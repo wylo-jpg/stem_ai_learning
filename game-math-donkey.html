@@ -187,7 +187,9 @@ var W=480,H=320;
 var PLATS=[{x0:0,x1:480,y:280},{x0:60,x1:480,y:215},{x0:0,x1:420,y:150},{x0:60,x1:480,y:85}];
 var LADDERS=[{x:400,top:215,bot:280},{x:100,top:150,bot:215},{x:380,top:85,bot:150}];
 var SEGS=[{x0:60,x1:480,y:85},{x0:0,x1:420,y:150},{x0:60,x1:480,y:215},{x0:0,x1:480,y:280}];
-var player,barrels,coins,q,gotKey,score,lives,level,over,started,spawnT,msgT,msg,throwAnim;
+var player={x:30,y:280,vx:0,vy:0,ground:true,climb:false,face:1},barrels=[],coins=[];
+var q={txt:'揀難度開始遊戲',coins:[],barrelVals:['?']},gotKey=false,score=0,lives=3,level=1;
+var over=false,started=false,spawnT=1.4,msgT=0,msg='',throwAnim=0;
 var diff='easy',best=0;
 var input={l:false,r:false,u:false,d:false};
 try{best=parseInt(localStorage.getItem('dmj_high')||'0',10)||0;}catch(e){}

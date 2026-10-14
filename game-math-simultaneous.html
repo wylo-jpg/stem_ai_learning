@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>🔐 解碼金庫｜二元一次方程</title>
+<style>
+:root{
+  --gold:#ffd76a;
+  --gold-deep:#c9962e;
+  --ink:#f7f2e2;
+  --blue1:#0d2150;
+  --blue2:#060f2b;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang HK","Microsoft JhengHei","Noto Sans HK",sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(1200px 620px at 50% -12%, #1d3f86 0%, #0d2150 48%, #060f2b 100%);
+  min-height:100vh;
+  touch-action:manipulation;
+  font-size:16px;
+  line-height:1.6;
+}
+.wrap{max-width:600px;margin:0 auto;padding:14px 14px 40px;}
+.top{text-align:center;margin:6px 0 2px;}
+.top h1{margin:0;font-size:30px;letter-spacing:2px;
+  background:linear-gradient(180deg,#fff6c8,#ffd76a 55%,#c9962e);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:0 2px 12px rgba(255,215,106,.25);}
+.top .sub{margin:2px 0 0;color:#cdd8f5;font-size:14px;letter-spacing:4px;}
+.back{display:inline-block;margin:10px 0 8px;color:var(--gold);text-decoration:none;font-size:15px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,215,106,.35);
+  padding:8px 14px;border-radius:999px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+.hud{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:6px 0 4px;}
+.pill{background:rgba(255,255,255,.09);border:1px solid rgba(255,215,106,.35);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-radius:999px;padding:7px 14px;font-size:15px;font-weight:700;white-space:nowrap;
+  box-shadow:0 4px 14px rgba(0,0,0,.3);}
+.dots{display:flex;gap:10px;justify-content:center;margin:8px 0 2px;font-size:22px;}
+.game{margin-top:6px;}
+/* ===== 金庫門 ===== */
+.vault-stage{position:relative;width:216px;height:216px;margin:8px auto 4px;}
+.gold-glow{position:absolute;inset:0;border-radius:50%;opacity:0;transition:opacity .45s;pointer-events:none;
+  background:radial-gradient(circle,#fffbe0 0%,#ffe27a 30%,rgba(255,190,60,.6) 55%,rgba(255,170,40,0) 72%);}
+.gold-glow.on{opacity:1;animation:glowPulse 1s ease-in-out infinite alternate;}
+@keyframes glowPulse{from{filter:brightness(1);}to{filter:brightness(1.25);}}
+.vault-door{position:absolute;inset:12px;border-radius:50%;
+  background:conic-gradient(from 200deg,#8a93a8,#e6ecf7 12%,#7c8699 25%,#cdd6e8 38%,#6f7889 50%,#e6ecf7 62%,#7c8699 75%,#cdd6e8 88%,#8a93a8);
+  box-shadow:0 0 0 6px #4a3a14,0 0 0 9px var(--gold-deep),0 0 36px rgba(255,215,106,.55),inset 0 0 28px rgba(0,0,0,.45);
+  transform-origin:16% 50%;transition:transform .85s cubic-bezier(.6,.05,.3,1);}
+.vault-door.open{transform:perspective(700px) rotateY(-108deg);}
+.vault-door.shake{animation:shake .5s;}
+@keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-13px);}40%{transform:translateX(11px);}60%{transform:translateX(-8px);}80%{transform:translateX(5px);}}
+.door-ring{position:absolute;inset:24px;border-radius:50%;border:3px solid rgba(70,58,22,.55);box-shadow:inset 0 0 14px rgba(0,0,0,.4);}
+.spoke{position:absolute;left:50%;top:50%;width:9px;height:146px;margin:-73px 0 0 -4.5px;border-radius:5px;
+  background:linear-gradient(180deg,#eef2fa,#98a1b4);box-shadow:0 0 8px rgba(0,0,0,.55);}
+.spoke.s1{transform:rotate(0deg);}.spoke.s2{transform:rotate(60deg);}.spoke.s3{transform:rotate(120deg);}
+.hub{position:absolute;left:50%;top:50%;width:66px;height:66px;margin:-33px 0 0 -33px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#f7e9b6,#cfa52f 72%);
+  display:flex;align-items:center;justify-content:center;font-size:30px;
+  box-shadow:0 0 0 4px #6b5a1e,0 5px 12px rgba(0,0,0,.55);}
+.particle{position:absolute;left:50%;top:50%;width:9px;height:9px;margin:-4.5px;border-radius:50%;
+  background:radial-gradient(circle,#fff8cf,#ffc93c);pointer-events:none;z-index:5;
+  animation:burst .95s ease-out forwards;}
+@keyframes burst{to{transform:translate(var(--tx),var(--ty)) scale(.15);opacity:0;}}
+/* ===== 題目卡 ===== */
+.card{background:rgba(255,255,255,.08);border:1px solid rgba(255,215,106,.35);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-radius:18px;padding:16px 16px 14px;box-shadow:0 12px 32px rgba(0,0,0,.4);}
+.eq{font-size:23px;text-align:center;margin:7px 0;letter-spacing:1px;font-weight:600;color:#fff;}
+.word{font-size:17px;line-height:1.85;color:#fff;}
+.ask{text-align:center;color:var(--gold);font-weight:800;font-size:17px;margin-top:10px;letter-spacing:1px;}
+#msg{min-height:26px;text-align:center;font-size:16px;font-weight:700;margin:8px 0 2px;color:var(--gold);}
+#opts.locked .opt{pointer-events:none;}
+.opt{display:block;width:100%;min-height:56px;margin:10px 0;padding:10px 12px;
+  font-size:21px;font-weight:800;color:#12234f;letter-spacing:1px;
+  background:linear-gradient(180deg,#fff4c2,#ffd76a);
+  border:none;border-radius:14px;touch-action:manipulation;cursor:pointer;
+  box-shadow:0 4px 0 #9a7a12,0 9px 20px rgba(0,0,0,.4);
+  transition:transform .06s, box-shadow .06s, background .2s;}
+.opt:active{transform:translateY(3px);box-shadow:0 1px 0 #9a7a12;}
+.opt.correct{background:linear-gradient(180deg,#cdf8c9,#58d465);color:#07320f;box-shadow:0 4px 0 #2a7a33,0 0 22px rgba(110,255,140,.7);}
+.opt.wrong{background:linear-gradient(180deg,#ffc7c7,#ef5f5f);color:#5c0d0d;box-shadow:0 4px 0 #8f2b2b;}
+.opt.dim{opacity:.55;}
+/* ===== 控制區 ===== */
+.controls{display:flex;gap:10px;justify-content:center;margin:16px 0 6px;}
+.ctl{flex:1;max-width:220px;min-height:48px;font-size:16px;font-weight:700;color:var(--ink);
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,215,106,.4);border-radius:14px;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);touch-action:manipulation;cursor:pointer;}
+.ctl:active{transform:scale(.97);}
+/* ===== Overlay ===== */
+.overlay{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;
+  background:rgba(4,10,26,.74);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);padding:16px;}
+.overlay.hidden{display:none;}
+.panel{width:100%;max-width:520px;max-height:92vh;overflow-y:auto;
+  background:linear-gradient(165deg,rgba(24,44,102,.96),rgba(9,18,48,.97));
+  border:1px solid rgba(255,215,106,.5);border-radius:22px;padding:24px 20px;
+  box-shadow:0 20px 60px rgba(0,0,0,.6),0 0 40px rgba(255,215,106,.12);text-align:center;}
+.panel h2{margin:0 0 8px;font-size:26px;
+  background:linear-gradient(180deg,#fff6c8,#ffd76a 60%,#c9962e);
+  -webkit-background-clip:text;background-clip:text;color:transparent;}
+.panel p{font-size:15px;color:#e8ecfa;}
+.rules{text-align:left;display:inline-block;margin:6px auto 4px;padding-left:4px;list-style:none;font-size:15px;color:#e8ecfa;}
+.rules li{margin:7px 0;}
+.diffrow{display:flex;gap:10px;justify-content:center;margin:14px 0 6px;}
+.diff-btn{flex:1;min-height:88px;font-size:16px;font-weight:800;color:var(--ink);line-height:1.5;
+  background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.2);border-radius:16px;
+  touch-action:manipulation;cursor:pointer;padding:10px 4px;}
+.diff-btn small{font-weight:400;font-size:12px;color:#cdd8f5;}
+.diff-btn.sel{border-color:var(--gold);background:rgba(255,215,106,.14);
+  box-shadow:0 0 18px rgba(255,215,106,.35);}
+.concept{text-align:left;font-size:14px;line-height:1.75;color:#fdf3d0;
+  background:rgba(255,215,106,.09);border:1px dashed rgba(255,215,106,.55);
+  border-radius:12px;padding:10px 12px;margin:10px 0 4px;}
+.big-btn{display:block;width:100%;min-height:58px;margin-top:14px;font-size:20px;font-weight:800;letter-spacing:2px;
+  color:#12234f;background:linear-gradient(180deg,#fff4c2,#ffd76a);border:none;border-radius:16px;
+  box-shadow:0 5px 0 #9a7a12,0 10px 24px rgba(0,0,0,.45);touch-action:manipulation;cursor:pointer;}
+.big-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #9a7a12;}
+.ghost-btn{display:block;width:100%;min-height:52px;margin-top:10px;font-size:17px;font-weight:700;color:var(--ink);
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,215,106,.45);border-radius:14px;
+  touch-action:manipulation;cursor:pointer;}
+.endstats{font-size:17px;line-height:2;color:#fff;margin:8px 0;}
+.endstats b{color:var(--gold);font-size:22px;}
+.newhigh{color:#7dff9a;font-weight:800;font-size:16px;min-height:24px;}
+@media (max-width:380px){
+  .eq{font-size:20px;}
+  .opt{font-size:19px;}
+  .top h1{font-size:26px;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <h1>🔐 解碼金庫</h1>
+    <p class="sub">二元一次方程 · 逐道開鎖</p>
+  </header>
+
+  <a class="back" href="games.html">← 返回遊戲列表</a>
+
+  <div class="hud">
+    <div class="pill">⭐ <span id="hScore">0</span></div>
+    <div class="pill" id="hLives">❤️❤️❤️</div>
+    <div class="pill">🚪 第 <span id="hDoor">1</span> / 5 道門</div>
+    <div class="pill">🏆 <span id="hHigh">0</span></div>
+  </div>
+  <div class="dots" id="doorDots"></div>
+
+  <main class="game">
+    <div class="vault-stage">
+      <div class="gold-glow" id="goldGlow"></div>
+      <div class="vault-door" id="vaultDoor">
+        <div class="door-ring"></div>
+        <div class="spoke s1"></div><div class="spoke s2"></div><div class="spoke s3"></div>
+        <div class="hub">🔐</div>
+      </div>
+      <div id="particles"></div>
+    </div>
+
+    <div class="card">
+      <div id="qprompt"></div>
+      <div id="msg"></div>
+      <div id="opts"></div>
+    </div>
+  </main>
+
+  <div class="controls">
+    <button class="ctl" id="btnSound">🔊 音效開</button>
+    <button class="ctl" id="btnRestart">↺ 重新開始</button>
+  </div>
+
+</div>
+
+<!-- 開場 -->
+<div class="overlay" id="ovStart">
+  <div class="panel">
+    <h2>🔐 解碼金庫</h2>
+    <p>金庫有 <b>5 道門</b>，每道門都有一組<b>二元一次方程</b>（聯立方程）。<br>
+    揀出正確嘅 <b>(x, y)</b> 有序對，就可以開鎖！</p>
+    <ul class="rules">
+      <li>✅ 答啱：開鎖動畫，<b>+100 分</b></li>
+      <li>❌ 答錯：扣 <b>1 條命</b>（共 3 條），換題重試同一道門</li>
+      <li>🏆 開晒 5 道門：每條剩餘生命 <b>+150 獎分</b></li>
+    </ul>
+    <div class="diffrow">
+      <button class="diff-btn sel" data-d="easy">🌱<br>初階<br><small>中一至中二</small></button>
+      <button class="diff-btn" data-d="medium">🌿<br>中階<br><small>中三至中四</small></button>
+      <button class="diff-btn" data-d="hard">🌳<br>高階<br><small>中五至中六</small></button>
+    </div>
+    <div class="concept" id="conceptBox"></div>
+    <button class="big-btn" id="btnStart">▶ 開始遊戲</button>
+  </div>
+</div>
+
+<!-- 結束 -->
+<div class="overlay hidden" id="ovEnd">
+  <div class="panel">
+    <h2 id="endTitle">🎉 過關！</h2>
+    <div class="newhigh" id="endHigh"></div>
+    <div class="endstats" id="endStats"></div>
+    <button class="big-btn" id="btnAgain">🔁 再玩一次</button>
+    <button class="ghost-btn" id="btnDiff">🎚️ 換難度</button>
+  </div>
+</div>
+
+<script>
+/*__PURE_START__*/
+/* ===== 純邏輯：分數運算＋出題（無 DOM，可獨立測試） ===== */
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){var t=a%b;a=b;b=t;}return a||1;}
+function F(n){return {n:n,d:1};}
+function frac(n,d){d=(d===undefined?1:d);if(d===0)d=1;if(d<0){n=-n;d=-d;}var g=gcd(n,d);return {n:n/g,d:d/g};}
+function fstr(f){var s=f.n<0?"\u2212":"";var an=Math.abs(f.n);return s+(f.d===1?String(an):an+"/"+f.d);}
+function fadd(p,q){return frac(p.n*q.d+q.n*p.d,p.d*q.d);}
+function fsub(p,q){return frac(p.n*q.d-q.n*p.d,p.d*q.d);}
+function fmul(p,q){return frac(p.n*q.n,p.d*q.d);}
+function fdiv(p,q){return frac(p.n*q.d,p.d*q.n);}
+function fneg(p){return {n:-p.n,d:p.d};}
+function feq(p,q){return p.n===q.n&&p.d===q.d;}
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function termStr(coef,v){var an=Math.abs(coef.n),d=coef.d;if(an===1&&d===1)return v;if(d===1)return an+v;if(an===1)return v+"/"+d;return "("+an+"/"+d+")"+v;}
+function eqStr(a,b,c){var s=(a.n<0?"\u2212":"")+termStr(a,"x");s+=(b.n<0?" \u2212 ":" + ")+termStr(b,"y");return s+" = "+fstr(c);}
+function solvesEq(e,o){return feq(fadd(fmul(e.a,o.x),fmul(e.b,o.y)),e.c);}
+function solvesBoth(eqs,o){for(var i=0;i<eqs.length;i++){if(!solvesEq(eqs[i],o))return false;}return true;}
+function okey(o){return fstr(o.x)+"|"+fstr(o.y);}
+/* 在第一條方程上隨機取一點（只滿足其中一條方程的干擾項） */
+function lineOnlyPoint(e,sol){
+  if(e.b.n===0)return null;
+  var ks=shuffle([1,-1,2,-2,3,-3,4,-4]);
+  for(var i=0;i<ks.length;i++){
+    var xp=fadd(sol.x,F(ks[i]));
+    var y=fdiv(fsub(e.c,fmul(e.a,xp)),e.b);
+    if(y.d===1)return {x:xp,y:y};
+  }
+  return null;
+}
+function buildOptions(eqs,sol){
+  var seen={};seen[okey(sol)]=true;
+  var cands=[];
+  function add(o){var k=okey(o);if(seen[k])return;if(solvesBoth(eqs,o))return;seen[k]=true;cands.push(o);}
+  add({x:sol.y,y:sol.x});                       /* x/y 調轉 */
+  add({x:fneg(sol.x),y:sol.y});                 /* 符號錯 */
+  add({x:sol.x,y:fneg(sol.y)});
+  add({x:fneg(sol.x),y:fneg(sol.y)});
+  var lp=lineOnlyPoint(eqs[0],sol);if(lp)add(lp);/* 只滿足第一條方程 */
+  var lp2=lineOnlyPoint(eqs[1],sol);if(lp2)add(lp2);
+  var offs=shuffle([[1,0],[-1,0],[0,1],[0,-1],[2,0],[0,2],[-2,0],[0,-2],[1,1],[1,-1],[-1,1],[-1,-1]]);
+  for(var i=0;i<offs.length;i++){add({x:fadd(sol.x,F(offs[i][0])),y:fadd(sol.y,F(offs[i][1]))});}
+  add({x:fmul(sol.x,F(2)),y:sol.y});
+  add({x:sol.x,y:fmul(sol.y,F(2))});
+  var n=3,guard=0;
+  while(cands.length<3&&guard<60){add({x:fadd(sol.x,F(n)),y:sol.y});add({x:sol.x,y:fadd(sol.y,F(n))});n++;guard++;}
+  shuffle(cands);
+  var opts=cands.slice(0,3);
+  opts.push({x:{n:sol.x.n,d:sol.x.d},y:{n:sol.y.n,d:sol.y.d},correct:true});
+  return shuffle(opts);
+}
+function eqPrompt(eqs){
+  return '<div class="eq">'+eqStr(eqs[0].a,eqs[0].b,eqs[0].c)+'</div>'+
+         '<div class="eq">'+eqStr(eqs[1].a,eqs[1].b,eqs[1].c)+'</div>'+
+         '<div class="ask">求 (x, y) = ?</div>';
+}
+/* 🌱 初階：整數解 */
+function genEasy(){
+  var x=rnd(1,9),y=rnd(1,9);
+  var t=pick(['s','a','b','c']);
+  var eqs;
+  if(t==='s'){eqs=[{a:F(1),b:F(1),c:F(x+y)},{a:F(1),b:F(-1),c:F(x-y)}];}
+  else if(t==='a'){eqs=[{a:F(2),b:F(3),c:F(2*x+3*y)},{a:F(1),b:F(-1),c:F(x-y)}];}
+  else if(t==='b'){eqs=[{a:F(1),b:F(2),c:F(x+2*y)},{a:F(3),b:F(-1),c:F(3*x-y)}];}
+  else{eqs=[{a:F(2),b:F(-1),c:F(2*x-y)},{a:F(1),b:F(3),c:F(x+3*y)}];}
+  var sol={x:F(x),y:F(y)};
+  return {prompt:eqPrompt(eqs),eqs:eqs,sol:sol,options:buildOptions(eqs,sol)};
+}
+/* 🌿 中階：大係數／分數係數，解為整數或簡單分數 */
+function genMedium(){
+  var mode=pick(['big','big','frac','half']);
+  var x,y,eqs;
+  if(mode==='big'){
+    var ix=rnd(1,12),iy=rnd(1,12);
+    var a1,b1,a2,b2,tries=0;
+    do{a1=rnd(1,12);b1=rnd(1,12);a2=rnd(1,12);b2=rnd(-12,12);if(b2===0)b2=1;tries++;}
+    while((a1*b2-a2*b1)===0&&tries<50);
+    eqs=[{a:F(a1),b:F(b1),c:F(a1*ix+b1*iy)},{a:F(a2),b:F(b2),c:F(a2*ix+b2*iy)}];
+    x=F(ix);y=F(iy);
+  }else if(mode==='frac'){
+    var jx=rnd(1,9),jy=rnd(1,9);
+    eqs=[{a:frac(1,2),b:F(1),c:frac(jx+2*jy,2)},{a:F(1),b:frac(-1,2),c:frac(2*jx-jy,2)}];
+    x=F(jx);y=F(jy);
+  }else{ /* half：解 x 為分母 2 的分數 */
+    var k=pick([1,3,5,7,9,11,13,15,17]);
+    var hy=rnd(1,9);
+    x=frac(k,2);y=F(hy);
+    eqs=[{a:F(2),b:F(3),c:F(k+3*hy)},{a:F(1),b:F(-1),c:fsub(x,y)}];
+  }
+  var sol={x:x,y:y};
+  return {prompt:eqPrompt(eqs),eqs:eqs,sol:sol,options:buildOptions(eqs,sol)};
+}
+/* 🌳 高階：文字應用題（年齡／錢幣／兩數和差） */
+function genHard(){
+  var t=pick(['age','age','coin','coin','sum']);
+  var eqs,sol,prompt;
+  if(t==='age'){
+    var pr=pick([[5,3,5,2],[6,3,6,2],[6,4,4,2],[4,3,5,2]]);
+    var y1=pr[0],k1=pr[1],y2=pr[2],k2=pr[3];
+    var s=(k1*y1-y1+k2*y2-y2)/(k1-k2);
+    var f=k1*s-k1*y1+y1;
+    eqs=[{a:F(1),b:F(-k1),c:F(y1*(1-k1))},{a:F(1),b:F(-k2),c:F(y2*(k2-1))}];
+    sol={x:F(f),y:F(s)};
+    prompt='<div class="word">'+y1+' 年前，爸爸的年齡是兒子的 '+k1+' 倍；'+y2+' 年後，爸爸的年齡是兒子的 '+k2+' 倍。<br>求爸爸和兒子現在的年齡（以（爸爸，兒子）表示）。</div>';
+  }else if(t==='coin'){
+    var dn=pick([[5,2],[10,5]]);
+    var d1=dn[0],d2=dn[1];
+    var n=rnd(12,24),cx=rnd(4,n-4),cy=n-cx,m=d1*cx+d2*cy;
+    eqs=[{a:F(1),b:F(1),c:F(n)},{a:F(d1),b:F(d2),c:F(m)}];
+    sol={x:F(cx),y:F(cy)};
+    prompt='<div class="word">有 '+d1+' 元和 '+d2+' 元硬幣共 '+n+' 個，總值 '+m+' 元。<br>求 '+d1+' 元和 '+d2+' 元硬幣各有多少個（以（'+d1+' 元個數，'+d2+' 元個數）表示）。</div>';
+  }else{
+    var S=rnd(20,60),D=rnd(2,Math.min(20,S-2));
+    if(((S+D)%2)!==0)D+=1;
+    var bx=(S+D)/2,by=(S-D)/2;
+    eqs=[{a:F(1),b:F(1),c:F(S)},{a:F(1),b:F(-1),c:F(D)}];
+    sol={x:F(bx),y:F(by)};
+    prompt='<div class="word">兩個正整數之和是 '+S+'，大數減小數之差是 '+D+'。<br>求這兩個數（大數在前）。</div>';
+  }
+  return {prompt:prompt,eqs:eqs,sol:sol,options:buildOptions(eqs,sol)};
+}
+function genQuestion(diff){
+  if(diff==='medium')return genMedium();
+  if(diff==='hard')return genHard();
+  return genEasy();
+}
+/*__PURE_END__*/
+
+/* ===== 遊戲主體（DOM） ===== */
+(function(){
+"use strict";
+function $(id){return document.getElementById(id);}
+var vaultDoor=$('vaultDoor'),goldGlow=$('goldGlow'),particlesBox=$('particles'),
+    qprompt=$('qprompt'),optsBox=$('opts'),msgBox=$('msg'),
+    hScore=$('hScore'),hLives=$('hLives'),hDoor=$('hDoor'),hHigh=$('hHigh'),
+    doorDots=$('doorDots');
+
+var HIGH_KEY='simvault_high';
+var TOTAL_DOORS=5,MAX_LIVES=3;
+var state={diff:'easy',score:0,lives:MAX_LIVES,door:1,answered:false,over:false,q:null};
+
+var CONCEPTS={
+  easy:'💡 <b>代入消元法</b>：由其中一條方程將 x（或 y）表達成另一個未知數的式子，代入另一條方程，化成一元一次方程求解，再代回去求另一個未知數。記得把答案代入<b>兩條</b>方程驗算！',
+  medium:'💡 <b>分數係數處理</b>：先把方程兩邊同乘分母的最小公倍數（LCM），化成整數係數再解；若答案是分數，約至最簡並寫成 <b>a/b</b> 形式。',
+  hard:'💡 <b>由文字題列方程</b>：設兩個未知數為 x、y，把「…是…的幾倍」「共…個／共值…元」等關係逐句翻譯成方程，列出聯立方程後求解；留意題目註明的 <b>(x, y)</b> 次序代表甚麼。'
+};
+
+/* ---------- 音效 ---------- */
+var AC=null,soundOn=true;
+function ac(){
+  if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){AC=null;}}
+  if(AC&&AC.state==='suspended'){try{AC.resume();}catch(e){}}
+  return AC;
+}
+function tone(f,delay,dur,type,vol){
+  try{
+    var c=ac();if(!c||!soundOn)return;
+    var o=c.createOscillator(),g=c.createGain();
+    o.type=type||'sine';o.frequency.value=f;
+    var t=c.currentTime+delay;
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(vol||0.22,t+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(g);g.connect(c.destination);
+    o.start(t);o.stop(t+dur+0.05);
+  }catch(e){}
+}
+function sfxCorrect(){tone(523.25,0,0.14);tone(659.25,0.1,0.14);tone(783.99,0.2,0.24);}
+function sfxWrong(){tone(155,0,0.28,'sawtooth',0.15);tone(110,0.05,0.3,'sawtooth',0.12);}
+function sfxUnlock(){var fs=[523.25,659.25,783.99,1046.5];for(var i=0;i<fs.length;i++)tone(fs[i],i*0.09,0.2);}
+
+/* ---------- HUD ---------- */
+function getHigh(){try{return parseInt(localStorage.getItem(HIGH_KEY)||'0',10)||0;}catch(e){return 0;}}
+function setHigh(v){try{localStorage.setItem(HIGH_KEY,String(v));}catch(e){}}
+function updateHUD(){
+  hScore.textContent=state.score;
+  var h='';
+  for(var i=0;i<MAX_LIVES;i++)h+=i<state.lives?'\u2764\uFE0F':'\uD83D\uDDA4';
+  hLives.textContent=h;
+  hDoor.textContent=Math.min(state.door,TOTAL_DOORS);
+  hHigh.textContent=getHigh();
+  var d='';
+  for(var j=1;j<=TOTAL_DOORS;j++)d+='<span>'+(j<state.door?'\uD83D\uDD13':(j===state.door?'\uD83D\uDEAA':'\uD83D\uDD12'))+'</span>';
+  doorDots.innerHTML=d;
+}
+function setMsg(t){msgBox.textContent=t||'';}
+
+/* ---------- 粒子 ---------- */
+function spawnParticles(){
+  for(var i=0;i<26;i++){
+    var p=document.createElement('span');
+    p.className='particle';
+    var ang=Math.random()*Math.PI*2,dist=60+Math.random()*70;
+    p.style.setProperty('--tx',Math.cos(ang)*dist+'px');
+    p.style.setProperty('--ty',Math.sin(ang)*dist+'px');
+    particlesBox.appendChild(p);
+    (function(el){setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},1000);})(p);
+  }
+}
+function closeDoorVisual(){
+  vaultDoor.classList.remove('open');
+  vaultDoor.classList.remove('shake');
+  goldGlow.classList.remove('on');
+}
+
+/* ---------- 出題／作答 ---------- */
+function newQuestion(){
+  state.q=genQuestion(state.diff);
+  state.answered=false;
+  renderQ();
+}
+function renderQ(){
+  qprompt.innerHTML=state.q.prompt;
+  setMsg('');
+  optsBox.innerHTML='';
+  optsBox.classList.remove('locked');
+  state.q.options.forEach(function(o){
+    var b=document.createElement('button');
+    b.className='opt';b.type='button';
+    b.textContent='('+fstr(o.x)+', '+fstr(o.y)+')';
+    b.addEventListener('pointerdown',function(ev){ev.preventDefault();answer(o,b);});
+    b.addEventListener('click',function(){answer(o,b);});
+    optsBox.appendChild(b);
+  });
+}
+function markCorrectBtn(){
+  var btns=optsBox.children;
+  for(var i=0;i<btns.length;i++){
+    var o=state.q.options[i];
+    if(o.correct)btns[i].classList.add('correct');
+    else btns[i].classList.add('dim');
+  }
+}
+function answer(o,btn){
+  if(state.answered||state.over)return;
+  state.answered=true;
+  optsBox.classList.add('locked');
+  if(o.correct){
+    btn.classList.add('correct');
+    state.score+=100;
+    sfxCorrect();sfxUnlock();
+    setMsg('✅ 答啱！+100 分，金庫門開啟…');
+    vaultDoor.classList.remove('shake');
+    vaultDoor.classList.add('open');
+    goldGlow.classList.add('on');
+    spawnParticles();
+    updateHUD();
+    setTimeout(function(){
+      state.door++;
+      if(state.door>TOTAL_DOORS){victory();}
+      else{closeDoorVisual();newQuestion();updateHUD();}
+    },1600);
+  }else{
+    btn.classList.add('wrong');
+    markCorrectBtn();
+    state.lives--;
+    sfxWrong();
+    vaultDoor.classList.add('shake');
+    updateHUD();
+    if(state.lives<=0){
+      setMsg('💔 生命用盡…');
+      setTimeout(function(){endGame(false);},1100);
+    }else{
+      setMsg('❌ 答錯！扣 1 條命，換題再試…');
+      setTimeout(function(){
+        vaultDoor.classList.remove('shake');
+        newQuestion();
+      },1200);
+    }
+  }
+}
+
+/* ---------- 結束 ---------- */
+function showEnd(win,bonus){
+  var hi=getHigh(),isNew=false;
+  if(state.score>hi){setHigh(state.score);isNew=true;}
+  $('endTitle').textContent=win?'\uD83C\uDF89 過關！金庫全開！':'\uD83D\uDC94 挑戰失敗';
+  $('endHigh').textContent=isNew?'\u2B50 新最高分！':'';
+  var s='\uD83D\uDEAA 開門數：<b>'+(win?TOTAL_DOORS:(state.door-1))+' / '+TOTAL_DOORS+'</b><br>'+
+        '⭐ 總分：<b>'+state.score+'</b>';
+  if(win)s+='<br>\uD83C\uDF81 生命獎分：'+state.lives+' × 150 = <b>+'+bonus+'</b>';
+  s+='<br>\uD83C\uDFC6 最高分：<b>'+Math.max(hi,state.score)+'</b>';
+  $('endStats').innerHTML=s;
+  $('ovEnd').classList.remove('hidden');
+  updateHUD();
+}
+function victory(){
+  state.over=true;
+  var bonus=state.lives*150;
+  state.score+=bonus;
+  showEnd(true,bonus);
+}
+function endGame(win){
+  state.over=true;
+  showEnd(win,0);
+}
+function reset(){
+  state.score=0;state.lives=MAX_LIVES;state.door=1;
+  state.answered=false;state.over=false;
+  closeDoorVisual();
+  newQuestion();
+  updateHUD();
+  $('ovEnd').classList.add('hidden');
+}
+
+/* ---------- 開場／按鈕 ---------- */
+function setDiff(d){
+  state.diff=d;
+  var btns=document.querySelectorAll('.diff-btn');
+  for(var i=0;i<btns.length;i++)btns[i].classList.toggle('sel',btns[i].getAttribute('data-d')===d);
+  $('conceptBox').innerHTML=CONCEPTS[d];
+}
+var diffBtns=document.querySelectorAll('.diff-btn');
+for(var i=0;i<diffBtns.length;i++){
+  (function(b){
+    b.addEventListener('pointerdown',function(ev){ev.preventDefault();ac();setDiff(b.getAttribute('data-d'));});
+    b.addEventListener('click',function(){setDiff(b.getAttribute('data-d'));});
+  })(diffBtns[i]);
+}
+$('btnStart').addEventListener('click',function(){
+  ac();
+  $('ovStart').classList.add('hidden');
+  reset();
+});
+$('btnAgain').addEventListener('click',function(){reset();});
+$('btnDiff').addEventListener('click',function(){
+  $('ovEnd').classList.add('hidden');
+  $('ovStart').classList.remove('hidden');
+});
+$('btnRestart').addEventListener('click',function(){reset();});
+$('btnSound').addEventListener('click',function(){
+  soundOn=!soundOn;
+  this.textContent=soundOn?'\uD83D\uDD0A 音效開':'\uD83D\uDD07 音效關';
+});
+
+/* ---------- 初始化 ---------- */
+setDiff('easy');
+updateHUD();
+})();
+</script>
+</body>
+</html>

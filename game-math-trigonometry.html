@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>🏹 三角學神射手</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏹</text></svg>">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang HK","PingFang TC","Microsoft JhengHei","Noto Sans HK","Heiti TC",sans-serif;
+  background:linear-gradient(180deg,#221a3e 0%,#3a2358 55%,#5b2a52 100%);
+  color:#fff;min-height:100vh;touch-action:manipulation;
+}
+#app{max-width:640px;margin:0 auto;padding:12px 12px 28px;}
+header h1{margin:6px 0 2px;text-align:center;font-size:30px;
+  background:linear-gradient(180deg,#ffe9a8,#ffb347);-webkit-background-clip:text;background-clip:text;color:transparent;}
+header p{text-align:center;color:#e8d9ff;margin:0 0 8px;font-size:14px;}
+.back{display:inline-block;margin:4px 0 10px;padding:9px 15px;min-height:44px;border-radius:999px;text-decoration:none;color:#fff;
+  background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);font-size:15px;}
+#hud{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-radius:14px;padding:10px 12px;font-size:15px;margin-bottom:10px;}
+#hud b{color:#ffd97a;}
+#stage{position:relative;border-radius:18px;overflow:hidden;box-shadow:0 12px 32px rgba(0,0,0,.35);}
+#scene{display:block;width:100%;height:250px;}
+#qcard{background:rgba(20,12,34,.78);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:14px 14px 12px;border-top:1px solid rgba(255,255,255,.12);}
+#qcard .qtext{font-size:18px;line-height:1.65;}
+#qcard .qhint{margin-top:8px;font-size:14px;color:#ffe1a8;background:rgba(255,200,100,.10);border:1px dashed rgba(255,200,100,.4);border-radius:10px;padding:6px 10px;line-height:1.6;}
+#qcard svg{display:block;margin:2px auto 8px;max-width:100%;height:auto;}
+#options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+@media (max-width:430px){#options{grid-template-columns:1fr;}}
+button.opt{min-height:56px;font-size:19px;font-weight:800;color:#4a2410;border:none;border-radius:14px;cursor:pointer;
+  background:linear-gradient(180deg,#ffffff,#ffe3b3);box-shadow:0 4px 0 #c98d4b,0 8px 18px rgba(0,0,0,.25);
+  touch-action:manipulation;user-select:none;-webkit-user-select:none;padding:10px 8px;font-family:inherit;}
+button.opt:active{transform:translateY(2px);box-shadow:0 2px 0 #c98d4b;}
+button.opt.correct{background:linear-gradient(180deg,#b6f3c0,#5fce7d);color:#0d3b1e;box-shadow:0 4px 0 #2f7d44,0 0 18px rgba(110,255,150,.55);}
+button.opt.wrong{background:linear-gradient(180deg,#ffc2c2,#f27d7d);color:#5c1010;box-shadow:0 4px 0 #a03a3a;animation:shake .35s;}
+button.opt:disabled{cursor:default;opacity:.92;}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}50%{transform:translateX(7px)}75%{transform:translateX(-4px)}}
+.overlay{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:16px;
+  background:rgba(18,10,30,.78);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
+.overlay.hidden{display:none;}
+.panel{width:100%;max-width:540px;max-height:92vh;overflow:auto;background:linear-gradient(180deg,rgba(52,32,86,.97),rgba(34,20,58,.97));
+  border:1px solid rgba(255,255,255,.2);border-radius:22px;padding:22px 20px;box-shadow:0 24px 60px rgba(0,0,0,.5);text-align:center;}
+.panel h2{margin:0 0 6px;font-size:26px;}
+.panel .rule{font-size:15px;line-height:1.9;color:#f3e9ff;margin:8px 0 12px;}
+.panel .rule b{color:#ffd97a;}
+.diffrow{display:flex;gap:8px;justify-content:center;margin:6px 0 10px;flex-wrap:wrap;}
+button.diff{min-height:56px;flex:1;min-width:140px;font-size:16px;font-weight:800;border-radius:14px;border:2px solid rgba(255,255,255,.25);
+  background:rgba(255,255,255,.08);color:#fff;cursor:pointer;touch-action:manipulation;padding:8px 6px;font-family:inherit;line-height:1.5;}
+button.diff small{font-weight:400;font-size:13px;color:#d9c9f5;}
+button.diff.sel{border-color:#ffd166;background:rgba(255,209,102,.18);box-shadow:0 0 14px rgba(255,209,102,.35);}
+#concept{text-align:left;font-size:14.5px;line-height:1.8;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);
+  border-radius:14px;padding:12px 14px;margin:0 0 14px;}
+#concept table{border-collapse:collapse;margin:8px auto;}
+#concept td,#concept th{border:1px solid rgba(255,255,255,.3);padding:4px 10px;text-align:center;font-size:14px;}
+button.big{min-height:56px;font-size:19px;font-weight:900;border:none;border-radius:16px;cursor:pointer;color:#4a2410;
+  background:linear-gradient(180deg,#ffe9a8,#ffb347);box-shadow:0 5px 0 #b97a2e,0 10px 24px rgba(0,0,0,.3);
+  padding:12px 26px;touch-action:manipulation;width:100%;margin-top:8px;font-family:inherit;}
+button.big:active{transform:translateY(2px);box-shadow:0 2px 0 #b97a2e;}
+button.ghost{background:rgba(255,255,255,.10);color:#fff;border:1px solid rgba(255,255,255,.25);box-shadow:none;}
+.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0;}
+.stat{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:10px;}
+.stat .k{font-size:13px;color:#d9c9f5;}
+.stat .v{font-size:26px;font-weight:900;color:#ffd97a;}
+#endTitle{font-size:34px;margin:4px 0;}
+#newRec{color:#8dff9d;font-weight:800;display:none;margin-top:6px;font-size:16px;}
+.footer{margin-top:14px;text-align:center;font-size:12px;color:#bfaee0;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>🏹 三角學神射手</h1>
+    <p>黃昏射箭場 · 答啱三角題，箭箭命中靶心！</p>
+  </header>
+  <a class="back" href="games.html">← 返回遊戲列表</a>
+  <div id="hud">
+    <span>⭐ <b id="hScore">0</b></span>
+    <span>🏹 第<b id="hRound">1</b>/5輪 · 剩餘箭：<b id="hArrows">➹➹➹</b></span>
+    <span>🎯 <b id="hAcc">–</b></span>
+    <span>🏆 <b id="hHigh">0</b></span>
+  </div>
+  <div id="stage">
+    <canvas id="scene"></canvas>
+    <div id="qcard">
+      <div class="qtext" id="qtext">揀難度，開始射箭吧！</div>
+      <div class="qhint" id="qhint"></div>
+    </div>
+  </div>
+  <div id="options"></div>
+  <div class="footer">單檔離線遊戲 · 最高分儲存在本機</div>
+</div>
+
+<div id="ovStart" class="overlay">
+  <div class="panel">
+    <h2>🏹 三角學神射手</h2>
+    <div class="rule">黃昏射箭場開幕啦！<br>共 <b>5 輪 × 3 支箭 ＝ 15 題</b>三角學題目<br>答啱 → 箭射中靶心 <b>＋100 分</b> 🎯<br>答錯 → 脫靶 ＋0 分 💨<br>15 題全中，即可獲得 <b>🏆 神射手</b> 稱號！</div>
+    <div class="diffrow">
+      <button class="diff" data-d="easy" type="button">🌱 初階<br><small>中一至中二</small></button>
+      <button class="diff" data-d="medium" type="button">🌿 中階<br><small>中三至中四</small></button>
+      <button class="diff" data-d="hard" type="button">🌳 高階<br><small>中五至中六</small></button>
+    </div>
+    <div id="concept"></div>
+    <button class="big" id="btnStart" type="button">▶ 開始遊戲</button>
+  </div>
+</div>
+
+<div id="ovEnd" class="overlay hidden">
+  <div class="panel">
+    <h2>🏁 比賽結束</h2>
+    <div id="endTitle">🏆 神射手</div>
+    <div class="statgrid">
+      <div class="stat"><div class="k">🎯 命中</div><div class="v" id="stHit">0/15</div></div>
+      <div class="stat"><div class="k">⭐ 總分</div><div class="v" id="stScore">0</div></div>
+      <div class="stat"><div class="k">📊 命中率</div><div class="v" id="stAcc">0%</div></div>
+      <div class="stat"><div class="k">🏆 最高分</div><div class="v" id="stHigh">0</div></div>
+    </div>
+    <div id="newRec">🎉 新紀錄！</div>
+    <button class="big" id="btnAgain" type="button">🔁 再玩一次</button>
+    <button class="big ghost" id="btnChange" type="button">🎚️ 換難度</button>
+  </div>
+</div>
+
+<script>
+/* ================= 工具 ================= */
+function rand(n){return Math.floor(Math.random()*n);}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=rand(i+1);const t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function gcd(a,b){return b?gcd(b,a%b):a;}
+function frac(n,d){const g=gcd(n,d);n/=g;d/=g;return d===1?String(n):n+"/"+d;}
+var D2R=Math.PI/180;
+
+/* 從候選池 [顯示字串, 數值] 抽 n 個干擾項：數值與正解不同、彼此互不相同 */
+function pickDis(correctV,pool,n){
+  var out=[],seen={},cands=shuffle(pool),i,t,v,k,dup,j;
+  for(i=0;i<cands.length&&out.length<n;i++){
+    t=cands[i][0];v=cands[i][1];
+    if(Math.abs(v-correctV)<1e-9)continue;
+    if(seen[t])continue;
+    dup=false;
+    for(j=0;j<out.length;j++){if(Math.abs(out[j].v-v)<1e-9){dup=true;break;}}
+    if(dup)continue;
+    seen[t]=1;out.push({t:t,v:v});
+  }
+  return out;
+}
+
+/* ================= 🌱 初階：特殊角三角比 ================= */
+var EASY_FACTS=[
+ {e:"sin 30°",func:"sin",deg:30,v:0.5,sym:"1/2"},
+ {e:"cos 60°",func:"cos",deg:60,v:0.5,sym:"1/2"},
+ {e:"tan 45°",func:"tan",deg:45,v:1,sym:"1"},
+ {e:"sin 60°",func:"sin",deg:60,v:Math.sqrt(3)/2,sym:"√3/2"},
+ {e:"cos 30°",func:"cos",deg:30,v:Math.sqrt(3)/2,sym:"√3/2"},
+ {e:"sin 45°",func:"sin",deg:45,v:Math.SQRT1_2,sym:"√2/2"},
+ {e:"cos 45°",func:"cos",deg:45,v:Math.SQRT1_2,sym:"√2/2"},
+ {e:"tan 60°",func:"tan",deg:60,v:Math.sqrt(3),sym:"√3"},
+ {e:"tan 30°",func:"tan",deg:30,v:Math.sqrt(3)/3,sym:"√3/3"}
+];
+var EASY_VPOOL=[["1/2",0.5],["√2/2",Math.SQRT1_2],["√3/2",Math.sqrt(3)/2],["√3/3",Math.sqrt(3)/3],
+ ["1",1],["√3",Math.sqrt(3)],["√2",Math.SQRT2],["2",2],["0",0]];
+function genEasy(){
+  if(rand(2)===0){
+    var f=EASY_FACTS[rand(EASY_FACTS.length)];
+    var ds=pickDis(f.v,EASY_VPOOL,3);
+    var opts=shuffle([{t:f.sym,v:f.v}].concat(ds));
+    return {key:"E0|"+f.e,text:"求 "+f.e+" 的值：",diagram:"",
+      hint:"💡 特殊角要熟：sin 30°=1/2，sin 45°=√2/2，sin 60°=√3/2",
+      options:opts,answer:opts.findIndex(function(o){return Math.abs(o.v-f.v)<1e-9;}),
+      value:f.v,sym:f.sym,verify:{kind:"E",func:f.func,deg:f.deg}};
+  }
+  var groups={},i,f;
+  for(i=0;i<EASY_FACTS.length;i++){f=EASY_FACTS[i];(groups[f.sym]=groups[f.sym]||[]).push(f);}
+  var syms=Object.keys(groups);
+  var s=syms[rand(syms.length)];
+  f=groups[s][rand(groups[s].length)];
+  var cand=shuffle(EASY_FACTS.filter(function(x){return Math.abs(x.v-f.v)>1e-9;})),others=[],ii,jj,dupe;
+  for(ii=0;ii<cand.length&&others.length<3;ii++){
+    dupe=false;
+    for(jj=0;jj<others.length;jj++){if(Math.abs(others[jj].v-cand[ii].v)<1e-9){dupe=true;break;}}
+    if(!dupe)others.push(cand[ii]);
+  }
+  var opts=shuffle([{t:f.e,v:f.v}].concat(others.map(function(x){return {t:x.e,v:x.v};})));
+  return {key:"E1|"+s,text:"下列哪一個三角比的值等於 "+s+"？",diagram:"",
+    hint:"💡 諗下 "+s+" 係邊個特殊角嘅值（小心 sin / cos 撈亂）",
+    options:opts,answer:opts.findIndex(function(o){return Math.abs(o.v-f.v)<1e-9;}),
+    value:f.v,sym:f.sym,verify:{kind:"E",func:f.func,deg:f.deg}};
+}
+
+/* ================= 🌿 中階：SOHCAHTOA ================= */
+var TRIS=[{p:3,q:4,h:5},{p:6,q:8,h:10},{p:5,q:12,h:13}];
+function triSVG(p,q,h){
+  return '<svg viewBox="0 0 300 200" width="280" height="187">'
+  +'<polygon points="70,160 250,160 70,40" fill="rgba(255,255,255,.08)" stroke="#ffd166" stroke-width="3"/>'
+  +'<rect x="70" y="140" width="20" height="20" fill="none" stroke="#ffd166" stroke-width="2"/>'
+  +'<path d="M 224 160 A 26 26 0 0 0 228 145" fill="none" stroke="#ff8fa3" stroke-width="3"/>'
+  +'<text x="236" y="152" fill="#ff8fa3" font-size="18" font-weight="bold">θ</text>'
+  +'<text x="34" y="105" fill="#ffffff" font-size="15">對邊 '+p+'</text>'
+  +'<text x="148" y="184" fill="#ffffff" font-size="15">鄰邊 '+q+'</text>'
+  +'<text x="168" y="96" fill="#ffffff" font-size="15">斜邊 '+h+'</text>'
+  +'</svg>';
+}
+var M2C=[
+ {h:10,deg:30,side:"opp",t:"5",v:5},
+ {h:10,deg:45,side:"opp",t:"5√2",v:5*Math.SQRT2},
+ {h:10,deg:60,side:"opp",t:"5√3",v:5*Math.sqrt(3)},
+ {h:10,deg:30,side:"adj",t:"5√3",v:5*Math.sqrt(3)},
+ {h:10,deg:60,side:"adj",t:"5",v:5},
+ {h:20,deg:30,side:"opp",t:"10",v:10},
+ {h:20,deg:60,side:"opp",t:"10√3",v:10*Math.sqrt(3)},
+ {h:8,deg:45,side:"opp",t:"4√2",v:4*Math.SQRT2},
+ {h:8,deg:45,side:"adj",t:"4√2",v:4*Math.SQRT2},
+ {h:6,deg:60,side:"opp",t:"3√3",v:3*Math.sqrt(3)},
+ {h:12,deg:30,side:"adj",t:"6√3",v:6*Math.sqrt(3)},
+ {h:12,deg:45,side:"opp",t:"6√2",v:6*Math.SQRT2}
+];
+function m2cands(h){
+  var S3=Math.sqrt(3),S2=Math.SQRT2;
+  var c=[[String(h/2),h/2],[String(h),h],[String(2*h),2*h],
+    [(h/2)+"√2",h*S2/2],[(h/2)+"√3",h*S3/2],[h+"√3",h*S3],[h+"√2",h*S2]];
+  if(h%3===0)c.push([(h/3)+"√3",h*S3/3]);
+  return c;
+}
+function genMedium(){
+  if(rand(2)===0){
+    var t=TRIS[rand(TRIS.length)];
+    var ask=["sin","cos","tan"][rand(3)];
+    var all={sin:[t.p,t.h],cos:[t.q,t.h],tan:[t.p,t.q]};
+    var cv=all[ask],cval=cv[0]/cv[1],cfrac=frac(cv[0],cv[1]);
+    var pool=[],ks=["sin","cos","tan"],i,k,r;
+    for(i=0;i<ks.length;i++){k=ks[i];if(k!==ask){r=all[k];pool.push([frac(r[0],r[1]),r[0]/r[1]]);}}
+    pool.push([frac(t.q,t.p),t.q/t.p],[frac(t.h,t.q),t.h/t.q],[frac(t.h,t.p),t.h/t.p]);
+    var ds=pickDis(cval,pool,3);
+    var opts=shuffle([{t:cfrac,v:cval}].concat(ds));
+    return {key:"M0|"+t.p+"-"+t.q+"-"+t.h+"|"+ask,
+      text:"直角三角形中，θ 的對邊長 "+t.p+"，鄰邊長 "+t.q+"，斜邊長 "+t.h+"，求 "+ask+" θ = ?",
+      diagram:triSVG(t.p,t.q,t.h),
+      hint:"💡 SOHCAHTOA：sin θ＝對邊/斜邊，cos θ＝鄰邊/斜邊，tan θ＝對邊/鄰邊",
+      options:opts,answer:opts.findIndex(function(o){return Math.abs(o.v-cval)<1e-9;}),
+      value:cval,verify:{kind:"M1",p:t.p,q:t.q,h:t.h,ask:ask}};
+  }
+  var c=M2C[rand(M2C.length)];
+  var ds=pickDis(c.v,m2cands(c.h),3);
+  var opts=shuffle([{t:c.t,v:c.v}].concat(ds));
+  var side=c.side==="opp"?"對邊":"鄰邊";
+  return {key:"M1|"+c.h+"|"+c.deg+"|"+c.side,
+    text:"直角三角形中，斜邊長 "+c.h+"，θ = "+c.deg+"°，求"+side+"長 = ?",
+    diagram:"",
+    hint:"💡 對邊＝斜邊 × sin θ；鄰邊＝斜邊 × cos θ",
+    options:opts,answer:opts.findIndex(function(o){return Math.abs(o.v-c.v)<1e-9;}),
+    value:c.v,verify:{kind:"M2",h:c.h,deg:c.deg,side:c.side}};
+}
+
+/* ================= 🌳 高階：正弦公式・餘弦公式・仰角俯角 ================= */
+var SYMVAL=[["3",3],["4",4],["5",5],["6",6],["8",8],["10",10],["12",12],["13",13],["15",15],
+ ["20",20],["25",25],["30",30],["40",40],["50",50],["60",60],["100",100],
+ ["4√2",4*Math.SQRT2],["5√2",5*Math.SQRT2],["6√2",6*Math.SQRT2],["8√2",8*Math.SQRT2],
+ ["3√3",3*Math.sqrt(3)],["4√3",4*Math.sqrt(3)],["5√3",5*Math.sqrt(3)],["6√3",6*Math.sqrt(3)],
+ ["10√3",10*Math.sqrt(3)],["12√3",12*Math.sqrt(3)],["15√3",15*Math.sqrt(3)],
+ ["30√3",30*Math.sqrt(3)],["60√3",60*Math.sqrt(3)],["100√3",100*Math.sqrt(3)],
+ ["√7",Math.sqrt(7)],["2√7",2*Math.sqrt(7)]];
+var H1T=[
+ {A:30,B:90,bT:"10",bV:10,unk:"a",t:"5",v:5},
+ {A:60,B:90,bT:"12",bV:12,unk:"a",t:"6√3",v:6*Math.sqrt(3)},
+ {A:45,B:90,bT:"8",bV:8,unk:"a",t:"4√2",v:4*Math.SQRT2},
+ {A:30,B:60,bT:"6√3",bV:6*Math.sqrt(3),unk:"a",t:"6",v:6},
+ {A:90,B:30,aT:"10",aV:10,unk:"b",t:"5",v:5},
+ {A:45,B:30,aT:"10",aV:10,unk:"b",t:"5√2",v:5*Math.SQRT2},
+ {A:60,B:45,bT:"6√2",bV:6*Math.SQRT2,unk:"a",t:"6√3",v:6*Math.sqrt(3)}
+];
+var H1S=[
+ {A:30,aT:"6",aV:6,bT:"6√3",bV:6*Math.sqrt(3),t:"√3/2",v:Math.sqrt(3)/2},
+ {A:30,aT:"5",aV:5,bT:"10",bV:10,t:"1",v:1},
+ {A:30,aT:"4",aV:4,bT:"4√2",bV:4*Math.SQRT2,t:"√2/2",v:Math.SQRT1_2}
+];
+var SINPOOL=[["√3/2",Math.sqrt(3)/2],["1/2",0.5],["1",1],["√2/2",Math.SQRT1_2],["√3/3",Math.sqrt(3)/3],["√3",Math.sqrt(3)]];
+var H2T=[
+ {a:3,b:4,C:90,t:"5",v:5},
+ {a:6,b:8,C:90,t:"10",v:10},
+ {a:5,b:12,C:90,t:"13",v:13},
+ {a:4,b:4,C:60,t:"4",v:4},
+ {a:5,b:5,C:60,t:"5",v:5},
+ {a:2,b:3,C:60,t:"√7",v:Math.sqrt(7)},
+ {a:3,b:3,C:120,t:"3√3",v:3*Math.sqrt(3)}
+];
+var H2A=[
+ {s:[3,4,5],v:90,opts:[["90°",90],["60°",60],["45°",45],["120°",120]]},
+ {s:[4,4,4],v:60,opts:[["60°",60],["90°",90],["45°",45],["30°",30]]}
+];
+var H3T=[
+ {k:"elev",d:30,dT:"30 m",ang:60,ask:"h",t:"30√3",v:30*Math.sqrt(3)},
+ {k:"elev",d:20,dT:"20 m",ang:45,ask:"h",t:"20",v:20},
+ {k:"elev",h:12,hT:"12 m",ang:30,ask:"d",t:"12√3",v:12*Math.sqrt(3)},
+ {k:"depr",h:60,hT:"60 m",ang:45,ask:"d",t:"60",v:60},
+ {k:"depr",h:100,hT:"100 m",ang:30,ask:"d",t:"100√3",v:100*Math.sqrt(3)},
+ {k:"elev",h:15*Math.sqrt(3),hT:"15√3 m",ang:60,ask:"d",t:"15",v:15}
+];
+function towerSVG(kind,ang){
+  if(kind==="elev"){
+    return '<svg viewBox="0 0 300 190" width="280" height="177">'
+    +'<line x1="10" y1="160" x2="290" y2="160" stroke="#8fd14f" stroke-width="4"/>'
+    +'<rect x="225" y="60" width="26" height="100" fill="rgba(255,255,255,.16)" stroke="#ffd166" stroke-width="3"/>'
+    +'<circle cx="45" cy="150" r="7" fill="#ff8fa3"/>'
+    +'<line x1="45" y1="150" x2="225" y2="60" stroke="#ffffff" stroke-width="2" stroke-dasharray="7 5"/>'
+    +'<line x1="45" y1="150" x2="125" y2="150" stroke="#9adcff" stroke-width="2"/>'
+    +'<path d="M 82 150 A 37 37 0 0 0 74 126" fill="none" stroke="#9adcff" stroke-width="2.5"/>'
+    +'<text x="90" y="136" fill="#9adcff" font-size="14">仰角 '+ang+'°</text>'
+    +'<text x="200" y="118" fill="#ffd166" font-size="14">塔</text>'
+    +'</svg>';
+  }
+  return '<svg viewBox="0 0 300 190" width="280" height="177">'
+  +'<rect x="20" y="40" width="60" height="120" fill="rgba(255,255,255,.12)" stroke="#ffd166" stroke-width="3"/>'
+  +'<line x1="80" y1="160" x2="290" y2="160" stroke="#6fb7ff" stroke-width="4"/>'
+  +'<circle cx="50" cy="32" r="7" fill="#ff8fa3"/>'
+  +'<line x1="50" y1="32" x2="232" y2="150" stroke="#ffffff" stroke-width="2" stroke-dasharray="7 5"/>'
+  +'<line x1="50" y1="32" x2="125" y2="32" stroke="#9adcff" stroke-width="2"/>'
+  +'<path d="M 87 32 A 37 37 0 0 1 94 56" fill="none" stroke="#9adcff" stroke-width="2.5"/>'
+  +'<text x="98" y="54" fill="#9adcff" font-size="14">俯角 '+ang+'°</text>'
+  +'<path d="M 220 150 l 12 -9 l 12 9 l -7 6 l -10 0 z" fill="#ffd166"/>'
+  +'</svg>';
+}
+function hSine(){
+  var t=H1T[rand(H1T.length)];
+  var give=t.unk==="a"?("b = "+t.bT):("a = "+t.aT);
+  var ds=pickDis(t.v,SYMVAL,3);
+  var opts=shuffle([{t:t.t,v:t.v}].concat(ds));
+  return {key:"H1|"+t.A+"|"+t.B+"|"+t.unk+"|"+t.t,
+    text:"在 △ABC 中，∠A = "+t.A+"°，∠B = "+t.B+"°，"+give+"，求 "+t.unk+" = ?",
+    diagram:"",hint:"💡 正弦公式：a/sin A = b/sin B = c/sin C",
+    options:opts,answer:opts.findIndex(function(o){return Math.abs(o.v-t.v)<1e-9;}),
+    value:t.v,verify:{kind:"H1",A:t.A,B:t.B,a:t.aV||null,b:t.bV||null,unk:t.unk}};
+}
+function hSineB(){
+  var t=H1S[rand(H1S.length)];
+  var ds=pickDis(t.v,SINPOOL,3);
+  var opts=shuffle([{t:t.t,v:t.v}].concat(ds));
+  return {key:"H1s|"+t.A+"|"+t.aT+"|"+t.bT,
+    text:"在 △ABC 中，∠A = "+t.A+"°，a = "+t.aT+"，b = "+t.bT+"，求 sin B = ?",
+    diagram:"",hint:"💡 正弦公式：a/sin A = b/sin B，先求出 sin B",
+    options:opts,answer:opts.findIndex(function(o){return Math.abs(o.v-t.v)<1e-9;}),
+    value:t.v,verify:{kind:"H1s",A:t.A,a:t.aV,b:t.bV}};
+}
+function hCos(){
+  var t=H2T[rand(H2T.length)];
+  var ds=pickDis(t.v,SYMVAL,3);
+  var opts=shuffle([{t:t.t,v:t.v}].concat(ds));
+  return {key:"H2|"+t.a+"|"+t.b+"|"+t.C,
+    text:"在 △ABC 中，a = "+t.a+"，b = "+t.b+"，∠C = "+t.C+"°，求 c = ?",
+    diagram:"",hint:"💡 餘弦公式：c² = a² + b² − 2ab·cos C",
+    options:opts,answer:opts.findIndex(function(o){return Math.abs(o.v-t.v)<1e-9;}),
+    value:t.v,verify:{kind:"H2",a:t.a,b:t.b,C:t.C}};
+}
+function hCosA(){
+  var t=H2A[rand(H2A.length)];
+  var opts=shuffle(t.opts.map(function(p){return {t:p[0],v:p[1]};}));
+  return {key:"H2a|"+t.s.join("-"),
+    text:"在 △ABC 中，三邊長分別為 "+t.s.join("、")+"，求最大角 = ?",
+    diagram:"",hint:"💡 大邊對大角：最長邊所對嘅角就係最大角",
+    options:opts,answer:opts.findIndex(function(o){return Math.abs(o.v-t.v)<1e-9;}),
+    value:t.v,verify:{kind:"H2a",s1:t.s[0],s2:t.s[1],s3:t.s[2]}};
+}
+function hElev(){
+  var t=H3T[rand(H3T.length)];
+  var ds=pickDis(t.v,SYMVAL,3);
+  var opts=shuffle([{t:t.t,v:t.v}].concat(ds));
+  var text;
+  if(t.k==="elev"&&t.ask==="h")text="在地面上距離塔底 "+t.dT+" 的位置仰望塔頂，仰角為 "+t.ang+"°，求塔的高度。（答案以 m 為單位）";
+  else if(t.k==="elev")text="塔高 "+t.hT+"，在地面仰望塔頂的仰角為 "+t.ang+"°，求觀察點與塔底的水平距離。（答案以 m 為單位）";
+  else text="從高 "+t.hT+" 的懸崖頂俯望海面的浮標，俯角為 "+t.ang+"°，求浮標與崖底的水平距離。（答案以 m 為單位）";
+  return {key:"H3|"+t.k+"|"+t.ang+"|"+t.ask+"|"+t.t,
+    text:text,diagram:towerSVG(t.k,t.ang),
+    hint:"💡 "+(t.k==="elev"?"仰角":"俯角")+"：由水平線"+(t.k==="elev"?"向上":"向下")+"望；tan(角)＝高度/水平距離",
+    options:opts,answer:opts.findIndex(function(o){return Math.abs(o.v-t.v)<1e-9;}),
+    value:t.v,verify:{kind:"H3",ang:t.ang,ask:t.ask,d:t.d||null,h:t.h||null}};
+}
+function genHard(){
+  var r=rand(10);
+  if(r<=2)return hSine();
+  if(r===3)return hSineB();
+  if(r<=5)return hCos();
+  if(r===6)return hCosA();
+  return hElev();
+}
+function genQuestion(diff){
+  if(diff==="medium")return genMedium();
+  if(diff==="hard")return genHard();
+  return genEasy();
+}
+function genQuestions(diff){
+  var qs=[],last="",guard=0,q;
+  while(qs.length<15&&guard<500){guard++;q=genQuestion(diff);if(q.key===last)continue;last=q.key;qs.push(q);}
+  return qs;
+}
+
+/* ================= 遊戲狀態 ================= */
+var S={diff:"easy",sel:"easy",qs:[],i:0,score:0,hits:0,shots:0,answered:false,high:0,anim:{phase:"idle"}};
+var cv,ctx,W=360,H=250,DPR=1,tx=0,ty=0,TR=40,bx=0,by=0;
+function $(id){return document.getElementById(id);}
+var CONCEPT={
+ easy:"<b>💡 數學概念：特殊角三角比</b><br>SOHCAHTOA：sin θ＝對邊/斜邊，cos θ＝鄰邊/斜邊，tan θ＝對邊/鄰邊"
+  +"<table><tr><th></th><th>30°</th><th>45°</th><th>60°</th></tr>"
+  +"<tr><th>sin</th><td>1/2</td><td>√2/2</td><td>√3/2</td></tr>"
+  +"<tr><th>cos</th><td>√3/2</td><td>√2/2</td><td>1/2</td></tr>"
+  +"<tr><th>tan</th><td>√3/3</td><td>1</td><td>√3</td></tr></table>"
+  +"口訣：sin 值隨角度增大而增大（1/2 → √2/2 → √3/2）！",
+ medium:"<b>💡 數學概念：對邊 / 鄰邊 / 斜邊定位</b><br>先搵 θ 喺邊個角：<br>• <b>對邊</b>：θ 對面嗰條邊（唔掂 θ）<br>• <b>鄰邊</b>：夾住 θ 嘅直角邊<br>• <b>斜邊</b>：最長嗰條（對住直角）<br>例：3-4-5 三角形，對邊=3、鄰邊=4 → sin θ=3/5，cos θ=4/5，tan θ=3/4。",
+ hard:"<b>💡 數學概念：正弦公式・餘弦公式・仰角俯角</b><br>• 正弦公式：a/sin A = b/sin B = c/sin C<br>• 餘弦公式：c² = a² + b² − 2ab·cos C<br>• <b>仰角</b>：由水平線向上望嘅角（tan 仰角＝高度/水平距離）<br>• <b>俯角</b>：由水平線向下望嘅角"
+};
+
+/* ================= 音效（WebAudio） ================= */
+var AC=null;
+function ac(){try{
+  if(!AC){var C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C();}
+  if(AC.state==="suspended")AC.resume();return AC;
+}catch(e){return null;}}
+function tone(f0,f1,dur,type,vol,delay){
+  try{var c=ac();if(!c)return;var t0=c.currentTime+(delay||0);
+  var o=c.createOscillator(),g=c.createGain();
+  o.type=type;o.frequency.setValueAtTime(Math.max(f0,1),t0);
+  o.frequency.exponentialRampToValueAtTime(Math.max(f1,1),t0+dur);
+  g.gain.setValueAtTime(vol,t0);g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+  o.connect(g);g.connect(c.destination);o.start(t0);o.stop(t0+dur+0.05);}catch(e){}
+}
+function sndClick(){tone(520,660,0.07,"triangle",0.08);}
+function sndDraw(){tone(160,540,0.3,"triangle",0.10);}
+function sndHit(){tone(150,55,0.22,"sine",0.28);tone(880,880,0.12,"triangle",0.10,0.02);tone(1174,1174,0.16,"triangle",0.10,0.12);}
+function sndMiss(){tone(520,170,0.5,"sawtooth",0.07);}
+function sndWin(){var fs=[523,659,784,1046,1318],i;for(i=0;i<fs.length;i++)tone(fs[i],fs[i],0.22,"triangle",0.12,i*0.13);}
+
+/* ================= 靶場繪製 ================= */
+function sizeCanvas(){
+  DPR=Math.min(2,window.devicePixelRatio||1);
+  W=cv.clientWidth||360;H=250;
+  cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  tx=W*0.80;ty=H*0.50;TR=Math.min(W,H)*0.21;bx=W*0.13;by=H*0.66;
+  drawScene(1);
+}
+function drawArrow(x,y,ang){
+  ctx.save();ctx.translate(x,y);ctx.rotate(ang);
+  ctx.strokeStyle="#5b3a1e";ctx.lineWidth=4;ctx.lineCap="round";
+  ctx.beginPath();ctx.moveTo(-24,0);ctx.lineTo(16,0);ctx.stroke();
+  ctx.fillStyle="#3d3d3d";
+  ctx.beginPath();ctx.moveTo(27,0);ctx.lineTo(12,-6);ctx.lineTo(12,6);ctx.closePath();ctx.fill();
+  ctx.fillStyle="#e63946";
+  ctx.beginPath();ctx.moveTo(-24,0);ctx.lineTo(-14,-7);ctx.lineTo(-14,-1);ctx.closePath();ctx.fill();
+  ctx.fillStyle="#f8f9fa";
+  ctx.beginPath();ctx.moveTo(-24,0);ctx.lineTo(-14,7);ctx.lineTo(-14,1);ctx.closePath();ctx.fill();
+  ctx.restore();
+}
+function arrowPos(a,u){
+  var p0=a.p0,p1=a.p1,c=a.ctrl;
+  var x=(1-u)*(1-u)*p0.x+2*(1-u)*u*c.x+u*u*p1.x;
+  var y=(1-u)*(1-u)*p0.y+2*(1-u)*u*c.y+u*u*p1.y;
+  var dx=2*(1-u)*(c.x-p0.x)+2*u*(p1.x-c.x);
+  var dy=2*(1-u)*(c.y-p0.y)+2*u*(p1.y-c.y);
+  return {x:x,y:y,ang:Math.atan2(dy,dx)};
+}
+function drawScene(u){
+  var a=S.anim,now=performance.now(),i,g;
+  g=ctx.createLinearGradient(0,0,0,H*0.74);
+  g.addColorStop(0,"#2e2560");g.addColorStop(0.45,"#8f3f74");g.addColorStop(0.75,"#ef6f53");g.addColorStop(1,"#ffc46b");
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H*0.74);
+  var sx=W*0.60,sy=H*0.62;
+  var sg=ctx.createRadialGradient(sx,sy,4,sx,sy,60);
+  sg.addColorStop(0,"rgba(255,240,190,.95)");sg.addColorStop(0.35,"rgba(255,200,120,.55)");sg.addColorStop(1,"rgba(255,200,120,0)");
+  ctx.fillStyle=sg;ctx.beginPath();ctx.arc(sx,sy,60,0,7);ctx.fill();
+  ctx.fillStyle="#fff2c0";ctx.beginPath();ctx.arc(sx,sy,20,0,7);ctx.fill();
+  ctx.fillStyle="rgba(255,255,255,.22)";
+  var cls=[[0.2,0.2,34],[0.45,0.32,26],[0.78,0.18,30]];
+  for(i=0;i<cls.length;i++){ctx.beginPath();ctx.ellipse(W*cls[i][0],H*cls[i][1],cls[i][2],cls[i][2]*0.42,0,0,7);ctx.fill();}
+  g=ctx.createLinearGradient(0,H*0.70,0,H);
+  g.addColorStop(0,"#93d452");g.addColorStop(1,"#3f8a3c");
+  ctx.fillStyle=g;ctx.fillRect(0,H*0.70,W,H*0.30);
+  ctx.strokeStyle="rgba(46,110,44,.8)";ctx.lineWidth=2;
+  for(i=0;i<14;i++){var gx=(i*53+17)%W,gy=H*0.72+((i*29)%(H*0.24));
+    ctx.beginPath();ctx.moveTo(gx,gy);ctx.lineTo(gx+3,gy-9);ctx.moveTo(gx+5,gy);ctx.lineTo(gx+8,gy-8);ctx.stroke();}
+  ctx.strokeStyle="#6b4226";ctx.lineWidth=7;ctx.lineCap="round";
+  ctx.beginPath();
+  ctx.moveTo(tx-TR*0.7,ty+TR*0.75);ctx.lineTo(tx-TR*1.05,H*0.97);
+  ctx.moveTo(tx+TR*0.7,ty+TR*0.75);ctx.lineTo(tx+TR*1.05,H*0.97);
+  ctx.stroke();
+  var ox=0;
+  if(a.phase==="hit"){var ht=(now-a.t0)/1000;ox=11*Math.exp(-2.6*ht)*Math.sin(24*ht);}
+  var rings=[["#e63946",1],["#f8f9fa",0.8],["#e63946",0.6],["#f8f9fa",0.42],["#ffd166",0.24]];
+  for(i=0;i<rings.length;i++){ctx.fillStyle=rings[i][0];ctx.beginPath();ctx.arc(tx+ox,ty,TR*rings[i][1],0,7);ctx.fill();}
+  ctx.fillStyle="#e63946";ctx.beginPath();ctx.arc(tx+ox,ty,TR*0.09,0,7);ctx.fill();
+  ctx.strokeStyle="rgba(0,0,0,.25)";ctx.lineWidth=2;ctx.beginPath();ctx.arc(tx+ox,ty,TR,0,7);ctx.stroke();
+  ctx.strokeStyle="#7a4a21";ctx.lineWidth=6;ctx.lineCap="round";
+  ctx.beginPath();ctx.moveTo(bx-4,by-44);ctx.quadraticCurveTo(bx-34,by,bx-4,by+44);ctx.stroke();
+  ctx.strokeStyle="rgba(255,255,255,.85)";ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(bx-4,by-44);ctx.lineTo(bx-4,by+44);ctx.stroke();
+  if(a.phase==="idle"){drawArrow(bx-4,by,0);}
+  else{var p=arrowPos(a,u||1);drawArrow(p.x,p.y,p.ang);}
+  if(a.phase==="hit"||a.phase==="miss"){
+    var rt=(now-a.t0)/1000,rise=Math.min(1,rt/0.9);
+    ctx.font="bold 22px sans-serif";ctx.textAlign="center";
+    if(a.phase==="hit"){ctx.fillStyle="#fff200";ctx.fillText("＋100 命中！🎯",tx,ty-TR-14-rise*34);}
+    else{ctx.fillStyle="#ffffff";ctx.fillText("💨 脫靶…",W*0.5,H*0.3-rise*20);}
+  }
+}
+
+/* ================= 遊戲流程 ================= */
+function updateHUD(){
+  $("hScore").textContent=S.score;
+  $("hRound").textContent=Math.floor(S.i/3)+1;
+  $("hArrows").textContent="➹".repeat(3-(S.i%3));
+  $("hAcc").textContent=S.shots?Math.round(S.hits/S.shots*100)+"%":"–";
+  $("hHigh").textContent=S.high;
+}
+function selectDiff(d){
+  S.sel=d;
+  var btns=document.querySelectorAll("#ovStart .diff"),i;
+  for(i=0;i<btns.length;i++)btns[i].classList.toggle("sel",btns[i].getAttribute("data-d")===d);
+  $("concept").innerHTML=CONCEPT[d];
+}
+function startGame(d){
+  S.diff=d;S.qs=genQuestions(d);S.i=0;S.score=0;S.hits=0;S.shots=0;
+  $("ovStart").classList.add("hidden");$("ovEnd").classList.add("hidden");
+  renderQ();
+}
+function renderQ(){
+  S.answered=false;S.anim={phase:"idle"};
+  var q=S.qs[S.i];
+  $("qtext").innerHTML=(q.diagram||"")+"<div>"+q.text+"</div>";
+  $("qhint").innerHTML=q.hint||"";
+  var box=$("options");box.innerHTML="";
+  q.options.forEach(function(o,idx){
+    var b=document.createElement("button");
+    b.className="opt";b.type="button";b.textContent=o.t;
+    b.addEventListener("pointerdown",function(e){e.preventDefault();onPick(idx,b);});
+    box.appendChild(b);
+  });
+  updateHUD();drawScene(1);
+}
+function onPick(idx,btn){
+  if(S.answered)return;
+  S.answered=true;
+  var q=S.qs[S.i],good=(idx===q.answer);
+  var btns=$("options").querySelectorAll("button"),i;
+  for(i=0;i<btns.length;i++)btns[i].disabled=true;
+  btn.classList.add(good?"correct":"wrong");
+  if(!good)btns[q.answer].classList.add("correct");
+  sndDraw();
+  var p0={x:bx+42,y:by},p1,mt;
+  if(good){p1={x:tx,y:ty};}
+  else{mt=rand(3);
+    if(mt===0)p1={x:W+70,y:ty-170};
+    else if(mt===1)p1={x:tx-40,y:H*0.96};
+    else p1={x:W+70,y:ty+50};}
+  var ctrl={x:(p0.x+p1.x)/2,y:Math.min(p0.y,p1.y)-46};
+  S.anim={phase:"fly",t0:performance.now(),dur:620,p0:p0,p1:p1,ctrl:ctrl,good:good};
+  requestAnimationFrame(flyLoop);
+}
+function flyLoop(now){
+  var a=S.anim;
+  var u=Math.min(1,(now-a.t0)/a.dur);
+  drawScene(u);
+  if(u<1)requestAnimationFrame(flyLoop);
+  else resolveShot();
+}
+function resolveShot(){
+  var a=S.anim;
+  if(a.good){S.score+=100;S.hits++;S.shots++;sndHit();}
+  else{S.shots++;sndMiss();}
+  a.phase=a.good?"hit":"miss";a.t0=performance.now();a.u=1;
+  updateHUD();drawScene(1);
+  setTimeout(advance,a.good?1400:1200);
+}
+function advance(){
+  if(S.i>=14)endGame();
+  else{S.i++;renderQ();}
+}
+function endGame(){
+  var title;
+  if(S.hits===15)title="🏆 神射手";
+  else if(S.hits>=12)title="🥈 精準射手";
+  else if(S.hits>=8)title="🥉 穩定射手";
+  else if(S.hits>=4)title="🎯 新手上路";
+  else title="💪 繼續努力";
+  var rec=S.score>S.high;
+  if(rec){S.high=S.score;try{localStorage.setItem("trigarcher_high",String(S.high));}catch(e){}}
+  $("stHit").textContent=S.hits+"/15";
+  $("stScore").textContent=S.score;
+  $("stAcc").textContent=Math.round(S.hits/15*100)+"%";
+  $("stHigh").textContent=S.high;
+  $("endTitle").textContent=title;
+  $("newRec").style.display=rec?"block":"none";
+  updateHUD();
+  $("ovEnd").classList.remove("hidden");
+  if(S.hits===15)sndWin();
+  else{tone(392,392,0.15,"triangle",0.10);tone(523,523,0.22,"triangle",0.10,0.15);}
+}
+function init(){
+  cv=$("scene");ctx=cv.getContext("2d");
+  sizeCanvas();
+  window.addEventListener("resize",sizeCanvas);
+  try{S.high=parseInt(localStorage.getItem("trigarcher_high")||"0",10)||0;}catch(e){S.high=0;}
+  $("hHigh").textContent=S.high;
+  var btns=document.querySelectorAll("#ovStart .diff"),i;
+  for(i=0;i<btns.length;i++){
+    (function(b){b.addEventListener("pointerdown",function(e){e.preventDefault();selectDiff(b.getAttribute("data-d"));sndClick();});})(btns[i]);
+  }
+  $("btnStart").addEventListener("pointerdown",function(e){e.preventDefault();sndClick();startGame(S.sel);});
+  $("btnAgain").addEventListener("pointerdown",function(e){e.preventDefault();sndClick();startGame(S.diff);});
+  $("btnChange").addEventListener("pointerdown",function(e){e.preventDefault();sndClick();$("ovEnd").classList.add("hidden");$("ovStart").classList.remove("hidden");});
+  selectDiff("easy");
+  drawScene(1);
+}
+if(typeof process==="undefined"||!process.versions||!process.versions.node){init();}
+</script>
+</body>
+</html>

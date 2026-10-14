@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>幸運大轉盤 · 概率</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang HK","Microsoft JhengHei","Noto Sans HK",sans-serif;
+  font-size:16px;color:#fff;min-height:100vh;
+  background:linear-gradient(180deg,#3a1c71 0%,#7b2d8b 40%,#d76d77 75%,#ffaf7b 100%);
+  background-attachment:fixed;
+  touch-action:manipulation;user-select:none;-webkit-user-select:none;
+  overflow-x:hidden;
+}
+header{text-align:center;padding:14px 10px 8px;position:relative}
+header h1{
+  margin:0;font-size:26px;letter-spacing:2px;font-weight:900;
+  background:linear-gradient(90deg,#ffe259,#ff9d5c,#ff6b9d,#ffe259);
+  background-size:300% 100%;
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  animation:shimmer 5s linear infinite;
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,.45));
+}
+@keyframes shimmer{to{background-position:300% 0}}
+header p{margin:4px 0 0;font-size:13px;color:#ffe9c9;opacity:.9;letter-spacing:4px}
+.back{
+  display:block;text-align:center;color:#fff;text-decoration:none;
+  padding:12px;font-size:16px;font-weight:700;
+  background:rgba(255,255,255,.12);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border-top:1px solid rgba(255,255,255,.25);border-bottom:1px solid rgba(255,255,255,.25);
+}
+.back:active{background:rgba(255,255,255,.25)}
+.wrap{max-width:600px;margin:0 auto;padding:10px 10px 26px}
+.hud{
+  display:flex;flex-wrap:wrap;gap:6px;justify-content:space-between;align-items:center;
+  background:rgba(255,255,255,.14);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,.3);border-radius:16px;
+  padding:8px 12px;margin-bottom:10px;font-size:15px;font-weight:700;
+  box-shadow:0 4px 18px rgba(0,0,0,.25);
+}
+.hud .score{color:#ffe259}.hud .best{color:#ffd6a5;font-size:13px}
+.stage{
+  background:rgba(20,8,40,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:16px 14px;
+  box-shadow:0 10px 34px rgba(0,0,0,.4);text-align:center;position:relative;overflow:hidden;
+}
+.lights{font-size:18px;letter-spacing:6px;margin-bottom:6px;animation:blink 1.2s steps(2) infinite}
+@keyframes blink{50%{opacity:.35}}
+.round{font-size:14px;font-weight:800;color:#ffd6a5;letter-spacing:2px;margin-bottom:8px}
+.q{font-size:17px;font-weight:700;line-height:1.8;margin:6px 0 14px;color:#fff8e7;min-height:60px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px}
+.opt{
+  min-height:62px;font-size:22px;font-weight:900;font-family:inherit;color:#fff;
+  border:none;border-radius:14px;cursor:pointer;
+  background:linear-gradient(160deg,rgba(255,255,255,.28),rgba(255,255,255,.08));
+  border:1px solid rgba(255,255,255,.4);
+  box-shadow:0 4px 12px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.4);
+  transition:transform .08s;
+}
+.opt:active{transform:scale(.95)}
+.opt.right{background:linear-gradient(160deg,#27ae60,#1e8449)}
+.opt.wrong{background:linear-gradient(160deg,#c0392b,#922b21)}
+.feedback{font-size:14.5px;line-height:1.7;margin-top:10px;min-height:24px;color:#ffeeb0}
+canvas#wheel{
+  width:min(78vw,300px);height:min(78vw,300px);
+  margin:6px auto;display:block;
+  filter:drop-shadow(0 8px 24px rgba(0,0,0,.5));
+}
+.spinbtn{
+  min-width:200px;min-height:60px;font-size:20px;font-weight:900;font-family:inherit;color:#4a2500;
+  background:linear-gradient(160deg,#ffe259,#ffa751);border:none;border-radius:30px;
+  margin:8px auto;cursor:pointer;letter-spacing:2px;display:block;
+  box-shadow:0 6px 20px rgba(255,180,60,.55),inset 0 1px 0 rgba(255,255,255,.6);
+  transition:transform .1s;
+}
+.spinbtn:active{transform:scale(.95)}
+.spinbtn:disabled{opacity:.45}
+.prize{
+  font-size:26px;font-weight:900;color:#ffe259;margin:8px 0;min-height:36px;
+  text-shadow:0 2px 10px rgba(255,200,60,.6);
+}
+.overlay{
+  position:fixed;inset:0;background:rgba(20,8,40,.78);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  display:flex;align-items:center;justify-content:center;z-index:50;padding:14px;
+  animation:fadeIn .25s ease;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.card{
+  background:linear-gradient(165deg,rgba(58,28,113,.96),rgba(120,60,120,.96));
+  border:1px solid rgba(255,255,255,.35);border-radius:22px;
+  padding:20px;max-width:480px;width:100%;text-align:center;
+  max-height:92vh;overflow-y:auto;
+  box-shadow:0 12px 44px rgba(0,0,0,.5);
+  animation:pop .3s cubic-bezier(.2,1.4,.4,1);
+}
+@keyframes pop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.card h2{margin:0 0 8px;font-size:24px}
+.card p{font-size:15px;line-height:1.75;color:#f5e9ff;margin:8px 0}
+.diffrow{display:flex;gap:8px;margin:12px 0}
+.diff{
+  flex:1;border:2px solid rgba(255,255,255,.3);border-radius:14px;padding:10px 4px;
+  background:rgba(255,255,255,.08);cursor:pointer;color:#fff;font-family:inherit;
+  font-size:14px;line-height:1.5;transition:all .15s;min-height:92px;
+}
+.diff .ic{font-size:26px;display:block}
+.diff b{font-size:16px}
+.diff.sel{
+  border-color:#ffe259;background:rgba(255,225,89,.18);
+  box-shadow:0 0 16px rgba(255,225,89,.45);transform:translateY(-2px);
+}
+.concept{
+  background:rgba(255,225,89,.12);border:2px dashed #ffe259;border-radius:12px;
+  padding:10px 12px;margin:12px 0;font-size:14px;color:#ffeeb0;text-align:left;line-height:1.7;
+}
+.bigbtn{
+  width:100%;min-height:60px;font-size:20px;font-weight:900;font-family:inherit;color:#4a2500;
+  background:linear-gradient(160deg,#ffe259,#ffa751);border:none;border-radius:16px;
+  margin-top:10px;cursor:pointer;letter-spacing:2px;
+  box-shadow:0 6px 20px rgba(255,180,60,.5),inset 0 1px 0 rgba(255,255,255,.6);
+  transition:transform .1s;
+}
+.bigbtn:active{transform:scale(.96)}
+.ghostbtn{
+  width:100%;min-height:48px;font-size:16px;font-weight:700;font-family:inherit;color:#fff;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.4);border-radius:14px;
+  margin-top:8px;cursor:pointer;
+}
+.ghostbtn:active{background:rgba(255,255,255,.25)}
+.hide{display:none!important}
+.stat{font-size:18px;margin:6px 0}
+.stat b{color:#ffe259}
+</style>
+</head>
+<body>
+<header>
+  <h1>🎰 幸運大轉盤</h1>
+  <p>概率嘉年華</p>
+</header>
+<a class="back" href="games.html">← 返回遊戲列表</a>
+
+<div class="wrap">
+  <div class="hud">
+    <div>🎪 第 <span id="round">–</span>/6 輪</div>
+    <div>❤️ <span id="lives">3</span></div>
+    <div>⭐ <span class="score" id="score">0</span></div>
+    <div class="best">🏆 <span id="best">0</span></div>
+  </div>
+  <div class="stage">
+    <div class="lights">✨🎪✨🎪✨🎪✨</div>
+    <div class="round" id="phase">準備開檔…</div>
+    <div class="q" id="qq">…</div>
+    <div class="opts" id="opts"></div>
+    <div class="feedback" id="feedback"></div>
+    <canvas id="wheel" width="600" height="600"></canvas>
+    <div class="prize" id="prize"></div>
+    <button class="spinbtn hide" id="spinBtn">🎡 轉！</button>
+  </div>
+</div>
+
+<div class="overlay" id="intro"><div class="card">
+  <h2>🎰 幸運大轉盤</h2>
+  <p><b>玩法：</b>每輪先答一條<b style="color:#ffe259">概率題</b>，答啱先有得<b>轉大轉盤</b>贏獎分！<br>
+  答錯冇得轉，仲扣 1 條命 ❤️（得 3 條命）<br>
+  一共 <b>6 輪</b>，睇下你贏到幾多分！</p>
+  <p style="font-size:16px;font-weight:800;color:#ffe259">揀一個難度開始：</p>
+  <div class="diffrow">
+    <button class="diff sel" data-d="easy"><span class="ic">🌱</span><b>初階</b><br>中一至中二<br>擲骰·擲幣·抽波</button>
+    <button class="diff" data-d="mid"><span class="ic">🌿</span><b>中階</b><br>中三至中四<br>相加·相乘法則</button>
+    <button class="diff" data-d="hard"><span class="ic">🌳</span><b>高階</b><br>中五至中六<br>條件概率·期望值</button>
+  </div>
+  <div class="concept">💡 <b>數學概念：</b><span id="conceptTxt"></span></div>
+  <button class="bigbtn" id="startBtn">▶ 開檔啦</button>
+</div></div>
+
+<div class="overlay hide" id="endOverlay"><div class="card">
+  <h2 id="endTitle"></h2>
+  <p class="stat" id="endText"></p>
+  <p class="stat">🏆 最高分：<b id="endBest"></b></p>
+  <button class="bigbtn" id="againBtn">🔁 再玩一次</button>
+  <button class="ghostbtn" id="changeDiffBtn">🎚️ 換難度</button>
+</div></div>
+
+<script>
+(function(){
+"use strict";
+/* ---------- 狀態（全部開頭初始化） ---------- */
+var diff='easy',best=0,score=0,lives=3,round=0,started=false,over=false,locked=true;
+var cur=null,prizeIdx=0,spinning=false,wheelAngle=0,spinRAF=0;
+var PRIZES=[50,100,150,200,250,500];
+var SEGC=['#ff6b9d','#ffa751','#ffe259','#7bed9f','#70a1ff','#c39bff'];
+function bestKey(){return 'pb_high_'+diff;}
+function loadBest(){try{best=parseInt(localStorage.getItem(bestKey())||'0',10)||0;}catch(e){best=0;}}
+function saveBest(){if(score>best){best=score;try{localStorage.setItem(bestKey(),String(best));}catch(e){}}}
+
+/* ---------- 音效 ---------- */
+function beep(f,d,type){try{
+  var ac=beep.ac||(beep.ac=new (window.AudioContext||window.webkitAudioContext)());
+  if(ac.state==='suspended')ac.resume();
+  var o=ac.createOscillator(),g=ac.createGain();
+  o.type=type||'sine';o.frequency.value=f;
+  g.gain.setValueAtTime(0.10,ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+d);
+  o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d);
+}catch(e){}}
+function sndGood(){beep(660,0.12);setTimeout(function(){beep(880,0.18);},110);}
+function sndBad(){beep(200,0.25,'sawtooth');}
+function sndWin(){var n=[523,659,784,1047];n.forEach(function(f,i){setTimeout(function(){beep(f,0.15);},i*120);});}
+
+/* ---------- 分數工具 ---------- */
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);return b?gcd(b,a%b):a;}
+function red(n,d){if(d<0){n=-n;d=-d;}var g=gcd(n,d)||1;return {n:n/g,d:d/g};}
+function fstr(f){return f.d===1?String(f.n):f.n+'/'+f.d;}
+function feq(a,b){return a.n*b.d===b.n*a.d;}
+function fOpts(ans,cands){
+  var vals=[red(ans.n,ans.d)],seen={};seen[vals[0].n+'/'+vals[0].d]=1;
+  cands=shuffle(cands.slice());
+  for(var i=0;i<cands.length&&vals.length<4;i++){
+    var c=red(cands[i].n,cands[i].d),k=c.n+'/'+c.d;
+    if(!seen[k]){seen[k]=1;vals.push(c);}
+  }
+  var d=1;
+  while(vals.length<4&&d<60){var c2=red(ans.n+d,ans.d);d++;var k2=c2.n+'/'+c2.d;if(!seen[k2]){seen[k2]=1;vals.push(c2);}}
+  vals=shuffle(vals);
+  var idx=0;for(var j=0;j<vals.length;j++)if(feq(vals[j],ans))idx=j;
+  return {opts:vals.map(fstr),idx:idx};
+}
+
+var DIFFS={
+  easy:{concept:'概率 = 想要嘅結果數 ÷ 所有可能結果數。公平情況下，每個結果機會均等。例如擲骰有 6 個可能結果，擲到「6」得 1 個啱心水，所以概率 = 1/6。'},
+  mid:{concept:'「或」用加法：互斥事件 P(A或B) = P(A) + P(B)。「和」用乘法：獨立事件 P(A和B) = P(A) × P(B)。兩次試驗可以畫樹形圖，逐枝數。'},
+  hard:{concept:'條件概率：已知部分資訊後，樣本空間縮細咗，概率要重新計。期望值 = Σ(結果 × 概率)，幫你判斷個遊戲長遠抵唔抵玩。'}
+};
+
+/* ---------- 出題 ---------- */
+function mkQ(txt,ans,cands,explain){var o=fOpts(ans,cands);return {txt:txt,opts:o.opts,idx:o.idx,explain:explain};}
+function genEasy(){
+  var p=Math.random(),r,b,t;
+  if(p<0.3){
+    var sets=[
+      {t:'擲一粒公平骰子，擲到「6」嘅概率係？',a:red(1,6),c:[red(1,2),red(1,3),red(5,6)],e:'6 個可能結果，得 1 個係 6：1/6'},
+      {t:'擲一粒公平骰子，擲到雙數（2、4、6）嘅概率係？',a:red(1,2),c:[red(1,6),red(1,3),red(2,3)],e:'雙數有 3 個：3/6 = 1/2'},
+      {t:'擲一粒公平骰子，擲到大過 4 嘅概率係？',a:red(1,3),c:[red(1,2),red(1,6),red(2,3)],e:'大過 4 得 5、6，共 2 個：2/6 = 1/3'},
+      {t:'擲一粒公平骰子，擲到質數（2、3、5）嘅概率係？',a:red(1,2),c:[red(1,3),red(1,6),red(2,5)],e:'質數有 3 個：3/6 = 1/2'}
+    ];
+    var s=sets[rnd(0,sets.length-1)];
+    return mkQ(s.t,s.a,s.c,'💡 '+s.e);
+  }else if(p<0.55){
+    return mkQ('擲一個公平硬幣，擲到「公」嘅概率係？',red(1,2),[red(1,3),red(1,4),red(2,3)],'💡 硬幣得公、字兩面：1/2');
+  }else if(p<0.8){
+    r=rnd(2,5);b=rnd(2,5);t=r+b;
+    var askRed=Math.random()<0.5;
+    var a=askRed?red(r,t):red(b,t);
+    var col=askRed?'紅':'藍',n=askRed?r:b,other=askRed?b:r;
+    return mkQ('袋入面有 '+r+' 個紅波、'+b+' 個藍波，隨機抽一個，抽中'+col+'波嘅概率係？',
+      a,[red(other,t),red(n,other),red(1,t)],
+      '💡 '+n+' 個'+col+'波 ÷ 共 '+t+' 個 = '+fstr(a));
+  }
+  var n8=rnd(2,4);
+  return mkQ('轉盤平均分成 8 格，其中 '+n8+' 格係紅色，隨機轉一次，指針停喺紅色嘅概率係？',
+    red(n8,8),[red(1,8),red(n8,7),red(8,n8)],'💡 '+n8+' 格紅 ÷ 8 格 = '+fstr(red(n8,8)));
+}
+function genMid(){
+  var p=Math.random();
+  if(p<0.22){
+    return mkQ('連擲兩個公平硬幣，兩個都係「公」嘅概率係？',red(1,4),[red(1,2),red(1,3),red(3,4)],
+      '💡 獨立事件用乘法：1/2 × 1/2 = 1/4（樹形圖：公公、公字、字公、字字）');
+  }else if(p<0.4){
+    return mkQ('連擲兩個公平硬幣，至少一個係「公」嘅概率係？',red(3,4),[red(1,2),red(1,4),red(2,3)],
+      '💡 公公、公字、字公都得，得字字唔得：3/4');
+  }else if(p<0.58){
+    return mkQ('擲兩粒公平骰子，點數之和係 7 嘅概率係？',red(1,6),[red(1,12),red(1,36),red(7,36)],
+      '💡 和係 7 有 (1,6)(2,5)(3,4)(4,3)(5,2)(6,1) 共 6 種：6/36 = 1/6');
+  }else if(p<0.76){
+    return mkQ('擲兩粒公平骰子，兩粒點數一樣嘅概率係？',red(1,6),[red(1,12),red(1,36),red(1,3)],
+      '💡 一樣有 (1,1)…(6,6) 共 6 種：6/36 = 1/6');
+  }else if(p<0.88){
+    return mkQ('袋有 3 個紅波、2 個藍波，抽完放回再抽一次，兩次都抽到紅波嘅概率係？',
+      red(9,25),[red(6,25),red(3,5),red(6,10)],'💡 放回即獨立：3/5 × 3/5 = 9/25');
+  }
+  return mkQ('擲一粒公平骰子，擲到「1 或 6」嘅概率係？',red(1,3),[red(1,6),red(1,36),red(1,12)],
+    '💡 互斥事件用加法：1/6 + 1/6 = 2/6 = 1/3（唔係相乘！）');
+}
+function genHard(){
+  var p=Math.random(),r,b,t,a;
+  if(p<0.3){
+    r=rnd(3,5);b=rnd(2,4);t=r+b;
+    a=red(r-1,t-1);
+    return mkQ('袋有 '+r+' 個紅波、'+b+' 個藍波，抽走咗一個紅波（唔放回），而家再抽一個，抽到紅波嘅概率係？',
+      a,[red(r,t),red(r-1,t),red(1,t-1)],'💡 抽走後剩 '+(r-1)+' 紅、共 '+(t-1)+' 個：'+fstr(a)+'（樣本空間縮細咗！）');
+  }else if(p<0.55){
+    r=rnd(3,5);b=rnd(2,4);t=r+b;
+    a=red(r*(r-1),t*(t-1));
+    return mkQ('袋有 '+r+' 個紅波、'+b+' 個藍波，唔放回連抽兩次，兩次都係紅波嘅概率係？',
+      a,[red(r*r,t*t),red(r,t),red(2*r,2*t)],'💡 第二次分母分子都要減 1：'+r+'/'+t+' × '+(r-1)+'/'+(t-1)+' = '+fstr(a));
+  }else if(p<0.8){
+    var X=[12,18,24,30][rnd(0,3)],Y=rnd(1,4),E=X/6-Y;
+    if(E<1){Y=1;E=X/6-1;}
+    var cands=[{n:X-Y,d:1},{n:E+1,d:1}];
+    if(E-1>=0)cands.push({n:E-1,d:1});else cands.push({n:E+2,d:1});
+    return mkQ('遊戲規則：擲到「6」贏 $'+X+'，每局收費 $'+Y+'。玩一局嘅期望利潤係幾多？',
+      {n:E,d:1},cands,'💡 期望值 = 贏嘅錢 × 概率 − 成本 = '+X+' × 1/6 − '+Y+' = $'+E+(E>0?'（長遠會贏，抵玩！）':'（長遠會輸！）'));
+  }
+  r=rnd(3,4);b=rnd(3,4);t=r+b;
+  a=red(b-1,t-1);
+  return mkQ('袋有 '+r+' 個紅波、'+b+' 個藍波，已知抽到嘅唔係紅波，再抽一個（唔放回），抽到藍波嘅概率係？',
+    a,[red(b,t),red(b,t-1),red(1,2)],'💡 已知唔係紅波，即抽走咗個藍波：剩 '+(b-1)+' 藍、共 '+(t-1)+' 個 = '+fstr(a));
+}
+function genQuestion(){return diff==='easy'?genEasy():(diff==='mid'?genMid():genHard());}
+
+/* ---------- 轉盤 ---------- */
+var cv=document.getElementById('wheel'),ctx=cv.getContext('2d');
+function drawWheel(){
+  var W=600,C=300,R=290,seg=Math.PI*2/PRIZES.length;
+  ctx.clearRect(0,0,W,W);
+  ctx.save();ctx.translate(C,C);ctx.rotate(wheelAngle);
+  for(var i=0;i<PRIZES.length;i++){
+    ctx.beginPath();ctx.moveTo(0,0);
+    ctx.arc(0,0,R,i*seg,(i+1)*seg);ctx.closePath();
+    ctx.fillStyle=SEGC[i];ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=6;ctx.stroke();
+    ctx.save();ctx.rotate(i*seg+seg/2);
+    ctx.fillStyle='#fff';ctx.font='900 44px sans-serif';ctx.textAlign='right';ctx.textBaseline='middle';
+    ctx.shadowColor='rgba(0,0,0,.4)';ctx.shadowBlur=8;
+    ctx.fillText('+'+PRIZES[i],R-28,0);
+    ctx.restore();
+  }
+  ctx.restore();
+  /* 外圈鉚釘 */
+  for(var k=0;k<12;k++){
+    var a=k/12*Math.PI*2;
+    ctx.fillStyle='#ffe259';
+    ctx.beginPath();ctx.arc(C+Math.cos(a)*(R+6),C+Math.sin(a)*(R+6),10,0,6.2832);ctx.fill();
+  }
+  /* 指針 */
+  ctx.fillStyle='#c0392b';
+  ctx.beginPath();ctx.moveTo(C-22,8);ctx.lineTo(C+22,8);ctx.lineTo(C,64);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='#fff';ctx.lineWidth=4;ctx.stroke();
+  /* 中心 */
+  var g=ctx.createRadialGradient(C,C,10,C,C,64);
+  g.addColorStop(0,'#ffe259');g.addColorStop(1,'#c98a00');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(C,C,58,0,6.2832);ctx.fill();
+  ctx.fillStyle='#5a3c00';ctx.font='900 40px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('轉',C,C);
+}
+function spinTo(idx,done){
+  spinning=true;
+  var seg=Math.PI*2/PRIZES.length;
+  var want=-Math.PI/2-(idx*seg+seg/2);
+  var curA=wheelAngle%(Math.PI*2);
+  var delta=(want-curA)%(Math.PI*2);if(delta<0)delta+=Math.PI*2;
+  var from=wheelAngle,to=wheelAngle+Math.PI*2*5+delta,t0=null;
+  function fr(ts){
+    if(t0===null)t0=ts;
+    var p=Math.min(1,(ts-t0)/2800);
+    var e=1-Math.pow(1-p,3);
+    wheelAngle=from+(to-from)*e;
+    drawWheel();
+    if(p<1){spinRAF=requestAnimationFrame(fr);}
+    else{spinning=false;done();}
+  }
+  spinRAF=requestAnimationFrame(fr);
+}
+
+/* ---------- 遊戲流程 ---------- */
+function updHud(){
+  document.getElementById('round').textContent=started?String(Math.min(round,6)):'–';
+  document.getElementById('lives').textContent=lives;
+  document.getElementById('score').textContent=score;
+  document.getElementById('best').textContent=best;
+}
+function nextRound(){
+  if(round>=6){endGame(true);return;}
+  if(lives<=0){endGame(false);return;}
+  round++;locked=false;
+  cur=genQuestion();
+  document.getElementById('phase').textContent='🎪 第 '+round+' 輪 · 先答題，贏轉盤機會！';
+  document.getElementById('qq').textContent=cur.txt;
+  document.getElementById('prize').textContent='';
+  var box=document.getElementById('opts');box.innerHTML='';
+  cur.opts.forEach(function(label,i){
+    var b=document.createElement('button');b.className='opt';b.textContent=label;
+    b.addEventListener('pointerdown',function(e){e.preventDefault();answer(i,b);});
+    box.appendChild(b);
+  });
+  document.getElementById('feedback').textContent='';
+  document.getElementById('spinBtn').classList.add('hide');
+  updHud();
+}
+function answer(i,btn){
+  if(locked||over||!started||spinning)return;
+  locked=true;
+  var btns=document.getElementById('opts').children;
+  btns[cur.idx].classList.add('right');
+  if(i===cur.idx){
+    score+=20;saveBest();sndGood();
+    document.getElementById('feedback').innerHTML='✅ 答啱！+20 分，撳轉盤啦！<br>💡 '+cur.explain;
+    document.getElementById('phase').textContent='🎡 好運來啦！';
+    document.getElementById('spinBtn').classList.remove('hide');
+    document.getElementById('spinBtn').disabled=false;
+  }else{
+    lives--;btn.classList.add('wrong');sndBad();
+    document.getElementById('feedback').innerHTML='❌ 答錯咗…正確答案係 <b>'+cur.opts[cur.idx]+'</b><br>💡 '+cur.explain+'<br>呢輪冇得轉 🥲';
+    setTimeout(function(){if(!over)nextRound();},2200);
+  }
+  updHud();
+}
+document.getElementById('spinBtn').addEventListener('click',function(){
+  if(spinning||!started||over)return;
+  var btn=document.getElementById('spinBtn');btn.disabled=true;
+  prizeIdx=rnd(0,PRIZES.length-1);
+  document.getElementById('phase').textContent='🎡 轉緊…';
+  beep(440,0.1);
+  spinTo(prizeIdx,function(){
+    var p=PRIZES[prizeIdx];
+    score+=p;saveBest();sndWin();
+    document.getElementById('prize').textContent='🎉 贏咗 +'+p+' 分！';
+    document.getElementById('phase').textContent='🎪 第 '+round+' 輪完';
+    updHud();
+    setTimeout(function(){if(!over)nextRound();},2000);
+  });
+});
+function endGame(finished){
+  over=true;saveBest();
+  if(finished){sndWin();showEnd('🎪 嘉年華完滿結束！','玩咗 6 輪<br>總分 <b>'+score+'</b>');}
+  else{sndBad();showEnd('🌧️ 命用晒啦…','玩到第 '+round+' 輪<br>總分 <b>'+score+'</b>');}
+}
+function showEnd(title,text){
+  document.getElementById('endTitle').textContent=title;
+  document.getElementById('endText').innerHTML=text;
+  document.getElementById('endBest').textContent=best;
+  document.getElementById('endOverlay').classList.remove('hide');
+}
+function newGame(){
+  score=0;lives=3;round=0;over=false;spinning=false;
+  if(spinRAF)cancelAnimationFrame(spinRAF);
+  wheelAngle=0;drawWheel();
+  loadBest();
+  document.getElementById('endOverlay').classList.add('hide');
+  nextRound();
+  updHud();
+}
+
+/* ---------- 事件 ---------- */
+document.getElementById('conceptTxt').textContent=DIFFS.easy.concept;
+var diffBtns=document.querySelectorAll('.diff');
+diffBtns.forEach(function(b){
+  b.addEventListener('click',function(){
+    diffBtns.forEach(function(x){x.classList.remove('sel');});
+    b.classList.add('sel');
+    diff=b.getAttribute('data-d');
+    document.getElementById('conceptTxt').textContent=DIFFS[diff].concept;
+    beep(660,0.08);
+  });
+});
+document.getElementById('startBtn').addEventListener('click',function(){
+  document.getElementById('intro').classList.add('hide');
+  started=true;beep(660,0.1);newGame();
+});
+document.getElementById('againBtn').addEventListener('click',function(){started=true;newGame();beep(660,0.1);});
+document.getElementById('changeDiffBtn').addEventListener('click',function(){
+  document.getElementById('endOverlay').classList.add('hide');
+  document.getElementById('intro').classList.remove('hide');
+});
+loadBest();updHud();drawWheel();
+})();
+</script>
+</body>
+</html>

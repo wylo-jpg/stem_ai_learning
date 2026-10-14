@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>黑客終端 · 二進制</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Microsoft JhengHei",monospace;
+  font-size:16px;color:#00ff88;min-height:100vh;
+  background:radial-gradient(ellipse at 50% 0%,#0d1f14 0%,#050805 70%);
+  background-attachment:fixed;
+  touch-action:manipulation;user-select:none;-webkit-user-select:none;
+  overflow-x:hidden;
+}
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:5;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 1px,transparent 1px 4px);
+}
+header{text-align:center;padding:14px 10px 8px;position:relative;z-index:2}
+header h1{
+  margin:0;font-size:26px;letter-spacing:3px;font-weight:900;color:#00ff88;
+  text-shadow:0 0 18px rgba(0,255,136,.7);
+}
+header p{margin:4px 0 0;font-size:12px;color:#00cc6a;opacity:.85;letter-spacing:5px}
+.back{
+  display:block;text-align:center;color:#00ff88;text-decoration:none;
+  padding:12px;font-size:16px;font-weight:700;font-family:inherit;
+  background:rgba(0,255,136,.06);
+  border-top:1px solid rgba(0,255,136,.25);border-bottom:1px solid rgba(0,255,136,.25);
+  position:relative;z-index:2;
+}
+.back:active{background:rgba(0,255,136,.18)}
+.wrap{max-width:600px;margin:0 auto;padding:10px 10px 26px;position:relative;z-index:2}
+.hud{
+  display:flex;flex-wrap:wrap;gap:6px;justify-content:space-between;align-items:center;
+  background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.35);border-radius:12px;
+  padding:8px 12px;margin-bottom:8px;font-size:15px;font-weight:700;
+  box-shadow:0 0 18px rgba(0,255,136,.15),inset 0 0 24px rgba(0,255,136,.05);
+}
+.hud .score{color:#ffe259}.hud .best{color:#00cc6a;font-size:13px}
+.combo{color:#ff9d5c;font-weight:900}
+.timerbar{height:12px;border-radius:6px;background:rgba(0,255,136,.12);border:1px solid rgba(0,255,136,.35);margin-bottom:10px;overflow:hidden}
+.timerfill{height:100%;width:100%;border-radius:6px;background:linear-gradient(90deg,#00ff88,#ffe259);box-shadow:0 0 12px rgba(0,255,136,.7);transition:width .1s linear}
+.terminal{
+  background:rgba(2,10,5,.92);border:1px solid rgba(0,255,136,.45);border-radius:14px;
+  padding:16px 14px;box-shadow:0 0 30px rgba(0,255,136,.18),inset 0 0 40px rgba(0,255,136,.04);
+  min-height:340px;position:relative;
+}
+.termline{margin:6px 0;line-height:1.6;font-size:15px;word-break:break-all}
+.prompt{color:#00ff88}
+.cursor{display:inline-block;width:10px;height:18px;background:#00ff88;vertical-align:-3px;animation:blinkc 1s steps(1) infinite}
+@keyframes blinkc{50%{opacity:0}}
+.bigbin{
+  font-size:clamp(30px,9vw,46px);font-weight:900;letter-spacing:8px;color:#00ff88;
+  text-align:center;margin:14px 0 4px;text-shadow:0 0 22px rgba(0,255,136,.8);
+}
+.weights{display:flex;justify-content:center;gap:8px;margin-bottom:2px}
+.weights span{font-size:11px;color:#00cc6a;min-width:44px;text-align:center}
+.bitrow{display:flex;justify-content:center;gap:8px;margin:8px 0 4px;flex-wrap:wrap}
+.bit{
+  width:56px;height:64px;font-size:30px;font-weight:900;font-family:inherit;cursor:pointer;
+  border-radius:12px;border:2px solid rgba(0,255,136,.5);color:#00331a;
+  background:linear-gradient(160deg,#0a3d22,#061f12);
+  transition:all .12s;
+}
+.bit.on{
+  color:#001a0d;background:linear-gradient(160deg,#00ff88,#00cc6a);
+  box-shadow:0 0 20px rgba(0,255,136,.8);transform:translateY(-2px);
+}
+.bit:active{transform:scale(.92)}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.opt{
+  min-height:62px;font-size:22px;font-weight:900;font-family:inherit;cursor:pointer;
+  border-radius:12px;border:2px solid rgba(0,255,136,.5);color:#00ff88;
+  background:rgba(0,255,136,.07);transition:transform .08s;
+}
+.opt:active{transform:scale(.95)}
+.opt.right{background:rgba(0,255,136,.35);border-color:#00ff88}
+.opt.wrong{background:rgba(255,60,60,.3);border-color:#ff5555;color:#ff8888}
+.submitbtn{
+  width:100%;min-height:58px;font-size:19px;font-weight:900;font-family:inherit;cursor:pointer;
+  border-radius:12px;border:2px solid #00ff88;color:#001a0d;
+  background:linear-gradient(160deg,#00ff88,#00cc6a);
+  box-shadow:0 0 22px rgba(0,255,136,.5);letter-spacing:2px;
+}
+.submitbtn:active{transform:scale(.97)}
+.q{font-size:16px;font-weight:700;color:#ccffe6;margin:8px 0;line-height:1.7;text-align:center}
+.explain{font-size:13.5px;color:#00cc6a;margin-top:10px;line-height:1.7;min-height:20px}
+.floatpts{
+  position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);
+  font-size:34px;font-weight:900;color:#ffe259;pointer-events:none;
+  text-shadow:0 0 16px rgba(255,220,80,.9);opacity:0;z-index:10;
+}
+.floatpts.show{animation:floatup 1s ease forwards}
+@keyframes floatup{0%{opacity:0;transform:translate(-50%,-30%)}20%{opacity:1}100%{opacity:0;transform:translate(-50%,-140%)}}
+.granted{color:#00ff88;font-weight:900}
+.denied{color:#ff5555;font-weight:900}
+.overlay{
+  position:fixed;inset:0;background:rgba(2,8,4,.88);z-index:50;
+  display:flex;align-items:center;justify-content:center;padding:14px;
+  animation:fadeIn .25s ease;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.card{
+  background:#06120a;border:1px solid rgba(0,255,136,.5);border-radius:18px;
+  padding:20px;max-width:480px;width:100%;text-align:center;
+  max-height:92vh;overflow-y:auto;color:#ccffe6;
+  box-shadow:0 0 44px rgba(0,255,136,.25);
+  animation:pop .3s cubic-bezier(.2,1.4,.4,1);font-family:inherit;
+}
+@keyframes pop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.card h2{margin:0 0 8px;font-size:24px;color:#00ff88;text-shadow:0 0 14px rgba(0,255,136,.6)}
+.card p{font-size:14.5px;line-height:1.75;margin:8px 0;text-align:left}
+.card p.c{text-align:center}
+.diffrow{display:flex;gap:8px;margin:12px 0}
+.diff{
+  flex:1;border:2px solid rgba(0,255,136,.3);border-radius:14px;padding:10px 4px;
+  background:rgba(0,255,136,.05);cursor:pointer;color:#ccffe6;font-family:inherit;
+  font-size:14px;line-height:1.5;transition:all .15s;min-height:96px;
+}
+.diff .ic{font-size:26px;display:block}
+.diff b{font-size:16px;color:#00ff88}
+.diff.sel{
+  border-color:#00ff88;background:rgba(0,255,136,.12);
+  box-shadow:0 0 16px rgba(0,255,136,.35);transform:translateY(-2px);
+}
+.concept{
+  background:rgba(0,255,136,.07);border:2px dashed #00ff88;border-radius:12px;
+  padding:10px 12px;margin:12px 0;font-size:13.5px;color:#a9f5cf;text-align:left;line-height:1.7;
+}
+.bigbtn{
+  width:100%;min-height:60px;font-size:20px;font-weight:900;font-family:inherit;color:#001a0d;
+  background:linear-gradient(160deg,#00ff88,#00cc6a);border:none;border-radius:14px;
+  margin-top:10px;cursor:pointer;letter-spacing:2px;
+  box-shadow:0 0 24px rgba(0,255,136,.5);
+  transition:transform .1s;
+}
+.bigbtn:active{transform:scale(.96)}
+.ghostbtn{
+  width:100%;min-height:48px;font-size:16px;font-weight:700;font-family:inherit;color:#00ff88;
+  background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.4);border-radius:14px;
+  margin-top:8px;cursor:pointer;
+}
+.ghostbtn:active{background:rgba(0,255,136,.18)}
+.hide{display:none!important}
+.stat{font-size:18px;margin:6px 0;text-align:center}
+.stat b{color:#ffe259}
+</style>
+</head>
+<body>
+<header>
+  <h1>💻 黑客終端</h1>
+  <p>BINARY // DECRYPT</p>
+</header>
+<a class="back" href="games.html">← 返回遊戲列表</a>
+
+<div class="wrap">
+  <div class="hud">
+    <div>⏱️ <span id="time">90</span>s</div>
+    <div class="combo">🔥 <span id="combo">0</span> 連擊</div>
+    <div>💻 <span id="solved">0</span> 密碼</div>
+    <div>⭐ <span class="score" id="score">0</span></div>
+    <div class="best">🏆 <span id="best">0</span></div>
+  </div>
+  <div class="timerbar"><div class="timerfill" id="timerfill"></div></div>
+  <div class="terminal" id="terminal">
+    <div class="floatpts" id="floatpts"></div>
+    <div class="termline prompt" id="sysline">&gt; 等待接入… <span class="cursor"></span></div>
+    <div class="q" id="qq"></div>
+    <div class="bigbin" id="bigbin"></div>
+    <div class="weights" id="weights"></div>
+    <div class="bitrow" id="bitrow"></div>
+    <div class="opts" id="opts"></div>
+    <button class="submitbtn hide" id="submitBtn">⏎ 提交 SUBMIT</button>
+    <div class="explain" id="explain"></div>
+  </div>
+</div>
+
+<div class="overlay" id="intro"><div class="card">
+  <h2>💻 黑客終端</h2>
+  <p class="c"><b>玩法：</b>90 秒限時，破解愈多密碼愈高分！</p>
+  <p>· <b>二進制 → 十進制</b>：揀正確答案<br>
+  · <b>十進制 → 二進制</b>：撳啲 0/1 掣砌出答案再提交<br>
+  · <b>高階</b>加二進制加法同容量換算<br>
+  🔥 連續答啱有連擊加成，答錯連擊歸零！</p>
+  <p class="c" style="font-size:16px;font-weight:800;color:#00ff88">揀一個難度接入：</p>
+  <div class="diffrow">
+    <button class="diff sel" data-d="easy"><span class="ic">🌱</span><b>初階</b><br>中一至中二<br>4位二進制↔十進制</button>
+    <button class="diff" data-d="mid"><span class="ic">🌿</span><b>中階</b><br>中三至中四<br>8位·byte概念</button>
+    <button class="diff" data-d="hard"><span class="ic">🌳</span><b>高階</b><br>中五至中六<br>二進制加法·換算</button>
+  </div>
+  <div class="concept">💡 <b>概念：</b><span id="conceptTxt"></span></div>
+  <button class="bigbtn" id="startBtn">▶ 接入終端</button>
+</div></div>
+
+<div class="overlay hide" id="endOverlay"><div class="card">
+  <h2 id="endTitle"></h2>
+  <p class="stat" id="endText"></p>
+  <p class="stat">🏆 最高分：<b id="endBest"></b></p>
+  <button class="bigbtn" id="againBtn">🔁 再玩一次</button>
+  <button class="ghostbtn" id="changeDiffBtn">🎚️ 換難度</button>
+</div></div>
+
+<script>
+(function(){
+"use strict";
+/* ---------- 狀態（全部開頭初始化） ---------- */
+var diff='easy',best=0,score=0,combo=0,maxCombo=0,solved=0;
+var timeLeft=90,timerId=null,started=false,over=false,locked=true;
+var cur=null,bitState=[];
+function bestKey(){return 'bn_high_'+diff;}
+function loadBest(){try{best=parseInt(localStorage.getItem(bestKey())||'0',10)||0;}catch(e){best=0;}}
+function saveBest(){if(score>best){best=score;try{localStorage.setItem(bestKey(),String(best));}catch(e){}}}
+
+/* ---------- 音效 ---------- */
+function beep(f,d,type){try{
+  var ac=beep.ac||(beep.ac=new (window.AudioContext||window.webkitAudioContext)());
+  if(ac.state==='suspended')ac.resume();
+  var o=ac.createOscillator(),g=ac.createGain();
+  o.type=type||'square';o.frequency.value=f;
+  g.gain.setValueAtTime(0.06,ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+d);
+  o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d);
+}catch(e){}}
+function sndGood(){beep(880,0.08);setTimeout(function(){beep(1320,0.12);},80);}
+function sndBad(){beep(160,0.2,'sawtooth');}
+
+/* ---------- 數學工具 ---------- */
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function bitsVal(bits){var v=0;for(var i=0;i<bits.length;i++)v=v*2+bits[i];return v;}
+function toBits(v,n){var b=[];for(var i=n-1;i>=0;i--)b.push((v>>i)&1);return b;}
+function expand(bits){
+  var parts=[],n=bits.length;
+  for(var i=0;i<n;i++)if(bits[i]===1)parts.push(Math.pow(2,n-1-i));
+  return parts.length?parts.join(' + '):'0';
+}
+function numOptsStr(ans,cands){
+  var vals=[ans],seen={};seen['k'+ans]=1;
+  cands=shuffle(cands.slice());
+  for(var i=0;i<cands.length&&vals.length<4;i++){
+    var c=cands[i];if(typeof c!=='number'||!isFinite(c)||c<0)continue;
+    var k='k'+c;if(!seen[k]){seen[k]=1;vals.push(c);}
+  }
+  var d=1;
+  while(vals.length<4&&d<80){var c2=ans+d;d++;var k2='k'+c2;if(!seen[k2]){seen[k2]=1;vals.push(c2);}}
+  vals=shuffle(vals);
+  var idx=0;for(var j=0;j<vals.length;j++)if(vals[j]===ans)idx=j;
+  return {opts:vals.map(String),idx:idx};
+}
+
+var DIFFS={
+  easy:{concept:'二進制只用 0 同 1。每位代表 2 嘅次方：由右至左係 1、2、4、8…。例如 1011₂ = 8 + 2 + 1 = 11。4 位可以表示 0～15。'},
+  mid:{concept:'8 位元 = 1 個 byte，可以表示 0～255（共 256 個數）。十進制轉二進制：將數字不停除以 2，記低每次餘數，由下而上就係答案。'},
+  hard:{concept:'二進制加法同十進制一樣要進位：1 + 1 = 10₂（寫 0 進 1）。電腦容量：8 bits = 1 byte，1024 bytes = 1 KB，1024 KB = 1 MB。'}
+};
+
+/* ---------- 出題 ---------- */
+function genB2D(n){
+  var max=Math.pow(2,n)-1,v=rnd(0,max),bits=toBits(v,n);
+  var rev=bitsVal(bits.slice().reverse());
+  var o=numOptsStr(v,[rev,v+1,v-1,v+2,v-2,v+4]);
+  return {mode:'choice',n:n,txt:'將二進制轉做十進制：',bits:bits,
+    opts:o.opts,idx:o.idx,val:v,
+    explain:'&gt; '+bits.join('')+'₂ = '+expand(bits)+' = <b>'+v+'</b>'};
+}
+function genD2B(n){
+  var max=Math.pow(2,n)-1,v=rnd(1,max);
+  return {mode:'toggle',n:n,txt:'撳啲掣砌出二進制，令佢等於十進制 <b>'+v+'</b>：',
+    val:v,bits:toBits(v,n),
+    explain:'&gt; '+v+' = '+expand(toBits(v,n))+' = <b>'+toBits(v,n).join('')+'₂</b>'};
+}
+function genAdd(){
+  var a=rnd(3,14),b=rnd(3,14),s=a+b;
+  var sa=toBits(s,5).join(''),sx=toBits(a^b,5).join('');
+  var o=numOptsStr(s,[a^b,s+1,s-1,s+2]);
+  var opts=o.opts.map(function(x){return toBits(x,5).join('');});
+  return {mode:'choice',n:0,txt:toBits(a,4).join('')+'₂ + '+toBits(b,4).join('')+'₂ = ?',bits:null,
+    opts:opts,idx:o.idx,val:s,
+    explain:'&gt; 先轉十進制：'+a+' + '+b+' = '+s+' = <b>'+sa+'₂</b>（唔可以直接逐位加，1+1 要進位！唔係 '+sx+'₂）'};
+}
+function genUnits(){
+  var sets=[
+    {t:'1 KB 等於幾多 bytes？',a:'1024',c:['1000','512','2048']},
+    {t:'3 bytes 等於幾多 bits？',a:'24',c:['30','12','32']},
+    {t:'要表示 0～255 嘅數字，最少要幾多 bits？',a:'8',c:['7','16','4']},
+    {t:'2 KB 等於幾多 bytes？',a:'2048',c:['2000','1024','4096']},
+    {t:'16 bits 等於幾多 bytes？',a:'2',c:['16','8','4']},
+    {t:'1 MB 等於幾多 KB？',a:'1024',c:['1000','512','2048']}
+  ];
+  var s=sets[rnd(0,sets.length-1)];
+  var opts=shuffle([s.a].concat(s.c));
+  return {mode:'choice',n:0,txt:s.t,bits:null,opts:opts,idx:opts.indexOf(s.a),val:s.a,
+    explain:'&gt; 電腦用 1024 進位：8 bits = 1 byte，1024 bytes = 1 KB，1024 KB = 1 MB'};
+}
+function genQuestion(){
+  var p=Math.random();
+  if(diff==='easy')return p<0.5?genB2D(4):genD2B(4);
+  if(diff==='mid')return p<0.5?genB2D(8):genD2B(8);
+  if(p<0.4)return genB2D(8);
+  if(p<0.7)return genAdd();
+  return genUnits();
+}
+
+/* ---------- 介面 ---------- */
+function sysMsg(html,cls){
+  var el=document.getElementById('sysline');
+  el.innerHTML='&gt; <span class="'+(cls||'')+'">'+html+'</span> <span class="cursor"></span>';
+}
+function floatPts(txt){
+  var f=document.getElementById('floatpts');
+  f.textContent=txt;f.classList.remove('show');
+  void f.offsetWidth;f.classList.add('show');
+}
+function updHud(){
+  document.getElementById('time').textContent=Math.ceil(timeLeft);
+  document.getElementById('timerfill').style.width=(timeLeft/90*100)+'%';
+  document.getElementById('combo').textContent=combo;
+  document.getElementById('solved').textContent=solved;
+  document.getElementById('score').textContent=score;
+  document.getElementById('best').textContent=best;
+}
+function renderQ(){
+  locked=false;
+  cur=genQuestion();
+  document.getElementById('qq').innerHTML=cur.txt;
+  document.getElementById('explain').innerHTML='';
+  var bb=document.getElementById('bigbin'),wr=document.getElementById('weights'),
+      br=document.getElementById('bitrow'),ob=document.getElementById('opts'),
+      sb=document.getElementById('submitBtn');
+  bb.textContent='';wr.innerHTML='';br.innerHTML='';ob.innerHTML='';
+  sb.classList.add('hide');
+  if(cur.mode==='choice'){
+    if(cur.bits)bb.textContent=cur.bits.join('');
+    cur.opts.forEach(function(label,i){
+      var b=document.createElement('button');b.className='opt';b.textContent=label;
+      b.addEventListener('pointerdown',function(e){e.preventDefault();answerChoice(i,b);});
+      ob.appendChild(b);
+    });
+  }else{
+    var n=cur.n;bitState=[];
+    for(var i=0;i<n;i++){
+      bitState.push(0);
+      (function(k){
+        var w=document.createElement('span');w.textContent=Math.pow(2,n-1-k);wr.appendChild(w);
+        var b=document.createElement('button');b.className='bit';b.textContent='0';
+        b.addEventListener('pointerdown',function(e){
+          e.preventDefault();
+          if(locked||over||!started)return;
+          bitState[k]=bitState[k]?0:1;
+          b.textContent=bitState[k]?'1':'0';
+          b.classList.toggle('on',!!bitState[k]);
+          beep(bitState[k]?990:660,0.05);
+        });
+        br.appendChild(b);
+      })(i);
+    }
+    sb.classList.remove('hide');
+  }
+  sysMsg('解碼中… 目標：'+(cur.mode==='toggle'?'砌出二進制':'揀正確十進制'));
+}
+function good(ans){
+  combo++;if(combo>maxCombo)maxCombo=combo;
+  solved++;
+  var pts=100+Math.min(combo*25,250);
+  score+=pts;saveBest();
+  sndGood();floatPts('+'+pts);
+  sysMsg('ACCESS GRANTED · 密碼已破解','granted');
+  updHud();
+  locked=true;
+  setTimeout(function(){if(!over&&started)renderQ();},650);
+}
+function bad(rightTxt){
+  combo=0;sndBad();
+  sysMsg('ACCESS DENIED · 正確答案：'+rightTxt,'denied');
+  updHud();
+  locked=true;
+  setTimeout(function(){if(!over&&started)renderQ();},1100);
+}
+function answerChoice(i,btn){
+  if(locked||over||!started)return;
+  var btns=document.getElementById('opts').children;
+  btns[cur.idx].classList.add('right');
+  document.getElementById('explain').innerHTML=cur.explain;
+  if(i===cur.idx){good();}
+  else{btn.classList.add('wrong');bad(cur.opts[cur.idx]);}
+}
+document.getElementById('submitBtn').addEventListener('click',function(){
+  if(locked||over||!started||!cur||cur.mode!=='toggle')return;
+  var ok=bitsVal(bitState)===cur.val;
+  document.getElementById('explain').innerHTML=cur.explain;
+  if(ok){good();}
+  else{bad(cur.bits.join(''));}
+});
+function tick(){
+  timeLeft-=0.1;
+  if(timeLeft<=0){timeLeft=0;updHud();endGame();return;}
+  if(Math.ceil(timeLeft)!==Math.ceil(timeLeft+0.1))updHud();
+  else document.getElementById('timerfill').style.width=(timeLeft/90*100)+'%';
+}
+function endGame(){
+  if(over)return;
+  over=true;locked=true;
+  if(timerId){clearInterval(timerId);timerId=null;}
+  saveBest();sndBad();
+  sysMsg('連線中斷 · TIME UP','denied');
+  document.getElementById('endTitle').textContent='⏱️ 時間到！';
+  document.getElementById('endText').innerHTML=
+    '破解咗 <b>'+solved+'</b> 個密碼<br>最高連擊 <b>'+maxCombo+'</b><br>總分 <b>'+score+'</b>';
+  document.getElementById('endBest').textContent=best;
+  document.getElementById('endOverlay').classList.remove('hide');
+}
+function newGame(){
+  score=0;combo=0;maxCombo=0;solved=0;timeLeft=90;over=false;
+  if(timerId)clearInterval(timerId);
+  loadBest();
+  document.getElementById('endOverlay').classList.add('hide');
+  renderQ();
+  timerId=setInterval(tick,100);
+  updHud();
+}
+
+/* ---------- 事件 ---------- */
+document.getElementById('conceptTxt').textContent=DIFFS.easy.concept;
+var diffBtns=document.querySelectorAll('.diff');
+diffBtns.forEach(function(b){
+  b.addEventListener('click',function(){
+    diffBtns.forEach(function(x){x.classList.remove('sel');});
+    b.classList.add('sel');
+    diff=b.getAttribute('data-d');
+    document.getElementById('conceptTxt').textContent=DIFFS[diff].concept;
+    beep(660,0.08);
+  });
+});
+document.getElementById('startBtn').addEventListener('click',function(){
+  document.getElementById('intro').classList.add('hide');
+  started=true;beep(880,0.1);newGame();
+});
+document.getElementById('againBtn').addEventListener('click',function(){started=true;newGame();beep(880,0.1);});
+document.getElementById('changeDiffBtn').addEventListener('click',function(){
+  document.getElementById('endOverlay').classList.add('hide');
+  document.getElementById('intro').classList.remove('hide');
+});
+loadBest();updHud();
+sysMsg('等待接入…');
+})();
+</script>
+</body>
+</html>

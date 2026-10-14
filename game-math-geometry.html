@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>📐 圖形建築師</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei","PingFang HK",sans-serif;
+background:radial-gradient(1200px 600px at 50% -10%,#123a6e 0%,#0a2247 55%,#061426 100%);
+color:#eaf4ff;min-height:100vh;touch-action:manipulation}
+header{background:linear-gradient(135deg,#0c4a6e,#0369a1);padding:14px 12px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.35)}
+header h1{margin:0;font-size:24px;letter-spacing:1px}
+header p{margin:4px 0 0;font-size:13px;color:#bae6fd}
+.back{display:block;max-width:640px;margin:10px auto 0;padding:0 14px;color:#7dd3fc;text-decoration:none;font-size:15px;font-weight:700}
+.hud{max-width:640px;margin:8px auto;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:6px;
+background:rgba(255,255,255,.08);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+border:1px solid rgba(255,255,255,.16);border-radius:16px;font-size:15px;font-weight:800;flex-wrap:wrap}
+.hud span{color:#fbbf24}
+main{max-width:640px;margin:0 auto;padding:10px 14px 30px;width:100%;display:flex;flex-direction:column;align-items:center}
+#towerWrap{margin:2px 0 8px;text-align:center}
+.crane{font-size:26px;margin-bottom:-4px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
+#tower{width:168px;margin:0 auto}
+.fl{height:30px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.30);border-bottom:none;
+display:flex;align-items:center;justify-content:center;gap:10px;transition:background .3s}
+.fl:first-child{border-radius:8px 8px 0 0}
+.fl:last-child{border-bottom:1px solid rgba(255,255,255,.30);border-radius:0 0 4px 4px}
+.fl .win{width:18px;height:12px;background:#0b2447;border-radius:2px;border:1px solid rgba(255,255,255,.25)}
+.fl.lit{background:linear-gradient(180deg,#fcd34d,#f59e0b);animation:pop .45s ease;box-shadow:0 0 18px rgba(251,191,36,.45)}
+.fl.lit .win{background:#fffbeb;border-color:#fde68a;box-shadow:0 0 8px #fde047;animation:tw 1.3s ease-in-out infinite alternate}
+@keyframes pop{0%{transform:scaleY(.15);transform-origin:bottom}100%{transform:scaleY(1);transform-origin:bottom}}
+@keyframes tw{from{opacity:.7}to{opacity:1}}
+.ground{width:210px;height:6px;margin:0 auto;background:rgba(255,255,255,.35);border-radius:3px}
+#floorLabel{margin-top:6px;font-size:14px;font-weight:700;color:#bae6fd}
+#cv{width:100%;max-width:430px;aspect-ratio:360/300;display:block;border-radius:16px;margin:4px 0 10px;
+box-shadow:0 6px 20px rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.18)}
+#qtext{width:100%;max-width:430px;background:rgba(255,255,255,.08);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:12px 14px;font-size:16px;line-height:1.65;margin-bottom:12px}
+#opts{width:100%;max-width:430px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt{min-height:56px;font-size:20px;font-weight:800;border-radius:14px;cursor:pointer;touch-action:manipulation;
+border:2px solid rgba(125,211,252,.5);background:rgba(12,74,110,.55);color:#eaf4ff;
+backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 3px 10px rgba(0,0,0,.3);transition:transform .08s}
+.opt:active{transform:scale(.96)}
+.opt.good{background:linear-gradient(135deg,#16a34a,#4ade80);border-color:#bbf7d0;color:#052e16;box-shadow:0 0 16px rgba(74,222,128,.6)}
+.opt.bad{background:linear-gradient(135deg,#b91c1c,#f87171);border-color:#fecaca;color:#450a0a}
+#msg{min-height:30px;margin-top:12px;font-size:16px;font-weight:800;text-align:center}
+#msg.good{color:#4ade80}#msg.bad{color:#f87171}
+#fw{position:fixed;inset:0;display:none;z-index:60;pointer-events:none}
+.overlay{position:fixed;inset:0;background:rgba(3,10,22,.93);display:flex;align-items:center;justify-content:center;z-index:50;padding:18px}
+.card{background:rgba(14,44,86,.85);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:26px 22px;max-width:520px;width:100%;
+max-height:92vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+.card h2{margin:0 0 10px;font-size:24px;color:#7dd3fc;text-align:center}
+.card p,.card li{font-size:16px;line-height:1.7;color:#eaf4ff}
+.card ul{padding-left:20px;margin:8px 0}
+.diffrow{display:flex;gap:10px;margin:12px 0}
+.dbtn{flex:1;min-height:64px;border-radius:14px;border:2px solid rgba(125,211,252,.35);background:rgba(255,255,255,.06);
+color:#eaf4ff;font-size:16px;font-weight:800;cursor:pointer;touch-action:manipulation;line-height:1.5}
+.dbtn small{display:block;font-size:12px;font-weight:600;color:#bae6fd}
+.dbtn.sel{border-color:#fbbf24;background:rgba(251,191,36,.16);box-shadow:0 0 12px rgba(251,191,36,.35)}
+.concept{background:rgba(6,20,38,.7);border:1px solid rgba(74,222,128,.35);border-radius:12px;padding:12px 14px;margin:12px 0;font-size:14.5px;line-height:1.75}
+.concept b{color:#4ade80}
+.card .start,.card .big2{width:100%;min-height:58px;font-size:18px;font-weight:800;border:none;border-radius:14px;margin-top:10px;cursor:pointer;touch-action:manipulation}
+.card .start{background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#451a03;box-shadow:0 4px 14px rgba(251,191,36,.4)}
+.card .big2{background:linear-gradient(135deg,#0284c7,#38bdf8);color:#fff}
+.btnrow2{display:flex;gap:10px}
+.btnrow2 .big2{flex:1}
+#endStats{text-align:center;font-size:17px}
+#endStats .big{font-size:30px;color:#fbbf24;font-weight:800}
+.newrec{color:#4ade80;font-weight:800}
+@media (max-width:400px){.hud{font-size:13px}#qtext{font-size:15px}.opt{font-size:18px}}
+</style>
+</head>
+<body>
+<header><h1>📐 圖形建築師</h1><p>平面幾何 · 藍圖地盤</p></header>
+<a class="back" href="games.html">← 返回遊戲列表</a>
+<div class="hud">
+<div>⭐ <span id="score">0</span></div>
+<div id="hearts">❤️❤️❤️</div>
+<div>🏢 第 <span id="floorNum">1</span>/5 層</div>
+<div>🏆 <span id="high">0</span></div>
+</div>
+<main>
+<div id="towerWrap">
+<div class="crane">🏗️</div>
+<div id="tower"></div>
+<div class="ground"></div>
+<div id="floorLabel">大廈建造中…</div>
+</div>
+<canvas id="cv"></canvas>
+<div id="qtext">撳「開始遊戲」開工！</div>
+<div id="opts"></div>
+<div id="msg"></div>
+</main>
+<canvas id="fw"></canvas>
+
+<div class="overlay" id="intro"><div class="card">
+<h2>📐 圖形建築師</h2>
+<p>歡迎嚟到藍圖地盤！睇住藍圖上嘅幾何圖形，答啱題目就起一層樓，起滿 <b>5 層</b>大廈落成 🎆</p>
+<ul>
+<li>✅ 答啱一題：起一層樓，<b>+100 分</b></li>
+<li>❌ 答錯：扣一條命（共 3 條 ❤️），同一層換一題再試</li>
+<li>🏁 落成獎分：剩低每條命 <b>+150 分</b></li>
+</ul>
+<div class="diffrow">
+<button class="dbtn sel" data-d="easy">🌱 初階<small>中一至中二</small></button>
+<button class="dbtn" data-d="med">🌿 中階<small>中三至中四</small></button>
+<button class="dbtn" data-d="hard">🌳 高階<small>中五至中六</small></button>
+</div>
+<div class="concept" id="concept"></div>
+<button class="start" id="startBtn">▶ 開始遊戲</button>
+</div></div>
+
+<div class="overlay" id="end" style="display:none"><div class="card">
+<h2 id="endTitle">🏗️ 大廈落成！</h2>
+<p id="endStats"></p>
+<div class="btnrow2">
+<button class="big2" id="againBtn">🔁 再玩一次</button>
+<button class="big2" id="diffBtn">🎚️ 換難度</button>
+</div>
+</div></div>
+
+<script>
+'use strict';
+/* ================= 純邏輯：出題（Node 可獨立測試） ================= */
+function rnd(n){return Math.floor(Math.random()*n);}
+function pick(a){return a[rnd(a.length)];}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=rnd(i+1);const t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function makeOptions(answer,cands){
+  const ans=String(answer),seen=new Set([ans]),opts=[ans];
+  for(const c of cands){const s=String(c);if(!seen.has(s)){seen.add(s);opts.push(s);}if(opts.length===4)break;}
+  let n=1;
+  while(opts.length<4){const f=ans+'·'+n;if(!seen.has(f)){seen.add(f);opts.push(f);}n++;}
+  return shuffle(opts);
+}
+const ANG=[30,35,40,45,50,55,60,65,70,75,80,100,110,120,130,140,150];
+const ANG2=[25,30,35,40,45,50,55,60,65,70];
+const MINUS='\u2212';
+
+function gEasy(){
+  const t=rnd(3);
+  if(t===0){ // 對頂角
+    const a=pick(ANG.filter(x=>x!==90));
+    const up=a+20<=170?a+20:a-30, dn=a-20>=10?a-20:a+30;
+    return {type:'vert',draw:'vert',p:{a:a},
+      text:'兩條直線相交，其中一隻角係 '+a+'°，求佢嘅對頂角係幾多度？',
+      ans:a+'°',opts:makeOptions(a+'°',[(180-a)+'°','90°',up+'°',dn+'°'])};
+  }
+  if(t===1){ // 補角（鄰角）
+    const a=pick(ANG.filter(x=>x!==90));
+    const ans=180-a;
+    const up=ans+15<=175?ans+15:ans-25, dn=ans-25>=5?ans-25:ans+25;
+    return {type:'supp',draw:'supp',p:{a:a},
+      text:'一直線上有一個點，由呢點向上畫出一條線，形成一隻 '+a+'° 嘅角。求隔籬隻角（鄰角）係幾多度？',
+      ans:ans+'°',opts:makeOptions(ans+'°',[a+'°','90°',up+'°',dn+'°'])};
+  }
+  // 三角形內角和（保證畫出嚟唔出界）
+  let b=40,c=50,tries=0;
+  while(tries++<300){
+    b=pick(ANG2);c=pick(ANG2);
+    if(b===c)continue;
+    const br=b*Math.PI/180,cr=c*Math.PI/180,sn=Math.sin(br+cr);
+    const h=200*Math.sin(br)*Math.sin(cr)/sn;
+    const cx=80+200*Math.sin(cr)*Math.cos(br)/sn;
+    if(h<=175&&cx>=70&&cx<=290)break;
+  }
+  const ans=180-b-c;
+  return {type:'tri',draw:'tri',p:{b:b,c:c},
+    text:'一個三角形，其中兩隻角分別係 '+b+'° 同 '+c+'°，求第三隻角係幾多度？',
+    ans:ans+'°',opts:makeOptions(ans+'°',[(b+c)+'°',(180-b)+'°',(180-c)+'°','90°',(ans+10)+'°',(ans-10)+'°'])};
+}
+
+function gMed(){
+  const t=rnd(2);
+  if(t===0){ // 平行線＋截線
+    const a=pick([30,40,50,60,70,80,100,110,120,130,140]);
+    const kind=rnd(3); // 0 同位角 1 內錯角 2 同旁內角
+    const names=['同位角','內錯角','同旁內角'];
+    const ans=kind===2?180-a:a;
+    const cands=kind===2
+      ?[a+'°','90°',(ans-15>0?ans-15:ans+15)+'°',(ans+20<=180?ans+20:ans-20)+'°']
+      :[(180-a)+'°','90°',(ans+15<=180?ans+15:ans-15)+'°',(ans-15>0?ans-15:ans+15)+'°'];
+    return {type:'parallel',draw:'parallel',p:{a:a,kind:kind},
+      text:'兩條平行線被一條截線所截，其中一隻角係 '+a+'°（如圖）。求圖中標示「?」嘅'+names[kind]+'係幾多度？',
+      ans:ans+'°',opts:makeOptions(ans+'°',cands)};
+  }
+  // 相似三角形
+  const tr=pick([[3,4,5],[6,8,10],[5,12,13]]),k=pick([2,3]);
+  const s1=tr[0],s2=tr[1],s3=tr[2],B1=s1*k,B2=s2*k,x=s3*k;
+  return {type:'similar',draw:'similar',p:{s1:s1,s2:s2,s3:s3,B1:B1,B2:B2},
+    text:'兩個三角形相似。小三角形三邊長係 '+s1+'、'+s2+'、'+s3+'；大三角形對應兩邊長係 '+B1+' 同 '+B2+'。求大三角形第三邊（圖中「?」）嘅長度。',
+    ans:String(x),opts:makeOptions(String(x),[String(s3),String(s3+(B1-s1)),String(x-1),String(x+1)])};
+}
+
+function gHard(){
+  const t=rnd(4);
+  if(t===0){ // 圓心角 = 2 × 圓周角
+    const g=pick([25,30,35,40,45,50]),ans=2*g;
+    return {type:'central',draw:'central',p:{g:g},
+      text:'圓中，同弧所對嘅圓周角係 '+g+'°（如圖）。求圓心角（圖中「?」）係幾多度？',
+      ans:ans+'°',opts:makeOptions(ans+'°',[g+'°',(180-ans)+'°','90°',(ans+10)+'°',(ans-10)+'°'])};
+  }
+  if(t===1){ // 半圓上嘅圓周角
+    const a=pick([25,30,35,40,50,55,60]);
+    if(rnd(2)===0){
+      return {type:'semi',draw:'semi',p:{a:a,ask:'c'},
+        text:'AB 係圓嘅直徑，C 係圓周上一點。已知 ∠CAB = '+a+'°，求 ∠ACB（圖中「?」）係幾多度？',
+        ans:'90°',opts:makeOptions('90°',[a+'°','45°','180°',(90-a)+'°'])};
+    }
+    const ans=90-a;
+    return {type:'semi',draw:'semi',p:{a:a,ask:'b'},
+      text:'AB 係圓嘅直徑，C 係圓周上一點。已知 ∠CAB = '+a+'°，求 ∠CBA（圖中「?」）係幾多度？',
+      ans:ans+'°',opts:makeOptions(ans+'°',[a+'°','90°',(180-a)+'°',(ans+10)+'°'])};
+  }
+  if(t===2){ // 切線 ⊥ 半徑
+    const a=pick([30,35,40,50,55,60]),ans=90-a;
+    return {type:'tangent',draw:'tangent',p:{a:a},
+      text:'如圖，PT 係圓喺 T 點嘅切線，OT 係半徑。已知 ∠OPT = '+a+'°，求 ∠POT（圖中「?」）係幾多度？',
+      ans:ans+'°',opts:makeOptions(ans+'°',[a+'°','90°',(180-a)+'°','45°'])};
+  }
+  const v=rnd(3); // 陰影面積
+  if(v===0){
+    return {type:'area',draw:'area1',p:{v:0},
+      text:'如圖，正方形邊長係 10，入面有一個半圓（半徑 4）。求陰影部分（正方形減去半圓）嘅面積。',
+      ans:'100 '+MINUS+' 8π',opts:makeOptions('100 '+MINUS+' 8π',['100 + 8π','100 '+MINUS+' 16π','100 '+MINUS+' 4π'])};
+  }
+  if(v===1){
+    return {type:'area',draw:'area2',p:{v:1},
+      text:'如圖，長方形長 12、闊 8，入面有一個三角形（底 6、高 4）。求陰影部分（長方形減去三角形）嘅面積。',
+      ans:'84',opts:makeOptions('84',['108','72','90'])};
+  }
+  return {type:'area',draw:'area3',p:{v:2},
+    text:'如圖，大正方形邊長係 8，入面有一個小正方形（邊長 4）。求陰影部分（大正方形減去小正方形）嘅面積。',
+    ans:'48',opts:makeOptions('48',['80','60','32'])};
+}
+const GEN={easy:gEasy,med:gMed,hard:gHard};
+
+/* ==== DOM ==== */
+const cv=document.getElementById('cv');
+const RAD=Math.PI/180;
+function bp(ctx,W,H){
+  ctx.fillStyle='#0e2c56';ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(255,255,255,0.07)';ctx.lineWidth=1;
+  for(let x=0;x<=W;x+=24){ctx.beginPath();ctx.moveTo(x+.5,0);ctx.lineTo(x+.5,H);ctx.stroke();}
+  for(let y=0;y<=H;y+=24){ctx.beginPath();ctx.moveTo(0,y+.5);ctx.lineTo(W,y+.5);ctx.stroke();}
+}
+function seg(ctx,x1,y1,x2,y2,w,c){ctx.strokeStyle=c||'#fff';ctx.lineWidth=w||3;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}
+function circ(ctx,x,y,r,w,c){ctx.strokeStyle=c||'#fff';ctx.lineWidth=w||3;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.stroke();}
+function dot(ctx,x,y,r,c){ctx.fillStyle=c||'#fff';ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();}
+function arc2(ctx,x,y,r,a0,a1,w,c,acw){ctx.strokeStyle=c;ctx.lineWidth=w||3;ctx.lineCap='round';ctx.beginPath();ctx.arc(x,y,r,a0,a1,!!acw);ctx.stroke();}
+function smallArc(ctx,x,y,r,a1,a2,w,c){
+  let d=(a2-a1)%(Math.PI*2);if(d<0)d+=Math.PI*2;
+  if(d<=Math.PI)arc2(ctx,x,y,r,a1,a2,w,c,false);else arc2(ctx,x,y,r,a1,a2,w,c,true);
+}
+function lab(ctx,x,y,s,c,size){ctx.fillStyle=c||'#fff';ctx.font='700 '+(size||17)+'px "Microsoft JhengHei",system-ui,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(s,x,y);}
+function bisLab(ctx,x,y,r,a1,a2,s,c,size){
+  let bx=Math.cos(a1)+Math.cos(a2),by=Math.sin(a1)+Math.sin(a2);
+  const m=Math.hypot(bx,by);
+  if(m<1e-6){bx=Math.cos(a1);by=Math.sin(a1);}else{bx/=m;by/=m;}
+  lab(ctx,x+r*bx,y+r*by,s,c,size);
+}
+function chev(ctx,x,y){
+  ctx.strokeStyle='#fbbf24';ctx.lineWidth=2.5;ctx.lineCap='round';
+  for(const dx of [-8,0]){ctx.beginPath();ctx.moveTo(x+dx-5,y-6);ctx.lineTo(x+dx+1,y);ctx.lineTo(x+dx-5,y+6);ctx.stroke();}
+}
+
+const DRAW={
+vert(ctx,p){
+  const a=p.a,cx=180,cy=150,t=a*RAD;
+  const dx=Math.cos(-t),dy=Math.sin(-t);
+  seg(ctx,50,cy,310,cy,3.5);
+  seg(ctx,cx-135*dx,cy-135*dy,cx+135*dx,cy+135*dy,3.5);
+  dot(ctx,cx,cy,5);
+  smallArc(ctx,cx,cy,34,-t,0,3,'#fbbf24');
+  bisLab(ctx,cx,cy,60,-t,0,a+'°','#fbbf24',18);
+  smallArc(ctx,cx,cy,34,Math.PI-t,Math.PI,3,'#22d3ee');
+  bisLab(ctx,cx,cy,64,Math.PI-t,Math.PI,'?','#22d3ee',24);
+},
+supp(ctx,p){
+  const a=p.a,t=a*RAD,PX=170,PY=175;
+  seg(ctx,45,PY,315,PY,3.5);
+  seg(ctx,PX,PY,PX+135*Math.cos(-t),PY+135*Math.sin(-t),3.5);
+  dot(ctx,PX,PY,5);
+  smallArc(ctx,PX,PY,36,-t,0,3,'#fbbf24');
+  bisLab(ctx,PX,PY,62,-t,0,a+'°','#fbbf24',18);
+  arc2(ctx,PX,PY,46,-t,Math.PI,3,'#22d3ee',true);
+  bisLab(ctx,PX,PY,72,-t,Math.PI,'?','#22d3ee',24);
+},
+tri(ctx,p){
+  const b=p.b,c=p.c,br=b*RAD,cr=c*RAD;
+  const Ax=80,Ay=240,Bx=280,By=240;
+  const s=200*Math.sin(cr)/Math.sin(br+cr);
+  const Cx=Ax+s*Math.cos(br),Cy=Ay-s*Math.sin(br);
+  seg(ctx,Ax,Ay,Bx,By,3.5);seg(ctx,Bx,By,Cx,Cy,3.5);seg(ctx,Cx,Cy,Ax,Ay,3.5);
+  dot(ctx,Ax,Ay,4);dot(ctx,Bx,By,4);dot(ctx,Cx,Cy,4);
+  smallArc(ctx,Ax,Ay,30,-br,0,3,'#fbbf24');
+  bisLab(ctx,Ax,Ay,52,-br,0,b+'°','#fbbf24',16);
+  const bcA=Math.atan2(Cy-By,Cx-Bx);
+  smallArc(ctx,Bx,By,30,bcA,Math.PI,3,'#fbbf24');
+  bisLab(ctx,Bx,By,52,bcA,Math.PI,c+'°','#fbbf24',16);
+  const caA=Math.atan2(Ay-Cy,Ax-Cx),cbA=Math.atan2(By-Cy,Bx-Cx);
+  smallArc(ctx,Cx,Cy,26,caA,cbA,3,'#22d3ee');
+  bisLab(ctx,Cx,Cy,50,caA,cbA,'?','#22d3ee',24);
+},
+parallel(ctx,p){
+  const a=p.a,kind=p.kind,t=a*RAD,y1=95,y2=205;
+  seg(ctx,45,y1,315,y1,3.5);seg(ctx,45,y2,315,y2,3.5);
+  chev(ctx,80,y1);chev(ctx,280,y1);chev(ctx,80,y2);chev(ctx,280,y2);
+  const x1=180-50/Math.tan(t),x2=180+50/Math.tan(t);
+  const dx=Math.cos(t),dy=Math.sin(t);
+  seg(ctx,x1-75*dx,y1-75*dy,x2+75*dx,y2+75*dy,3.5);
+  dot(ctx,x1,y1,4);dot(ctx,x2,y2,4);
+  smallArc(ctx,x1,y1,30,0,t,3,'#fbbf24');
+  bisLab(ctx,x1,y1,54,0,t,a+'°','#fbbf24',17);
+  if(kind===0){smallArc(ctx,x2,y2,30,0,t,3,'#22d3ee');bisLab(ctx,x2,y2,56,0,t,'?','#22d3ee',24);}
+  else if(kind===1){arc2(ctx,x2,y2,30,t-Math.PI,Math.PI,3,'#22d3ee',true);bisLab(ctx,x2,y2,56,t-Math.PI,Math.PI,'?','#22d3ee',24);}
+  else{smallArc(ctx,x2,y2,30,t-Math.PI,0,3,'#22d3ee');bisLab(ctx,x2,y2,58,t-Math.PI,0,'?','#22d3ee',24);}
+},
+similar(ctx,p){
+  const s1=p.s1,s2=p.s2,s3=p.s3,B1=p.B1,B2=p.B2;
+  let u1=100/Math.max(s1,s2),u2=u1*(B1/s1);
+  const mh=Math.max(s2*u1,B2*u2);
+  if(mh>180){const f=180/mh;u1*=f;u2*=f;}
+  const mw=s1*u1+45+B1*u2;
+  if(mw>340){const f=340/mw;u1*=f;u2*=f;}
+  function tri2(ox,oy,u,L1,L2,hypLab,hypC){
+    const A={x:ox,y:oy},B={x:ox+L1*u,y:oy},C={x:ox,y:oy-L2*u};
+    seg(ctx,A.x,A.y,B.x,B.y,3.5);seg(ctx,A.x,A.y,C.x,C.y,3.5);seg(ctx,B.x,B.y,C.x,C.y,3.5);
+    dot(ctx,A.x,A.y,4);dot(ctx,B.x,B.y,4);dot(ctx,C.x,C.y,4);
+    lab(ctx,(A.x+B.x)/2,(A.y+B.y)/2+17,String(L1),'#fff',15);
+    lab(ctx,(A.x+C.x)/2-15,(A.y+C.y)/2,String(L2),'#fff',15);
+    const mx=(B.x+C.x)/2,my=(B.y+C.y)/2;
+    const dx=C.x-B.x,dy=C.y-B.y,len=Math.hypot(dx,dy);
+    lab(ctx,mx-dy/len*20,my+dx/len*20,hypLab,hypC,16);
+  }
+  tri2(35,252,u1,s1,s2,String(s3),'#fff');
+  tri2(35+s1*u1+50,252,u2,B1,B2,'?', '#22d3ee');
+  lab(ctx,35+s1*u1+25,252,'~','#fbbf24',22);
+},
+central(ctx,p){
+  const g=p.g,O={x:180,y:160},r=92;
+  const aA=200*RAD,aB=(200-2*g)*RAD,aC=(200-g+180)*RAD;
+  const A={x:O.x+r*Math.cos(aA),y:O.y+r*Math.sin(aA)};
+  const B={x:O.x+r*Math.cos(aB),y:O.y+r*Math.sin(aB)};
+  const C={x:O.x+r*Math.cos(aC),y:O.y+r*Math.sin(aC)};
+  circ(ctx,O.x,O.y,r,3.5);
+  seg(ctx,O.x,O.y,A.x,A.y,3);seg(ctx,O.x,O.y,B.x,B.y,3);
+  seg(ctx,C.x,C.y,A.x,A.y,3);seg(ctx,C.x,C.y,B.x,B.y,3);
+  dot(ctx,O.x,O.y,5);dot(ctx,A.x,A.y,4);dot(ctx,B.x,B.y,4);dot(ctx,C.x,C.y,4);
+  lab(ctx,O.x-13,O.y+15,'O','#fff',14);
+  const ca1=Math.atan2(A.y-C.y,A.x-C.x),ca2=Math.atan2(B.y-C.y,B.x-C.x);
+  smallArc(ctx,C.x,C.y,26,ca1,ca2,3,'#fbbf24');
+  bisLab(ctx,C.x,C.y,48,ca1,ca2,g+'°','#fbbf24',17);
+  smallArc(ctx,O.x,O.y,28,aB,aA,3,'#22d3ee');
+  bisLab(ctx,O.x,O.y,52,aB,aA,'?','#22d3ee',24);
+},
+semi(ctx,p){
+  const a=p.a,O={x:180,y:150},r=95;
+  const A={x:85,y:150},B={x:275,y:150};
+  const th=-2*a*RAD;
+  const C={x:O.x+r*Math.cos(th),y:O.y+r*Math.sin(th)};
+  circ(ctx,O.x,O.y,r,3.5);
+  seg(ctx,A.x,A.y,B.x,B.y,4);
+  seg(ctx,A.x,A.y,C.x,C.y,3);seg(ctx,C.x,C.y,B.x,B.y,3);
+  dot(ctx,O.x,O.y,5);dot(ctx,A.x,A.y,4);dot(ctx,B.x,B.y,4);dot(ctx,C.x,C.y,4);
+  lab(ctx,O.x,O.y+18,'O','#fff',14);
+  lab(ctx,A.x-14,A.y,'A','#fff',14);lab(ctx,B.x+14,B.y,'B','#fff',14);lab(ctx,C.x,C.y-16,'C','#fff',14);
+  smallArc(ctx,A.x,A.y,28,-a*RAD,0,3,'#fbbf24');
+  bisLab(ctx,A.x,A.y,52,-a*RAD,0,a+'°','#fbbf24',17);
+  if(p.ask==='c'){
+    const b1=Math.atan2(A.y-C.y,A.x-C.x),b2=Math.atan2(B.y-C.y,B.x-C.x);
+    smallArc(ctx,C.x,C.y,26,b1,b2,3,'#22d3ee');
+    bisLab(ctx,C.x,C.y,50,b1,b2,'?','#22d3ee',24);
+  }else{
+    const b1=Math.atan2(C.y-B.y,C.x-B.x);
+    smallArc(ctx,B.x,B.y,26,b1,Math.PI,3,'#22d3ee');
+    bisLab(ctx,B.x,B.y,52,b1,Math.PI,'?','#22d3ee',24);
+  }
+},
+tangent(ctx,p){
+  const a=p.a,O={x:130,y:165},r=60,T={x:190,y:165};
+  const PT=r/Math.tan(a*RAD),P={x:190,y:165-PT};
+  circ(ctx,O.x,O.y,r,3.5);
+  seg(ctx,190,40,190,275,3.5);
+  seg(ctx,O.x,O.y,T.x,T.y,3.5);
+  seg(ctx,O.x,O.y,P.x,P.y,3);
+  dot(ctx,O.x,O.y,5);dot(ctx,T.x,T.y,4);dot(ctx,P.x,P.y,4);
+  ctx.strokeStyle='#4ade80';ctx.lineWidth=2.5;
+  ctx.strokeRect(T.x-11,T.y-11,11,11);
+  lab(ctx,O.x-14,O.y+18,'O','#fff',14);lab(ctx,T.x+16,T.y,'T','#fff',14);lab(ctx,P.x+16,P.y,'P','#fff',14);
+  const p1=Math.atan2(O.y-P.y,O.x-P.x);
+  smallArc(ctx,P.x,P.y,24,p1,Math.PI/2,3,'#fbbf24');
+  bisLab(ctx,P.x,P.y,48,p1,Math.PI/2,a+'°','#fbbf24',17);
+  const o2=Math.atan2(P.y-O.y,P.x-O.x);
+  smallArc(ctx,O.x,O.y,26,0,o2,3,'#22d3ee');
+  bisLab(ctx,O.x,O.y,50,0,o2,'?','#22d3ee',24);
+},
+area1(ctx){
+  ctx.fillStyle='rgba(251,191,36,0.16)';ctx.fillRect(80,60,180,180);
+  ctx.fillStyle='#0e2c56';ctx.beginPath();ctx.arc(170,240,72,Math.PI,Math.PI*2);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='#fff';ctx.lineWidth=3.5;ctx.strokeRect(80,60,180,180);
+  arc2(ctx,170,240,72,Math.PI,Math.PI*2,3,'#fff',false);
+  seg(ctx,170,240,170,168,2,'rgba(255,255,255,.65)');
+  lab(ctx,186,204,'4','#fff',15);
+  lab(ctx,170,262,'正方形邊長 10','#fff',15);
+  lab(ctx,170,34,'陰影面積 = ?','#22d3ee',18);
+},
+area2(ctx){
+  ctx.fillStyle='rgba(251,191,36,0.16)';ctx.fillRect(90,90,180,120);
+  ctx.fillStyle='#0e2c56';ctx.beginPath();
+  ctx.moveTo(100,200);ctx.lineTo(190,200);ctx.lineTo(145,140);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='#fff';ctx.lineWidth=3.5;ctx.strokeRect(90,90,180,120);
+  ctx.beginPath();ctx.moveTo(100,200);ctx.lineTo(190,200);ctx.lineTo(145,140);ctx.closePath();ctx.stroke();
+  lab(ctx,180,228,'長方形 12 × 8','#fff',15);
+  lab(ctx,145,182,'底 6、高 4','#fff',13);
+  lab(ctx,180,34,'陰影面積 = ?','#22d3ee',18);
+},
+area3(ctx){
+  ctx.fillStyle='rgba(251,191,36,0.16)';ctx.fillRect(100,70,160,160);
+  ctx.fillStyle='#0e2c56';ctx.fillRect(140,110,80,80);
+  ctx.strokeStyle='#fff';ctx.lineWidth=3.5;
+  ctx.strokeRect(100,70,160,160);ctx.strokeRect(140,110,80,80);
+  lab(ctx,180,250,'大正方形邊長 8','#fff',15);
+  lab(ctx,180,152,'4','#fff',15);
+  lab(ctx,180,34,'陰影面積 = ?','#22d3ee',18);
+}
+};
+
+function drawQ(q){
+  const dpr=window.devicePixelRatio||1,W=360,H=300;
+  cv.width=W*dpr;cv.height=H*dpr;
+  const ctx=cv.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  bp(ctx,W,H);
+  DRAW[q.draw](ctx,q.p);
+}
+
+/* ---------- 音效 ---------- */
+let AC=null;
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(AC&&AC.state==='suspended'){AC.resume().catch(function(){});}return AC;}
+function tone(f,t0,dur,type,vol){
+  try{
+    const c=ac();if(!c)return;
+    const o=c.createOscillator(),g=c.createGain();
+    o.type=type||'sine';o.frequency.value=f;
+    const t=c.currentTime+t0;
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(vol||0.15,t+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(g);g.connect(c.destination);
+    o.start(t);o.stop(t+dur+0.05);
+  }catch(e){}
+}
+function sfxBuild(){tone(523,0,.16);tone(659,.11,.16);tone(784,.22,.28);}
+function sfxWrong(){tone(196,0,.22,'sawtooth',.07);tone(147,.14,.28,'sawtooth',.07);}
+function sfxWin(){const n=[523,659,784,1047];for(let i=0;i<n.length;i++)tone(n[i],i*.13,.22);tone(1319,.55,.5);}
+
+/* ---------- 遊戲狀態 ---------- */
+let diff='easy',score=0,lives=3,built=0,answered=false,current=null;
+let high=0;
+try{high=parseInt(localStorage.getItem('geoarch_high')||'0',10)||0;}catch(e){}
+const CONCEPTS={
+easy:'💡 <b>數學概念（初階 · 中一至中二）：</b><br>• <b>對頂角相等</b>：兩條直線相交，相對嘅兩隻角角度相等。<br>• <b>三角形內角和</b>：三隻內角加埋 = 180°。<br>• <b>補角</b>：直線上一點兩旁嘅鄰角加埋 = 180°。',
+med:'💡 <b>數學概念（中階 · 中三至中四）：</b><br>• <b>平行線</b>被截線所截：同位角相等、內錯角相等、同旁內角互補（加埋 180°）。<br>• <b>相似三角形</b>：對應邊成比例，對應角相等。',
+hard:'💡 <b>數學概念（高階 · 中五至中六）：</b><br>• <b>圓心角 = 2 × 圓周角</b>（同弧所對）。<br>• <b>半圓上嘅圓周角 = 90°</b>（直徑所對嘅角）。<br>• <b>切線垂直於半徑</b>（喺切點成直角）。<br>• <b>陰影面積 = 大圖形面積 − 小圖形面積</b>。'
+};
+
+function renderHUD(){
+  document.getElementById('score').textContent=score;
+  document.getElementById('hearts').textContent='❤️'.repeat(lives)+'🖤'.repeat(3-lives);
+  document.getElementById('floorNum').textContent=Math.min(built+1,5);
+  document.getElementById('high').textContent=high;
+  document.getElementById('floorLabel').textContent=built>=5?'🎆 大廈落成！':'大廈建造中…仲差 '+(5-built)+' 層';
+}
+function buildTower(){
+  const tw=document.getElementById('tower');tw.innerHTML='';
+  for(let i=4;i>=0;i--){
+    const f=document.createElement('div');f.className='fl';f.dataset.lv=i;
+    for(let w=0;w<4;w++){const s=document.createElement('span');s.className='win';s.style.animationDelay=(w*0.25+i*0.15)+'s';f.appendChild(s);}
+    tw.appendChild(f);
+  }
+}
+function renderTower(){
+  const floors=document.getElementById('tower').children;
+  for(let k=0;k<5;k++){
+    const lv=4-k;
+    if(lv<built)floors[k].classList.add('lit');else floors[k].classList.remove('lit');
+  }
+}
+function msg(t,cls){const m=document.getElementById('msg');m.textContent=t;m.className=cls||'';}
+
+function nextQ(){
+  if(built>=5){finish(true);return;}
+  answered=false;
+  current=GEN[diff]();
+  drawQ(current);
+  document.getElementById('qtext').textContent=current.text;
+  const box=document.getElementById('opts');box.innerHTML='';
+  current.opts.forEach(function(op){
+    const b=document.createElement('button');
+    b.className='opt';b.textContent=op;b.setAttribute('type','button');
+    b.addEventListener('pointerdown',function(e){e.preventDefault();choose(op,b);});
+    box.appendChild(b);
+  });
+  msg('');
+}
+function choose(op,btn){
+  if(answered||!current)return;
+  answered=true;
+  const q=current;
+  if(op===q.ans){
+    btn.classList.add('good');
+    sfxBuild();
+    score+=100;built++;
+    renderHUD();renderTower();
+    msg('✅ 答啱！起好第 '+built+' 層！+100 分','good');
+    setTimeout(nextQ,1400);
+  }else{
+    btn.classList.add('bad');
+    const kids=document.getElementById('opts').children;
+    for(let i=0;i<kids.length;i++)if(kids[i].textContent===q.ans)kids[i].classList.add('good');
+    lives--;sfxWrong();renderHUD();
+    if(lives<=0){msg('❌ 答錯咗，冇晒命啦…','bad');setTimeout(function(){finish(false);},1500);}
+    else{msg('❌ 答錯咗，扣一條命！同層換題再試 💪','bad');setTimeout(nextQ,1700);}
+  }
+}
+function finish(win){
+  let bonus=0;
+  if(win){bonus=lives*150;score+=bonus;sfxWin();fireworks();}
+  let rec=false;
+  if(score>high){high=score;rec=true;try{localStorage.setItem('geoarch_high',String(high));}catch(e){}}
+  renderHUD();
+  document.getElementById('endTitle').textContent=win?'🏗️ 大廈落成！':'💔 工程暫停';
+  document.getElementById('endStats').innerHTML=
+    '起好樓層：<b>'+built+'/5</b><br>'+
+    (win?'落成獎分：<b>+'+bonus+'</b>（剩低 '+lives+' 條命）<br>':'')+
+    '<span class="big">⭐ '+score+' 分</span><br>'+
+    '🏆 最高分：'+high+(rec?' <span class="newrec">新紀錄！</span>':'');
+  document.getElementById('end').style.display='flex';
+}
+
+/* ---------- 煙花 ---------- */
+const fw=document.getElementById('fw');
+function fireworks(){
+  try{
+    const dpr=window.devicePixelRatio||1;
+    const W=window.innerWidth,H=window.innerHeight;
+    fw.width=W*dpr;fw.height=H*dpr;fw.style.display='block';
+    const fx=fw.getContext('2d');fx.setTransform(dpr,0,0,dpr,0,0);
+    const P=[];
+    const cols=['#fbbf24','#22d3ee','#f472b6','#4ade80','#ffffff'];
+    function burst(x,y){
+      for(let i=0;i<80;i++){
+        const a=Math.random()*Math.PI*2,sp=1.5+Math.random()*5;
+        P.push({x:x,y:y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:1,c:cols[i%cols.length],r:2+Math.random()*2.5});
+      }
+    }
+    burst(W*0.25,H*0.32);burst(W*0.75,H*0.28);burst(W*0.5,H*0.45);burst(W*0.4,H*0.2);burst(W*0.65,H*0.5);
+    let frames=0;
+    (function tick(){
+      fx.clearRect(0,0,W,H);
+      for(const p of P){
+        p.x+=p.vx;p.y+=p.vy;p.vy+=0.055;p.vx*=0.99;p.life-=0.007;
+        if(p.life<=0)continue;
+        fx.globalAlpha=Math.max(p.life,0);
+        fx.fillStyle=p.c;fx.beginPath();fx.arc(p.x,p.y,p.r,0,Math.PI*2);fx.fill();
+      }
+      fx.globalAlpha=1;
+      if(++frames<240)requestAnimationFrame(tick);
+      else fw.style.display='none';
+    })();
+  }catch(e){fw.style.display='none';}
+}
+
+/* ---------- 流程 ---------- */
+function resetGame(){
+  score=0;lives=3;built=0;answered=false;current=null;
+  buildTower();renderTower();renderHUD();
+  document.getElementById('end').style.display='none';
+  nextQ();
+}
+document.querySelectorAll('.dbtn').forEach(function(b){
+  b.addEventListener('pointerdown',function(e){
+    e.preventDefault();
+    document.querySelectorAll('.dbtn').forEach(function(x){x.classList.remove('sel');});
+    b.classList.add('sel');
+    diff=b.dataset.d;
+    document.getElementById('concept').innerHTML=CONCEPTS[diff];
+  });
+});
+document.getElementById('concept').innerHTML=CONCEPTS.easy;
+document.getElementById('startBtn').addEventListener('pointerdown',function(e){
+  e.preventDefault();ac();
+  document.getElementById('intro').style.display='none';
+  resetGame();
+});
+document.getElementById('againBtn').addEventListener('pointerdown',function(e){e.preventDefault();resetGame();});
+document.getElementById('diffBtn').addEventListener('pointerdown',function(e){
+  e.preventDefault();
+  document.getElementById('end').style.display='none';
+  document.getElementById('intro').style.display='flex';
+});
+buildTower();renderTower();renderHUD();
+</script>
+</body>
+</html>
