@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Prompt 大師 | AI 小遊戲</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei","PingFang HK",sans-serif;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);color:#eee;min-height:100vh}
+.wrap{max-width:760px;margin:0 auto;padding:16px 14px 60px}
+.topnav{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.topnav a{color:#9fd8ff;text-decoration:none;font-size:14px;background:rgba(255,255,255,.08);padding:8px 14px;border-radius:20px}
+header{text-align:center;padding:10px 0 4px}
+header h1{margin:6px 0;font-size:26px}
+header p{margin:0;color:#bcd;font-size:14px}
+.intro{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:14px 16px;margin:14px 0;font-size:14px;line-height:1.7}
+.intro b{color:#ffd166}
+.progress{background:rgba(0,0,0,.35);border-radius:10px;height:14px;margin:12px 0;overflow:hidden}
+.progress>div{height:100%;background:linear-gradient(90deg,#e94560,#ffd166);width:0%;transition:width .4s}
+.rinfo{display:flex;justify-content:space-between;font-size:14px;color:#bcd;margin-bottom:6px}
+.rinfo b{color:#ffd166;font-size:18px}
+.card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:18px;margin:12px 0}
+.task{background:rgba(233,69,96,.12);border-left:4px solid #e94560;border-radius:0 12px 12px 0;padding:12px 14px;margin-bottom:14px}
+.task .t{font-size:12px;color:#ff8fa3;letter-spacing:2px}
+.task .d{font-size:17px;font-weight:700;margin-top:4px}
+textarea{width:100%;min-height:130px;border-radius:12px;border:2px solid rgba(255,255,255,.2);background:rgba(0,0,0,.35);color:#fff;font-size:16px;padding:12px;font-family:inherit;resize:vertical}
+textarea:focus{outline:none;border-color:#ffd166}
+.hint{font-size:13px;color:#8aa;margin-top:6px}
+button.big{width:100%;border:none;border-radius:12px;padding:15px;font-size:17px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#e94560,#ff7b54);color:#fff;margin-top:12px}
+button.big:active{transform:scale(.98)}
+button.ghost{background:rgba(255,255,255,.12);margin-top:8px}
+.result{display:none}
+.score-big{font-size:52px;font-weight:900;text-align:center;color:#ffd166;margin:6px 0}
+.check{display:flex;gap:10px;align-items:flex-start;padding:10px;border-radius:10px;margin:8px 0;font-size:14px;line-height:1.6}
+.check.ok{background:rgba(6,214,160,.12);border:1px solid rgba(6,214,160,.4)}
+.check.no{background:rgba(233,69,96,.1);border:1px solid rgba(233,69,96,.35)}
+.check .ic{font-size:20px;flex-shrink:0}
+.check b{color:#ffd166}
+.tip{background:rgba(255,209,102,.08);border:1px dashed rgba(255,209,102,.5);border-radius:10px;padding:10px 12px;font-size:13px;color:#ffe3a3;margin-top:10px;line-height:1.7}
+.final{text-align:center;display:none}
+.final .rank{font-size:40px;margin:10px 0}
+.final h2{color:#ffd166}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:10px}
+td,th{padding:8px;border-bottom:1px solid rgba(255,255,255,.12);text-align:left}
+th{color:#8aa}
+footer{text-align:center;color:#8aa;font-size:12px;margin-top:24px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="topnav"><a href="ai.html">← AI 專區</a><a href="games.html">← 遊戲區</a><a href="index.html">🏠 首頁</a></div>
+<header><h1>✍️ Prompt 大師</h1><p>寫出好指令，先叫得郁 AI</p></header>
+
+<div class="intro" id="introBox">
+<b>🎮 玩法：</b>每關有一個任務，你要寫一段 prompt（指令）畀 AI。系統會檢查你嘅 prompt 包唔包含 5 大要素，逐項評分。<br>
+<b>💡 AI 概念：</b>Prompt Engineering —— 好嘅指令要有<b>角色、任務、格式、對象、限制</b>，AI 先會交出你想要嘅答案。
+</div>
+
+<div class="rinfo"><span>第 <b id="roundN">1</b> / 5 關</span><span>總分：<b id="totalS">0</b></span></div>
+<div class="progress"><div id="pbar"></div></div>
+
+<div class="card" id="playCard">
+<div class="task"><div class="t">📋 今關任務</div><div class="d" id="taskD"></div></div>
+<textarea id="pin" placeholder="喺度寫你嘅 prompt…例如：你係一位…"></textarea>
+<div class="hint">💡 提示：諗下「畀咩角色 AI 做」、「要佢做咩」、「想要咩格式」、「寫畀邊個睇」、「有咩限制」</div>
+<button class="big" onclick="submit()">🚀 交畀 AI 評分</button>
+</div>
+
+<div class="card result" id="resCard">
+<div class="score-big" id="rScore">0 分</div>
+<div id="checks"></div>
+<div class="tip" id="tipBox"></div>
+<button class="big" id="nextBtn" onclick="next()">下一關 →</button>
+</div>
+
+<div class="card final" id="finalCard">
+<div class="rank" id="rankE">🏆</div>
+<h2 id="rankT"></h2>
+<p id="rankD" style="color:#bcd"></p>
+<table id="sumT"><tr><th>關卡</th><th>任務</th><th>得分</th></tr></table>
+<button class="big ghost" onclick="location.reload()">↺ 再玩一次</button>
+</div>
+
+<footer>教學資源共享 · Prompt 大師</footer>
+</div>
+
+<script>
+var ROUNDS=[
+{t:"寫一封請假信畀班主任",kw:[
+ {n:"🎭 角色設定",k:["你係","作為","扮演","假設你係"],d:"話畀 AI 知佢要扮演咩角色，例如「你係一位中學生」。"},
+ {n:"🎯 任務清晰",k:["請假信","請假"],d:"清楚講明要做咩，唔好得個「幫我寫嘢」咁空泛。"},
+ {n:"📝 格式要求",k:["格式","分段","段落","開頭","結尾","稱呼"],d:"指定格式：點開頭、點結尾、分幾段。"},
+ {n:"👥 對象語氣",k:["班主任","老師","正式","禮貌","尊敬"],d:"講明寫畀邊個、咩語氣，AI 先識用啱嘅口吻。"},
+ {n:"⛔ 具體限制",k:["原因","日期","病假","事假","一天","兩天","三天"],d:"加具體資料：原因、日期、日數，封信先真實有用。"}]},
+{t:"解釋「光合作用」畀小學生聽",kw:[
+ {n:"🎭 角色設定",k:["你係","作為","扮演","老師"],d:"設定 AI 做一位識深入淺出嘅老師。"},
+ {n:"🎯 任務清晰",k:["光合作用","解釋","講解"],d:"講明要解釋咩概念。"},
+ {n:"📝 格式要求",k:["例子","比喻","步驟","分點","簡單"],d:"要求用比喻、例子或者分點，方便小朋友明。"},
+ {n:"👥 對象語氣",k:["小學生","小朋友","淺白","生動","有趣"],d:"講明對象係小學生，AI 會自動用淺白生動嘅語言。"},
+ {n:"⛔ 具體限制",k:["字","唔用","唔好","避免","術語"],d:"限制字數或者避開艱深術語，答案更貼心。"}]},
+{t:"幫我設計一個生日派對",kw:[
+ {n:"🎭 角色設定",k:["你係","作為","扮演","策劃"],d:"叫 AI 做派對策劃師，諗嘢會全面啲。"},
+ {n:"🎯 任務清晰",k:["生日派對","派對","設計","計劃"],d:"講明係生日派對，唔係普通聚會。"},
+ {n:"📝 格式要求",k:["流程","時間表","清單","預算","分"],d:"要流程、時間表或者預算清單，計劃先實用。"},
+ {n:"👥 對象語氣",k:["朋友","同學","十人","人數","歲"],d:"講明人數、年齡層，活動先啱玩。"},
+ {n:"⛔ 具體限制",k:["預算","元","唔","主題"],d:"加預算上限或者主題，AI 唔會亂咁建議啲貴嘢。"}]},
+{t:"寫一條道歉訊息畀朋友",kw:[
+ {n:"🎭 角色設定",k:["你係","作為","扮演"],d:"設定情境角色，等 AI 代入。"},
+ {n:"🎯 任務清晰",k:["道歉","唔好意思","對唔住","sorry"],d:"講明目的係道歉。"},
+ {n:"📝 格式要求",k:["訊息","短","簡短","whatsapp"],d:"講明係短訊息，AI 唔會寫成長篇大論。"},
+ {n:"👥 對象語氣",k:["朋友","真誠","誠懇","語氣"],d:"指定真誠嘅語氣，寫畀朋友睇。"},
+ {n:"⛔ 具體限制",k:["遲到","唔記得","原因","因為"],d:"講低咩事要道歉，訊息先有內容。"}]},
+{t:"幫我 plan 考試前一星期溫習時間表",kw:[
+ {n:"🎭 角色設定",k:["你係","作為","扮演"],d:"叫 AI 做溫習教練。"},
+ {n:"🎯 任務清晰",k:["溫習","時間表","計劃","考試"],d:"講明要溫習時間表。"},
+ {n:"📝 格式要求",k:["表格","每日","星期","時間"],d:"要求用表列出每日安排，一目了然。"},
+ {n:"👥 對象語氣",k:["中學生","中一","中二","中三"],d:"講明自己讀幾年級，難度先啱。"},
+ {n:"⛔ 具體限制",k:["科目","數學","英文","唔","休息"],d:"列出科目、每日上限同休息時間，計劃先做得到。"}]}
+];
+var r=0,total=0,scores=[];
+function render(){
+  document.getElementById('roundN').textContent=r+1;
+  document.getElementById('taskD').textContent=ROUNDS[r].t;
+  document.getElementById('pbar').style.width=(r/5*100)+'%';
+  document.getElementById('totalS').textContent=total;
+  document.getElementById('pin').value='';
+  document.getElementById('playCard').style.display='block';
+  document.getElementById('resCard').style.display='none';
+}
+function submit(){
+  var txt=document.getElementById('pin').value.trim();
+  if(txt.length<5){alert('寫多幾隻字先啦！試下寫返一段完整嘅指令。');return;}
+  var low=txt.toLowerCase(),sc=0,html='';
+  ROUNDS[r].kw.forEach(function(c){
+    var hit=c.k.some(function(k){return low.indexOf(k.toLowerCase())>=0;});
+    if(hit)sc+=20;
+    html+='<div class="check '+(hit?'ok':'no')+'"><div class="ic">'+(hit?'✅':'❌')+'</div><div><b>'+c.n+'</b> '+(hit?'+20 分':'0 分')+'<br><span style="color:#bcd">'+c.d+'</span></div></div>';
+  });
+  total+=sc;scores.push(sc);
+  document.getElementById('rScore').textContent=sc+' 分';
+  document.getElementById('checks').innerHTML=html;
+  var missed=ROUNDS[r].kw.filter(function(c,i){return document.getElementById('checks').children[i].className.indexOf('no')>=0;});
+  document.getElementById('tipBox').innerHTML='💡 <b>大師貼士：</b>'+(sc===100?'完美！五大要素齊晒，你已經係 Prompt 高手！':'下次試下加入：'+ROUNDS[r].kw.filter(function(c){return !c.k.some(function(k){return low.indexOf(k.toLowerCase())>=0;});}).map(function(c){return c.n;}).join('、'));
+  document.getElementById('nextBtn').textContent=(r===4)?'睇成績 🏆':'下一關 →';
+  document.getElementById('playCard').style.display='none';
+  document.getElementById('resCard').style.display='block';
+  document.getElementById('pbar').style.width=((r+1)/5*100)+'%';
+  document.getElementById('totalS').textContent=total;
+  window.scrollTo(0,0);
+}
+function next(){
+  if(r<4){r++;render();window.scrollTo(0,0);}
+  else{
+    document.getElementById('resCard').style.display='none';
+    var f=document.getElementById('finalCard');f.style.display='block';
+    var rows='';ROUNDS.forEach(function(rd,i){rows+='<tr><td>'+(i+1)+'</td><td>'+rd.t+'</td><td>'+scores[i]+' 分</td></tr>';});
+    document.getElementById('sumT').innerHTML='<tr><th>關卡</th><th>任務</th><th>得分</th></tr>'+rows;
+    var rk=document.getElementById('rankT'),re=document.getElementById('rankE'),rd=document.getElementById('rankD');
+    if(total>=450){re.textContent='🏆';rk.textContent='Prompt 大師！';rd.textContent='總分 '+total+'/500。你完全掌握五大要素，以後叫 AI 做嘢無難度！';}
+    else if(total>=300){re.textContent='🥈';rk.textContent='Prompt 高手！';rd.textContent='總分 '+total+'/500。已經好叻，爭少少就完美，記住每次都諗齊五大要素！';}
+    else if(total>=150){re.textContent='🥉';rk.textContent='Prompt 學徒';rd.textContent='總分 '+total+'/500。有進步空間！試下每次寫 prompt 之前，問自己：角色、任務、格式、對象、限制。';}
+    else{re.textContent='🌱';rk.textContent='Prompt 新手';rd.textContent='總分 '+total+'/500。唔緊要，再玩多次，今次記住五大要素：🎭角色 🎯任務 📝格式 👥對象 ⛔限制';}
+    window.scrollTo(0,0);
+  }
+}
+render();
+</script>
+</body>
+</html>

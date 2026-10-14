@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>神經網絡實驗室 | AI 小遊戲</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei","PingFang HK",sans-serif;background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);color:#eef;min-height:100vh}
+.wrap{max-width:900px;margin:0 auto;padding:16px 14px 60px}
+.topnav{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.topnav a{color:#9fd8ff;text-decoration:none;font-size:14px;background:rgba(255,255,255,.08);padding:8px 14px;border-radius:20px}
+header{text-align:center;padding:10px 0 4px}
+header h1{margin:6px 0;font-size:26px}
+header p{margin:0;color:#bcd;font-size:14px}
+.intro{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:14px 16px;margin:14px 0;font-size:14px;line-height:1.7}
+.intro b{color:#ffd166}
+.levels{display:flex;gap:8px;justify-content:center;margin:12px 0;flex-wrap:wrap}
+.lvbtn{border:2px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);color:#fff;border-radius:12px;padding:10px 18px;font-size:15px;cursor:pointer;font-weight:700}
+.lvbtn.active{background:#ffd166;color:#203a43;border-color:#ffd166}
+.lvbtn.done{border-color:#06d6a0}
+.card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:16px;margin:12px 0}
+.card h2{margin:0 0 10px;font-size:18px;color:#ffd166}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+.stat{flex:1;min-width:100px;background:rgba(0,0,0,.3);border-radius:12px;padding:10px;text-align:center}
+.stat .v{font-size:22px;font-weight:800;color:#06d6a0}
+.stat .l{font-size:12px;color:#bcd}
+.stage{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+canvas#plot{background:#0b1620;border-radius:12px;max-width:100%;touch-action:none}
+.controls{flex:1;min-width:250px}
+.ctl{margin:12px 0}
+.ctl label{display:flex;justify-content:space-between;font-size:14px;margin-bottom:4px}
+.ctl label span{color:#ffd166;font-weight:700;font-family:monospace}
+input[type=range]{width:100%;height:34px;accent-color:#ffd166}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+button.big{flex:1;min-width:140px;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:800;cursor:pointer}
+#trainBtn{background:linear-gradient(135deg,#06d6a0,#118ab2);color:#fff}
+#resetBtn{background:rgba(255,255,255,.15);color:#fff}
+#nextBtn{background:linear-gradient(135deg,#ffd166,#f4a261);color:#203a43;display:none}
+svg#net{width:100%;max-width:340px;height:auto;display:block;margin:0 auto}
+.msg{min-height:24px;text-align:center;font-weight:700;margin:8px 0;color:#ffd166}
+.success{color:#06d6a0!important}
+canvas#lossC{width:100%;height:90px;background:#0b1620;border-radius:10px}
+footer{text-align:center;color:#8aa;font-size:12px;margin-top:24px}
+.kbd{font-family:monospace}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="topnav"><a href="ai.html">← AI 專區</a><a href="games.html">← 遊戲區</a><a href="index.html">🏠 首頁</a></div>
+<header><h1>🧠 神經網絡實驗室</h1><p>親手調較神經元，看 AI 如何學會分類</p></header>
+
+<div class="intro">
+<b>🎮 玩法：</b>左邊有紅藍兩色圓點，代表兩類數據。拖動右邊滑桿改變神經元的權重 <span class="kbd">w₁、w₂</span> 同偏差 <span class="kbd">b</span>，條分界線會郁——試下將紅藍點完全分開！搞唔掂就㩒「自動訓練」，睇 AI 自己學。<br>
+<b>💡 AI 概念：</b>神經元 = 加權求和＋激活函數；權重決定分界線位置；訓練 = 用梯度下降不斷減少錯誤（Loss）。
+</div>
+
+<div class="levels">
+<button class="lvbtn active" id="lv1" onclick="setLevel(1)">第 1 關：直線分類</button>
+<button class="lvbtn" id="lv2" onclick="setLevel(2)">第 2 關：曲線挑戰</button>
+</div>
+
+<div class="card">
+<h2 id="lvTitle">第 1 關：直線分類</h2>
+<div class="msg" id="msg"></div>
+<div class="stats">
+<div class="stat"><div class="v" id="accV">--%</div><div class="l">準確率</div></div>
+<div class="stat"><div class="v" id="lossV">--</div><div class="l">Loss（越細越好）</div></div>
+<div class="stat"><div class="v" id="stepV">0</div><div class="l">訓練步數</div></div>
+</div>
+<div class="stage">
+<div><canvas id="plot" width="340" height="340"></canvas></div>
+<div class="controls">
+<div class="ctl"><label>權重 w₁ <span id="w1V">0.00</span></label><input type="range" id="w1" min="-5" max="5" step="0.05" value="0.5"></div>
+<div class="ctl"><label>權重 w₂ <span id="w2V">0.00</span></label><input type="range" id="w2" min="-5" max="5" step="0.05" value="0.5"></div>
+<div class="ctl"><label>偏差 b <span id="bV">0.00</span></label><input type="range" id="b" min="-5" max="5" step="0.05" value="-0.5"></div>
+<div class="ctl"><label>學習率（自動訓練用） <span id="lrV">0.30</span></label><input type="range" id="lr" min="0.05" max="1" step="0.05" value="0.3"></div>
+<div class="btnrow">
+<button class="big" id="trainBtn" onclick="autoTrain()">🤖 自動訓練</button>
+<button class="big" id="resetBtn" onclick="resetW()">↺ 重置</button>
+</div>
+<div class="btnrow"><button class="big" id="nextBtn" onclick="setLevel(2)">下一關 →</button></div>
+</div>
+</div>
+<div style="margin-top:12px"><div style="font-size:13px;color:#bcd;margin-bottom:4px">Loss 變化曲線</div><canvas id="lossC" width="600" height="90"></canvas></div>
+</div>
+
+<div class="card">
+<h2>🔌 神經元結構</h2>
+<svg id="net" viewBox="0 0 340 220">
+<circle cx="50" cy="60" r="26" fill="#118ab2"/><text x="50" y="66" text-anchor="middle" fill="#fff" font-size="18">x₁</text>
+<circle cx="50" cy="160" r="26" fill="#118ab2"/><text x="50" y="166" text-anchor="middle" fill="#fff" font-size="18">x₂</text>
+<circle cx="170" cy="110" r="34" fill="#ffd166"/><text x="170" y="118" text-anchor="middle" fill="#203a43" font-size="22" font-weight="bold">Σ</text>
+<circle cx="290" cy="110" r="26" fill="#06d6a0"/><text x="290" y="116" text-anchor="middle" fill="#fff" font-size="14">輸出</text>
+<line id="e1" x1="76" y1="60" x2="138" y2="100" stroke="#ffd166" stroke-width="3"/>
+<line id="e2" x1="76" y1="160" x2="138" y2="120" stroke="#ffd166" stroke-width="3"/>
+<line x1="204" y1="110" x2="264" y2="110" stroke="#06d6a0" stroke-width="3"/>
+<text id="t1" x="105" y="72" fill="#ffd166" font-size="13">w₁</text>
+<text id="t2" x="105" y="158" fill="#ffd166" font-size="13">w₂</text>
+<text x="170" y="200" text-anchor="middle" fill="#bcd" font-size="13">z = w₁x₁ + w₂x₂ + b → sigmoid(z)</text>
+</svg>
+<div style="font-size:13px;color:#bcd;line-height:1.7">每個輸入乘上<b style="color:#ffd166">權重</b>再加總，經過 sigmoid 激活函數變成 0–1 之間的機率。分界線就是 <span class="kbd">w₁x₁ + w₂x₂ + b = 0</span>。</div>
+</div>
+
+<footer>教學資源共享 · 神經網絡實驗室</footer>
+</div>
+
+<script>
+// ---------- 數據 ----------
+var DATA1=[ // 可線性分隔: x1+x2<1 藍, >1 紅
+[0.10,0.12,0],[0.22,0.18,0],[0.15,0.35,0],[0.30,0.25,0],[0.08,0.45,0],[0.35,0.30,0],[0.25,0.45,0],[0.42,0.38,0],[0.18,0.55,0],[0.45,0.48,0],[0.32,0.58,0],[0.50,0.55,0],
+[0.90,0.88,1],[0.78,0.82,1],[0.85,0.65,1],[0.70,0.75,1],[0.92,0.55,1],[0.65,0.70,1],[0.75,0.55,1],[0.58,0.62,1],[0.82,0.45,1],[0.55,0.52,1],[0.68,0.42,1],[0.50,0.45,1]];
+var DATA2=[ // 圓形分佈: 單層神經元分唔開
+[0.50,0.50,0],[0.55,0.48,0],[0.45,0.55,0],[0.52,0.58,0],[0.48,0.42,0],[0.58,0.52,0],[0.42,0.48,0],[0.50,0.60,0],[0.60,0.50,0],[0.40,0.50,0],[0.50,0.40,0],[0.55,0.55,0],
+[0.10,0.10,1],[0.90,0.10,1],[0.10,0.90,1],[0.90,0.90,1],[0.20,0.80,1],[0.80,0.20,1],[0.05,0.50,1],[0.95,0.50,1],[0.50,0.05,1],[0.50,0.95,1],[0.15,0.30,1],[0.85,0.70,1]];
+
+var level=1, data=DATA1, w1=0.5, w2=0.5, b=-0.5, steps=0, lossHist=[], training=false, lv1done=false;
+
+function sig(z){return 1/(1+Math.exp(-z));}
+function predict(x1,x2){return sig(w1*x1+w2*x2+b);}
+function computeLoss(){
+  var s=0;
+  for(var i=0;i<data.length;i++){
+    var p=predict(data[i][0],data[i][1]); p=Math.min(0.999999,Math.max(0.000001,p));
+    var t=data[i][2]; s+=-(t*Math.log(p)+(1-t)*Math.log(1-p));
+  }
+  return s/data.length;
+}
+function accuracy(){
+  var ok=0;
+  for(var i=0;i<data.length;i++){ if((predict(data[i][0],data[i][1])>=0.5?1:0)===data[i][2]) ok++; }
+  return ok/data.length;
+}
+function gdStep(lr){
+  var g1=0,g2=0,gb=0;
+  for(var i=0;i<data.length;i++){
+    var p=predict(data[i][0],data[i][1]), t=data[i][2], e=p-t;
+    g1+=e*data[i][0]; g2+=e*data[i][1]; gb+=e;
+  }
+  w1-=lr*g1/data.length; w2-=lr*g2/data.length; b-=lr*gb/data.length; steps++;
+}
+
+// ---------- 繪圖 ----------
+var plot=document.getElementById('plot'), ctx=plot.getContext('2d');
+function draw(){
+  var W=340,H=340,px=function(x){return x*W;},py=function(y){return H-y*H;};
+  ctx.clearRect(0,0,W,H);
+  // 背景分區
+  var img=ctx.createImageData(W,H);
+  for(var yy=0;yy<H;yy+=4)for(var xx=0;xx<W;xx+=4){
+    var p=sig(w1*(xx/W)+w2*(1-yy/H)+b);
+    var r=p>0.5?[255,120,120]:[120,160,255];
+    for(var dy=0;dy<4;dy++)for(var dx=0;dx<4;dx++){
+      var id=((yy+dy)*W+xx+dx)*4;
+      img.data[id]=r[0];img.data[id+1]=r[1];img.data[id+2]=r[2];img.data[id+3]=28;
+    }
+  }
+  ctx.putImageData(img,0,0);
+  // 分界線
+  ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.setLineDash([7,5]);ctx.beginPath();
+  if(Math.abs(w2)>0.001){
+    ctx.moveTo(px(0),py(-b/w2));ctx.lineTo(px(1),py(-(w1+b)/w2));
+  }else if(Math.abs(w1)>0.001){ctx.moveTo(px(-b/w1),py(0));ctx.lineTo(px(-b/w1),py(1));}
+  ctx.stroke();ctx.setLineDash([]);
+  // 點
+  for(var i=0;i<data.length;i++){
+    var X=px(data[i][0]),Y=py(data[i][1]);
+    var pred=predict(data[i][0],data[i][1])>=0.5?1:0;
+    ctx.beginPath();ctx.arc(X,Y,9,0,7);
+    ctx.fillStyle=data[i][2]===1?'#ff595e':'#4cc9f0';ctx.fill();
+    ctx.lineWidth=3;ctx.strokeStyle=pred===data[i][2]?'#06d6a0':'#ffd166';ctx.stroke();
+    ctx.fillStyle='#fff';ctx.font='bold 9px sans-serif';ctx.textAlign='center';
+    ctx.fillText(pred===data[i][2]?'✓':'✗',X,Y+3);
+  }
+}
+var lc=document.getElementById('lossC'),lctx=lc.getContext('2d');
+function drawLoss(){
+  lctx.clearRect(0,0,600,90);
+  if(lossHist.length<2)return;
+  var mx=Math.max.apply(null,lossHist),mn=Math.min.apply(null,lossHist),rg=(mx-mn)||1;
+  lctx.strokeStyle='#06d6a0';lctx.lineWidth=2;lctx.beginPath();
+  for(var i=0;i<lossHist.length;i++){
+    var x=i/(lossHist.length-1)*600,y=85-(lossHist[i]-mn)/rg*75;
+    i?lctx.lineTo(x,y):lctx.moveTo(x,y);
+  }
+  lctx.stroke();
+}
+function refresh(){
+  document.getElementById('w1V').textContent=w1.toFixed(2);
+  document.getElementById('w2V').textContent=w2.toFixed(2);
+  document.getElementById('bV').textContent=b.toFixed(2);
+  document.getElementById('t1').textContent='w₁='+w1.toFixed(2);
+  document.getElementById('t2').textContent='w₂='+w2.toFixed(2);
+  document.getElementById('e1').setAttribute('stroke-width',1+Math.min(8,Math.abs(w1)*1.6));
+  document.getElementById('e2').setAttribute('stroke-width',1+Math.min(8,Math.abs(w2)*1.6));
+  var acc=accuracy(),loss=computeLoss();
+  document.getElementById('accV').textContent=(acc*100).toFixed(0)+'%';
+  document.getElementById('accV').style.color=acc>=0.9?'#06d6a0':'#ffd166';
+  document.getElementById('lossV').textContent=loss.toFixed(3);
+  document.getElementById('stepV').textContent=steps;
+  draw();
+  var m=document.getElementById('msg');
+  if(level===1){
+    if(acc>=0.9&&!lv1done){lv1done=true;m.innerHTML='<span class="success">🎉 過關！準確率 ≥90%，你調到條完美分界線！</span>';document.getElementById('nextBtn').style.display='block';document.getElementById('lv1').classList.add('done');}
+    else if(!lv1done){m.textContent='目標：將所有紅藍點正確分開（準確率 ≥90%）';}
+  }else{
+    m.textContent='呢組數據係圓形分佈，無論點調都分唔開…㩒「自動訓練」試下！';
+  }
+}
+
+// ---------- 互動 ----------
+['w1','w2','b'].forEach(function(id){
+  document.getElementById(id).addEventListener('input',function(){
+    if(training)return;
+    w1=parseFloat(document.getElementById('w1').value);
+    w2=parseFloat(document.getElementById('w2').value);
+    b=parseFloat(document.getElementById('b').value);
+    refresh();
+  });
+});
+document.getElementById('lr').addEventListener('input',function(){
+  document.getElementById('lrV').textContent=parseFloat(this.value).toFixed(2);
+});
+function syncSliders(){
+  document.getElementById('w1').value=w1;document.getElementById('w2').value=w2;document.getElementById('b').value=b;
+}
+function resetW(){training=false;w1=0.5;w2=0.5;b=-0.5;steps=0;lossHist=[];syncSliders();drawLoss();refresh();}
+function autoTrain(){
+  if(training)return;training=true;
+  document.getElementById('trainBtn').textContent='訓練緊…';
+  var lr=parseFloat(document.getElementById('lr').value),n=0,total=240;
+  lossHist=[];
+  var iv=setInterval(function(){
+    for(var k=0;k<6&&n<total;k++){gdStep(lr);n++;}
+    lossHist.push(computeLoss());
+    syncSliders();drawLoss();refresh();
+    if(n>=total){
+      clearInterval(iv);training=false;
+      document.getElementById('trainBtn').textContent='🤖 自動訓練';
+      if(level===2){
+        var acc=accuracy();
+        document.getElementById('msg').innerHTML='訓練完成，準確率只有 <b>'+(acc*100).toFixed(0)+'%</b>！<br>💡 單層神經元只能畫<b>直線</b>分界，分唔開圓形數據。<br>真正的深度學習會加<b>隱藏層</b>，等網絡學識畫曲線——呢個就係 "Deep" Learning 個 "Deep" 嘅意思！';
+        document.getElementById('lv2').classList.add('done');
+      }
+    }
+  },60);
+}
+function setLevel(l){
+  level=l;training=false;resetW();
+  document.getElementById('lv1').classList.toggle('active',l===1);
+  document.getElementById('lv2').classList.toggle('active',l===2);
+  data=(l===1)?DATA1:DATA2;
+  document.getElementById('lvTitle').textContent=l===1?'第 1 關：直線分類':'第 2 關：曲線挑戰';
+  document.getElementById('nextBtn').style.display='none';
+  refresh();
+}
+refresh();
+</script>
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>槓桿平衡</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#1c1917;color:#fef3c7;line-height:1.6}
+header{background:linear-gradient(135deg,#78350f,#b45309);padding:18px 16px;text-align:center}
+header h1{margin:0;font-size:22px}
+header p{margin:4px 0 0;font-size:13px;opacity:.85}
+.back{display:block;text-align:center;background:#451a03;color:#fcd34d;text-decoration:none;padding:12px;font-size:16px;font-weight:600}
+.wrap{max-width:640px;margin:0 auto;padding:12px 14px 40px}
+canvas{width:100%;height:320px;background:#292524;border-radius:12px;display:block;touch-action:none}
+.panel{background:#44403c;border-radius:12px;padding:14px;margin-top:12px}
+.row{display:flex;gap:10px;align-items:center;margin:10px 0;flex-wrap:wrap}
+label{font-size:15px;min-width:96px}
+input[type=range]{flex:1;min-width:140px;height:44px;accent-color:#f59e0b}
+.val{font-size:16px;font-weight:700;color:#fcd34d;min-width:76px;text-align:right}
+.wbtns{display:flex;gap:8px;flex-wrap:wrap}
+.wbtns button{flex:1;min-width:64px;min-height:48px;font-size:16px;font-weight:700;background:#57534e;color:#fef3c7;border-radius:10px;border:2px solid transparent}
+.wbtns button.on{background:#b45309;border-color:#fcd34d;color:#fff}
+button.act{min-height:52px;font-size:18px;font-weight:700;border:none;border-radius:10px;padding:10px 18px;cursor:pointer;background:#d97706;color:#fff;width:100%}
+button.act:active{transform:scale(.98)}
+.ro-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.ro{background:#1c1917;border-radius:8px;padding:10px;text-align:center}
+.ro .k{font-size:12px;color:#a8a29e}
+.ro .v{font-size:18px;font-weight:800;color:#fcd34d}
+#msg{min-height:52px;font-size:16px;text-align:center;padding:8px;color:#fde68a;font-weight:600}
+.score{font-size:15px;text-align:center;color:#fbbf24;font-weight:700}
+.modebar{display:flex;gap:8px;margin-bottom:4px}
+.modebar button{flex:1;background:#57534e;color:#e7e5e4;min-height:48px;font-size:16px;font-weight:700;border-radius:10px;border:none}
+.modebar button.on{background:#d97706;color:#fff}
+#overlay{position:fixed;inset:0;background:rgba(28,25,23,.97);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+#overlay .card{background:#44403c;border-radius:16px;padding:24px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto}
+#overlay h2{margin-top:0;color:#fcd34d}
+#overlay p{font-size:15px}
+#overlay .go{width:100%;background:#d97706;color:#fff;margin-top:12px;min-height:52px;font-size:18px;font-weight:700;border:none;border-radius:10px}
+</style>
+</head>
+<body>
+<header><h1>⚖️ 槓桿平衡</h1><p>調支點 · 鬥力矩 · 令天秤平衡</p></header>
+<a class="back" href="games.html">← 返回遊戲列表</a>
+<div class="wrap">
+<div class="modebar"><button id="mFree" class="on">🔬 自由探索</button><button id="mChal">🏆 挑戰模式</button></div>
+<canvas id="cv"></canvas>
+<div class="panel">
+<div class="row"><label>左邊重量</label><div class="wbtns" id="wL"></div></div>
+<div class="row"><label>右邊重量</label><div class="wbtns" id="wR"></div></div>
+<div class="row"><label for="ful">支點位置</label><input type="range" id="ful" min="0.5" max="3.5" step="0.05" value="2"><span class="val" id="fulV">2.00 m</span></div>
+<div class="ro-grid">
+<div class="ro"><div class="k">左力矩 (m₁×d₁)</div><div class="v" id="tL">—</div></div>
+<div class="ro"><div class="k">右力矩 (m₂×d₂)</div><div class="v" id="tR">—</div></div>
+</div>
+<div class="row"><button class="act" id="btnCheck" style="display:none">⚖️ 檢查平衡！</button></div>
+</div>
+<div id="msg"></div>
+<div class="score" id="score"></div>
+</div>
+<div id="overlay"><div class="card">
+<h2>⚖️ 槓桿平衡</h2>
+<p><b>玩法：</b>左右兩邊揀唔同重量，拖動滑桿移動支點位置，令支點兩邊嘅力矩相等，槓桿就會平衡！</p>
+<p><b>🏆 挑戰模式：</b>每關隨機出兩個重量，你要計啱支點位置，3 關，嘗試次數愈少分愈高。</p>
+<p><b>💡 物理原理：</b>力矩 = 力 × 力臂。平衡條件：m₁ × d₁ = m₂ × d₂。重嘅一邊要近支點，輕嘅一邊要遠離支點 —— 呢個就係點解細力都可以撬起大石頭！</p>
+<button class="go" onclick="document.getElementById('overlay').style.display='none'">開始挑戰！</button>
+</div></div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+var W=0,H=0;
+function resize(){var d=Math.min(window.devicePixelRatio||1,2);W=cv.clientWidth;H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);}
+window.addEventListener('resize',resize); resize();
+var BEAM=4, m1=20, m2=30, ful=2.0, angle=0, targetAngle=0;
+var mode='free', round=0, attempts=0, score=0, rM1=0, rM2=0;
+var weights=[10,20,30,40,50];
+function mkBtns(id,cur,set){
+  var box=document.getElementById(id); box.innerHTML='';
+  weights.forEach(function(w){
+    var b=document.createElement('button');
+    b.textContent=w+' kg'; if(w===cur)b.className='on';
+    b.addEventListener('click',function(){set(w);mkBtns(id,w,set);upd();});
+    box.appendChild(b);
+  });
+}
+mkBtns('wL',m1,function(v){m1=v;});
+mkBtns('wR',m2,function(v){m2=v;});
+function torques(){var d1=ful, d2=BEAM-ful;return{m1:m1,d1:d1,m2:m2,d2:BEAM-ful,t1:m1*d1,t2:m2*d2};}
+function upd(){
+  document.getElementById('fulV').textContent=ful.toFixed(2)+' m';
+  var t=torques();
+  document.getElementById('tL').textContent=t.t1.toFixed(1);
+  document.getElementById('tR').textContent=t.t2.toFixed(1);
+  var diff=t.t1-t.t2;
+  targetAngle=Math.max(-0.26,Math.min(0.26,diff*0.004));
+}
+document.getElementById('ful').addEventListener('input',function(e){ful=parseFloat(e.target.value);upd();});
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  angle+=(targetAngle-angle)*0.08;
+  var gy=H*0.72, cx=W/2;
+  var scale=(W-80)/BEAM;
+  ctx.fillStyle='#78716c';
+  ctx.beginPath();ctx.moveTo(cx-24,gy);ctx.lineTo(cx+24,gy);ctx.lineTo(cx,gy-46);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#fcd34d';ctx.font='bold 12px sans-serif';ctx.textAlign='center';
+  ctx.fillText('支點',cx,gy+22);
+  ctx.save();ctx.translate(cx,gy-46);ctx.rotate(angle);
+  ctx.fillStyle='#a16207';
+  ctx.fillRect(-BEAM/2*scale,-7,BEAM*scale,14);
+  ctx.fillStyle='#fef3c7';ctx.font='11px sans-serif';
+  for(var i=0;i<=4;i++){var mx=(-BEAM/2+i)*scale;ctx.fillRect(mx-1,-7,2,14);ctx.fillText(i+'m',mx,26);}
+  var fx=(ful-BEAM/2)*scale;
+  ctx.fillStyle='#ef4444';ctx.beginPath();ctx.arc(fx,0,6,0,7);ctx.fill();
+  var bw1=14+m1*0.5, bw2=14+m2*0.5;
+  ctx.fillStyle='#38bdf8';
+  var lx=-BEAM/2*scale;
+  ctx.fillRect(lx-bw1/2,8,bw1,bw1);
+  ctx.fillStyle='#fff';ctx.fillText(m1+'kg',lx,12+bw1/2);
+  ctx.fillStyle='#f472b6';
+  var rx=BEAM/2*scale;
+  ctx.fillRect(rx-bw2/2,8,bw2,bw2);
+  ctx.fillStyle='#fff';ctx.fillText(m2+'kg',rx,12+bw2/2);
+  ctx.restore();
+  if(Math.abs(targetAngle)<0.005){
+    ctx.fillStyle='#4ade80';ctx.font='bold 18px sans-serif';
+    ctx.fillText('⚖️ 平衡！',cx,40);
+  }
+}
+function setMode(m){
+  mode=m;
+  document.getElementById('mFree').className=m==='free'?'on':'';
+  document.getElementById('mChal').className=m==='chal'?'on':'';
+  document.getElementById('btnCheck').style.display=m==='chal'?'':'none';
+  document.getElementById('msg').textContent='';
+  if(m==='chal'){round=0;score=0;newRound();}else{document.getElementById('score').textContent='';}
+}
+document.getElementById('mFree').addEventListener('click',function(){setMode('free');});
+document.getElementById('mChal').addEventListener('click',function(){setMode('chal');});
+function newRound(){
+  attempts=0;
+  rM1=weights[Math.floor(Math.random()*5)];
+  do{rM2=weights[Math.floor(Math.random()*5)];}while(rM2===rM1);
+  m1=rM1;m2=rM2;
+  mkBtns('wL',m1,function(v){m1=v;});
+  mkBtns('wR',m2,function(v){m2=v;});
+  ful=2.0;document.getElementById('ful').value=2.0;upd();
+  document.getElementById('score').textContent='第 '+(round+1)+' / 3 關　總分：'+score;
+  document.getElementById('msg').textContent='🎯 左 '+m1+' kg，右 '+m2+' kg —— 支點應該放喺邊？（提示：m₁×d₁ = m₂×d₂）';
+}
+document.getElementById('btnCheck').addEventListener('click',function(){
+  attempts++;
+  var t=torques();
+  var diff=Math.abs(t.t1-t.t2);
+  if(diff<3){
+    var pts=Math.max(20,100-(attempts-1)*15);score+=pts;
+    var ans=(BEAM*m2/(m1+m2)).toFixed(2);
+    document.getElementById('msg').textContent='✅ 平衡！支點在 '+ful.toFixed(2)+' m（答案 '+ans+' m）+'+pts+' 分';
+    round++;
+    if(round>=3){
+      var best=0;try{best=parseInt(localStorage.getItem('leverBest')||'0');}catch(e){}
+      var nb='';if(score>best){try{localStorage.setItem('leverBest',score);}catch(e){}nb=' 🏅 新紀錄！';}
+      document.getElementById('score').textContent='🎉 完成！總分：'+score+' / 300'+nb;
+      setTimeout(function(){if(mode==='chal'){round=0;score=0;newRound();}},2500);
+    }else setTimeout(newRound,2000);
+  }else{
+    document.getElementById('msg').textContent='❌ 未平衡！左力矩 '+t.t1.toFixed(1)+' vs 右力矩 '+t.t2.toFixed(1)+'（第 '+attempts+' 次）';
+  }
+  if(round<3)document.getElementById('score').textContent='第 '+(round+1)+' / 3 關　總分：'+score;
+});
+function loop(){draw();requestAnimationFrame(loop);}
+upd();loop();
+})();
+</script>
+</body>
+</html>

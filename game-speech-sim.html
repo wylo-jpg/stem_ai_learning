@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>語音識別大作戰</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#082f49;color:#e0f2fe;touch-action:manipulation;line-height:1.6}
+header{background:#0c4a6e;padding:12px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:5}
+header a{color:#7dd3fc;text-decoration:none;font-size:16px;min-height:44px;display:flex;align-items:center}
+header h1{margin:0;font-size:18px;flex:1}
+#hud{display:flex;gap:8px;padding:10px 12px}
+.hud-box{background:#0c4a6e;border-radius:10px;padding:8px 14px;font-size:15px;flex:1;text-align:center}
+.hud-box b{color:#fbbf24;font-size:18px}
+#bar-wrap{height:10px;background:#0c4a6e;border-radius:6px;margin:0 12px;overflow:hidden}
+#bar{height:100%;width:100%;background:#38bdf8;border-radius:6px;transition:width 1s linear}
+#stage{max-width:640px;margin:0 auto;padding:12px}
+#scenario{background:#0c4a6e;border-radius:12px;padding:14px 16px;font-size:14px;margin-bottom:12px;color:#bae6fd}
+#ai-say{font-size:13px;color:#7dd3fc;margin-bottom:8px}
+#sentence{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:14px 0}
+.chip{min-width:52px;min-height:52px;display:flex;align-items:center;justify-content:center;background:#164e63;border:2px solid #0ea5e9;border-radius:10px;font-size:24px;cursor:pointer;user-select:none}
+.chip:active{background:#0e7490}
+.chip.fixed{background:#14532d;border-color:#22c55e;cursor:default}
+.chip.bad{animation:shake .3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+#hint{text-align:center;color:#7dd3fc;font-size:14px;min-height:24px}
+#choices{display:flex;gap:10px;justify-content:center;margin:12px 0;flex-wrap:wrap}
+#choices button{min-width:80px;min-height:56px;font-size:22px;border-radius:12px;border:2px solid #38bdf8;background:#0c4a6e;color:#fff;cursor:pointer}
+#choices button:active{background:#0369a1}
+#msg{text-align:center;font-size:15px;min-height:28px;font-weight:700}
+.overlay{position:fixed;inset:0;background:rgba(8,47,73,.95);display:flex;align-items:center;justify-content:center;z-index:20;padding:20px}
+.overlay.hidden{display:none}
+.panel{background:#0c4a6e;border-radius:16px;padding:24px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto}
+.panel h2{margin:0 0 10px;font-size:20px}
+.panel p{font-size:15px;color:#e0f2fe;margin:8px 0}
+.concept{background:#083344;border-radius:10px;padding:12px 14px;margin:12px 0;font-size:14px}
+.concept b{color:#7dd3fc}
+button.big{display:block;width:100%;min-height:52px;margin-top:14px;background:#0284c7;color:#fff;border:0;border-radius:12px;font-size:18px;font-weight:700;cursor:pointer}
+button.big:active{background:#0369a1}
+footer{text-align:center;color:#475569;font-size:12px;padding:16px}
+</style>
+</head>
+<body>
+<header><a href="ai.html">← 返回</a><h1>🎙️ 語音識別大作戰</h1></header>
+<div id="hud">
+<div class="hud-box">第 <b id="h-round">1</b>/8 句</div>
+<div class="hud-box">⏱ <b id="h-time">90</b>s</div>
+<div class="hud-box">分數 <b id="h-score">0</b></div>
+</div>
+<div id="bar-wrap"><div id="bar"></div></div>
+<div id="stage">
+<div id="scenario">🎧 情境：<span id="sc-text"></span></div>
+<div id="ai-say">🤖 AI 聽到（有錯！）：</div>
+<div id="sentence"></div>
+<div id="hint"></div>
+<div id="choices"></div>
+<div id="msg"></div>
+</div>
+
+<div class="overlay" id="intro">
+<div class="panel">
+<h2>🎙️ 語音識別大作戰</h2>
+<p><b>玩法：</b>AI 語音轉文字成日聽錯嘢！每句有 2 個字俾 AI 聽錯咗。<b>篤你覺得錯嘅字</b>，再揀返啱嘅字。篤啱錯字先可以改；篤啱嘅字會扣時間！90 秒內改晒 8 句。</p>
+<div class="concept"><b>💡 AI概念 — 語音識別：</b>AI 將聲音轉文字要過兩關：<b>聲學模型</b>（認發音）同<b>語言模型</b>（估邊個詞合理）。同音字（氣／器）、口音、背景嘈音都係大挑戰。你平時同 Siri／語音輸入講嘢，佢聽錯嗰陣就係呢啲原因！</div>
+<button class="big" onclick="startGame()">開始挑戰</button>
+</div>
+</div>
+
+<div class="overlay hidden" id="end">
+<div class="panel">
+<h2>🏁 完成！</h2>
+<p id="end-text"></p>
+<div class="concept"><b>💡 諗一諗：</b>點解 AI 聽廣東話特別易錯？（提示：同音字多、懶音、口語同書面語唔同）如果你係工程師，會點樣改善？</div>
+<button class="big" onclick="location.reload()">再玩一次</button>
+<a href="ai.html" style="display:block;text-align:center;margin-top:10px;color:#7dd3fc;min-height:44px;line-height:44px">返回 AI 資源頁</a>
+</div>
+</div>
+
+<footer>單檔離線遊戲 · 教學資源共享</footer>
+
+<script>
+const DATA=[
+ {sc:"同學同 Siri 講嘢",say:"今天天氣很好",hear:["今","天","天","器","很","好"],wrong:[{i:3,ok:"氣",ch:["氣","器","汽"]},{i:2,ok:"天",ch:["天","添","田"]}]},
+ {sc:"嘈吵嘅課室入面",say:"我想去公園散步",hear:["我","想","去","公","園","散","佈"],wrong:[{i:6,ok:"步",ch:["步","佈","埠"]},{i:3,ok:"公",ch:["公","工","功"]}]},
+ {sc:"文具店門口",say:"佢買咗個新書包",hear:["佢","買","咗","個","新","書","飽"],wrong:[{i:6,ok:"包",ch:["包","飽","胞"]},{i:0,ok:"佢",ch:["佢","去","居"]}]},
+ {sc:"科學堂分享",say:"人工智能好有趣",hear:["人","工","只","能","好","有","趣"],wrong:[{i:2,ok:"智",ch:["智","只","誌"]},{i:5,ok:"有",ch:["有","友","又"]}]},
+ {sc:"班主任宣佈",say:"聽日要交功課",hear:["聽","日","要","交","公","課"],wrong:[{i:4,ok:"功",ch:["功","公","攻"]},{i:0,ok:"聽",ch:["聽","青","輕"]}]},
+ {sc:"小食部排隊",say:"我鍾意食雪糕",hear:["我","鍾","意","食","雪","羔"],wrong:[{i:5,ok:"糕",ch:["糕","羔","高"]},{i:1,ok:"鍾",ch:["鍾","鐘","忠"]}]},
+ {sc:"運動會現場",say:"佢跑得好快",hear:["佢","跑","得","好","塊"],wrong:[{i:4,ok:"快",ch:["快","塊","會"]},{i:1,ok:"跑",ch:["跑","炮","泡"]}]},
+ {sc:"天文學會活動",say:"今晚有流星雨",hear:["今","晚","有","流","星","宇"],wrong:[{i:5,ok:"雨",ch:["雨","宇","羽"]},{i:3,ok:"流",ch:["流","留","榴"]}]},
+];
+let round=0,score=0,timeLeft=90,timer=null,fixed=0,totalWrong=0,selected=null,playing=false;
+const TOTAL=90;
+
+function startGame(){
+  document.getElementById('intro').classList.add('hidden');
+  round=0;score=0;timeLeft=TOTAL;playing=true;
+  document.getElementById('h-score').textContent='0';
+  loadRound();
+  timer=setInterval(()=>{
+    timeLeft--;
+    document.getElementById('h-time').textContent=timeLeft;
+    document.getElementById('bar').style.width=(timeLeft/TOTAL*100)+'%';
+    if(timeLeft<=15)document.getElementById('h-time').style.color='#ef4444';
+    if(timeLeft<=0){clearInterval(timer);playing=false;endGame(false);}
+  },1000);
+}
+function loadRound(){
+  const d=DATA[round];
+  totalWrong=d.wrong.length;fixed=0;selected=null;
+  document.getElementById('h-round').textContent=round+1;
+  document.getElementById('sc-text').textContent='「'+d.say+'」';
+  document.getElementById('hint').textContent=`呢句有 ${totalWrong} 個字俾 AI 聽錯咗，篤出嚟！`;
+  document.getElementById('msg').textContent='';
+  document.getElementById('choices').innerHTML='';
+  const box=document.getElementById('sentence');box.innerHTML='';
+  d.hear.forEach((ch,i)=>{
+    const el=document.createElement('div');el.className='chip';el.textContent=ch;el.dataset.i=i;
+    el.onclick=()=>tapChip(el,i);
+    box.appendChild(el);
+  });
+}
+function tapChip(el,i){
+  if(!playing||el.classList.contains('fixed'))return;
+  const d=DATA[round];
+  const w=d.wrong.find(w=>w.i===i&&!w.done);
+  if(w){
+    selected=w;
+    const box=document.getElementById('choices');box.innerHTML='';
+    const opts=[...w.ch].sort(()=>Math.random()-0.5);
+    opts.forEach(c=>{
+      const b=document.createElement('button');b.textContent=c;
+      b.onclick=()=>choose(b,c,el);
+      box.appendChild(b);
+    });
+    document.getElementById('msg').textContent='揀返啱嘅字：';
+    document.getElementById('msg').style.color='#fbbf24';
+  }else{
+    el.classList.add('bad');setTimeout(()=>el.classList.remove('bad'),300);
+    timeLeft=Math.max(0,timeLeft-2);
+    document.getElementById('h-time').textContent=timeLeft;
+    document.getElementById('msg').textContent='❌ 呢個字冇錯！扣 2 秒';
+    document.getElementById('msg').style.color='#ef4444';
+  }
+}
+function choose(btn,c,el){
+  if(!playing||!selected)return;
+  if(c===selected.ok){
+    el.textContent=c;el.classList.add('fixed');
+    selected.done=true;fixed++;score+=10;
+    document.getElementById('h-score').textContent=score;
+    document.getElementById('choices').innerHTML='';
+    document.getElementById('msg').textContent='✅ 改啱咗！+10 分';
+    document.getElementById('msg').style.color='#22c55e';
+    selected=null;
+    if(fixed>=totalWrong){
+      document.getElementById('hint').textContent='🎉 呢句搞掂！';
+      setTimeout(()=>{
+        round++;
+        if(round>=DATA.length){clearInterval(timer);playing=false;endGame(true);}
+        else loadRound();
+      },900);
+    }
+  }else{
+    btn.style.opacity='.35';btn.disabled=true;
+    timeLeft=Math.max(0,timeLeft-1);
+    document.getElementById('msg').textContent='❌ 唔係呢個，再諗下！扣 1 秒';
+    document.getElementById('msg').style.color='#ef4444';
+  }
+}
+function endGame(win){
+  const stars=win?(score>=75?'⭐⭐⭐':score>=60?'⭐⭐':'⭐'):'—';
+  document.getElementById('end-text').innerHTML=`${win?'🎉 8 句全部修正完成！':'⏱ 時間到！'}<br>總分：<b style="color:#fbbf24;font-size:22px">${score}</b> / 80<br>評級：${stars}`;
+  document.getElementById('end').classList.remove('hidden');
+}
+</script>
+</body>
+</html>

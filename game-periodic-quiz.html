@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<title>元素表問答王</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei","PingFang HK",sans-serif;background:#faf5ff;color:#1f2937;line-height:1.6;touch-action:manipulation}
+header{background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;padding:16px;text-align:center}
+header h1{margin:0;font-size:22px}
+header p{margin:4px 0 0;font-size:13px;opacity:.9}
+.topbar{display:flex;justify-content:space-between;align-items:center;max-width:520px;margin:0 auto;padding:10px 14px}
+.topbar a{color:#7c3aed;font-weight:700;text-decoration:none;font-size:15px}
+.badge{background:#fff;border:2px solid #7c3aed;color:#7c3aed;border-radius:20px;padding:4px 14px;font-weight:800;font-size:15px}
+main{max-width:520px;margin:0 auto;padding:12px 14px 40px}
+.card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:14px}
+.hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.timebar{height:14px;background:#e9d5ff;border-radius:7px;overflow:hidden;margin-bottom:14px}
+.timebar div{height:100%;background:linear-gradient(90deg,#7c3aed,#a78bfa);width:100%;transition:width 1s linear}
+.q{font-size:22px;font-weight:800;text-align:center;margin:10px 0 16px;min-height:64px}
+.q .big{font-size:44px;display:block;font-family:monospace;color:#7c3aed}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opt{min-height:64px;border-radius:14px;border:2px solid #ddd6fe;background:#fff;font-size:18px;font-weight:700;font-family:inherit;cursor:pointer;color:#1f2937}
+.opt.ok{background:#dcfce7;border-color:#16a34a}
+.opt.no{background:#fee2e2;border-color:#dc2626}
+.opt:disabled{opacity:.9}
+.streak{text-align:center;font-size:14px;color:#7c3aed;font-weight:700;min-height:22px}
+.concept{background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:12px;font-size:14px}
+.concept b{color:#7c3aed}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.overlay .box{background:#fff;border-radius:16px;padding:24px;max-width:440px;width:100%;max-height:85vh;overflow:auto;text-align:center}
+.overlay h2{margin:0 0 10px;font-size:22px;color:#7c3aed}
+.overlay p,.overlay li{font-size:15px;text-align:left}
+.overlay .big-score{font-size:52px;font-weight:900;color:#7c3aed}
+.overlay .box button{background:#7c3aed;color:#fff;min-height:52px;font-size:18px;font-weight:800;width:100%;margin-top:14px;border:none;border-radius:12px;font-family:inherit;cursor:pointer}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<header><h1>⚛️ 元素表問答王</h1><p>60 秒限時搶答，睇下你識幾多元素！</p></header>
+<div class="topbar"><a href="games.html">← 返回遊戲</a><div class="badge">最高 <span id="best">0</span></div></div>
+<main>
+<div class="card">
+<div class="hud"><div class="badge">⏱ <span id="time">60</span>s</div><div class="badge">分數 <span id="score">0</span></div></div>
+<div class="timebar"><div id="tbar"></div></div>
+<div class="streak" id="streak"></div>
+<div class="q" id="q">撳開始作答</div>
+<div class="opts" id="opts"></div>
+</div>
+<div class="card concept">
+<b>💡 科學原理</b><br>
+元素按<b>原子序</b>（質子數目）排列，原子序決定咗佢係咩元素。同一<b>族</b>（直行）嘅元素化學性質相似，例如第 1 族都係活潑金屬。記熟頭 20 個元素嘅符號同原子序，學化學事半功倍！
+</div>
+</main>
+<div class="overlay" id="intro">
+<div class="box">
+<h2>⚛️ 點玩？</h2>
+<ul>
+<li>60 秒內答越多越好，題目包括：<b>符號→中文名</b>、<b>中文名→符號</b>、<b>原子序→元素</b>。</li>
+<li>答啱 +10 分，連擊有加成（連對 3 題開始每題 +2）。</li>
+<li>答錯唔扣分，但連擊會斷。</li>
+</ul>
+<button onclick="startGame()">開始挑戰！</button>
+</div>
+</div>
+<div class="overlay hidden" id="over">
+<div class="box">
+<h2>⏰ 時間到！</h2>
+<div class="big-score" id="finalScore">0</div>
+<p style="text-align:center" id="rank"></p>
+<button onclick="startGame()">再玩一次</button>
+</div>
+</div>
+<script>
+const E=[['H','氫',1],['He','氦',2],['Li','鋰',3],['Be','鈹',4],['B','硼',5],['C','碳',6],['N','氮',7],['O','氧',8],['F','氟',9],['Ne','氖',10],['Na','鈉',11],['Mg','鎂',12],['Al','鋁',13],['Si','矽',14],['P','磷',15],['S','硫',16],['Cl','氯',17],['Ar','氬',18],['K','鉀',19],['Ca','鈣',20],['Fe','鐵',26],['Cu','銅',29],['Zn','鋅',30],['Ag','銀',47]];
+let score=0,streak=0,time=60,timer=null,playing=false;
+const best=parseInt(localStorage.getItem('pq_best')||'0');
+document.getElementById('best').textContent=best;
+function startGame(){
+  document.getElementById('intro').classList.add('hidden');
+  document.getElementById('over').classList.add('hidden');
+  score=0;streak=0;time=60;playing=true;upd();
+  nextQ();
+  clearInterval(timer);
+  timer=setInterval(()=>{
+    time--;document.getElementById('time').textContent=time;
+    document.getElementById('tbar').style.width=(time/60*100)+'%';
+    if(time<=0)endGame();
+  },1000);
+}
+function pick(arr,n,ex){const c=arr.filter(x=>x!==ex);for(let i=c.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[c[i],c[j]]=[c[j],c[i]];}return c.slice(0,n);}
+function nextQ(){
+  if(!playing)return;
+  const el=E[Math.floor(Math.random()*E.length)];
+  const type=Math.floor(Math.random()*3);
+  let qhtml,correct,pool;
+  if(type===0){qhtml='「<span class="big">'+el[0]+'</span>」係咩元素？';correct=el[1];pool=E.map(e=>e[1]);}
+  else if(type===1){qhtml='「'+el[1]+'」嘅化學符號係？';correct=el[0];pool=E.map(e=>e[0]);}
+  else{qhtml='原子序 <span class="big">'+el[2]+'</span> 係咩元素？';correct=el[1];pool=E.map(e=>e[1]);}
+  const opts=[correct,...pick(pool,3,correct)];
+  for(let i=opts.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[opts[i],opts[j]]=[opts[j],opts[i]];}
+  document.getElementById('q').innerHTML=qhtml;
+  const box=document.getElementById('opts');box.innerHTML='';
+  opts.forEach(o=>{
+    const b=document.createElement('button');b.className='opt';b.textContent=o;
+    b.onclick=()=>{
+      if(!playing)return;
+      document.querySelectorAll('.opt').forEach(x=>x.disabled=true);
+      if(o===correct){
+        b.classList.add('ok');streak++;
+        const pts=10+(streak>=3?(streak-2)*2:0);
+        score+=pts;
+        document.getElementById('streak').textContent=streak>=2?('🔥 連擊 x'+streak+'！+'+pts):'';
+      }else{
+        b.classList.add('no');streak=0;
+        document.getElementById('streak').textContent='';
+        document.querySelectorAll('.opt').forEach(x=>{if(x.textContent===correct)x.classList.add('ok');});
+      }
+      upd();setTimeout(nextQ,650);
+    };
+    box.appendChild(b);
+  });
+}
+function upd(){document.getElementById('score').textContent=score;}
+function endGame(){
+  playing=false;clearInterval(timer);
+  document.getElementById('finalScore').textContent=score;
+  let r=score>=200?'🏆 元素大師！':score>=120?'🥈 化學高手！':score>=60?'🥉 唔錯，繼續努力！':'💪 熟習下元素表再嚟過！';
+  document.getElementById('rank').textContent=r;
+  if(score>best){localStorage.setItem('pq_best',score);document.getElementById('best').textContent=score;}
+  document.getElementById('over').classList.remove('hidden');
+}
+</script>
+</body>
+</html>

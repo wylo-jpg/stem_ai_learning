@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>元素配對王</title>
+<style>
+:root{--blue:#2563eb;--ink:#1f2937;--muted:#6b7280;--bg:#f3f4f6;--card:#fff;--green:#16a34a;--purple:#7c3aed}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;touch-action:manipulation}
+header{background:linear-gradient(135deg,#5b21b6,#7c3aed);color:#fff;padding:22px 20px;text-align:center}
+header h1{margin:0 0 6px;font-size:24px}
+header p{margin:0;opacity:.92;font-size:13.5px}
+nav{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 16px;display:flex;gap:4px;overflow-x:auto;position:sticky;top:0;z-index:10}
+nav a{padding:12px 16px;text-decoration:none;color:var(--muted);font-weight:600;font-size:14px;white-space:nowrap;border-bottom:3px solid transparent}
+nav a.active{color:var(--blue);border-bottom-color:var(--blue)}
+main{max-width:720px;margin:0 auto;padding:18px 14px 50px}
+.hud{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--card);border-radius:12px;padding:12px 14px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:12px}
+.hud .stat{background:#f5f3ff;border-radius:8px;padding:6px 12px;font-weight:700;font-size:14px}
+.hud .stat small{display:block;font-weight:400;color:var(--muted);font-size:11px}
+.btn{border:none;border-radius:10px;padding:12px 18px;font-size:15px;font-weight:700;cursor:pointer;color:#fff;background:var(--blue);min-height:48px}
+.btn:active{transform:scale(.96)}
+.btn.green{background:var(--green)}
+.btn.gray{background:#9ca3af}
+#board{display:grid;gap:10px;margin-top:4px}
+.card3d{perspective:600px;cursor:pointer;aspect-ratio:3/3.4;min-height:86px}
+.inner{position:relative;width:100%;height:100%;transition:transform .35s;transform-style:preserve-3d}
+.card3d.flip .inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.12)}
+.front{background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;font-size:34px;font-weight:800}
+.back{background:#fff;transform:rotateY(180deg);border:3px solid var(--purple);font-weight:800}
+.back .sym{font-size:26px;color:var(--purple)}
+.back .nam{font-size:30px;color:var(--ink)}
+.back .zno{font-size:11px;color:var(--muted);font-weight:400}
+.card3d.done{cursor:default}
+.card3d.done .back{border-color:var(--green);background:#f0fdf4;box-shadow:0 0 12px #86efac}
+.card3d.done .front{display:none}
+.card3d.done .inner{transform:rotateY(180deg)}
+#matchInfo{background:#f0fdf4;border:2px solid #86efac;border-radius:12px;padding:12px 16px;margin-top:14px;font-size:15px;min-height:60px;display:flex;align-items:center;gap:10px}
+#matchInfo .big{font-size:34px}
+.tip{background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 14px;font-size:13.5px;margin-top:12px;color:#92400e}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px}
+.overlay.hide{display:none}
+.sheet{background:#fff;border-radius:16px;max-width:520px;width:100%;padding:26px;max-height:88vh;overflow:auto}
+.sheet h2{margin:0 0 10px;font-size:22px}
+.sheet p,.sheet li{font-size:14.5px}
+.sheet ul{padding-left:20px}
+.sheet .btn{width:100%;margin-top:14px}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:26px}
+@media(max-width:480px){.card3d{min-height:76px}.back .sym{font-size:22px}.back .nam{font-size:24px}}
+</style>
+</head>
+<body>
+<header>
+<h1>⚗️ 元素配對王</h1>
+<p>反轉卡牌，配對元素中文名同符號！背熟週期表</p>
+</header>
+<nav>
+<a href="index.html">🏠 首頁</a>
+<a href="maths.html">📐 數學</a>
+<a href="videos.html">🎬 影片</a>
+<a href="games.html" class="active">🎮 遊戲</a>
+<a href="stem.html">🔬 STEM</a>
+<a href="ai.html">🤖 AI</a>
+</nav>
+<main>
+<div class="hud">
+<div class="stat"><small>關卡</small><span id="hLevel">1 / 3</span></div>
+<div class="stat"><small>已配對</small><span id="hPairs">0 / 6</span></div>
+<div class="stat"><small>步數</small><span id="hMoves">0</span></div>
+<div class="stat"><small>總分</small><span id="hScore">0</span></div>
+<button class="btn gray" onclick="buildLevel()">↺ 重玩</button>
+</div>
+<div id="board"></div>
+<div id="matchInfo"><span class="big">🧪</span><span>撳卡牌反轉佢，搵返佢嘅另一半！配對成功會顯示元素資料。</span></div>
+<div class="tip">💡 記憶小貼士：先記熟頭 20 號元素，符號多數取自拉丁文名（例如 Na 來自 Natrium「鈉」）。</div>
+</main>
+<footer>教學資源共享 · 歡迎老師同學生使用</footer>
+
+<div class="overlay" id="helpOv">
+<div class="sheet">
+<h2>⚗️ 點玩？</h2>
+<ul>
+<li>撳一張卡反轉佢，再撳另一張。</li>
+<li>如果係同一個元素嘅<b>中文名</b>同<b>化學符號</b>（例如「氧」+「O」），就配對成功！</li>
+<li>唔啱就會反轉返，記住位置，下次再試。</li>
+<li>配對晒所有卡就過關，步數愈少、時間愈快分愈高。</li>
+<li>第 1 關 6 對 → 第 2 關 9 對 → 第 3 關 12 對。</li>
+</ul>
+<p>📐 背後嘅化學：每個元素都有獨一無二嘅<b>原子序</b>（質子數目）。符號係國際通用嘅化學語言，識咗佢先寫到化學式！</p>
+<button class="btn" onclick="document.getElementById('helpOv').classList.add('hide')">開始配對！</button>
+</div>
+</div>
+
+<div class="overlay hide" id="resOv">
+<div class="sheet" style="text-align:center">
+<h2 id="resTitle"></h2>
+<p id="resText" style="font-size:15px"></p>
+<button class="btn green" id="resBtn" onclick="closeResult()">下一關 →</button>
+</div>
+</div>
+
+<script>
+const ELEMENTS=[
+ {n:'氫',s:'H',z:1},{n:'氦',s:'He',z:2},{n:'鋰',s:'Li',z:3},
+ {n:'碳',s:'C',z:6},{n:'氮',s:'N',z:7},{n:'氧',s:'O',z:8},
+ {n:'氟',s:'F',z:9},{n:'氖',s:'Ne',z:10},{n:'鈉',s:'Na',z:11},
+ {n:'鎂',s:'Mg',z:12},{n:'鋁',s:'Al',z:13},{n:'矽',s:'Si',z:14},
+ {n:'磷',s:'P',z:15},{n:'硫',s:'S',z:16},{n:'氯',s:'Cl',z:17},
+ {n:'氬',s:'Ar',z:18},{n:'鉀',s:'K',z:19},{n:'鈣',s:'Ca',z:20},
+ {n:'鐵',s:'Fe',z:26},{n:'銅',s:'Cu',z:29},{n:'鋅',s:'Zn',z:30},
+ {n:'碘',s:'I',z:53},{n:'銀',s:'Ag',z:47},{n:'金',s:'Au',z:79}
+];
+const LEVELS=[6,9,12];
+let level=0,score=0,moves=0,pairs=0,totalPairs=6,first=null,lock=false,t0=0;
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function buildLevel(){
+ totalPairs=LEVELS[level];moves=0;pairs=0;first=null;lock=false;t0=Date.now();
+ const pool=shuffle([...ELEMENTS]).slice(0,totalPairs);
+ const cards=shuffle(pool.flatMap(e=>[{e,k:'n'},{e,k:'s'}]));
+ const bd=document.getElementById('board');
+ const cols=totalPairs<=6?4:totalPairs<=9?6:6;
+ bd.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+ bd.innerHTML='';
+ cards.forEach(c=>{
+  const d=document.createElement('div');
+  d.className='card3d';
+  const label=c.k==='n'?`<div class="nam">${c.e.n}</div>`:`<div class="sym">${c.e.s}</div>`;
+  d.innerHTML=`<div class="inner"><div class="face front">⚗️</div><div class="face back">${label}<div class="zno">#${c.e.z}</div></div></div>`;
+  d.onclick=()=>flip(d,c);
+  c.el=d;bd.appendChild(d);
+ });
+ document.getElementById('hLevel').textContent=(level+1)+' / '+LEVELS.length;
+ document.getElementById('hPairs').textContent='0 / '+totalPairs;
+ document.getElementById('hMoves').textContent='0';
+ document.getElementById('hScore').textContent=score;
+ document.getElementById('matchInfo').innerHTML='<span class="big">🧪</span><span>撳卡牌反轉佢，搵返佢嘅另一半！</span>';
+}
+function flip(d,c){
+ if(lock||d.classList.contains('flip')||d.classList.contains('done'))return;
+ d.classList.add('flip');
+ if(!first){first={d,c};return;}
+ moves++;document.getElementById('hMoves').textContent=moves;
+ const a=first;first=null;
+ if(a.c.e===c.e){
+  lock=true;
+  setTimeout(()=>{
+   a.d.classList.add('done');d.classList.add('done');
+   pairs++;
+   const gain=Math.max(40,120-Math.floor(moves*1.5));
+   score+=gain;
+   document.getElementById('hPairs').textContent=pairs+' / '+totalPairs;
+   document.getElementById('hScore').textContent=score;
+   document.getElementById('matchInfo').innerHTML=
+    `<span class="big">✅</span><span><b>${c.e.n}（${c.e.s}）</b> · 原子序 ${c.e.z}<br>配對成功！+${gain} 分</span>`;
+   lock=false;
+   if(pairs>=totalPairs)setTimeout(levelComplete,600);
+  },350);
+ }else{
+  lock=true;
+  score=Math.max(0,score-3);
+  document.getElementById('hScore').textContent=score;
+  setTimeout(()=>{a.d.classList.remove('flip');d.classList.remove('flip');lock=false;},750);
+ }
+}
+function levelComplete(){
+ const secs=Math.round((Date.now()-t0)/1000);
+ const tb=Math.max(0,300-secs*2);score+=tb;
+ document.getElementById('hScore').textContent=score;
+ const ov=document.getElementById('resOv');
+ document.getElementById('resTitle').textContent=level<LEVELS.length-1?'🎉 過關！':'🏆 全部完成！';
+ document.getElementById('resText').textContent=
+  `用咗 ${moves} 步、${secs} 秒！時間獎勵 +${tb}，總分 ${score}。`+
+  (level<LEVELS.length-1?'下一關更多元素等緊你！':'你已經識晒呢 '+ELEMENTS.length+' 個元素喇！');
+ document.getElementById('resBtn').textContent=level<LEVELS.length-1?'下一關 →':'再玩一次';
+ ov.classList.remove('hide');
+}
+function closeResult(){
+ document.getElementById('resOv').classList.add('hide');
+ if(level<LEVELS.length-1){level++;buildLevel();}
+ else{level=0;score=0;buildLevel();}
+}
+buildLevel();
+</script>
+</body>
+</html>

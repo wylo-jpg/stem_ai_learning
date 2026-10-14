@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>聊天機器人訓練師 | AI 小遊戲</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei","PingFang HK",sans-serif;background:linear-gradient(135deg,#134e5e,#71b280);color:#eee;min-height:100vh}
+.wrap{max-width:680px;margin:0 auto;padding:16px 14px 60px}
+.topnav{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.topnav a{color:#a7f3d0;text-decoration:none;font-size:14px;background:rgba(255,255,255,.08);padding:8px 14px;border-radius:20px}
+header{text-align:center;padding:10px 0 4px}
+header h1{margin:6px 0;font-size:26px}
+header p{margin:0;color:#a7f3d0;font-size:14px}
+.intro{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:14px 16px;margin:14px 0;font-size:14px;line-height:1.7}
+.intro b{color:#fbbf24}
+.hud{display:flex;gap:10px;margin:12px 0}
+.hud .box{flex:1;background:rgba(0,0,0,.35);border-radius:12px;padding:10px;text-align:center}
+.hud .v{font-size:22px;font-weight:800;color:#fbbf24}
+.hud .l{font-size:12px;color:#a7f3d0}
+.botface{text-align:center;font-size:54px;margin:8px 0 2px}
+.botmood{font-size:14px;color:#a7f3d0;min-height:22px}
+.chat{background:rgba(0,0,0,.3);border-radius:16px;padding:16px;margin:12px 0;min-height:120px}
+.bubble{background:rgba(255,255,255,.92);color:#1f2937;border-radius:4px 18px 18px 18px;padding:14px 16px;font-size:17px;line-height:1.6;max-width:88%;display:inline-block}
+.qtag{font-size:13px;color:#a7f3d0;margin-bottom:8px}
+.intentgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.ibtn{border:none;border-radius:14px;padding:18px 8px;font-size:17px;font-weight:800;cursor:pointer;color:#fff;min-height:64px}
+.ibtn:active{transform:scale(.96)}
+.ibtn:disabled{opacity:.55}
+#i0{background:linear-gradient(135deg,#3b82f6,#1d4ed8)}
+#i1{background:linear-gradient(135deg,#8b5cf6,#6d28d9)}
+#i2{background:linear-gradient(135deg,#ef4444,#b91c1c)}
+#i3{background:linear-gradient(135deg,#0ea5e9,#0369a1)}
+.fb{display:none;border-radius:12px;padding:14px;font-size:15px;line-height:1.7;margin:10px 0}
+.fb.right{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.5)}
+.fb.wrong{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.5)}
+.fb b{color:#fbbf24}
+#nextBtn{display:none;width:100%;border:none;border-radius:12px;padding:15px;font-size:16px;font-weight:800;cursor:pointer;min-height:56px;color:#fff;background:linear-gradient(135deg,#f59e0b,#84cc16);margin-top:6px}
+.accwrap{margin:12px 0}
+.accbar{background:rgba(0,0,0,.4);border-radius:10px;height:20px;overflow:hidden}
+#accfill{height:100%;width:0%;background:linear-gradient(90deg,#84cc16,#22c55e);transition:width .5s}
+.acclbl{font-size:13px;color:#a7f3d0;margin-top:4px;text-align:center}
+.final{text-align:center;display:none;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:24px 18px;margin:12px 0}
+.final .big{font-size:56px}
+.final h2{color:#fbbf24;margin:8px 0}
+.final p{color:#d1fae5;line-height:1.8;font-size:14px}
+footer{text-align:center;color:#9db8a8;font-size:12px;margin-top:24px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="topnav"><a href="ai.html">← AI 專區</a><a href="games.html">← 遊戲區</a><a href="index.html">🏠 首頁</a></div>
+<header><h1>🤖 聊天機器人訓練師</h1><p>教識隻 Bot 聽得明人話</p></header>
+<div class="intro">
+<b>🎮 玩法：</b>隻 Bot 收到一句訊息，你要幫佢判斷係咩<b>意圖</b>（問功課／閒聊／投訴／問天氣）。判斷啱，Bot 就學識咗，聰明度上升！有啲題目好鬼刁鑽，要睇清楚。<br>
+<b>💡 AI 概念：</b>意圖識別（Intent Classification）係聊天機械人嘅核心——先要聽得明「你想點」，先識得答。AI 靠大量標記好嘅對話數據嚟學，你而家就係做緊標記員嘅工作！
+</div>
+<div class="hud">
+<div class="box"><div class="v" id="qN">1/10</div><div class="l">題目</div></div>
+<div class="box"><div class="v" id="sc">0</div><div class="l">得分</div></div>
+<div class="box"><div class="v" id="st">🔥0</div><div class="l">連擊</div></div>
+</div>
+<div class="botface" id="face">😐</div>
+<div class="botmood" id="mood" style="text-align:center">Bot 等緊你教佢…</div>
+<div class="accwrap"><div class="accbar"><div id="accfill"></div></div><div class="acclbl">🤖 Bot 聰明度：<span id="accv">0%</span></div></div>
+<div class="chat"><div class="qtag" id="qTag">第 1 題</div><div class="bubble" id="msg"></div></div>
+<div class="intentgrid">
+<button class="ibtn" id="i0">📚 問功課</button>
+<button class="ibtn" id="i1">💬 閒聊</button>
+<button class="ibtn" id="i2">😤 投訴</button>
+<button class="ibtn" id="i3">🌤️ 問天氣</button>
+</div>
+<div class="fb" id="fb"></div>
+<button id="nextBtn">下一題 →</button>
+<div class="final" id="finalCard">
+<div class="big" id="fE">🏆</div>
+<h2 id="fT"></h2>
+<p id="fD"></p>
+<button class="ibtn" style="width:100%;background:linear-gradient(135deg,#16a34a,#65a30d)" onclick="location.reload()">↺ 再訓練</button>
+</div>
+<footer>教學資源共享 · 邊玩邊學 AI</footer>
+</div>
+<script>
+var MSGS=[
+ {m:'呢條二次方程點解呀？',a:0,w:'「點解」+ 數學題 → 典型問功課。'},
+ {m:'今日食咩好呀？',a:1,w:'純粹吹水，冇實際問題要解決 → 閒聊。'},
+ {m:'點解我份功課成日唔見㗎！真係嬲死我！',a:2,w:'有嬲怒情緒 + 埋怨 → 投訴。'},
+ {m:'聽日會唔會落雨呀？',a:3,w:'問聽日天氣 → 問天氣。'},
+ {m:'sin30° 等於幾多呀？',a:0,w:'問數學數值 → 問功課。'},
+ {m:'你鍾意邊隊波呀？',a:1,w:'問喜好、吹水 → 閒聊。'},
+ {m:'個 app 成日自己彈出嚟，好煩呀！',a:2,w:'埋怨產品問題 → 投訴。'},
+ {m:'呢個星期六天氣點呀？',a:3,w:'問週末天氣 → 問天氣。'},
+ {m:'呢條數我計極都唔啱，係咪我好蠢呀？',a:0,w:'刁鑽題！雖然有情緒，但核心係「條數唔識計」→ 問功課。AI 都成日俾呢啲混合意圖呃到！'},
+ {m:'出面落緊好大雨呀！',a:1,w:'刁鑽題！只係分享現況，冇問問題 → 閒聊，唔係問天氣。意圖識別要睇「想點」，唔係睇關鍵字！'},
+ {m:'落雨又唔早啲通知，搞到我成身濕晒！',a:2,w:'有天氣字眼，但重點係埋怨 → 投訴。關鍵字會呃人，語氣先係重點！'},
+ {m:'聽日去打波，要唔要帶遮呀？',a:3,w:'問聽日需唔需要遮 → 背後係問天氣。AI 要識得諗深一層！'}
+];
+var NAMES=['📚 問功課','💬 閒聊','😤 投訴','🌤️ 問天氣'];
+var order=[],qi=0,score=0,streak=0,correct=0;
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+order=shuffle([0,1,2,3,4,5,6,7,8,9,10,11]).slice(0,10);
+function showQ(){
+  var M=MSGS[order[qi]];
+  document.getElementById('qTag').textContent='第 '+(qi+1)+' 題 / 10';
+  document.getElementById('qN').textContent=(qi+1)+'/10';
+  document.getElementById('msg').textContent='「'+M.m+'」';
+  document.getElementById('fb').style.display='none';
+  document.getElementById('nextBtn').style.display='none';
+  for(var i=0;i<4;i++)document.getElementById('i'+i).disabled=false;
+  document.getElementById('mood').textContent='Bot 等緊你教佢…';
+  document.getElementById('face').textContent='😐';
+}
+function answer(i){
+  var M=MSGS[order[qi]];
+  for(var k=0;k<4;k++)document.getElementById('i'+k).disabled=true;
+  var fb=document.getElementById('fb');
+  fb.style.display='block';
+  if(i===M.a){
+    score+=10+Math.min(streak*2,10);streak++;correct++;
+    fb.className='fb right';
+    fb.innerHTML='<b>✅ 答啱！+'+(10+Math.min((streak-1)*2,10))+' 分</b><br>'+M.w;
+    document.getElementById('face').textContent='🤩';
+    document.getElementById('mood').textContent='Bot：學識咗！多謝師傅！';
+  }else{
+    streak=0;
+    fb.className='fb wrong';
+    fb.innerHTML='<b>❌ 錯咗！正確係 '+NAMES[M.a]+'</b><br>'+M.w;
+    document.getElementById('face').textContent='😵';
+    document.getElementById('mood').textContent='Bot：吓…原來係咁…';
+  }
+  document.getElementById('sc').textContent=score;
+  document.getElementById('st').textContent='🔥'+streak;
+  var acc=Math.round(correct/(qi+1)*100);
+  document.getElementById('accfill').style.width=acc+'%';
+  document.getElementById('accv').textContent=acc+'%';
+  document.getElementById('nextBtn').style.display='block';
+}
+document.getElementById('i0').onclick=function(){answer(0);};
+document.getElementById('i1').onclick=function(){answer(1);};
+document.getElementById('i2').onclick=function(){answer(2);};
+document.getElementById('i3').onclick=function(){answer(3);};
+document.getElementById('nextBtn').onclick=function(){
+  qi++;
+  if(qi<10)showQ();
+  else{
+    document.getElementById('nextBtn').style.display='none';
+    document.querySelector('.intentgrid').style.display='none';
+    document.querySelector('.chat').style.display='none';
+    document.getElementById('finalCard').style.display='block';
+    var acc=Math.round(correct/10*100);
+    document.getElementById('fE').textContent=acc>=90?'🏆':(acc>=70?'🎉':'🤖');
+    document.getElementById('fT').textContent='訓練完成！Bot 聰明度 '+acc+'%';
+    document.getElementById('fD').innerHTML='你做咗 AI 訓練員嘅核心工作：<b>數據標記</b>（data labeling）。<br>現實中嘅 Siri、小愛同學都係靠成千上萬個人手標記嘅對話學識聽人話㗎！<br>記住：AI 幾聰明，取決於人類教得幾好。';
+    document.getElementById('face').textContent=acc>=70?'🤖':'🫠';
+    document.getElementById('mood').textContent=acc>=70?'Bot：我出師喇，多謝師傅！':'Bot：我仲要努力…';
+  }
+};
+showQ();
+</script>
+</body>
+</html>

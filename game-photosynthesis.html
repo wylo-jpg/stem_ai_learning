@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<title>光合作用模擬</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei","PingFang HK",sans-serif;background:#f0fdf4;color:#1f2937;line-height:1.6;touch-action:manipulation}
+header{background:linear-gradient(135deg,#15803d,#a3e635);color:#fff;padding:16px;text-align:center}
+header h1{margin:0;font-size:22px}
+header p{margin:4px 0 0;font-size:13px;opacity:.9}
+.topbar{display:flex;justify-content:space-between;align-items:center;max-width:560px;margin:0 auto;padding:10px 14px}
+.topbar a{color:#15803d;font-weight:700;text-decoration:none;font-size:15px}
+.badge{background:#fff;border:2px solid #15803d;color:#15803d;border-radius:20px;padding:4px 14px;font-weight:800;font-size:15px}
+main{max-width:560px;margin:0 auto;padding:12px 14px 40px}
+.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:14px}
+.scene{position:relative;height:220px;background:linear-gradient(#bae6fd 0%,#e0f2fe 60%,#d6a85c 60%,#b98a3e 100%);border-radius:12px;overflow:hidden}
+.sun{position:absolute;top:14px;right:18px;font-size:40px;transition:transform .3s,filter .3s}
+.plant{position:absolute;bottom:38px;left:50%;transform:translateX(-50%);font-size:64px}
+.bubble{position:absolute;bottom:80px;border-radius:50%;background:rgba(255,255,255,.7);border:1px solid #7dd3fc;animation:rise 2.4s linear infinite}
+@keyframes rise{from{transform:translateY(0);opacity:1}to{transform:translateY(-110px);opacity:0}}
+.slider-row{margin:14px 0}
+.slider-row label{display:flex;justify-content:space-between;font-size:15px;font-weight:700;margin-bottom:4px}
+.slider-row input{width:100%;height:44px;accent-color:#15803d;cursor:pointer}
+.readout{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.ro{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px;text-align:center}
+.ro .v{font-size:26px;font-weight:900;color:#15803d}
+.ro .l{font-size:12px;color:#64748b}
+.ratebar{height:18px;background:#e5e7eb;border-radius:9px;overflow:hidden;margin-top:8px}
+.ratebar div{height:100%;background:linear-gradient(90deg,#4ade80,#16a34a);width:0%;transition:width .3s}
+.challenge{background:#fefce8;border:2px solid #eab308;border-radius:12px;padding:14px;margin-top:12px}
+.challenge h3{margin:0 0 8px;font-size:16px;color:#854d0e}
+.challenge p{margin:0 0 10px;font-size:14px}
+.chbtn{display:block;width:100%;min-height:52px;margin:8px 0;border-radius:12px;border:2px solid #eab308;background:#fff;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;color:#1f2937}
+.chbtn.ok{background:#dcfce7;border-color:#16a34a}
+.chbtn.no{background:#fee2e2;border-color:#dc2626}
+.msg{text-align:center;font-weight:800;font-size:16px;min-height:26px;margin-top:8px}
+.msg.ok{color:#15803d}.msg.bad{color:#dc2626}
+.concept{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px;font-size:14px}
+.concept b{color:#15803d}
+.equation{text-align:center;font-size:17px;font-weight:700;margin:8px 0}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.overlay .box{background:#fff;border-radius:16px;padding:24px;max-width:440px;width:100%;max-height:85vh;overflow:auto}
+.overlay h2{margin:0 0 10px;font-size:20px;color:#15803d}
+.overlay p,.overlay li{font-size:15px}
+.overlay .box button{background:#15803d;color:#fff;min-height:52px;font-size:18px;font-weight:800;width:100%;margin-top:14px;border:none;border-radius:12px;font-family:inherit;cursor:pointer}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<header><h1>☀️ 光合作用模擬</h1><p>調較光照同 CO₂，睇下光合速率點變！</p></header>
+<div class="topbar"><a href="games.html">← 返回遊戲</a><div class="badge">挑戰 <span id="chDone">0</span>/3</div></div>
+<main>
+<div class="card">
+<div class="scene" id="scene">
+<div class="sun" id="sun">☀️</div>
+<div class="plant">🌱</div>
+</div>
+<div class="slider-row">
+<label>💡 光照強度 <span id="lightV">50%</span></label>
+<input type="range" id="light" min="0" max="100" value="50">
+</div>
+<div class="slider-row">
+<label>💨 二氧化碳濃度 <span id="co2V">0.10%</span></label>
+<input type="range" id="co2" min="0" max="20" value="10">
+</div>
+<div class="readout">
+<div class="ro"><div class="v" id="rateV">0</div><div class="l">光合速率（單位/分鐘）</div></div>
+<div class="ro"><div class="v" id="limitV" style="font-size:18px">—</div><div class="l">現時限制因素</div></div>
+</div>
+<div class="ratebar"><div id="ratebar"></div></div>
+</div>
+<div class="card">
+<div class="challenge">
+<h3>🎯 挑戰 <span id="chNum">1</span>/3</h3>
+<p id="chText"></p>
+<div id="chOpts"></div>
+</div>
+<div class="msg" id="msg"></div>
+</div>
+<div class="card concept">
+<b>💡 科學原理：限制因素</b><br>
+<div class="equation">光能 + 水 + CO₂ → 葡萄糖 + 氧氣</div>
+光合速率由<b>最唔夠</b>嗰個因素決定——呢個叫<b>限制因素</b>。例如光好夠但 CO₂ 好少，咁 CO₂ 就係限制因素，加光都冇用，要加 CO₂ 先會快啲。明白呢個概念，就識得點樣種嘢最高產！
+</div>
+</main>
+<div class="overlay" id="intro">
+<div class="box">
+<h2>☀️ 點玩？</h2>
+<ul>
+<li>拖動滑桿調<b>光照強度</b>同 <b>CO₂ 濃度</b>。</li>
+<li>睇下水泡冒出嘅速度同光合速率讀數點變。</li>
+<li>留意「限制因素」——係邊樣拖慢咗光合作用？</li>
+<li>完成 3 個挑戰，做個光合作用專家！</li>
+</ul>
+<button onclick="document.getElementById('intro').classList.add('hidden')">開始實驗！</button>
+</div>
+</div>
+<script>
+const lightEl=document.getElementById('light'),co2El=document.getElementById('co2');
+const scene=document.getElementById('scene');
+let bubbles=[];
+function rate(){
+  const L=lightEl.value/100, C=co2El.value/20;
+  const fL=L/(L+0.25), fC=C/(C+0.25);
+  const limiting=fL<fC?'💡 光照':'💨 二氧化碳';
+  return {v:Math.round(100*Math.min(fL,fC)),lim:limiting,fL,fC};
+}
+function render(){
+  const r=rate();
+  document.getElementById('lightV').textContent=lightEl.value+'%';
+  document.getElementById('co2V').textContent=(co2El.value/100).toFixed(2)+'%';
+  document.getElementById('rateV').textContent=r.v;
+  document.getElementById('limitV').textContent=r.lim;
+  document.getElementById('ratebar').style.width=r.v+'%';
+  const sun=document.getElementById('sun');
+  sun.style.filter='brightness('+(0.6+lightEl.value/100*0.7)+')';
+  sun.style.transform='scale('+(0.8+lightEl.value/200)+')';
+  bubbles.forEach(b=>b.remove());bubbles=[];
+  const n=Math.round(r.v/12);
+  for(let i=0;i<n;i++){
+    const b=document.createElement('div');b.className='bubble';
+    const s=6+Math.random()*10;
+    b.style.width=s+'px';b.style.height=s+'px';
+    b.style.left=(30+Math.random()*40)+'%';
+    b.style.animationDuration=(1.5+Math.random()*1.5)+'s';
+    b.style.animationDelay=(Math.random()*2)+'s';
+    scene.appendChild(b);bubbles.push(b);
+  }
+}
+lightEl.oninput=render;co2El.oninput=render;
+const challenges=[
+ {t:'將光照同 CO₂ 都調到最高，光合速率會去到幾多？（撳啱嘅答案）',
+  opts:['約 50','約 80','約 95','約 120'],ans:2,
+  why:'兩樣都充足時，速率接近最高 100。仲有少少未到 100，係因為公式入面嘅半飽和常數。'},
+ {t:'將 CO₂ 調到最高（0.20%），光照調到最低（0%），限制因素係咩？',
+  opts:['二氧化碳','光照','水','溫度'],ans:1,
+  why:'冇光就冇能量做光合作用，CO₂ 幾多都冇用。限制因素係光照！'},
+ {t:'光照 100% 但 CO₂ 係 0%，再慢慢加 CO₂，速率點變？',
+  opts:['唔變','先快後慢，最後穩定','一直變快唔停','變慢'],ans:1,
+  why:'初頭 CO₂ 係限制因素，加 CO₂ 會變快；但當 CO₂ 夠多，限制因素轉做其他（例如光已到頂），速率就會穩定落嚟。'}
+];
+let ch=0;
+function loadCh(){
+  document.getElementById('chNum').textContent=ch+1;
+  document.getElementById('chDone').textContent=ch;
+  const c=challenges[ch];
+  document.getElementById('chText').textContent=c.t;
+  const box=document.getElementById('chOpts');box.innerHTML='';
+  c.opts.forEach((o,i)=>{
+    const b=document.createElement('button');b.className='chbtn';b.textContent=o;
+    b.onclick=()=>{
+      if(i===c.ans){b.classList.add('ok');flash('🎉 啱！'+c.why,'ok');}
+      else{b.classList.add('no');box.children[c.ans].classList.add('ok');flash('答案係「'+c.opts[c.ans]+'」。'+c.why,'bad');}
+      document.querySelectorAll('.chbtn').forEach(x=>x.disabled=true);
+      setTimeout(()=>{ch++;
+        if(ch>=challenges.length){document.getElementById('chDone').textContent='3';document.getElementById('chText').textContent='🏆 3 個挑戰全部完成！你已經掌握限制因素嘅概念！';box.innerHTML='';flash('','');}
+        else loadCh();
+      },3000);
+    };
+    box.appendChild(b);
+  });
+  flash('','');
+}
+function flash(t,cls){const m=document.getElementById('msg');m.innerHTML=t;m.className='msg '+cls;}
+render();loadCh();
+</script>
+</body>
+</html>

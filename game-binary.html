@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>二進制大冒險</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;display:flex;flex-direction:column}
+header{background:linear-gradient(135deg,#1e3a8a,#3b82f6);padding:14px 16px;text-align:center}
+header h1{margin:0;font-size:22px}
+.hud{display:flex;justify-content:space-around;background:#1e293b;padding:10px;font-size:15px;font-weight:700}
+.hud span{color:#fbbf24}
+main{flex:1;display:flex;flex-direction:column;align-items:center;padding:16px;max-width:640px;margin:0 auto;width:100%}
+.target{background:#1e293b;border-radius:16px;padding:18px;width:100%;text-align:center;margin-bottom:14px}
+.target .label{font-size:14px;color:#94a3b8}
+.target .num{font-size:56px;font-weight:800;color:#fbbf24;line-height:1.2}
+.bits{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:100%;margin-bottom:8px}
+.bit{background:#1e293b;border:2px solid #334155;border-radius:14px;padding:10px 4px;text-align:center;cursor:pointer;min-height:88px;display:flex;flex-direction:column;justify-content:center;user-select:none;touch-action:manipulation}
+.bit .w{font-size:12px;color:#94a3b8}
+.bit .v{font-size:32px;font-weight:800;color:#64748b}
+.bit.on{border-color:#22c55e;background:#14532d}
+.bit.on .v{color:#4ade80}
+.sumbar{font-size:15px;color:#94a3b8;margin:8px 0;text-align:center}
+.sumbar b{color:#e2e8f0;font-size:20px}
+.btnrow{display:flex;gap:12px;width:100%;margin-top:8px}
+button.big{flex:1;min-height:56px;font-size:18px;font-weight:700;border:none;border-radius:14px;cursor:pointer;touch-action:manipulation}
+#checkBtn{background:#22c55e;color:#052e16}
+#clearBtn{background:#334155;color:#e2e8f0}
+.feedback{min-height:32px;font-size:17px;font-weight:700;margin-top:10px;text-align:center}
+.feedback.good{color:#4ade80}.feedback.bad{color:#f87171}
+.overlay{position:fixed;inset:0;background:rgba(2,6,23,.92);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.card{background:#1e293b;border-radius:20px;padding:28px 24px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto}
+.card h2{margin:0 0 12px;font-size:24px;color:#fbbf24}
+.card p,.card li{font-size:16px;line-height:1.7;color:#cbd5e1}
+.card ul{padding-left:20px}
+.concept{background:#0f172a;border-radius:12px;padding:14px;margin:14px 0;font-size:15px}
+.concept b{color:#4ade80}
+.card button{width:100%;min-height:56px;font-size:18px;font-weight:700;background:#22c55e;color:#052e16;border:none;border-radius:14px;margin-top:10px;cursor:pointer}
+.bitval{font-family:monospace}
+@media(max-width:400px){.bits{grid-template-columns:repeat(4,1fr);gap:8px}.bit{min-height:80px}.target .num{font-size:48px}}
+</style>
+</head>
+<body>
+<header><h1>🔢 二進制大冒險</h1></header>
+<div class="hud"><div>⏱️ <span id="time">60</span>s</div><div>❓ 第 <span id="q">1</span>/10 題</div><div>⭐ <span id="score">0</span> 分</div></div>
+<main>
+<div class="target"><div class="label">將呢個十進制數轉做二進制：</div><div class="num" id="targetNum">0</div></div>
+<div class="bits" id="bits"></div>
+<div class="sumbar">你而家嘅二進制值 = <b id="curVal">0</b></div>
+<div class="btnrow"><button class="big" id="clearBtn">清除</button><button class="big" id="checkBtn">✅ 確認</button></div>
+<div class="feedback" id="fb"></div>
+</main>
+<div class="overlay" id="intro">
+<div class="card">
+<h2>🔢 二進制大冒險</h2>
+<p><b>玩法：</b>撳下面嘅 8 個掣（開／關），砌出同題目一樣嘅二進制數，60 秒內做 10 題，答得愈快分愈高！</p>
+<div class="concept">💡 <b>二進制概念：</b>電腦只識 0 同 1。每個位代表 2 嘅次方：<span class="bitval">128 64 32 16 8 4 2 1</span>。例如 13 = 8+4+1，所以二進制係 <span class="bitval">00001101</span>。</div>
+<ul><li>撳掣切換 0／1，綠色即係「開」</li><li>答啱 +100 分，連擊有加成</li><li>答錯唔扣分，再試過</li></ul>
+<button onclick="startGame()">開始挑戰 🚀</button>
+</div>
+</div>
+<div class="overlay" id="gameover" style="display:none">
+<div class="card"><h2>🎉 完成！</h2><p id="finalScore" style="font-size:20px"></p><button onclick="location.reload()">再玩一次 🔁</button></div>
+</div>
+<script>
+const weights=[128,64,32,16,8,4,2,1];
+let bits=[0,0,0,0,0,0,0,0],target=0,qNum=1,score=0,streak=0,timeLeft=60,timer=null,answered=false;
+const bitsEl=document.getElementById('bits');
+weights.forEach((w,i)=>{
+  const d=document.createElement('div');d.className='bit';d.id='bit'+i;
+  d.innerHTML=`<div class="w">${w}</div><div class="v">0</div>`;
+  d.addEventListener('pointerdown',e=>{e.preventDefault();toggle(i);});
+  bitsEl.appendChild(d);
+});
+function toggle(i){if(answered)return;bits[i]=bits[i]?0:1;render();}
+function render(){
+  bits.forEach((b,i)=>{const el=document.getElementById('bit'+i);el.classList.toggle('on',b===1);el.querySelector('.v').textContent=b;});
+  document.getElementById('curVal').textContent=bits.reduce((s,b,i)=>s+b*weights[i],0);
+}
+function newQ(){
+  answered=false;bits=[0,0,0,0,0,0,0,0];render();
+  target=Math.floor(Math.random()*256);
+  document.getElementById('targetNum').textContent=target;
+  document.getElementById('q').textContent=qNum;
+  document.getElementById('fb').textContent='';document.getElementById('fb').className='feedback';
+}
+function startGame(){
+  document.getElementById('intro').style.display='none';
+  newQ();
+  timer=setInterval(()=>{timeLeft--;document.getElementById('time').textContent=timeLeft;
+    if(timeLeft<=0)endGame();},1000);
+}
+document.getElementById('clearBtn').addEventListener('click',()=>{if(!answered){bits=[0,0,0,0,0,0,0,0];render();}});
+document.getElementById('checkBtn').addEventListener('click',()=>{
+  if(answered)return;
+  const val=bits.reduce((s,b,i)=>s+b*weights[i],0);
+  const fb=document.getElementById('fb');
+  if(val===target){
+    answered=true;streak++;
+    const pts=100+Math.min(streak*20,100)+timeLeft;
+    score+=pts;document.getElementById('score').textContent=score;
+    fb.textContent=`✅ 啱！+${pts} 分（連擊 x${streak}）`;fb.className='feedback good';
+    setTimeout(()=>{qNum++;if(qNum>10)endGame();else newQ();},900);
+  }else{streak=0;fb.textContent=`❌ 唔啱，你砌咗 ${val}，再試下！`;fb.className='feedback bad';}
+});
+function endGame(){
+  clearInterval(timer);
+  document.getElementById('gameover').style.display='flex';
+  document.getElementById('finalScore').innerHTML=`你嘅分數：<b style="color:#fbbf24">${score}</b> 分<br>完成咗 ${Math.min(qNum,10)} 題`;
+}
+</script>
+</body>
+</html>

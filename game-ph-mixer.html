@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<title>酸鹼混合師</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei","PingFang HK",sans-serif;background:#f0f7ff;color:#1f2937;line-height:1.6;touch-action:manipulation}
+header{background:linear-gradient(135deg,#0e7490,#22d3ee);color:#fff;padding:16px;text-align:center}
+header h1{margin:0;font-size:22px}
+header p{margin:4px 0 0;font-size:13px;opacity:.9}
+.topbar{display:flex;justify-content:space-between;align-items:center;max-width:520px;margin:0 auto;padding:10px 14px}
+.topbar a{color:#0e7490;font-weight:700;text-decoration:none;font-size:15px}
+.badge{background:#fff;border:2px solid #0e7490;color:#0e7490;border-radius:20px;padding:4px 14px;font-weight:800;font-size:15px}
+main{max-width:520px;margin:0 auto;padding:12px 14px 40px}
+.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:14px}
+.target{font-size:18px;font-weight:800;text-align:center}
+.target .num{font-size:34px;color:#0e7490}
+.lab{display:flex;gap:12px;align-items:flex-end;justify-content:center;margin:10px 0}
+.beaker{position:relative;width:120px;height:170px;border:3px solid #94a3b8;border-top:none;border-radius:0 0 24px 24px;overflow:hidden;background:#fff}
+.liquid{position:absolute;bottom:0;left:0;right:0;background:#43a047;transition:height .2s,background .3s}
+.phmeter{text-align:center}
+.phmeter .val{font-size:44px;font-weight:900;font-family:monospace}
+.phmeter .lbl{font-size:13px;color:#64748b}
+.scale{display:flex;height:14px;border-radius:7px;overflow:hidden;margin:8px 0 2px}
+.scale div{flex:1}
+.scale-lbl{display:flex;justify-content:space-between;font-size:11px;color:#64748b}
+.vol{font-size:13px;color:#64748b;text-align:center;margin-top:6px}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+button{font-family:inherit;border:none;border-radius:12px;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none}
+.pour{min-height:72px;font-size:17px;font-weight:800;color:#fff}
+.pour.acid{background:linear-gradient(135deg,#dc2626,#f87171)}
+.pour.base{background:linear-gradient(135deg,#1d4ed8,#60a5fa)}
+.pour:active{transform:scale(.97);filter:brightness(1.1)}
+.hint{font-size:12px;color:#64748b;text-align:center;margin-top:6px}
+.row{display:flex;gap:12px;margin-top:12px}
+.row button{flex:1;min-height:52px;font-size:17px;font-weight:800}
+.done{background:#059669;color:#fff}
+.reset{background:#e5e7eb;color:#374151}
+.msg{text-align:center;font-weight:800;font-size:18px;min-height:28px;margin-top:8px}
+.msg.ok{color:#059669}.msg.bad{color:#dc2626}
+.concept{background:#ecfeff;border:1px solid #a5f3fc;border-radius:10px;padding:12px;font-size:14px}
+.concept b{color:#0e7490}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.overlay .box{background:#fff;border-radius:16px;padding:24px;max-width:440px;width:100%;max-height:85vh;overflow:auto}
+.overlay h2{margin:0 0 10px;font-size:20px;color:#0e7490}
+.overlay p,.overlay li{font-size:15px}
+.overlay .box button{background:#0e7490;color:#fff;min-height:52px;font-size:18px;font-weight:800;width:100%;margin-top:14px}
+.hidden{display:none}
+.kbd{font-family:monospace;background:#f1f5f9;padding:2px 8px;border-radius:6px}
+</style>
+</head>
+<body>
+<header><h1>🧪 酸鹼混合師</h1><p>調配酸鹼溶液，命中目標 pH 值！</p></header>
+<div class="topbar"><a href="games.html">← 返回遊戲</a><div class="badge">分數 <span id="score">0</span></div></div>
+
+<main>
+<div class="card">
+  <div class="target">第 <span id="round">1</span> / 5 關<br>目標 pH = <span class="num" id="targetPh">7.0</span><br><span style="font-size:13px;font-weight:400;color:#64748b">誤差 ±0.3 內算過關</span></div>
+</div>
+
+<div class="card">
+  <div class="lab">
+    <div class="beaker"><div class="liquid" id="liquid" style="height:0%"></div></div>
+    <div class="phmeter">
+      <div class="lbl">pH 計</div>
+      <div class="val" id="phVal">—</div>
+      <div class="lbl" id="phWord"></div>
+    </div>
+  </div>
+  <div class="scale" id="scale"></div>
+  <div class="scale-lbl"><span>0 酸</span><span>7 中性</span><span>14 鹼</span></div>
+  <div class="vol">燒杯內溶液：<b id="vol">0</b> mL（酸 <span id="va">0</span> mL ＋ 鹼 <span id="vb">0</span> mL）</div>
+  <div class="btns">
+    <button class="pour acid" id="btnAcid">🧪 按住加入酸<br><span style="font-size:12px">pH 1 鹽酸</span></button>
+    <button class="pour base" id="btnBase">⚗️ 按住加入鹼<br><span style="font-size:12px">pH 14 氫氧化鈉</span></button>
+  </div>
+  <div class="hint">按住按鈕連續加入，放開即停（每次約 1 mL）</div>
+  <div class="row">
+    <button class="done" id="btnDone">✔ 完成</button>
+    <button class="reset" id="btnReset">🗑 清空重來</button>
+  </div>
+  <div class="msg" id="msg"></div>
+</div>
+
+<div class="card concept">
+  <b>💡 科學原理：酸鹼中和</b><br>
+  酸提供 H⁺，鹼提供 OH⁻，兩者相遇會結合成水：<span class="kbd">H⁺ + OH⁻ → H₂O</span>。<br>
+  邊種離子剩得多，溶液就偏向嗰邊：H⁺ 多 → 酸性（pH &lt; 7）；OH⁻ 多 → 鹼性（pH &gt; 7）；啱啱好互相抵消 → 中性（pH = 7）。
+</div>
+</main>
+
+<div class="overlay" id="intro">
+<div class="box">
+<h2>🧪 點玩？</h2>
+<ul>
+<li>每關有一個<b>目標 pH 值</b>（誤差 ±0.3 過關）。</li>
+<li>按住紅色掣加<b>酸</b>（pH 1），藍色掣加<b>鹼</b>（pH 14）。</li>
+<li>留意 pH 計讀數，估下要加幾多先啱。</li>
+<li>撳「完成」交卷，過關得分，失敗可以清空重試。</li>
+</ul>
+<p>💡 <b>貼士</b>：酸鹼等量混合會變中性（pH 7）！想偏酸就加多啲酸，想偏鹼就加多啲鹼。</p>
+<button onclick="document.getElementById('intro').classList.add('hidden')">開始挑戰！</button>
+</div>
+</div>
+
+<script>
+const targets=[7.0,3.0,11.0,5.5,9.0];
+let round=0,score=0,va=0,vb=0,attempts=0,timer=null;
+
+const scale=document.getElementById('scale');
+const cols=['#e53935','#ef5350','#fb8c00','#fdd835','#c0ca33','#43a047','#43a047','#43a047','#26a69a','#1e88e5','#1e88e5','#5e35b1','#7b1fa2','#8e24aa'];
+cols.forEach(c=>{const d=document.createElement('div');d.style.background=c;scale.appendChild(d);});
+
+function calcPh(){
+  const V=va+vb;
+  if(V<=0)return null;
+  const nH=va*0.1,nOH=vb*0.1;
+  if(Math.abs(nH-nOH)<1e-9)return 7;
+  if(nH>nOH)return -Math.log10((nH-nOH)/V);
+  return 14+Math.log10((nOH-nH)/V);
+}
+function phColor(p){
+  if(p<3)return'#e53935';if(p<5)return'#fb8c00';if(p<6)return'#fdd835';
+  if(p<=8)return'#43a047';if(p<10)return'#1e88e5';if(p<12)return'#5e35b1';return'#8e24aa';
+}
+function phWord(p){
+  if(p<3)return'強酸性';if(p<6)return'酸性';if(p<6.7)return'弱酸性';
+  if(p<=7.3)return'中性';if(p<=8)return'弱鹼性';if(p<11)return'鹼性';return'強鹼性';
+}
+function render(){
+  const p=calcPh();
+  document.getElementById('vol').textContent=(va+vb).toFixed(0);
+  document.getElementById('va').textContent=va.toFixed(0);
+  document.getElementById('vb').textContent=vb.toFixed(0);
+  const liq=document.getElementById('liquid');
+  liq.style.height=Math.min(100,(va+vb))+'%';
+  if(p===null){
+    document.getElementById('phVal').textContent='—';
+    document.getElementById('phWord').textContent='';
+    liq.style.background='#e2e8f0';
+  }else{
+    document.getElementById('phVal').textContent=p.toFixed(1);
+    document.getElementById('phWord').textContent=phWord(p);
+    liq.style.background=phColor(p);
+  }
+}
+function pour(which){
+  if(va+vb>=100){flash('燒杯滿了！','bad');return;}
+  if(which==='a')va+=1;else vb+=1;
+  render();
+}
+function bindHold(id,which){
+  const el=document.getElementById(id);
+  const start=e=>{e.preventDefault();pour(which);timer=setInterval(()=>pour(which),120);};
+  const stop=()=>{clearInterval(timer);};
+  el.addEventListener('pointerdown',start);
+  el.addEventListener('pointerup',stop);
+  el.addEventListener('pointerleave',stop);
+  el.addEventListener('pointercancel',stop);
+}
+bindHold('btnAcid','a');bindHold('btnBase','b');
+function flash(t,cls){const m=document.getElementById('msg');m.textContent=t;m.className='msg '+cls;}
+document.getElementById('btnReset').onclick=()=>{va=0;vb=0;render();flash('','');};
+document.getElementById('btnDone').onclick=()=>{
+  const p=calcPh();
+  if(p===null){flash('燒杯係空嘅！加啲溶液先。','bad');return;}
+  attempts++;
+  const t=targets[round];
+  if(Math.abs(p-t)<=0.3){
+    const pts=Math.max(20,100-(attempts-1)*25);
+    score+=pts;
+    document.getElementById('score').textContent=score;
+    flash('🎉 過關！+'+pts+' 分','ok');
+    setTimeout(nextRound,1400);
+  }else{
+    flash(p<t?'太酸了，加啲鹼試下。':'太鹼了，加啲酸試下。','bad');
+  }
+};
+function nextRound(){
+  round++;attempts=0;va=0;vb=0;
+  if(round>=targets.length){
+    document.getElementById('round').textContent='5';
+    flash('🏆 全部完成！總分 '+score+' 分','ok');
+    document.getElementById('btnDone').disabled=true;
+    return;
+  }
+  document.getElementById('round').textContent=round+1;
+  document.getElementById('targetPh').textContent=targets[round].toFixed(1);
+  flash('','');render();
+}
+render();
+</script>
+</body>
+</html>

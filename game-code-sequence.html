@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>編程排序大挑戰</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#101828;color:#e2e8f0;min-height:100vh}
+header{background:linear-gradient(135deg,#166534,#22c55e);padding:14px;text-align:center}
+header h1{margin:0;font-size:22px}
+.hud{display:flex;justify-content:space-around;background:#052e16;padding:10px;font-size:15px;font-weight:700}
+.hud span{color:#fbbf24}
+main{max-width:620px;margin:0 auto;padding:14px;width:100%}
+#grid{display:grid;gap:4px;width:min(92vw,380px);margin:0 auto;background:#052e16;padding:8px;border-radius:14px;touch-action:manipulation}
+.cell{aspect-ratio:1;background:#14532d;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:min(8vw,34px);position:relative}
+.cell.wall{background:#3f3f46}
+.cell.goal{background:#713f12}
+.cell.path{background:#166534}
+.proglabel{font-size:14px;color:#86efac;margin:12px 0 6px;font-weight:700}
+#program{display:flex;flex-wrap:wrap;gap:6px;min-height:60px;background:#052e16;border-radius:12px;padding:10px;margin-bottom:8px}
+.pcmd{min-width:52px;min-height:52px;font-size:15px;font-weight:800;border-radius:10px;border:none;background:#22c55e;color:#052e16;cursor:pointer;touch-action:manipulation;padding:6px 10px}
+.pcmd:active{transform:scale(.94)}
+.empty-note{color:#4d7c5f;font-size:14px;padding:12px}
+.palette{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+.cmd{min-height:60px;font-size:16px;font-weight:800;border-radius:12px;border:2px solid #22c55e;background:#14532d;color:#bbf7d0;cursor:pointer;touch-action:manipulation}
+.cmd small{display:block;font-size:11px;font-weight:400}
+.cmd:active{transform:scale(.95)}
+.btnrow{display:flex;gap:10px;margin-top:6px}
+button.big{flex:1;min-height:58px;font-size:18px;font-weight:800;border:none;border-radius:14px;cursor:pointer;touch-action:manipulation}
+#runBtn{background:#fbbf24;color:#451a03}
+#clearBtn{background:#475569;color:#fff}
+#undoBtn{background:#7c3aed;color:#fff}
+.feedback{min-height:36px;font-size:16px;font-weight:700;text-align:center;margin-top:8px}
+.feedback.good{color:#4ade80}.feedback.bad{color:#f87171}
+.overlay{position:fixed;inset:0;background:rgba(5,20,10,.94);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.card{background:#052e16;border-radius:20px;padding:28px 24px;max-width:540px;width:100%;max-height:90vh;overflow-y:auto}
+.card h2{margin:0 0 12px;font-size:24px;color:#86efac}
+.card p,.card li{font-size:16px;line-height:1.7;color:#d1fae5}
+.card ul{padding-left:20px}
+.concept{background:#101828;border-radius:12px;padding:14px;margin:14px 0;font-size:15px}
+.concept b{color:#4ade80}
+.card button{width:100%;min-height:56px;font-size:18px;font-weight:700;background:#22c55e;color:#052e16;border:none;border-radius:14px;margin-top:10px;cursor:pointer}
+.robot-anim{transition:all .25s}
+</style>
+</head>
+<body>
+<header><h1>🤖 編程排序大挑戰</h1></header>
+<div class="hud"><div>🏁 關卡 <span id="lv">1</span>/6</div><div>⭐ <span id="score">0</span> 分</div></div>
+<main>
+<div id="grid"></div>
+<div class="proglabel">📝 你嘅程式（撳指令會加入，撳已加入嘅指令會刪除）：</div>
+<div id="program"><div class="empty-note">未有指令 — 撳下面嘅掣加入</div></div>
+<div class="palette">
+<button class="cmd" data-c="F">⬆️ 前進<small>行一格</small></button>
+<button class="cmd" data-c="L">↰ 左轉<small>原地轉左</small></button>
+<button class="cmd" data-c="R">↱ 右轉<small>原地轉右</small></button>
+</div>
+<div class="btnrow"><button class="big" id="undoBtn">↩️ 刪最後</button><button class="big" id="clearBtn">🗑️ 清空</button><button class="big" id="runBtn">▶️ 執行</button></div>
+<div class="feedback" id="fb"></div>
+</main>
+<div class="overlay" id="intro"><div class="card">
+<h2>🤖 編程排序大挑戰</h2>
+<p><b>玩法：</b>幫機械人 🤖 寫程式行去終點 🏁！撳指令掣（前進／左轉／右轉）排好順序，再撳「執行」睇佢行。唔好撞牆！</p>
+<div class="concept">💡 <b>運算思維：</b>寫程式就係將大問題拆成細步驟，再按正確<b>順序</b>排列。機械人唔識諗嘢，佢只會跟住你嘅指令逐個做 — 順序錯咗，結果就錯晒！呢個就係<b>演算法</b>嘅精神。</div>
+<ul><li>⬆️ 前進：向住而家方向行一格</li><li>↰↱ 轉向：原地轉，唔會郁位</li><li>撞牆或者行出界 = 失敗</li><li>每關 +150 分，用愈少指令分愈高</li></ul>
+<button onclick="startGame()">開始編程 💻</button>
+</div></div>
+<div class="overlay" id="win" style="display:none"><div class="card"><h2>🏆 全部過關！</h2><p id="finalScore" style="font-size:19px"></p><button onclick="location.reload()">再挑戰 🔁</button></div></div>
+<script>
+// 關卡：size, walls[[r,c]...], start{r,c,dir 0=上 1=右 2=下 3=左}, goal{r,c}
+const levels=[
+ {size:4,walls:[],start:{r:3,c:0,dir:1},goal:{r:3,c:3}},
+ {size:4,walls:[[1,1],[2,1]],start:{r:3,c:0,dir:0},goal:{r:0,c:3}},
+ {size:5,walls:[[2,1],[2,2],[2,3]],start:{r:4,c:0,dir:0},goal:{r:0,c:4}},
+ {size:5,walls:[[1,2],[2,2],[3,2],[3,1]],start:{r:4,c:4,dir:0},goal:{r:0,c:0}},
+ {size:6,walls:[[1,1],[1,2],[1,3],[3,2],[3,3],[4,3]],start:{r:5,c:0,dir:1},goal:{r:0,c:5}},
+ {size:6,walls:[[0,2],[1,2],[2,2],[2,4],[3,4],[4,4],[4,1],[4,2]],start:{r:5,c:0,dir:0},goal:{r:0,c:5}},
+];
+const DIR_EMOJI=['⬆️','➡️','⬇️','⬅️'];
+const CMD_LABEL={F:'⬆️',L:'↰',R:'↱'};
+let lv=0,score=0,program=[],running=false;
+const gridEl=document.getElementById('grid'),progEl=document.getElementById('program');
+function renderGrid(robot){
+  const L=levels[lv],n=L.size;
+  gridEl.style.gridTemplateColumns=`repeat(${n},1fr)`;
+  gridEl.innerHTML='';
+  for(let r=0;r<n;r++)for(let c=0;c<n;c++){
+    const d=document.createElement('div');d.className='cell';
+    const isWall=L.walls.some(w=>w[0]===r&&w[1]===c);
+    const isGoal=L.goal.r===r&&L.goal.c===c;
+    if(isWall){d.classList.add('wall');d.textContent='🧱';}
+    else if(isGoal){d.classList.add('goal');d.textContent='🏁';}
+    if(robot&&robot.r===r&&robot.c===c){d.textContent='🤖';d.title='面朝'+['上','右','下','左'][robot.dir];
+      const arr=document.createElement('div');arr.style.cssText='position:absolute;bottom:1px;right:2px;font-size:12px;';
+      arr.textContent=DIR_EMOJI[robot.dir];d.appendChild(arr);}
+    gridEl.appendChild(d);
+  }
+}
+function renderProg(){
+  progEl.innerHTML='';
+  if(!program.length){progEl.innerHTML='<div class="empty-note">未有指令 — 撳下面嘅掣加入</div>';return;}
+  program.forEach((c,i)=>{const b=document.createElement('button');b.className='pcmd';b.textContent=(i+1)+CMD_LABEL[c];
+    b.title='撳我刪除';b.addEventListener('click',()=>{if(!running){program.splice(i,1);renderProg();}});progEl.appendChild(b);});
+}
+function newLevel(){
+  program=[];running=false;
+  document.getElementById('lv').textContent=lv+1;
+  document.getElementById('fb').textContent='';document.getElementById('fb').className='feedback';
+  renderGrid(levels[lv].start);renderProg();
+}
+document.querySelectorAll('.cmd').forEach(b=>b.addEventListener('click',()=>{
+  if(running||program.length>=40)return;program.push(b.dataset.c);renderProg();
+}));
+document.getElementById('undoBtn').addEventListener('click',()=>{if(!running){program.pop();renderProg();}});
+document.getElementById('clearBtn').addEventListener('click',()=>{if(!running){program=[];renderProg();renderGrid(levels[lv].start);}});
+document.getElementById('runBtn').addEventListener('click',async()=>{
+  if(running||!program.length)return;running=true;
+  const fb=document.getElementById('fb');fb.textContent='';fb.className='feedback';
+  const L=levels[lv],n=L.size;
+  let r=L.start.r,c=L.start.c,dir=L.start.dir;
+  const isWall=(rr,cc)=>rr<0||rr>=n||cc<0||cc>=n||L.walls.some(w=>w[0]===rr&&w[1]===cc);
+  renderGrid({r,c,dir});
+  await new Promise(res=>setTimeout(res,400));
+  for(const cmd of program){
+    if(cmd==='L')dir=(dir+3)%4;
+    else if(cmd==='R')dir=(dir+1)%4;
+    else{let nr=r,nc=c;if(dir===0)nr--;if(dir===1)nc++;if(dir===2)nr++;if(dir===3)nc--;
+      if(isWall(nr,nc)){fb.textContent='💥 撞牆／出界！再諗過指令順序。';fb.className='feedback bad';renderGrid({r,c,dir});running=false;return;}
+      r=nr;c=nc;}
+    renderGrid({r,c,dir});
+    await new Promise(res=>setTimeout(res,320));
+  }
+  running=false;
+  if(r===L.goal.r&&c===L.goal.c){
+    const pts=Math.max(80,220-program.length*5);score+=pts;
+    document.getElementById('score').textContent=score;
+    fb.textContent=`🎉 到達終點！+${pts} 分（用咗 ${program.length} 個指令）`;fb.className='feedback good';
+    setTimeout(()=>{lv++;if(lv>=levels.length){document.getElementById('win').style.display='flex';
+      document.getElementById('finalScore').innerHTML=`總分：<b style="color:#fbbf24">${score}</b> 分<br>🏆 你係演算法大師！`;}else newLevel();},1500);
+  }else{fb.textContent='🤖 行完都未到終點，再調下順序！';fb.className='feedback bad';}
+});
+function startGame(){document.getElementById('intro').style.display='none';newLevel();}
+</script>
+</body>
+</html>

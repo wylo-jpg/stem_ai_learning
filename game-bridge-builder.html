@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>建橋工程師</title>
+<style>
+:root{--blue:#2563eb;--ink:#1f2937;--muted:#6b7280;--bg:#f3f4f6;--card:#fff;--green:#16a34a;--red:#dc2626;--amber:#d97706}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;touch-action:manipulation}
+header{background:linear-gradient(135deg,#92400e,#d97706);color:#fff;padding:22px 20px;text-align:center}
+header h1{margin:0 0 6px;font-size:24px}
+header p{margin:0;opacity:.92;font-size:13.5px}
+nav{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 16px;display:flex;gap:4px;overflow-x:auto;position:sticky;top:0;z-index:10}
+nav a{padding:12px 16px;text-decoration:none;color:var(--muted);font-weight:600;font-size:14px;white-space:nowrap;border-bottom:3px solid transparent}
+nav a.active{color:var(--blue);border-bottom-color:var(--blue)}
+main{max-width:1000px;margin:0 auto;padding:18px 14px 50px}
+.hud{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--card);border-radius:12px;padding:12px 14px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:12px}
+.hud .stat{background:#fef3c7;border-radius:8px;padding:6px 12px;font-weight:700;font-size:14px}
+.hud .stat small{display:block;font-weight:400;color:var(--muted);font-size:11px}
+.btn{border:none;border-radius:10px;padding:12px 20px;font-size:15px;font-weight:700;cursor:pointer;color:#fff;background:var(--blue);min-height:48px}
+.btn:active{transform:scale(.96)}
+.btn.green{background:var(--green)}
+.btn.red{background:var(--red)}
+.btn.amber{background:var(--amber)}
+.btn.gray{background:#9ca3af}
+.btn.on{outline:3px solid #1f2937}
+.canvas-wrap{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.08);padding:8px}
+canvas{width:100%;height:auto;display:block;border-radius:8px;touch-action:none}
+.tip{background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 14px;font-size:13.5px;margin-top:12px;color:#92400e}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px}
+.overlay.hide{display:none}
+.sheet{background:#fff;border-radius:16px;max-width:520px;width:100%;padding:26px;max-height:88vh;overflow:auto}
+.sheet h2{margin:0 0 10px;font-size:22px}
+.sheet p,.sheet li{font-size:14.5px}
+.sheet ul{padding-left:20px}
+.sheet .btn{width:100%;margin-top:14px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;margin-top:8px;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:6px}
+.dot{width:14px;height:14px;border-radius:50%;display:inline-block}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:26px}
+</style>
+</head>
+<body>
+<header>
+<h1>🌉 建橋工程師</h1>
+<p>用有限預算起條橋，頂住貨車唔好冧！學結構工程同力學</p>
+</header>
+<nav>
+<a href="index.html">🏠 首頁</a>
+<a href="maths.html">📐 數學</a>
+<a href="videos.html">🎬 影片</a>
+<a href="games.html" class="active">🎮 遊戲</a>
+<a href="stem.html">🔬 STEM</a>
+<a href="ai.html">🤖 AI</a>
+</nav>
+<main>
+<div class="hud">
+<div class="stat"><small>關卡</small><span id="hLevel">1 / 3</span></div>
+<div class="stat"><small>剩餘預算</small>$<span id="hBudget">500</span></div>
+<div class="stat"><small>總分</small><span id="hScore">0</span></div>
+<button class="btn green" id="btnTest" onclick="startTest()">🚚 測試承重</button>
+<button class="btn amber" id="btnDel" onclick="toggleDel()">🧹 刪除模式</button>
+<button class="btn gray" onclick="clearAll()">↺ 清除</button>
+</div>
+<div class="canvas-wrap"><canvas id="cv" width="960" height="600"></canvas></div>
+<div class="legend">
+<span><span class="dot" style="background:#16a34a"></span>受力正常</span>
+<span><span class="dot" style="background:#eab308"></span>受力偏大</span>
+<span><span class="dot" style="background:#dc2626"></span>就快斷！</span>
+<span>⬛ 固定樁（唔會郁）</span>
+</div>
+<div class="tip">💡 工程小貼士：三角形結構最穩陣！將力分散去兩邊山崖嘅固定樁，唔好淨係起一條直路。</div>
+</main>
+<footer>教學資源共享 · 歡迎老師同學生使用</footer>
+
+<div class="overlay" id="helpOv">
+<div class="sheet">
+<h2>🌉 點玩？</h2>
+<ul>
+<li>撳一個<b>圓點</b>，再撳另一個圓點，就可以起一條<b>樑</b>連住佢哋（要夠預算）。</li>
+<li>黑色四方係<b>固定樁</b>，起響山崖上面，唔會郁。</li>
+<li>起好之後撳 <b>🚚 測試承重</b>，貨車會碌過條橋。</li>
+<li>樑受力太大會由綠變紅再<b>斷裂</b>；橋冧咗就失敗，可以加固再試。</li>
+<li>貨車成功過到對岸就過關，剩愈多預算分愈高！</li>
+<li>撳 <b>🧹 刪除模式</b> 再撳樑可以拆走（退一半錢）。</li>
+</ul>
+<p>📐 背後嘅物理：每條樑都有<b>最大拉力</b>，重量要靠多條樑分擔。三角形結構可以將力傳去固定樁，係橋樑工程嘅基本功。</p>
+<button class="btn" onclick="document.getElementById('helpOv').classList.add('hide')">開始起橋！</button>
+</div>
+</div>
+
+<div class="overlay hide" id="resOv">
+<div class="sheet" style="text-align:center">
+<h2 id="resTitle"></h2>
+<p id="resText" style="font-size:15px"></p>
+<button class="btn green" id="resBtn" onclick="closeResult()">繼續</button>
+</div>
+</div>
+
+<script>
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const W=960,H=600,DECK=340;
+const LEVELS=[
+ {gl:180,gr:780,load:3400,budget:500},
+ {gl:120,gr:840,load:4400,budget:650},
+ {gl:60,gr:900,load:5400,budget:800}
+];
+const ROWS=[220,280,340,400,460],MAXLEN=135,BREAK=0.12,GRAV=900,ITER=6;
+let level=0,score=0,best=+(localStorage.getItem('bridgeBest')||0);
+let nodes=[],beams=[],budget=0,selected=-1,delMode=false,testing=false;
+let fx=0,passed=false,testDone=false;
+
+function buildLevel(){
+ const L=LEVELS[level];
+ nodes=[];beams=[];budget=L.budget;selected=-1;testing=false;testDone=false;passed=false;
+ const cols=[];
+ for(let x=L.gl;x<=L.gr+1;x+=60)cols.push(x);
+ ROWS.forEach(y=>cols.forEach(x=>{
+   nodes.push({x,y,px:x,py:y,fixed:(x<=L.gl+1||x>=L.gr-1),id:nodes.length});
+ }));
+ document.getElementById('hLevel').textContent=(level+1)+' / '+LEVELS.length;
+ document.getElementById('hBudget').textContent=budget;
+ document.getElementById('hScore').textContent=score;
+ document.getElementById('btnDel').classList.remove('on');delMode=false;
+}
+function nodeAt(mx,my){
+ let bestI=-1,bd=20;
+ nodes.forEach((n,i)=>{const d=Math.hypot(n.x-mx,n.y-my);if(d<bd){bd=d;bestI=i;}});
+ return bestI;
+}
+function beamAt(mx,my){
+ let bi=-1,bd=14;
+ beams.forEach((b,i)=>{if(b.broken)return;
+  const a=nodes[b.a],c=nodes[b.b];
+  const dx=c.x-a.x,dy=c.y-a.y,L2=dx*dx+dy*dy;
+  let t=((mx-a.x)*dx+(my-a.y)*dy)/(L2||1);t=Math.max(0,Math.min(1,t));
+  const d=Math.hypot(mx-(a.x+t*dx),my-(a.y+t*dy));
+  if(d<bd){bd=d;bi=i;}});
+ return bi;
+}
+function beamCost(a,b){return Math.round(Math.hypot(nodes[a].x-nodes[b].x,nodes[a].y-nodes[b].y)*0.2);}
+cv.addEventListener('pointerdown',e=>{
+ if(testing)return;
+ const r=cv.getBoundingClientRect();
+ const mx=(e.clientX-r.left)*W/r.width,my=(e.clientY-r.top)*H/r.height;
+ if(delMode){const bi=beamAt(mx,my);
+  if(bi>=0){const b=beams[bi];budget+=Math.floor(beamCost(b.a,b.b)/2);beams.splice(bi,1);upd();}return;}
+ const ni=nodeAt(mx,my);
+ if(ni<0){selected=-1;return;}
+ if(selected<0){selected=ni;return;}
+ if(selected===ni){selected=-1;return;}
+ const a=selected;selected=-1;
+ if(beams.some(b=>(b.a===a&&b.b===ni)||(b.a===ni&&b.b===a)))return;
+ const d=Math.hypot(nodes[a].x-nodes[ni].x,nodes[a].y-nodes[ni].y);
+ if(d>MAXLEN||d<5){flash('太遠喇！樑最長駁到 '+MAXLEN+'px');return;}
+ const cost=beamCost(a,ni);
+ if(cost>budget){flash('預算唔夠呀！');return;}
+ budget-=cost;
+ beams.push({a,b:ni,rest:d,broken:false,strain:0});
+ upd();
+});
+function upd(){document.getElementById('hBudget').textContent=budget;}
+let flashT=null;
+function flash(msg){
+ let el=document.getElementById('flash');
+ if(!el){el=document.createElement('div');el.id='flash';
+  el.style.cssText='position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#1f2937;color:#fff;padding:10px 22px;border-radius:10px;z-index:60;font-size:15px;font-weight:700';
+  document.body.appendChild(el);}
+ el.textContent=msg;el.style.display='block';
+ clearTimeout(flashT);flashT=setTimeout(()=>el.style.display='none',1600);
+}
+function toggleDel(){delMode=!delMode;selected=-1;document.getElementById('btnDel').classList.toggle('on',delMode);}
+function clearAll(){if(testing)return;beams=[];budget=LEVELS[level].budget;selected=-1;upd();}
+function startTest(){
+ if(testing||testDone)return;
+ nodes.forEach(n=>{n.px=n.x;n.py=n.y;});
+ beams.forEach(b=>{b.broken=false;b.strain=0;});
+ testing=true;testDone=false;passed=false;fx=LEVELS[level].gl+30;selected=-1;
+}
+function step(dt){
+ const sub=2,sdt=dt/sub;
+ for(let s=0;s<sub;s++){
+  for(const n of nodes){if(n.fixed)continue;
+   const vx=(n.x-n.px)*0.998,vy=(n.y-n.py)*0.998;
+   n.px=n.x;n.py=n.y;n.x+=vx;n.y+=vy+GRAV*sdt*sdt;}
+  // 貨車重量：壓住附近節點
+  const L=LEVELS[level];
+  for(const n of nodes){if(n.fixed)continue;
+   const d=Math.hypot(n.x-fx,n.y-DECK);
+   if(d<95){const w=1-d/95;n.y+=L.load*w*sdt*sdt;}}
+  for(let k=0;k<ITER;k++)for(const b of beams){if(b.broken)continue;
+   const A=nodes[b.a],C=nodes[b.b];
+   let dx=C.x-A.x,dy=C.y-A.y;const d=Math.hypot(dx,dy)||0.001;
+   const diff=(d-b.rest)/d;
+   const wA=A.fixed?0:1,wC=C.fixed?0:1,ws=wA+wC;
+   if(!ws)continue;
+   A.x+=dx*diff*(wA/ws);A.y+=dy*diff*(wA/ws);
+   C.x-=dx*diff*(wC/ws);C.y-=dy*diff*(wC/ws);}
+  for(const b of beams){if(b.broken)continue;
+   const A=nodes[b.a],C=nodes[b.b];
+   const d=Math.hypot(C.x-A.x,C.y-A.y);
+   b.strain=(d-b.rest)/b.rest;
+   if(b.strain>BREAK)b.broken=true;}
+ }
+ fx+=100*dt;
+ // 檢查橋面支撐
+ let sy=0,sw=0;
+ for(const n of nodes){if(n.fixed)continue;
+  const d=Math.hypot(n.x-fx,n.y-DECK);
+  if(d<95){const w=1-d/95;sy+=n.y*w;sw+=w;}}
+ const supY=sw>0?sy/sw:1e9;
+ const brokenN=beams.filter(b=>b.broken).length;
+ if(supY>DECK+95||(beams.length>0&&brokenN/beams.length>0.55)){fail();}
+ else if(fx>=LEVELS[level].gr-30){win();}
+}
+function fail(){testing=false;testDone=true;
+ showRes('💥 橋冧咗！','貨車跌咗落去。試下加多啲樑，或者用三角形將力傳去兩邊固定樁，再撳測試。','再試一次');}
+function win(){testing=false;testDone=true;passed=true;
+ const gain=200+budget*2;score+=gain;
+ document.getElementById('hScore').textContent=score;
+ if(score>best){best=score;localStorage.setItem('bridgeBest',best);}
+ if(level<LEVELS.length-1)
+  showRes('🎉 過關！','貨車成功過橋！本關得分 +'+gain+'（剩餘預算 $'+budget+'）。','下一關 →');
+ else
+  showRes('🏆 全部完成！','你係真正嘅橋樑工程師！總分 '+score+'（最高 '+best+'）。','再玩一次');}
+function showRes(t,x,btn){document.getElementById('resTitle').textContent=t;
+ document.getElementById('resText').textContent=x;
+ document.getElementById('resBtn').textContent=btn;
+ document.getElementById('resOv').classList.remove('hide');}
+function closeResult(){document.getElementById('resOv').classList.add('hide');
+ if(passed){if(level<LEVELS.length-1){level++;buildLevel();}else{level=0;score=0;buildLevel();}}}
+function stressColor(t){t=Math.max(0,Math.min(1,t));
+ if(t<0.5){const k=t/0.5;return `rgb(${22+k*(234-22)},${163+k*(179-163)},${74+k*(8-74)})`;}
+ const k=(t-0.5)/0.5;return `rgb(${234+k*(220-234)},${179+k*(38-179)},${8+k*(38-8)})`;}
+function draw(){
+ ctx.clearRect(0,0,W,H);
+ const L=LEVELS[level];
+ // 天空
+ const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#bae6fd');g.addColorStop(.62,'#e0f2fe');g.addColorStop(.62,'#60a5fa');g.addColorStop(1,'#3b82f6');
+ ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ // 山崖
+ ctx.fillStyle='#a16207';
+ ctx.fillRect(0,0,L.gl,DECK+40);ctx.fillRect(L.gr,0,W-L.gr,DECK+40);
+ ctx.fillStyle='#854d0e';
+ for(let y=DECK+40;y<H;y+=26){ctx.fillRect(0,y,L.gl,8);ctx.fillRect(L.gr,y,W-L.gr,8);}
+ ctx.fillStyle='#65a30d';ctx.fillRect(0,DECK+28,L.gl,12);ctx.fillRect(L.gr,DECK+28,W-L.gr,12);
+ // 樑
+ for(const b of beams){if(b.broken)continue;
+  const A=nodes[b.a],C=nodes[b.b];
+  ctx.strokeStyle=stressColor(b.strain/BREAK);ctx.lineWidth=6;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(C.x,C.y);ctx.stroke();
+  ctx.strokeStyle='rgba(0,0,0,.25)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(C.x,C.y);ctx.stroke();}
+ // 節點
+ nodes.forEach((n,i)=>{
+  if(n.fixed){ctx.fillStyle='#1f2937';ctx.fillRect(n.x-7,n.y-7,14,14);}
+  else{ctx.fillStyle=i===selected?'#f59e0b':'#fff';ctx.strokeStyle='#1f2937';ctx.lineWidth=2;
+   ctx.beginPath();ctx.arc(n.x,n.y,7,0,7);ctx.fill();ctx.stroke();}});
+ // 貨車
+ if(testing||testDone){
+  let sy=0,sw=0;
+  for(const n of nodes){if(n.fixed)continue;const d=Math.hypot(n.x-fx,n.y-DECK);
+   if(d<95){const w=1-d/95;sy+=n.y*w;sw+=w;}}
+  const ty=sw>0?sy/sw:DECK;
+  ctx.font='44px serif';ctx.textAlign='center';ctx.fillText('🚚',fx,ty-8);}
+}
+let last=0;
+function loop(ts){const dt=Math.min(0.033,(ts-last)/1000||0.016);last=ts;
+ if(testing)step(dt);draw();requestAnimationFrame(loop);}
+buildLevel();requestAnimationFrame(loop);
+</script>
+</body>
+</html>

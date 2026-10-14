@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>決策樹大師 | AI 小遊戲</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei","PingFang HK",sans-serif;background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);color:#eee;min-height:100vh}
+.wrap{max-width:680px;margin:0 auto;padding:16px 14px 60px}
+.topnav{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.topnav a{color:#a7f3d0;text-decoration:none;font-size:14px;background:rgba(255,255,255,.08);padding:8px 14px;border-radius:20px}
+header{text-align:center;padding:10px 0 4px}
+header h1{margin:6px 0;font-size:26px}
+header p{margin:0;color:#a7f3d0;font-size:14px}
+.intro{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:14px 16px;margin:14px 0;font-size:14px;line-height:1.7}
+.intro b{color:#fbbf24}
+.hud{display:flex;gap:10px;margin:12px 0}
+.hud .box{flex:1;background:rgba(0,0,0,.35);border-radius:12px;padding:10px;text-align:center}
+.hud .v{font-size:22px;font-weight:800;color:#fbbf24}
+.hud .l{font-size:12px;color:#a7f3d0}
+.tip{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.4);border-radius:12px;padding:12px 14px;font-size:14px;margin:10px 0;min-height:48px;line-height:1.6}
+.groups{display:flex;flex-direction:column;gap:10px;margin:12px 0}
+.gcard{background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.14);border-radius:14px;padding:12px 14px;cursor:pointer}
+.gcard.sel{border-color:#fbbf24;background:rgba(251,191,36,.1)}
+.gcard.done{border-color:#34d399;opacity:.75;cursor:default}
+.gcard .ghead{font-size:13px;color:#a7f3d0;margin-bottom:8px}
+.gcard .animals{font-size:30px;line-height:1.5}
+.gcard .alabel{font-size:12px;color:#cbd5e1;margin-top:4px}
+.qlist{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+.qbtn{border:none;border-radius:14px;padding:14px 16px;font-size:16px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#0d9488,#14b8a6);color:#fff;min-height:52px}
+.qbtn:active{transform:scale(.96)}
+.qbtn:disabled{opacity:.4}
+.rowbtns{display:flex;gap:10px;margin:12px 0}
+.bigbtn{flex:1;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:800;cursor:pointer;min-height:52px}
+#resetBtn{background:rgba(255,255,255,.12);color:#eee}
+.final{text-align:center;display:none;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:24px 18px;margin:12px 0}
+.final .big{font-size:56px}
+.final h2{color:#fbbf24;margin:8px 0}
+.final p{color:#cbd5e1;line-height:1.8;font-size:14px}
+footer{text-align:center;color:#7d8ea3;font-size:12px;margin-top:24px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="topnav"><a href="ai.html">← AI 專區</a><a href="games.html">← 遊戲區</a><a href="index.html">🏠 首頁</a></div>
+<header><h1>🌳 決策樹大師</h1><p>用是非問題，親手砌一棵分類樹</p></header>
+
+<div class="intro">
+<b>🎮 玩法：</b>畫面有一組動物未分好類。<b>撳一組</b>選中佢，再<b>揀一條是非問題</b>將佢分開。分到每組得返一隻動物就過關。<b>秘訣：揀分得最平均嘅問題，棵樹就愈矮、分得愈快！</b><br>
+<b>💡 AI 概念：</b>決策樹（Decision Tree）係最直觀嘅 AI 模型——用一連串是非問題做分類。AI 揀問題嗰陣會計算「資訊增益」，即係揀分得最開嗰條，原理同你而家玩緊嘅一模一樣。
+</div>
+
+<div class="hud">
+<div class="box"><div class="v" id="lvl">第 1 關</div><div class="l">關卡</div></div>
+<div class="box"><div class="v" id="dep">0</div><div class="l">目前樹深</div></div>
+<div class="box"><div class="v" id="par">目標 ≤2</div><div class="l">三星目標</div></div>
+<div class="box"><div class="v" id="scr">0 ⭐</div><div class="l">總星數</div></div>
+</div>
+
+<div class="tip" id="tip">👆 先撳下面其中一組動物，再揀一條問題將佢分開。</div>
+
+<div class="groups" id="groups"></div>
+
+<div class="qlist" id="qlist"></div>
+
+<div class="rowbtns">
+<button class="bigbtn" id="resetBtn" onclick="resetLevel()">↺ 重設本關</button>
+</div>
+
+<div class="final" id="finalCard">
+<div class="big" id="fE">🏆</div>
+<h2 id="fT"></h2>
+<p id="fD"></p>
+<button class="bigbtn" style="width:100%;background:linear-gradient(135deg,#0d9488,#14b8a6);color:#fff" onclick="location.reload()">↺ 再挑戰</button>
+</div>
+
+<footer>教學資源共享 · 邊玩邊學 AI</footer>
+</div>
+
+<script>
+const ANIMALS = {
+  dog:{e:'🐶',n:'狗'}, cat:{e:'🐱',n:'貓'}, bird:{e:'🐦',n:'雀'},
+  fish:{e:'🐟',n:'魚'}, snake:{e:'🐍',n:'蛇'}, frog:{e:'🐸',n:'青蛙'},
+  bfly:{e:'🦋',n:'蝴蝶'}, spider:{e:'🕷️',n:'蜘蛛'}
+};
+// 每條問題：適用動物 -> true/false
+const QUESTIONS = [
+  {t:'有毛髮？', f:{dog:1,cat:1}},
+  {t:'係哺乳類？', f:{dog:1,cat:1}},
+  {t:'叫聲係「汪汪」？', f:{dog:1}},
+  {t:'有羽毛？', f:{bird:1}},
+  {t:'識飛？', f:{bird:1,bfly:1}},
+  {t:'住喺水入面？', f:{fish:1,frog:1}},
+  {t:'有鱗片？', f:{fish:1,snake:1}},
+  {t:'會生蛋？', f:{bird:1,fish:1,snake:1,frog:1,bfly:1,spider:1}},
+  {t:'有毒？', f:{snake:1,spider:1}},
+  {t:'係昆蟲？', f:{bfly:1,spider:1}},
+  {t:'有 8 隻腳？', f:{spider:1}},
+  {t:'識跳？', f:{frog:1}}
+];
+const LEVELS = [
+  {animals:['dog','cat','bird','fish'], qs:[0,3,5,7,4,2], par:2},
+  {animals:['dog','bird','fish','snake','bfly','spider'], qs:[0,3,4,5,6,7,8,9,10,2], par:3},
+  {animals:['dog','cat','bird','fish','snake','frog','bfly','spider'], qs:[0,1,2,3,4,5,6,7,8,9,10,11], par:3}
+];
+let lvl=0, groups=[], sel=-1, stars=0, maxDepth=0;
+
+function tip(m){document.getElementById('tip').innerHTML=m;}
+
+function resetLevel(){
+  const L=LEVELS[lvl];
+  groups=[{items:L.animals.slice(),depth:0}];
+  sel=-1; maxDepth=0;
+  document.getElementById('lvl').textContent='第 '+(lvl+1)+' 關';
+  document.getElementById('par').textContent='目標 ≤'+L.par;
+  document.getElementById('dep').textContent='0';
+  tip('👆 先撳下面其中一組動物，再揀一條問題將佢分開。記住：<b>分得愈平均，棵樹愈矮！</b>');
+  render();
+}
+function render(){
+  const L=LEVELS[lvl];
+  const gEl=document.getElementById('groups');
+  gEl.innerHTML='';
+  groups.forEach((g,i)=>{
+    const d=document.createElement('div');
+    d.className='gcard'+(g.items.length===1?' done':'')+(i===sel?' sel':'');
+    const em=g.items.map(a=>ANIMALS[a].e).join(' ');
+    const nm=g.items.map(a=>ANIMALS[a].n).join('、');
+    d.innerHTML='<div class="ghead">第 '+(i+1)+' 組 · 深度 '+g.depth+(g.items.length===1?' · ✅ 分好':'')+'</div>'
+      +'<div class="animals">'+em+'</div><div class="alabel">'+nm+'</div>';
+    if(g.items.length>1){d.onclick=()=>{sel=i;render();};}
+    gEl.appendChild(d);
+  });
+  const qEl=document.getElementById('qlist');
+  qEl.innerHTML='';
+  L.qs.forEach(qi=>{
+    const b=document.createElement('button');
+    b.className='qbtn';b.textContent=QUESTIONS[qi].t;
+    b.disabled=(sel<0||groups[sel].items.length<=1);
+    b.onclick=()=>applyQ(qi);
+    qEl.appendChild(b);
+  });
+}
+function applyQ(qi){
+  if(sel<0)return;
+  const g=groups[sel], q=QUESTIONS[qi];
+  const y=g.items.filter(a=>q.f[a]), n=g.items.filter(a=>!q.f[a]);
+  if(y.length===0||n.length===0){
+    tip('⚠️ 「'+q.t+'」分唔開呢組（全部答同一邊）。試下揀一條<b>分得開</b>嘅問題！');
+    return;
+  }
+  groups.splice(sel,1,
+    {items:y,depth:g.depth+1},
+    {items:n,depth:g.depth+1});
+  maxDepth=Math.max(maxDepth,g.depth+1);
+  document.getElementById('dep').textContent=maxDepth;
+  sel=-1;
+  const yn=y.map(a=>ANIMALS[a].n).join('、'), nn=n.map(a=>ANIMALS[a].n).join('、');
+  tip('✅ 「'+q.t+'」→ 是：'+yn+' ｜ 否：'+nn);
+  render();
+  if(groups.every(g=>g.items.length===1)) levelDone();
+}
+function levelDone(){
+  const L=LEVELS[lvl];
+  let s = maxDepth<=L.par?3:(maxDepth<=L.par+1?2:1);
+  stars+=s;
+  document.getElementById('scr').textContent=stars+' ⭐';
+  const em=s===3?'🏆':(s===2?'🎉':'💪');
+  tip(em+' 第 '+(lvl+1)+' 關完成！樹深 '+maxDepth+'，攞到 '+s+' 粒星。'
+    +(s<3?'<br>💡 貼士：每次揀將組分得<b>最平均</b>嘅問題（例如 4 隻分 2+2），樹深就會最矮。AI 就係咁計「資訊增益」嚟揀問題㗎！':'<br>💡 完美！你嘅揀問題策略同 AI 計出嚟嘅「資訊增益」最優解一樣！'));
+  if(lvl<LEVELS.length-1){
+    setTimeout(()=>{lvl++;resetLevel();},2600);
+  }else{
+    setTimeout(()=>{
+      document.getElementById('finalCard').style.display='block';
+      document.getElementById('fE').textContent=stars>=8?'🏆':'🎮';
+      document.getElementById('fT').textContent='三關完成！共 '+stars+' / 9 ⭐';
+      document.getElementById('fD').innerHTML='你親手砌咗三棵決策樹！記住個重點：<b>好嘅問題 = 分得平均嘅問題</b>。<br>現實中嘅 AI（如隨機森林）就係用成百棵咁樣嘅樹一齊投票做決定㗎！';
+      document.getElementById('finalCard').scrollIntoView({behavior:'smooth'});
+    },2600);
+  }
+}
+resetLevel();
+</script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>分數披薩店</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#1c0f0a;color:#fde68a;min-height:100vh}
+header{background:linear-gradient(135deg,#9a3412,#ea580c);padding:14px;text-align:center}
+header h1{margin:0;font-size:22px}
+.hud{display:flex;justify-content:space-around;background:#431407;padding:10px;font-size:15px;font-weight:700}
+.hud span{color:#fbbf24}
+main{max-width:600px;margin:0 auto;padding:16px;width:100%;display:flex;flex-direction:column;align-items:center}
+.customer{background:#431407;border-radius:16px;padding:14px 18px;width:100%;text-align:center;margin-bottom:12px;font-size:17px}
+.customer .face{font-size:44px}
+.customer .order{font-size:22px;font-weight:800;color:#fbbf24;margin-top:6px}
+#pizzaWrap{position:relative;width:min(88vw,340px);height:min(88vw,340px);margin:6px auto}
+#pizza{width:100%;height:100%;touch-action:manipulation}
+.cutbtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:12px 0}
+.cutbtn{min-width:64px;min-height:52px;font-size:16px;font-weight:800;border-radius:12px;border:2px solid #ea580c;background:#431407;color:#fdba74;cursor:pointer;touch-action:manipulation;padding:8px 12px}
+.cutbtn.sel{background:#ea580c;color:#fff}
+.selinfo{font-size:16px;margin:6px 0;min-height:28px;text-align:center}
+.selinfo b{color:#4ade80;font-size:20px}
+.btnrow{display:flex;gap:10px;width:100%;margin-top:6px}
+button.big{flex:1;min-height:58px;font-size:18px;font-weight:800;border:none;border-radius:14px;cursor:pointer;touch-action:manipulation}
+#serveBtn{background:#22c55e;color:#052e16}
+#resetBtn{background:#57534e;color:#fff}
+.feedback{min-height:36px;font-size:17px;font-weight:700;text-align:center;margin-top:8px}
+.feedback.good{color:#4ade80}.feedback.bad{color:#f87171}
+.overlay{position:fixed;inset:0;background:rgba(20,8,2,.94);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.card{background:#431407;border-radius:20px;padding:28px 24px;max-width:540px;width:100%;max-height:90vh;overflow-y:auto}
+.card h2{margin:0 0 12px;font-size:24px;color:#fdba74}
+.card p,.card li{font-size:16px;line-height:1.7;color:#fde68a}
+.card ul{padding-left:20px}
+.concept{background:#1c0f0a;border-radius:12px;padding:14px;margin:14px 0;font-size:15px}
+.concept b{color:#4ade80}
+.card button{width:100%;min-height:56px;font-size:18px;font-weight:700;background:#ea580c;color:#fff;border:none;border-radius:14px;margin-top:10px;cursor:pointer}
+.tip{font-size:13px;color:#a8a29e;text-align:center;margin-top:4px}
+</style>
+</head>
+<body>
+<header><h1>🍕 分數披薩店</h1></header>
+<div class="hud"><div>🧑‍🍳 客人 <span id="cust">1</span>/8</div><div>⭐ <span id="score">0</span> 分</div><div>😊 滿意度 <span id="happy">100</span>%</div></div>
+<main>
+<div class="customer"><div class="face" id="face">🧑</div><div id="custText">唔該，我要</div><div class="order" id="orderText">3/4 個披薩</div></div>
+<div id="pizzaWrap"><svg id="pizza" viewBox="0 0 200 200"></svg></div>
+<div class="tip">撳披薩上面嘅格仔揀／唔揀</div>
+<div class="cutbtns" id="cutBtns"></div>
+<div class="selinfo">你揀咗 <b id="selFrac">0/8</b> 個披薩</div>
+<div class="btnrow"><button class="big" id="resetBtn">重揀</button><button class="big" id="serveBtn">🍽️ 上菜</button></div>
+<div class="feedback" id="fb"></div>
+</main>
+<div class="overlay" id="intro"><div class="card">
+<h2>🍕 分數披薩店</h2>
+<p><b>玩法：</b>客人會叫指定分數嘅披薩（例如 3/4）。你先揀將披薩切成幾多份，再撳格仔揀啱份量，撳「上菜」！8 位客人，滿意度會影響分數。</p>
+<div class="concept">💡 <b>分數概念：</b>分母 = 成個披薩切成幾多份；分子 = 你拎咗幾多份。例如切 8 份拎 6 份 = 6/8 = 3/4。記住：<b>唔同切法可以代表同一個分數！</b>（等值分數）</div>
+<ul><li>切法：2、3、4、6、8 份</li><li>啱晒 +100 分；等值分數都啱！</li><li>錯一次扣 10% 滿意度</li></ul>
+<button onclick="startGame()">開店營業 🔔</button>
+</div></div>
+<div class="overlay" id="gameover" style="display:none"><div class="card"><h2>🏁 收舖！</h2><p id="finalScore" style="font-size:19px"></p><button onclick="location.reload()">再開一間 🔁</button></div></div>
+<script>
+const FACES=['🧑','👩','👴','👵','👦','👧','🧔','👱‍♀️'];
+const CUT_OPTIONS=[2,3,4,6,8];
+let cutN=8,selected=new Set(),custIdx=0,score=0,happy=100,target={n:3,d:4};
+function gcd(a,b){return b?gcd(b,a%b):a;}
+function newCustomer(){
+  selected=new Set();cutN=8;
+  // 隨機目標分數（確保有等值可能）
+  const d=[2,3,4,6,8][Math.floor(Math.random()*5)];
+  let n=1+Math.floor(Math.random()*(d-1));
+  const g=gcd(n,d);n/=g;const dd=d/g;
+  // 有時用非最簡比出題
+  target={n:n,d:dd};
+  document.getElementById('face').textContent=FACES[custIdx%FACES.length];
+  document.getElementById('custText').textContent='唔該，我要';
+  document.getElementById('orderText').textContent=`${target.n}/${target.d} 個披薩`;
+  document.getElementById('cust').textContent=custIdx+1;
+  document.getElementById('fb').textContent='';document.getElementById('fb').className='feedback';
+  renderCutBtns();drawPizza();updateSel();
+}
+function renderCutBtns(){
+  const el=document.getElementById('cutBtns');el.innerHTML='';
+  CUT_OPTIONS.forEach(n=>{const b=document.createElement('button');b.className='cutbtn'+(n===cutN?' sel':'');b.textContent='切 '+n+' 份';
+    b.addEventListener('click',()=>{cutN=n;selected=new Set();renderCutBtns();drawPizza();updateSel();});el.appendChild(b);});
+}
+function drawPizza(){
+  const svg=document.getElementById('pizza');svg.innerHTML='';
+  const cx=100,cy=100,r=92;
+  // 底
+  const base=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  base.setAttribute('cx',cx);base.setAttribute('cy',cy);base.setAttribute('r',r);
+  base.setAttribute('fill','#fbbf24');base.setAttribute('stroke','#92400e');base.setAttribute('stroke-width','4');
+  svg.appendChild(base);
+  for(let i=0;i<cutN;i++){
+    const a1=(i/cutN)*Math.PI*2-Math.PI/2, a2=((i+1)/cutN)*Math.PI*2-Math.PI/2;
+    const x1=cx+r*Math.cos(a1),y1=cy+r*Math.sin(a1),x2=cx+r*Math.cos(a2),y2=cy+r*Math.sin(a2);
+    const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+    p.setAttribute('d',`M${cx},${cy} L${x1},${y1} A${r},${r} 0 0 1 ${x2},${y2} Z`);
+    p.setAttribute('fill',selected.has(i)?'#22c55e':'#fcd34d');
+    p.setAttribute('fill-opacity',selected.has(i)?'0.85':'0.55');
+    p.setAttribute('stroke','#92400e');p.setAttribute('stroke-width','2');
+    p.style.cursor='pointer';
+    p.addEventListener('pointerdown',e=>{e.preventDefault();selected.has(i)?selected.delete(i):selected.add(i);drawPizza();updateSel();});
+    svg.appendChild(p);
+    // 芝士點
+    const ma=(a1+a2)/2, px=cx+r*0.62*Math.cos(ma), py=cy+r*0.62*Math.sin(ma);
+    const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    dot.setAttribute('cx',px);dot.setAttribute('cy',py);dot.setAttribute('r','5');dot.setAttribute('fill','#ef4444');dot.setAttribute('pointer-events','none');
+    svg.appendChild(dot);
+  }
+}
+function updateSel(){document.getElementById('selFrac').textContent=`${selected.size}/${cutN}`;}
+document.getElementById('resetBtn').addEventListener('click',()=>{selected=new Set();drawPizza();updateSel();});
+document.getElementById('serveBtn').addEventListener('click',()=>{
+  const fb=document.getElementById('fb');
+  if(selected.size===0){fb.textContent='⚠️ 你未揀任何披薩！';fb.className='feedback bad';return;}
+  // 檢查等值：selected/cutN == target.n/target.d
+  const ok=selected.size*target.d===target.n*cutN;
+  if(ok){
+    const pts=Math.round(100*happy/100);score+=pts;
+    document.getElementById('score').textContent=score;
+    fb.textContent=`✅ 好味！+${pts} 分`;fb.className='feedback good';
+    setTimeout(()=>{custIdx++;if(custIdx>=8)endGame();else newCustomer();},1100);
+  }else{
+    happy=Math.max(0,happy-10);document.getElementById('happy').textContent=happy;
+    fb.textContent=`❌ 唔啱！你要 ${target.n}/${target.d}，你畀咗 ${selected.size}/${cutN}`;fb.className='feedback bad';
+  }
+});
+function endGame(){
+  document.getElementById('gameover').style.display='flex';
+  let msg=`總分：<b style="color:#fbbf24">${score}</b> 分<br>滿意度：${happy}%<br>`;
+  msg+=score>=700?'🌟 米芝蓮三星！你係分數大師！':score>=400?'👍 做得唔錯，繼續努力！':'💪 多啲練習等值分數！';
+  document.getElementById('finalScore').innerHTML=msg;
+}
+function startGame(){document.getElementById('intro').style.display='none';newCustomer();}
+</script>
+</body>
+</html>

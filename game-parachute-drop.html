@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>降落傘挑戰</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#082f49;color:#e0f2fe;line-height:1.6}
+header{background:linear-gradient(135deg,#0c4a6e,#0284c7);padding:18px 16px;text-align:center}
+header h1{margin:0;font-size:22px}
+header p{margin:4px 0 0;font-size:13px;opacity:.85}
+.back{display:block;text-align:center;background:#0c4a6e;color:#7dd3fc;text-decoration:none;padding:12px;font-size:16px;font-weight:600}
+.wrap{max-width:640px;margin:0 auto;padding:12px 14px 40px}
+canvas{width:100%;height:380px;background:linear-gradient(#38bdf8 0%,#7dd3fc 55%,#86efac 55.2%,#4ade80 100%);border-radius:12px;display:block;touch-action:none}
+.panel{background:#0c4a6e;border-radius:12px;padding:14px;margin-top:12px}
+.row{display:flex;gap:10px;align-items:center;margin:10px 0;flex-wrap:wrap}
+label{font-size:15px;min-width:96px}
+input[type=range]{flex:1;min-width:140px;height:44px;accent-color:#38bdf8}
+.val{font-size:16px;font-weight:700;color:#7dd3fc;min-width:76px;text-align:right}
+button{min-height:52px;font-size:18px;font-weight:700;border:none;border-radius:10px;padding:10px 18px;cursor:pointer}
+.btn-p{background:#0284c7;color:#fff;width:100%}
+.btn-p:active{transform:scale(.98)}
+.steer{display:flex;gap:12px;margin-top:10px}
+.steer button{flex:1;background:#155e75;color:#fff;font-size:24px;min-height:64px;user-select:none;-webkit-user-select:none}
+.hud{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+.hud .ro{background:#082f49;border-radius:8px;padding:8px;text-align:center}
+.ro .k{font-size:11px;color:#7dd3fc}
+.ro .v{font-size:17px;font-weight:800}
+#msg{min-height:52px;font-size:16px;text-align:center;padding:8px;color:#fef08a;font-weight:600}
+.score{font-size:15px;text-align:center;color:#fbbf24;font-weight:700}
+#overlay{position:fixed;inset:0;background:rgba(8,47,73,.97);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+#overlay .card{background:#0c4a6e;border-radius:16px;padding:24px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto}
+#overlay h2{margin-top:0;color:#7dd3fc}
+#overlay p{font-size:15px}
+#overlay .go{width:100%;background:#0284c7;color:#fff;margin-top:12px}
+</style>
+</head>
+<body>
+<header><h1>降落傘挑戰</h1><p>調傘調重 · 頂住風 · 安全降落目標區</p></header>
+<a class="back" href="games.html">← 返回遊戲列表</a>
+<div class="wrap">
+<canvas id="cv"></canvas>
+<div class="panel" id="setup">
+<div class="row"><label for="area">傘面積</label><input type="range" id="area" min="8" max="40" step="1" value="20"><span class="val" id="areaV">20 m²</span></div>
+<div class="row"><label for="mass">總重量</label><input type="range" id="mass" min="60" max="120" step="5" value="85"><span class="val" id="massV">85 kg</span></div>
+<div class="row"><div style="font-size:14px">預計終端速度：<b id="vtPre" style="color:#7dd3fc">—</b>　<span style="color:#94a3b8">（安全著陸要 &lt; 6.5 m/s）</span></div></div>
+<button class="btn-p" id="btnDrop">跳傘！</button>
+</div>
+<div class="panel" id="fly" style="display:none">
+<div class="hud">
+<div class="ro"><div class="k">高度</div><div class="v" id="hAlt">150 m</div></div>
+<div class="ro"><div class="k">下降速度</div><div class="v" id="hV">0 m/s</div></div>
+<div class="ro"><div class="k">風速</div><div class="v" id="hW">0</div></div>
+</div>
+<div class="steer"><button id="btnL">◀ 左</button><button id="btnR">右 ▶</button></div>
+</div>
+<div id="msg"></div>
+<div class="score" id="score"></div>
+</div>
+<div id="overlay"><div class="card">
+<h2>降落傘挑戰</h2>
+<p><b>玩法：</b>先調好傘面積同總重量，然後跳傘！下降途中用左右掣頂住風，務求降落喺綠色目標區內。</p>
+<p><b>計分：</b>共 3 回合。降落愈近目標中心分愈高；著陸速度超過 6.5 m/s 會受傷扣分！</p>
+<p><b>物理原理：</b>空氣阻力 F = ½ρC<sub>d</sub>Av²。終端速度 v<sub>t</sub> = √(2mg/ρC<sub>d</sub>A) —— 傘愈大、重量愈輕，落得愈慢愈安全。但太大隻傘會俾風吹走好遠！</p>
+<button class="go" onclick="document.getElementById('overlay').style.display='none'">明白，起跳！</button>
+</div></div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+var W=0,H=0;
+function resize(){var d=Math.min(window.devicePixelRatio||1,2);W=cv.clientWidth;H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);}
+window.addEventListener('resize',resize); resize();
+var rho=1.225, Cd=1.5, grav=9.8, HH=150, TS=4;
+var area=20, mass=85, vt=0;
+var state='setup', round=0, score=0;
+var px=0, py=0, vx=0, vy=0, wind=0, zoneX=0, zoneW=44;
+var steerL=false, steerR=false;
+function vterm(a,m){return Math.sqrt(2*m*grav/(rho*Cd*a));}
+function updPre(){
+  area=parseFloat(document.getElementById('area').value);
+  mass=parseFloat(document.getElementById('mass').value);
+  document.getElementById('areaV').textContent=area+' m²';
+  document.getElementById('massV').textContent=mass+' kg';
+  vt=vterm(area,mass);
+  var el=document.getElementById('vtPre');
+  el.textContent=vt.toFixed(1)+' m/s';
+  el.style.color=vt<6.5?'#4ade80':'#f87171';
+}
+document.getElementById('area').addEventListener('input',updPre);
+document.getElementById('mass').addEventListener('input',updPre);
+function newRound(){
+  wind=(Math.random()*6-3);
+  zoneX=40+Math.random()*(W-80-zoneW);
+  px=W/2; py=0; vx=0; vy=0;
+  document.getElementById('score').textContent='第 '+(round+1)+' / 3 回合　總分：'+score;
+  document.getElementById('msg').textContent='第 '+(round+1)+' 回合：風速 '+(wind>=0?'→':'←')+' '+Math.abs(wind).toFixed(1)+' m/s';
+}
+document.getElementById('btnDrop').addEventListener('click',function(){
+  updPre();
+  document.getElementById('setup').style.display='none';
+  document.getElementById('fly').style.display='';
+  state='fall'; newRound();
+});
+function bindHold(id,set){
+  var b=document.getElementById(id);
+  b.addEventListener('pointerdown',function(e){e.preventDefault();set(true);});
+  b.addEventListener('pointerup',function(e){e.preventDefault();set(false);});
+  b.addEventListener('pointerleave',function(e){e.preventDefault();set(false);});
+  b.addEventListener('pointercancel',function(e){e.preventDefault();set(false);});
+}
+bindHold('btnL',function(v){steerL=v;});
+bindHold('btnR',function(v){steerR=v;});
+function land(){
+  state='setup';
+  document.getElementById('setup').style.display='';
+  document.getElementById('fly').style.display='none';
+  var zc=zoneX+zoneW/2;
+  var dist=Math.abs(px-zc);
+  var acc=Math.max(0,1-dist/(zoneW*2));
+  var safe=vy<6.5;
+  var pts=Math.round(acc*60)+(safe?40:0);
+  score+=pts;
+  if(safe){
+    document.getElementById('msg').textContent=(dist<zoneW/2?'✅ 成功降落目標區！':'😐 降落咗，但偏離目標 '+dist.toFixed(0)+' m')+'　著陸速度 '+vy.toFixed(1)+' m/s（+'+pts+' 分）';
+  }else{
+    document.getElementById('msg').textContent='💥 著陸速度 '+vy.toFixed(1)+' m/s 太快，受傷了！記住：傘大啲／輕啲會安全啲（+'+pts+' 分）';
+  }
+  round++;
+  if(round<3){ setTimeout(function(){document.getElementById('btnDrop').click();},2200); }
+  else{
+    var best=0; try{best=parseInt(localStorage.getItem('chuteBest')||'0');}catch(e){}
+    var nb=''; if(score>best){try{localStorage.setItem('chuteBest',score);}catch(e){} nb=' 🏅 新紀錄！';}
+    setTimeout(function(){document.getElementById('msg').textContent='🎉 3 回合完成！總分：'+score+' / 300'+nb;},2200);
+  }
+}
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  var gy=H*0.82;
+  ctx.fillStyle='#16a34a';
+  ctx.fillRect(zoneX,gy,zoneW,H-gy);
+  ctx.fillStyle='rgba(255,255,255,.9)'; ctx.font='12px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('目標區',zoneX+zoneW/2,gy+18);
+  var y=gy-(py/HH)*(gy-20);
+  ctx.strokeStyle='#e0f2fe'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(px-24,y-26); ctx.lineTo(px-8,y-6);
+  ctx.moveTo(px+24,y-26); ctx.lineTo(px+8,y-6); ctx.stroke();
+  ctx.fillStyle='#f472b6';
+  ctx.beginPath(); ctx.moveTo(px-26,y-26); ctx.quadraticCurveTo(px,y-52,px+26,y-26); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#0ea5e9';
+  ctx.beginPath(); ctx.arc(px,y,8,0,7); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.font='bold 13px sans-serif';
+  ctx.fillText((wind>=0?'→ ':'← ')+Math.abs(wind).toFixed(1)+' m/s',W-70,24);
+}
+var last=performance.now();
+function loop(now){
+  var dt=Math.min((now-last)/1000,0.05); last=now;
+  if(state==='fall'){
+    var sdt=dt*TS, n=8, h=sdt/n;
+    for(var i=0;i<n;i++){
+      var drag=0.5*rho*Cd*area*vy*vy/mass;
+      vy+=(grav-drag)*h; if(vy<0)vy=0;
+      var tvx=0; if(steerL)tvx-=5; if(steerR)tvx+=5;
+      vx+=(tvx-vx)*Math.min(1,h*3);
+      px+=(vx+wind)*h; py+=vy*h;
+      if(px<10)px=10; if(px>W-10)px=W-10;
+      if(py>=HH){py=HH; land(); break;}
+    }
+    document.getElementById('hAlt').textContent=Math.max(0,HH-py).toFixed(0)+' m';
+    document.getElementById('hV').textContent=vy.toFixed(1)+' m/s';
+    document.getElementById('hW').textContent=(wind>=0?'→ ':'← ')+Math.abs(wind).toFixed(1);
+  }
+  draw(); requestAnimationFrame(loop);
+}
+updPre(); requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

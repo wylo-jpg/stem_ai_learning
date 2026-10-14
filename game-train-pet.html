@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>訓練 AI 寵物 | AI 小遊戲</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei","PingFang HK",sans-serif;background:linear-gradient(135deg,#134e5e,#71b280);color:#fff;min-height:100vh}
+.wrap{max-width:680px;margin:0 auto;padding:16px 14px 60px}
+.topnav{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.topnav a{color:#e8f5e9;text-decoration:none;font-size:14px;background:rgba(255,255,255,.15);padding:8px 14px;border-radius:20px}
+header{text-align:center;padding:10px 0 4px}
+header h1{margin:6px 0;font-size:26px}
+header p{margin:0;color:#dcedc8;font-size:14px}
+.intro{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:14px;padding:14px 16px;margin:14px 0;font-size:14px;line-height:1.7}
+.intro b{color:#ffe082}
+.hud{display:flex;gap:10px;margin:12px 0}
+.hud .box{flex:1;background:rgba(0,0,0,.3);border-radius:12px;padding:10px;text-align:center}
+.hud .v{font-size:22px;font-weight:800;color:#ffe082}
+.hud .l{font-size:12px;color:#dcedc8}
+.progress{background:rgba(0,0,0,.3);border-radius:10px;height:12px;overflow:hidden;margin-bottom:4px}
+.progress>div{height:100%;background:linear-gradient(90deg,#ffe082,#ff9f1c);width:0%;transition:width .4s}
+.stage{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:18px;padding:20px;margin:12px 0;text-align:center}
+.pet{font-size:90px;display:inline-block;transition:transform .3s}
+.pet.happy{animation:bounce .6s}
+.pet.sad{animation:shake .5s}
+@keyframes bounce{0%,100%{transform:translateY(0)}30%{transform:translateY(-22px) rotate(-8deg)}60%{transform:translateY(0) rotate(8deg)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-12px)}75%{transform:translateX(12px)}}
+.sit{font-size:20px;font-weight:800;margin:12px 0;min-height:30px}
+.sit .e{font-size:44px;display:block;margin-bottom:6px}
+.acts{display:flex;gap:12px;justify-content:center;margin:10px 0;flex-wrap:wrap}
+.act{background:rgba(0,0,0,.3);border:2px solid rgba(255,255,255,.3);border-radius:12px;padding:10px 18px;font-size:16px;color:#fff;font-weight:700}
+.act.chosen{border-color:#ffe082;background:rgba(255,224,130,.2)}
+.feed{display:flex;gap:12px;margin-top:14px}
+.feed button{flex:1;border:none;border-radius:14px;padding:18px;font-size:19px;font-weight:800;cursor:pointer;color:#fff}
+.feed button:active{transform:scale(.95)}
+.feed button:disabled{opacity:.4}
+#like{background:linear-gradient(135deg,#66bb6a,#2e7d32)}
+#dislike{background:linear-gradient(135deg,#ef5350,#b71c1c)}
+.brain{background:rgba(0,0,0,.35);border-radius:14px;padding:14px;margin:12px 0}
+.brain h3{margin:0 0 10px;font-size:15px;color:#ffe082}
+.qrow{margin:8px 0;font-size:13px}
+.qrow .lbl{margin-bottom:3px;color:#dcedc8}
+.qbar{background:rgba(255,255,255,.12);border-radius:8px;height:20px;position:relative;overflow:hidden}
+.qbar>div{height:100%;border-radius:8px;transition:width .5s,background .5s}
+.qrow .qv{font-family:monospace;color:#ffe082}
+.log{background:rgba(0,0,0,.3);border-radius:12px;padding:10px 14px;font-size:13px;max-height:120px;overflow-y:auto;margin:12px 0;line-height:1.8;color:#dcedc8}
+.msg{min-height:26px;text-align:center;font-weight:700;color:#ffe082;margin:8px 0}
+.final{text-align:center;display:none;background:rgba(255,255,255,.1);border-radius:18px;padding:24px;margin:12px 0}
+.final .big{font-size:64px}
+.final h2{color:#ffe082}
+footer{text-align:center;color:#c8e6c9;font-size:12px;margin-top:24px;opacity:.8}
+.concept{font-size:13px;color:#dcedc8;line-height:1.8;background:rgba(0,0,0,.25);border-radius:12px;padding:12px 14px;margin:12px 0}
+.concept b{color:#ffe082}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="topnav"><a href="ai.html">← AI 專區</a><a href="games.html">← 遊戲區</a><a href="index.html">🏠 首頁</a></div>
+<header><h1>🐶 訓練 AI 寵物</h1><p>用讚同彈，教識阿 Q 做好決定</p></header>
+
+<div class="intro">
+<b>🎮 玩法：</b>阿 Q 會遇到唔同情景，自己揀一個行動。你覺得啱就㩒 <b>👍 讚</b>（獎勵 +1），錯就㩒 <b>👎 彈</b>（懲罰 −1）。阿 Q 會記住邊個行動有獎，慢慢學識正確做法。目標：20 回合內令聰明度 ≥80%！<br>
+<b>💡 AI 概念：</b>強化學習（Reinforcement Learning）—— AI 靠<b>試錯＋獎勵</b>學習，唔使人逐步教。留意下面個「腦」（Q 值表）點樣隨住你嘅讚彈改變！
+</div>
+
+<div class="hud">
+<div class="box"><div class="v" id="hRound">0/20</div><div class="l">回合</div></div>
+<div class="box"><div class="v" id="hSmart">--%</div><div class="l">聰明度</div></div>
+<div class="box"><div class="v" id="hExp">100%</div><div class="l">亂試率</div></div>
+</div>
+<div class="progress"><div id="pbar"></div></div>
+
+<div class="stage" id="stage">
+<div class="pet" id="pet">🐶</div>
+<div class="sit" id="sit"><span class="e">🚦</span>紅燈！過唔過馬路？</div>
+<div class="acts" id="acts"></div>
+<div class="msg" id="msg">阿 Q 諗緊…</div>
+<div class="feed">
+<button id="like" onclick="feedback(1)" disabled>👍 讚！做得啱</button>
+<button id="dislike" onclick="feedback(-1)" disabled>👎 彈！做錯咗</button>
+</div>
+</div>
+
+<div class="brain">
+<h3>🧠 阿 Q 個腦（Q 值：每個情景下每個行動有幾「正」）</h3>
+<div id="qbrain"></div>
+</div>
+
+<div class="concept">
+<b>💡 睇真啲：</b>阿 Q 揀行動用 <b>ε-greedy</b>：有 <span id="epsT">100%</span> 機會亂試（探索），否則揀暫時最高分嘅行動（利用）。你每畀一次讚/彈，Q 值就會更新：<b>Q ← Q + 0.5×(獎勵 − Q)</b>。探索率會隨回合下降——就好似細路大個咗，唔再亂嚟。
+</div>
+
+<div class="log" id="log"></div>
+
+<div class="final" id="final">
+<div class="big" id="fE">🎓</div>
+<h2 id="fT"></h2>
+<p id="fD" style="line-height:1.8"></p>
+<button style="border:none;border-radius:12px;padding:14px 30px;font-size:16px;font-weight:800;background:#ffe082;color:#134e5e;cursor:pointer" onclick="location.reload()">↺ 再訓練一隻</button>
+</div>
+
+<footer>教學資源共享 · 訓練 AI 寵物</footer>
+</div>
+
+<script>
+var SITS=[
+ {e:"🚦",t:"紅燈！過唔過馬路？",acts:["🛑 停低等","🏃 照衝過去"],good:0},
+ {e:"🍖",t:"地下有舊骨頭，食唔食？",acts:["😋 食咗佢","🙈 唔理佢"],good:0},
+ {e:"👤",t:"有個陌生人行近，點算？",acts:["🐕 吠兩聲警告","😠 撲過去咬"],good:0},
+ {e:"🎾",t:"主人掟個波，追唔追？",acts:["🏃 追返個波","😴 繼續瞓"],good:0}
+];
+// Q table: sits x acts, init 0
+var Q=SITS.map(function(){return [0,0];});
+var round=0,MAXR=20,hist=[],cur=-1,choice=-1,eps=1.0,alpha=0.5;
+var petMoods=["🐶","🐕","🦮"];
+
+function epsNow(){return Math.max(0.05,1-round/MAXR*0.95);}
+function pick(s){
+  if(Math.random()<epsNow()){
+    return Math.floor(Math.random()*2);
+  }
+  return Q[s][0]>=Q[s][1]?0:1;
+}
+function newRound(){
+  if(round>=MAXR){finish();return;}
+  cur=Math.floor(Math.random()*SITS.length);
+  choice=pick(cur);
+  var s=SITS[cur];
+  document.getElementById('sit').innerHTML='<span class="e">'+s.e+'</span>'+s.t;
+  var ah='';
+  s.acts.forEach(function(a,ix){
+    ah+='<div class="act'+(ix===choice?' chosen':'')+'">'+a+(ix===choice?' ← 阿Q揀咗':'')+'</div>';
+  });
+  document.getElementById('acts').innerHTML=ah;
+  document.getElementById('msg').textContent='阿 Q 揀咗：'+s.acts[choice]+' —— 你讚定彈？';
+  document.getElementById('like').disabled=false;
+  document.getElementById('dislike').disabled=false;
+  document.getElementById('pet').className='pet';
+  document.getElementById('pet').textContent='🐶';
+}
+function feedback(rw){
+  document.getElementById('like').disabled=true;
+  document.getElementById('dislike').disabled=true;
+  // Q-learning update
+  var old=Q[cur][choice];
+  Q[cur][choice]=old+alpha*(rw-old);
+  var correct=(choice===SITS[cur].good);
+  hist.push(correct?1:0); if(hist.length>10)hist.shift();
+  round++;
+  var pet=document.getElementById('pet');
+  pet.textContent=rw>0?'😋':'😢';
+  pet.className='pet '+(rw>0?'happy':'sad');
+  document.getElementById('msg').textContent=rw>0?'阿 Q 好開心！呢個行動加咗分～':'阿 Q 唔開心…呢個行動扣咗分。';
+  addLog('第'+round+'回合：'+SITS[cur].e+' 阿Q「'+SITS[cur].acts[choice]+'」→ '+(rw>0?'👍讚':'👎彈')+'（Q值 '+old.toFixed(2)+' → '+Q[cur][choice].toFixed(2)+'）');
+  updateHud();drawBrain();
+  setTimeout(newRound,1100);
+}
+function updateHud(){
+  document.getElementById('hRound').textContent=round+'/'+MAXR;
+  var sm=hist.length?hist.reduce(function(a,b){return a+b;})/hist.length:0;
+  var el=document.getElementById('hSmart');
+  el.textContent=hist.length?Math.round(sm*100)+'%':'--%';
+  el.style.color=sm>=0.8?'#66ff99':'#ffe082';
+  var e=epsNow();
+  document.getElementById('hExp').textContent=Math.round(e*100)+'%';
+  document.getElementById('epsT').textContent=Math.round(e*100)+'%';
+  document.getElementById('pbar').style.width=(round/MAXR*100)+'%';
+}
+function drawBrain(){
+  var h='';
+  SITS.forEach(function(s,si){
+    h+='<div class="qrow"><div class="lbl">'+s.e+' '+s.t+'</div>';
+    s.acts.forEach(function(a,ai){
+      var v=Q[si][ai],pct=Math.min(100,Math.abs(v)*100);
+      var col=v>=0?'linear-gradient(90deg,#66bb6a,#2e7d32)':'linear-gradient(90deg,#ef5350,#b71c1c)';
+      h+='<div style="display:flex;align-items:center;gap:8px;margin:3px 0"><span style="min-width:110px">'+a+'</span><div class="qbar" style="flex:1"><div style="width:'+pct+'%;background:'+col+'"></div></div><span class="qv">'+v.toFixed(2)+'</span></div>';
+    });
+    h+='</div>';
+  });
+  document.getElementById('qbrain').innerHTML=h;
+}
+function addLog(m){
+  var l=document.getElementById('log');
+  l.innerHTML='<div>'+m+'</div>'+l.innerHTML;
+}
+function finish(){
+  document.getElementById('stage').style.display='none';
+  var sm=hist.length?hist.reduce(function(a,b){return a+b;})/hist.length:0;
+  var f=document.getElementById('final');f.style.display='block';
+  var e=document.getElementById('fE'),t=document.getElementById('fT'),d=document.getElementById('fD');
+  if(sm>=0.8){e.textContent='🎓';t.textContent='訓練成功！阿 Q 畢業喇！';
+    d.innerHTML='聰明度 <b>'+Math.round(sm*100)+'%</b>！阿 Q 已經學識喺唔同情景做啱決定。<br><br>💡 你啱啱做咗一次<b>強化學習</b>：阿 Q 係 <b>Agent</b>，情景係 <b>Environment</b>，你嘅讚彈係 <b>Reward</b>。AI 就係靠無數次試錯同獎勵，學識打機、揸車、落棋——AlphaGo 都係咁練返嚟㗎！';}
+  else{e.textContent='🐾';t.textContent='差少少…再接再厲！';
+    d.innerHTML='聰明度 <b>'+Math.round(sm*100)+'%</b>，未到 80% 畢業線。<br><br>💡 諗下：係咪有時讚彈得唔一致？強化學習最緊要<b>獎勵一致</b>——如果時讚時彈，AI 就會 confusion，學唔識。現實訓練 AI 都係咁，reward design 好重要！';}
+  window.scrollTo(0,0);
+}
+drawBrain();updateHud();newRound();
+</script>
+</body>
+</html>

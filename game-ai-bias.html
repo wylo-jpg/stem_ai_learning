@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>AI偏見偵探</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#1e1b4b;color:#e0e7ff;touch-action:manipulation;line-height:1.6}
+header{background:#312e81;padding:12px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:5}
+header a{color:#c4b5fd;text-decoration:none;font-size:16px;min-height:44px;display:flex;align-items:center}
+header h1{margin:0;font-size:18px;flex:1}
+#hud{display:flex;gap:8px;padding:10px 12px}
+.hud-box{background:#312e81;border-radius:10px;padding:8px 14px;font-size:15px;flex:1;text-align:center}
+.hud-box b{color:#fbbf24;font-size:18px}
+#stage{max-width:680px;margin:0 auto;padding:8px 12px}
+#case-title{font-size:18px;font-weight:800;margin:6px 0;color:#fde68a}
+#case-desc{font-size:14px;color:#c7d2fe;margin-bottom:10px}
+#cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.card{background:#312e81;border-radius:12px;padding:12px;font-size:13px}
+.card .ava{font-size:30px;text-align:center}
+.card .nm{font-weight:700;text-align:center;margin:4px 0;font-size:14px}
+.card .attr{color:#c7d2fe;font-size:12px;line-height:1.7}
+.scorebar{height:10px;background:#1e1b4b;border-radius:6px;margin-top:8px;overflow:hidden}
+.scorebar>div{height:100%;border-radius:6px;transition:width 1s}
+.scoretxt{font-size:13px;font-weight:700;margin-top:4px}
+#qbox{background:#312e81;border-radius:12px;padding:16px;margin-top:14px}
+#qbox h3{margin:0 0 10px;font-size:16px}
+.opt{display:block;width:100%;min-height:52px;margin:8px 0;background:#4338ca;color:#fff;border:2px solid #6d6df5;border-radius:10px;font-size:16px;cursor:pointer}
+.opt:active{background:#3730a3}
+.opt.right{background:#14532d;border-color:#22c55e}
+.opt.wrongb{background:#7f1d1d;border-color:#ef4444}
+#fixbtn{display:none;width:100%;min-height:56px;margin-top:10px;background:#059669;color:#fff;border:0;border-radius:12px;font-size:17px;font-weight:700;cursor:pointer}
+#fixbtn:active{background:#047857}
+#explain{background:#312e81;border-radius:12px;padding:14px 16px;margin-top:12px;font-size:14px;display:none}
+#explain.show{display:block}
+#explain b{color:#fbbf24}
+#nextbtn{display:none;width:100%;min-height:52px;margin-top:12px;background:#7c3aed;color:#fff;border:0;border-radius:12px;font-size:17px;font-weight:700;cursor:pointer}
+.overlay{position:fixed;inset:0;background:rgba(30,27,75,.95);display:flex;align-items:center;justify-content:center;z-index:20;padding:20px}
+.overlay.hidden{display:none}
+.panel{background:#312e81;border-radius:16px;padding:24px;max-width:540px;width:100%;max-height:90vh;overflow-y:auto}
+.panel h2{margin:0 0 10px;font-size:20px}
+.panel p{font-size:15px;color:#e0e7ff;margin:8px 0}
+.concept{background:#1e1b4b;border-radius:10px;padding:12px 14px;margin:12px 0;font-size:14px}
+.concept b{color:#c4b5fd}
+button.big{display:block;width:100%;min-height:52px;margin-top:14px;background:#7c3aed;color:#fff;border:0;border-radius:12px;font-size:18px;font-weight:700;cursor:pointer}
+footer{text-align:center;color:#6d6df5;font-size:12px;padding:16px}
+.tag{display:inline-block;font-size:11px;background:#4c1d95;border-radius:8px;padding:2px 8px;margin:2px 2px 2px 0}
+</style>
+</head>
+<body>
+<header><a href="ai.html">← 返回</a><h1>🔍 AI偏見偵探</h1></header>
+<div id="hud">
+<div class="hud-box">案件 <b id="h-case">1</b>/3</div>
+<div class="hud-box">分數 <b id="h-score">0</b></div>
+</div>
+<div id="stage">
+<div id="case-title"></div>
+<div id="case-desc"></div>
+<div id="cards"></div>
+<div id="qbox">
+<h3 id="q"></h3>
+<div id="opts"></div>
+<button id="fixbtn" onclick="fixBias()">🛠️ 修正 AI：移除偏見特徵</button>
+</div>
+<div id="explain"></div>
+<button id="nextbtn" onclick="nextCase()">下一個案件 →</button>
+</div>
+
+<div class="overlay" id="intro">
+<div class="panel">
+<h2>🔍 AI偏見偵探</h2>
+<p><b>玩法：</b>你係 AI 倫理調查員！有間公司用 AI 篩選求職者，但有人投訴個系統唔公平。<b>睇每位申請人嘅資料同 AI 評分，找出 AI 對邊個群體有偏見</b>，然後動手修正佢！</p>
+<div class="concept"><b>💡 AI概念 — 算法偏見：</b>AI 係跟歷史數據學嘢嘅。如果以前嘅招聘數據本身已經偏向某個群體（例如多請男性），AI 就會學埋呢個偏見，仲會放大佢。呢個叫「垃圾入、垃圾出」(Garbage In, Garbage Out)。公平嘅 AI 需要多元化數據 + 人為監察。</div>
+<button class="big" onclick="startGame()">接受調查任務</button>
+</div>
+</div>
+
+<div class="overlay hidden" id="end">
+<div class="panel">
+<h2>🏁 調查完成！</h2>
+<p id="end-text"></p>
+<div class="concept"><b>💡 諗一諗：</b>現實中 AI 偏見可以好隱蔽——有時連設計者都唔知。除咗移除特徵，仲有咩方法令 AI 更公平？（提示：多元化訓練數據、定期審計、透明度）</div>
+<button class="big" onclick="location.reload()">再查一次</button>
+<a href="ai.html" style="display:block;text-align:center;margin-top:10px;color:#c4b5fd;min-height:44px;line-height:44px">返回 AI 資源頁</a>
+</div>
+</div>
+
+<footer>單檔離線遊戲 · 教學資源共享</footer>
+
+<script>
+const CASES=[
+ {title:"案件一：科技公司招聘 👨‍💻",
+  desc:"6 位申請人學歷、經驗相近。投訴人話：AI 好似特別鍾意請男性。",
+  biasAttr:"性別",biasGroup:"男性",victim:"女性",
+  fixed:"移除「性別」特徵後，AI 只能按學歷、經驗、技能評分，分數變得公平。",
+  apps:[
+   {n:"陳大文",a:"👨",g:"男",e:"大學畢業",x:"5年經驗",s:"Python, 團隊管理",score:91,fair:82},
+   {n:"黃志強",a:"👨",g:"男",e:"大學畢業",x:"4年經驗",s:"Java, 項目經驗",score:87,fair:78},
+   {n:"李偉傑",a:"👨",g:"男",e:"大專畢業",x:"6年經驗",s:"系統維運",score:85,fair:80},
+   {n:"張小慧",a:"👩",g:"女",e:"大學畢業",x:"5年經驗",s:"Python, 團隊管理",score:72,fair:83},
+   {n:"劉美玲",a:"👩",g:"女",e:"碩士畢業",x:"4年經驗",s:"Java, 數據分析",score:70,fair:84},
+   {n:"趙嘉欣",a:"👩",g:"女",e:"大學畢業",x:"6年經驗",s:"系統維運, 雲端",score:74,fair:81}],
+  q:"AI 對邊個群體有偏見（畀咗不公平嘅高分）？",
+  opts:["偏向男性申請人","偏向女性申請人","冇偏見，好公平"],ans:0},
+ {title:"案件二：銀行見習計劃 🏦",
+  desc:"投訴人話：讀名校嘅好似特別易入，明明能力差唔多。",
+  biasAttr:"畢業學校",biasGroup:"名校生",victim:"普通學校生",
+  fixed:"移除「畢業學校」特徵後，AI 按實習表現、面試、技能評分，差距消失。",
+  apps:[
+   {n:"周子豪",a:"🧑",g:"男校",e:"名校畢業",x:"2份實習",s:"金融建模",score:89,fair:76},
+   {n:"吳天佑",a:"👩",g:"女校",e:"名校畢業",x:"1份實習",s:"Excel, 溝通",score:86,fair:72},
+   {n:"鄭一鳴",a:"🧑",g:"男校",e:"名校畢業",x:"3份實習",s:"數據分析",score:92,fair:80},
+   {n:"何家寶",a:"👩",g:"普通中學",e:"普通學校畢業",x:"3份實習",s:"金融建模, 雙語",score:71,fair:81},
+   {n:"馮志遠",a:"🧑",g:"普通中學",e:"普通學校畢業",x:"2份實習",s:"數據分析, 演講",score:69,fair:78},
+   {n:"林曉彤",a:"👩",g:"普通中學",e:"普通學校畢業",x:"4份實習",s:"會計, 實習獲獎",score:73,fair:83}],
+  q:"AI 嘅偏見來源係咩？",
+  opts:["偏向名校畢業生","偏向普通學校畢業生","冇偏見，好公平"],ans:0},
+ {title:"案件三：送貨平台派單 🛵",
+  desc:"年長司機投訴：AI 成日將好單派畀後生仔。",
+  biasAttr:"年齡",biasGroup:"年輕人",victim:"年長者",
+  fixed:"移除「年齡」特徵後，AI 按準時率、評分、接單量派單，各年齡層機會均等。",
+  apps:[
+   {n:"阿杰",a:"🧑",g:"24歲",e:"準時率98%",x:"500單",s:"市區熟路",score:90,fair:80},
+   {n:"細榮",a:"🧑",g:"27歲",e:"準時率97%",x:"450單",s:"夜更願意",score:88,fair:79},
+   {n:"阿樂",a:"🧑",g:"22歲",e:"準時率99%",x:"300單",s:"速度快",score:91,fair:81},
+   {n:"強哥",a:"👨",g:"48歲",e:"準時率99%",x:"2000單",s:"零投訴, 熟路",score:70,fair:85},
+   {n:"華叔",a:"👨",g:"52歲",e:"準時率98%",x:"1800單",s:"夜更願意",score:68,fair:82},
+   {n:"根叔",a:"👨",g:"45歲",e:"準時率100%",x:"2200單",s:"零意外紀錄",score:72,fair:86}],
+  q:"邊個群體被 AI 不公平對待？",
+  opts:["年長司機被壓分","年輕司機被壓分","冇偏見，好公平"],ans:0}
+];
+let ci=0,score=0,answered=false;
+
+function startGame(){
+  document.getElementById('intro').classList.add('hidden');
+  ci=0;score=0;loadCase();
+}
+function barColor(s){return s>=85?'#22c55e':s>=75?'#eab308':'#ef4444';}
+function loadCase(){
+  answered=false;
+  const c=CASES[ci];
+  document.getElementById('h-case').textContent=ci+1;
+  document.getElementById('case-title').textContent=c.title;
+  document.getElementById('case-desc').textContent=c.desc;
+  const box=document.getElementById('cards');box.innerHTML='';
+  c.apps.forEach(a=>{
+    const d=document.createElement('div');d.className='card';
+    d.innerHTML=`<div class="ava">${a.a}</div><div class="nm">${a.n}</div>
+    <div class="attr"><span class="tag">${a.g}</span><br>${a.e}<br>${a.x}<br>技能：${a.s}</div>
+    <div class="scorebar"><div class="sfill" style="width:${a.score}%;background:${barColor(a.score)}"></div></div>
+    <div class="scoretxt">AI 評分：<span class="snum">${a.score}</span></div>`;
+    box.appendChild(d);
+  });
+  document.getElementById('q').textContent='🕵️ '+c.q;
+  const ob=document.getElementById('opts');ob.innerHTML='';
+  c.opts.forEach((t,i)=>{
+    const b=document.createElement('button');b.className='opt';b.textContent=t;
+    b.onclick=()=>answer(b,i);
+    ob.appendChild(b);
+  });
+  document.getElementById('fixbtn').style.display='none';
+  document.getElementById('explain').classList.remove('show');
+  document.getElementById('nextbtn').style.display='none';
+}
+function answer(btn,i){
+  if(answered)return;answered=true;
+  const c=CASES[ci];
+  const btns=document.querySelectorAll('.opt');
+  btns.forEach(b=>b.disabled=true);
+  if(i===c.ans){
+    btn.classList.add('right');score+=30;
+    document.getElementById('h-score').textContent=score;
+    document.getElementById('q').textContent='✅ 答啱！+30 分。AI 確實偏向「'+c.biasGroup+'」，'+c.victim+'被壓分。';
+  }else{
+    btn.classList.add('wrongb');btns[c.ans].classList.add('right');
+    document.getElementById('q').textContent='❌ 睇清楚啲！留意'+c.biasAttr+'相同但分數差好遠嘅申請人。正確：偏向「'+c.biasGroup+'」。';
+  }
+  document.getElementById('fixbtn').style.display='block';
+}
+function fixBias(){
+  const c=CASES[ci];
+  const cards=document.querySelectorAll('#cards .card');
+  c.apps.forEach((a,i)=>{
+    const f=cards[i].querySelector('.sfill'),n=cards[i].querySelector('.snum');
+    f.style.width=a.fair+'%';f.style.background=barColor(a.fair);n.textContent=a.fair;
+  });
+  document.getElementById('fixbtn').style.display='none';
+  const ex=document.getElementById('explain');
+  ex.innerHTML=`<b>🔧 修正完成！</b>${c.fixed}<br><br><b>💡 偏見點嚟？</b>歷史數據入面，${c.biasGroup}本來就佔優（社會唔平等嘅結果），AI 照單全收學咗呢個模式。修正方法除咗移除特徵，仲可以：用更多元化嘅數據訓練、定期做公平性審計、畀人覆核 AI 決定。`;
+  ex.classList.add('show');
+  document.getElementById('nextbtn').style.display='block';
+}
+function nextCase(){
+  ci++;
+  if(ci>=CASES.length){
+    const stars=score>=90?'⭐⭐⭐':score>=60?'⭐⭐':'⭐';
+    document.getElementById('end-text').innerHTML=`總分：<b style="color:#fbbf24;font-size:22px">${score}</b> / 90<br>評級：${stars}<br>你已經識得偵測同修正 AI 偏見——呢個係 AI 倫理最重要嘅技能之一！`;
+    document.getElementById('end').classList.remove('hidden');
+  }else loadCase();
+}
+</script>
+</body>
+</html>

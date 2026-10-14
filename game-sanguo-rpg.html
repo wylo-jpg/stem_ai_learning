@@ -1,0 +1,2289 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>三國演義 RPG・群雄傳</title>
+<style>
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent;}
+html, body { margin:0; padding:0;}
+body {
+background:#14100b; color:#e8d9b0;
+font-family:"Noto Serif TC","Songti TC","PMingLiU",serif;
+min-height:100dvh; padding-bottom:env(safe-area-inset-bottom);
+}
+#app { max-width:640px; margin:0 auto; min-height:100dvh; padding:16px 14px 28px;}
+.screen { display:none;}
+.screen.active { display:block; animation:fadein.3s;}
+@keyframes fadein { from{opacity:0} to{opacity:1}}
+h1.title {
+text-align:center; font-size:44px; margin:34px 0 4px; color:#f5c542;
+text-shadow:0 2px 0 #5a2c00, 0 0 22px rgba(245,197,66,.35); letter-spacing:8px;
+}
+.subtitle { text-align:center; color:#b08d57; letter-spacing:6px; margin-bottom:30px; font-size:15px;}
+.btn {
+display:block; width:100%; margin:10px 0; padding:15px; font-size:19px;
+font-family:inherit; font-weight:bold; letter-spacing:2px;
+color:#2a1a08; background:linear-gradient(180deg,#f5d67b,#d4a017);
+border:2px solid #8a5a00; border-radius:12px; cursor:pointer;
+box-shadow:0 3px 0 #6b4400;
+}
+.btn:active { transform:translateY(2px); box-shadow:none;}
+.btn.secondary {
+background:#2b1a12; color:#e8d9b0; border:2px solid #8a5a2a; box-shadow:0 3px 0 #1a0f08;
+}
+.btn.small { font-size:15px; padding:10px;}
+.btn:disabled { opacity:.45;}
+.card {
+background:#201510; border:2px solid #8a5a2a; border-radius:12px;
+padding:14px; margin:10px 0;
+}
+.hero-pick { display:flex; gap:10px; align-items:center; text-align:left;}
+.hero-pick.icon { font-size:44px;}
+.hero-pick.nm { font-size:20px; color:#f5c542; font-weight:bold;}
+.hero-pick.ds { font-size:13px; color:#c9b18a; margin-top:4px; line-height:1.5;}
+.bar { height:16px; background:#3a2418; border-radius:8px; overflow:hidden; border:1px solid #6b4a2a; margin:4px 0; position:relative; }
+.bar.fill { height:100%; border-radius:8px; transition:width.35s;}
+.fill.hp { background:linear-gradient(90deg,#c0392b,#e74c3c);}
+.fill.mp { background:linear-gradient(90deg,#2471a3,#2e86c1);}
+.fill.xp { background:linear-gradient(90deg,#b7950b,#f5c542); height:10px;}
+.barnum { position:absolute; left:0; right:0; top:0; bottom:0; text-align:center;
+font-size:12px; line-height:16px; color:#fff; text-shadow:0 1px 2px #000; pointer-events:none; }
+.stat-line { font-size:14px; color:#c9b18a; line-height:1.7;}
+.stat-line b { color:#f5c542;}
+/* battle */
+.foe-card,.me-card { background:#241611; border:2px solid #8a5a2a; border-radius:12px; padding:10px 12px;}
+.foe-card.row,.me-card.row { display:flex; align-items:center; gap:10px;}
+.big-icon { font-size:46px;}
+.nm { font-size:20px; font-weight:bold; color:#f5c542;}
+.foe-card.nm { color:#ff8a7a;}
+.lvl { font-size:13px; color:#b08d57;}
+#blog { height:56px; overflow-y:auto; background:#120c07; border:1px solid #5a3a1a;
+border-radius:8px; padding:6px 8px; margin:6px 0; font-size:13px; line-height:1.5; flex:none;}
+#blog.me { color:#9fd6a4;} #blog.foe { color:#ff9a8a;}
+#blog.sys { color:#f5c542;} #blog.dmg { color:#ffd24d; font-weight:bold;}
+.act-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-top:6px; flex:none;}
+.act-grid .btn { margin:0; font-size:15px; padding:12px 2px; letter-spacing:0;}
+#subrow { display:none; margin-top:6px; flex:none;}
+#subrow.show { display:block; max-height:32dvh; overflow-y:auto;}
+#subrow .btn { font-size:15px; padding:10px 6px;}
+.chip { display:inline-block; font-size:12px; background:#5a2c00; color:#ffd24d;
+border-radius:6px; padding:1px 7px; margin:1px 2px;}
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-7px)} 75%{transform:translateX(7px)}}
+.shake { animation:shake.3s;}
+@keyframes flash { 0%{filter:brightness(2)} 100%{filter:brightness(1)}}
+.flash { animation:flash.4s;}
+/* story */
+#story-text { min-height:220px; font-size:18px; line-height:2; background:#1d130c;
+border:2px solid #8a5a2a; border-radius:12px; padding:18px;}
+.chapter-head { text-align:center; color:#f5c542; font-size:22px; letter-spacing:4px; margin:14px 0;}
+.shop-row { display:flex; justify-content:space-between; align-items:center; gap:8px;
+padding:10px 4px; border-bottom:1px dashed #5a3a1a;}
+.shop-row.info { font-size:15px;}.shop-row.info small{ color:#b08d57;}
+.gold { color:#f5c542; font-weight:bold; font-size:18px; text-align:center; margin:8px 0;}
+.hub-title { text-align:center; font-size:24px; color:#f5c542; letter-spacing:4px; margin:10px 0;}
+.center { text-align:center;}.muted { color:#b08d57; font-size:14px;}
+#scr-battle.active { display:flex; flex-direction:column; }
+#battlefield { display:flex; gap:6px; flex:none; }
+.side { flex:1; min-width:0; }
+.side-title { text-align:center; font-size:12px; color:#b08d57; letter-spacing:4px; margin-bottom:1px; }
+.unit { display:flex; gap:5px; align-items:center; background:#241611; border:2px solid #4a2f1a; border-radius:8px; padding:3px 5px; margin:3px 0; }
+.unit .uicon { font-size:22px; line-height:1; }
+.unit .uinfo { flex:1; min-width:0; }
+.unit .uname { font-size:12px; font-weight:bold; color:#e8d9b0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.unit .ulv { font-size:10px; color:#b08d57; font-weight:normal; }
+.unit .bar { height:10px; margin:1px 0; }
+.unit .barnum { font-size:9px; line-height:10px; }
+.unit .ustatus .chip { font-size:10px; padding:0 5px; }
+.unit.active { border-color:#f5c542; box-shadow:0 0 10px rgba(245,197,66,.5); }
+.unit.istgt { border-color:#e74c3c; }
+.unit.dead { opacity:.5; filter:grayscale(1); }
+.unit.targetable { border-color:#e74c3c; cursor:pointer; animation:pulse 1s infinite; }
+@keyframes pulse { 0%,100%{box-shadow:0 0 4px rgba(231,76,60,.4)} 50%{box-shadow:0 0 12px rgba(231,76,60,.9)} }
+/* 特技 cut-in */
+#skill-cutin { position:fixed; left:0; right:0; top:34%; z-index:99; pointer-events:none;
+opacity:0; text-align:center; }
+#skill-cutin.show { animation:cutin .8s ease-out; }
+@keyframes cutin {
+0%{opacity:0; transform:scale(.5);}
+12%{opacity:1; transform:scale(1.12);}
+25%{transform:scale(1);}
+78%{opacity:1;}
+100%{opacity:0; transform:scale(1.06);}
+}
+.cutin-name { display:inline-block; font-size:32px; font-weight:bold; color:#f5c542;
+letter-spacing:6px; background:rgba(10,5,2,.72); padding:12px 34px;
+border-top:3px solid #f5c542; border-bottom:3px solid #f5c542;
+text-shadow:0 2px 0 #5a2c00, 0 0 18px rgba(245,197,66,.6); }
+.cutin-name.foe { color:#ff8a7a; border-color:#ff8a7a;
+text-shadow:0 2px 0 #5a0000, 0 0 18px rgba(255,100,80,.6); }
+#turn-banner { text-align:center; font-size:14px; color:#f5c542; margin:4px 0 0; min-height:24px; flex:none; }
+#postbattle { flex:none; }
+#postbattle .btn { margin:6px 0; }
+#postbattle { margin-top:8px; }
+.hero-pick.picked { border-color:#f5c542; background:#3a2412; }
+#mute-btn { position:fixed; top:10px; right:10px; z-index:50; font-size:22px;
+background:#241611; border:1px solid #8a5a2a; border-radius:10px; padding:4px 10px; cursor:pointer;}
+</style>
+</head>
+<body>
+<button id="mute-btn" onclick="toggleMute()">🔊</button>
+<div id="app">
+
+<!-- 標題 -->
+<div class="screen active" id="scr-title">
+<h1 class="title">三國演義</h1>
+<div class="subtitle">群 雄 傳</div>
+<div class="center" style="font-size:52px; margin-bottom:18px;">🐉⚔️🐯</div>
+<button class="btn" id="btn-continue" onclick="loadGame()" style="display:none;">📜 繼續征戰</button>
+<button class="btn" onclick="show('scr-select')">⚔️ 開創新傳奇</button>
+<button class="btn secondary" onclick="show('scr-how')">📖 玩法說明</button>
+</div>
+
+<!-- 玩法說明 -->
+<div class="screen" id="scr-how">
+<div class="hub-title">玩法說明</div>
+<div class="card stat-line">
+🏯 <b>劇情：</b>劉備一生十章五十戰：由黃巾之亂打到後漢中興，改編結局由你親手締造！<br>
+👥 <b>陣容：</b>先選主將，武將隨劇情逐一加入（開局冇諸葛亮、冇馬超㗎）。<br>
+📖 <b>問答：</b>每章開頭有一題三國問答，答啱獎 50 銀兩。<br>
+⚔️ <b>戰鬥：</b>5v5回合制，速度快先出手。輪到邊個，公仔會金框標示，由你揀行動。<br>
+🎯 <b>點選目標：</b>揀好攻擊／技能／道具後，直接撳敵方或我方公仔指定目標。<br>
+📈 <b>升級：</b>打贏全軍一齊升級；裝備只對主將生效。<br>
+🛒 <b>營地：</b>每章之間可休息（免費回滿）、買藥買裝備。<br>
+💾 <b>存檔：</b>自動儲存，隨時離開返嚟繼續。<br>
+💠 <b>小貼士：</b>劉備識補血，記得帶埋佢！九轉還魂丹會自動救返瀕死嘅武將。
+</div>
+<button class="btn secondary" onclick="show('scr-title')">← 返回</button>
+</div>
+
+<!-- 選角 -->
+<div class="screen" id="scr-select">
+<div class="hub-title" id="sel-title">選擇你的主將</div>
+<div id="hero-list"></div>
+<button class="btn secondary" onclick="show('scr-title')">← 返回</button>
+</div>
+
+<!-- 難度選擇 -->
+<div class="screen" id="scr-difficulty">
+<div class="hub-title">選擇難度</div>
+<div class="card stat-line" id="diff-desc" style="margin-bottom:12px"></div>
+<button class="btn" onclick="pickDifficulty('normal')">🟢 普通模式<br><small>經典體驗，適合細細品味劇情</small></button>
+<button class="btn" onclick="pickDifficulty('hard')" style="margin-top:8px">🔴 困難模式<br><small>敵方級數×3、AI 90%放技能、商店貴五成、操練得3次、退場不能重入</small></button>
+<button class="btn secondary" onclick="show('scr-select')" style="margin-top:8px">← 重新選將</button>
+</div>
+
+<!-- 劇情 -->
+<div class="screen" id="scr-story">
+<div class="chapter-head" id="story-chapter"></div>
+<div id="story-text"></div>
+<button class="btn" id="story-next" onclick="storyNext()">下一步 →</button>
+</div>
+
+<!-- 營地 -->
+<div class="screen" id="scr-hub">
+<div class="hub-title">🏕️ 軍營<span id="hub-diff"></span></div>
+<div class="gold">💰 銀兩：<span id="hub-gold"></span></div>
+<div class="card" id="hub-hero"></div>
+<div class="card muted" id="hub-progress"></div>
+<button class="btn" onclick="goBattle()">⚔️ 出征</button>
+<button class="btn secondary" onclick="openTeam()">👥 陣容（換人）</button>
+<button class="btn secondary" onclick="openTrain()">🏋️ 練兵（升級／加血／技能）</button>
+<button class="btn secondary" onclick="rest()">💤 休息（回滿體力）</button>
+<button class="btn secondary" onclick="openShop()">🛒 商店</button>
+<button class="btn secondary" onclick="openEquip()">🎒 裝備</button>
+<div class="card" style="font-size:13px"><b>⚔️ 兵種相剋</b>（相剋時傷害+30%）<br>
+⚔️步兵→🏹弓兵→🐎騎兵→⚔️步兵<br>
+🗡️賊兵→🎓謀士→🛡️護衛→🗡️賊兵<br>
+<small class="muted">基本戰技：💥突擊（1.5倍）／🌪️亂攻（隨機兩位各0.7倍）／🌙伏擊（1.2倍＋60%停1回合），每次扣 MP</small></div>
+<button class="btn secondary" onclick="show('scr-title')">💾 存檔並返回標題</button>
+</div>
+
+<!-- 問答 -->
+<div class="screen" id="scr-quiz">
+<div class="hub-title">📖 軍師問答</div>
+<div class="card" style="font-size:18px;line-height:1.8" id="quiz-q"></div>
+<div id="quiz-opts"></div>
+<div class="card" id="quiz-result" style="font-size:16px;line-height:1.8"></div>
+<button class="btn" id="quiz-next" onclick="quizNextBtn()" style="display:none">繼續 →</button>
+</div>
+
+<!-- 決戰小遊戲 -->
+<div class="screen" id="scr-minigame">
+<div class="hub-title" id="mg-title">🎯 小遊戲</div>
+<div class="card" style="font-size:16px;line-height:1.8" id="mg-desc"></div>
+<div class="card">
+<div id="mg-track" style="position:relative;height:36px;background:#3a2418;border-radius:18px;border:1px solid #6b4a2a;overflow:hidden">
+<div id="mg-zone" style="position:absolute;top:0;bottom:0;background:rgba(46,204,113,.5)"></div>
+<div id="mg-marker" style="position:absolute;top:0;bottom:0;width:5px;background:#f5c542;box-shadow:0 0 8px #f5c542"></div>
+</div>
+<div class="muted center" style="margin-top:8px">金色標記移到綠色區域時按下！</div>
+</div>
+<div class="card center" id="mg-result" style="font-size:17px;line-height:1.8"></div>
+<button class="btn" id="mg-go" onclick="mgShoot()">⚡ 出手！</button>
+<button class="btn" id="mg-next" onclick="mgNext()" style="display:none">繼續出戰 →</button>
+</div>
+
+<!-- 練兵場 -->
+<div class="screen" id="scr-train">
+<div class="hub-title">🏋️ 練兵場</div>
+<div class="gold">💰 銀兩：<span id="train-gold"></span></div>
+<div class="card"><div class="muted" style="margin-bottom:6px">選擇武將</div><div id="train-heroes" style="display:flex;gap:8px;overflow-x:auto;padding:4px"></div></div>
+<div class="card" id="train-info" style="line-height:1.8"></div>
+<div class="card" id="train-actions"></div>
+<div class="card" id="train-skills"></div>
+<div class="card center" id="train-msg" style="min-height:24px;font-size:16px"></div>
+<button class="btn secondary" onclick="renderHub();show('scr-hub')">← 返回軍營</button>
+</div>
+
+<!-- 陣容 -->
+<div class="screen" id="scr-team">
+<div class="hub-title">👥 陣容整備</div>
+<div class="muted center" id="team-hint">先點選出戰武將，再點板凳武將進行交換（主將不可更換）</div>
+<div class="card"><div class="nm" style="font-size:16px">⚔️ 出戰（5人）</div><div id="team-battle"></div></div>
+<div class="card"><div class="nm" style="font-size:16px">🪑 板凳</div><div id="team-bench"></div></div>
+<div class="card" id="team-locked-card"><div class="nm" style="font-size:16px">❓ 未登場</div><div id="team-locked"></div></div>
+<button class="btn secondary" onclick="show('scr-hub');renderHub()">← 返回軍營</button>
+</div>
+
+<!-- 商店 -->
+<div class="screen" id="scr-shop">
+<div class="hub-title">🛒 商店</div>
+<div class="gold">💰 銀兩：<span id="shop-gold"></span></div>
+<div class="card" id="shop-list"></div>
+<button class="btn secondary" onclick="show('scr-hub');renderHub()">← 返回軍營</button>
+</div>
+
+<!-- 裝備 -->
+<div class="screen" id="scr-equip">
+<div class="hub-title">🎒 裝備</div>
+<div class="card" id="equip-cur"></div>
+<div class="card" id="equip-bag"></div>
+<button class="btn secondary" onclick="show('scr-hub');renderHub()">← 返回軍營</button>
+</div>
+
+<!-- 戰鬥 -->
+<div class="screen" id="scr-battle">
+<div id="battlefield">
+<div class="side"><div class="side-title">— 我方 —</div><div id="ally-units"></div></div>
+<div class="side"><div class="side-title">— 敵方 —</div><div id="foe-units"></div></div>
+</div>
+<div id="blog"></div>
+<div id="turn-banner"></div>
+<div id="subrow"></div>
+<div class="act-grid" id="actrow">
+<button class="btn" onclick="doAllyAction('attack')">⚔️攻擊</button>
+<button class="btn" onclick="cycleTarget()" title="切換目標">🎯</button>
+<button class="btn" onclick="showSkills()">✨技能</button>
+<button class="btn" onclick="showStrats()">📜計謀</button>
+<button class="btn" onclick="showItems()">💊道具</button>
+<button class="btn" onclick="doAllyAction('defend')">🛡️防守</button>
+</div>
+<div id="postbattle"></div>
+</div>
+
+<!-- 結局 -->
+<div class="screen" id="scr-end">
+<div class="hub-title">🏆 一代名將</div>
+<div class="card" id="end-text" style="font-size:17px; line-height:2;"></div>
+<div class="card stat-line" id="end-stats"></div>
+<button class="btn" onclick="localStorage.removeItem(SAVE_KEY);location.reload()">🔄 再開新局</button>
+</div>
+
+<!-- 特技 cut-in -->
+<div id="skill-cutin"></div>
+
+</div>
+
+<script>
+"use strict";
+/* ================= 工具 ================= */
+const $ = id => document.getElementById(id);
+const sleep = ms => new Promise(r => setTimeout(r, window.__TEST ? 0 : ms));
+const rnd = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+const clone = o => JSON.parse(JSON.stringify(o));
+const SAVE_KEY = 'sanguo_rpg_save_v2';
+const TEST =!!window.__TEST;
+
+/* ================= 音效 ================= */
+let audioCtx = null, muted = false;
+function toggleMute(){ muted =!muted; $('mute-btn').textContent = muted? '🔇': '🔊';}
+function tone(f, d, type){
+if (muted || TEST) return;
+try {
+audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+o.type = type||'square'; o.frequency.value = f;
+g.gain.setValueAtTime(0.12, audioCtx.currentTime);
+g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + d);
+o.connect(g); g.connect(audioCtx.destination);
+o.start(); o.stop(audioCtx.currentTime + d);
+} catch(e){}
+}
+const sfx = {
+hit(){ tone(140,.12);}, crit(){ tone(320,.18,'sawtooth');},
+heal(){ tone(520,.2,'sine');}, skill(){ tone(240,.25,'triangle');},
+win(){ [392,523,659,784].forEach((f,i)=>setTimeout(()=>tone(f,.22,'triangle'), i*130));},
+lose(){ [330,262,196].forEach((f,i)=>setTimeout(()=>tone(f,.3,'sawtooth'), i*180));}
+};
+
+/* ================= 數據 ================= */
+const HEROES = {
+liubei: { id:'liubei', name:'劉備', title:'玄德', icon:'👑', unlock:0, arm:'步兵',
+desc:'仁德載物，雙股劍攻守兼備。擅長治療。',
+hp:135, mp:55, atk:20, def:12, int:20, spd:13, grow:{hp:14,mp:7,atk:3,def:2,int:3,spd:1},
+skills:[
+{ id:'sgj', name:'雙股劍', mp:12, target:'foe', desc:'1.6倍傷害', ef:{t:'dmg',mult:1.6} },
+{ id:'rende', name:'仁德載物', mp:18, target:'ally', desc:'為一名友軍回復40% HP', ef:{t:'heal',pct:0.4} }
+]},
+guanyu: { id:'guanyu', name:'關羽', title:'武聖', icon:'🐉', unlock:0, arm:'騎兵',
+desc:'義薄雲天，青龍偃月刀所向披靡。攻擊力超群。',
+hp:130, mp:45, atk:27, def:11, int:12, spd:14, grow:{hp:14,mp:6,atk:4,def:2,int:2,spd:1},
+skills:[
+{ id:'tuodao', name:'拖刀計', mp:15, target:'foe', desc:'2.2倍傷害，無視30%防禦', ef:{t:'dmg',mult:2.2,ignoreDef:0.3} },
+{ id:'weiyan', name:'武聖威嚴', mp:20, target:'allFoes', desc:'全體敵方攻擊-30%，3回合', ef:{t:'debuff',k:'atkDown',p:0.3,turns:3} }
+]},
+zhangfei: { id:'zhangfei', name:'張飛', title:'翼德', icon:'🐯', unlock:0, arm:'步兵',
+desc:'勇冠三軍，丈八蛇矛橫掃千軍。血量雄厚。',
+hp:160, mp:40, atk:25, def:13, int:8, spd:12, grow:{hp:17,mp:5,atk:4,def:3,int:1,spd:1},
+skills:[
+{ id:'hedan', name:'喝斷長坂', mp:15, target:'foe', desc:'1.6倍傷害＋眩暈1回合', ef:{t:'dmg',mult:1.6,stun:true} },
+{ id:'kuangwu', name:'丈八狂舞', mp:25, target:'foe', desc:'3連擊，各0.8倍', ef:{t:'hits',hits:3,mult:0.8} }
+]},
+jianyong: { id:'jianyong', name:'簡雍', title:'憲和', icon:'📜', unlock:0, arm:'謀士',
+desc:'劉備同鄉好友，運籌帷幄的謀士。擅長削弱敵軍、鼓舞全軍。',
+hp:95, mp:70, atk:12, def:8, int:24, spd:13, grow:{hp:11,mp:9,atk:2,def:2,int:4,spd:1},
+skills:[
+{ id:'youshui', name:'遊說', mp:14, target:'foe', desc:'敵方攻擊-25%，3回合', ef:{t:'debuff',k:'atkDown',p:0.25,turns:3} },
+{ id:'yunchou', name:'運籌帷幄', mp:16, target:'allAllies', desc:'全體我方攻擊+20%，3回合', ef:{t:'buff',k:'atkUp',p:0.2,turns:3} }
+]},
+zhaoyun: { id:'zhaoyun', name:'趙雲', title:'子龍', icon:'🐴', unlock:0, arm:'騎兵',
+desc:'一身是膽，長坂坡七進七出。速度最快。',
+hp:120, mp:50, atk:23, def:10, int:14, spd:21, grow:{hp:13,mp:7,atk:3,def:2,int:3,spd:2},
+skills:[
+{ id:'qijin', name:'七進七出', mp:20, target:'foe', desc:'4連擊，各0.6倍', ef:{t:'hits',hits:4,mult:0.6} },
+{ id:'jici', name:'銀槍疾刺', mp:12, target:'foe', desc:'1.8倍傷害，暴擊率大增', ef:{t:'dmg',mult:1.8,crit:0.45} }
+]},
+zhuge: { id:'zhuge', name:'諸葛亮', title:'孔明', icon:'🪭', unlock:5, arm:'謀士', hint:'第六章・三顧茅廬後加入',
+desc:'料事如神，羽扇綸巾。智謀型。',
+hp:100, mp:80, atk:13, def:9, int:29, spd:15, grow:{hp:11,mp:10,atk:2,def:2,int:4,spd:1},
+skills:[
+{ id:'huogong', name:'火燒連營', mp:20, target:'foe', desc:'2.5倍智力傷害＋燃燒2回合', ef:{t:'dmg',mult:2.5,magic:true,ignoreDef:0.5,burn:{t:2,base:8,scale:0.3}} },
+{ id:'bazhen', name:'八陣圖', mp:18, target:'self', desc:'自身防禦+50%(3回)＋回20MP', ef:{t:'buff',k:'defUp',p:0.5,turns:3}, ef2:{t:'mp',amt:20} }
+]},
+huangzhong: { id:'huangzhong', name:'黃忠', title:'漢升', icon:'🏹', unlock:6, arm:'弓兵', hint:'第七章・長沙之戰後加入',
+desc:'老當益壯，百步穿楊。遠程連擊手。',
+hp:105, mp:40, atk:26, def:9, int:12, spd:16, grow:{hp:12,mp:5,atk:4,def:2,int:2,spd:2},
+skills:[
+{ id:'lianzhu', name:'連珠箭', mp:16, target:'foe', desc:'3連擊，各0.7倍', ef:{t:'hits',hits:3,mult:0.7} },
+{ id:'baibu', name:'百步穿楊', mp:14, target:'foe', desc:'2.0倍傷害，暴擊率50%', ef:{t:'dmg',mult:2.0,crit:0.5} }
+]},
+weiyan: { id:'weiyan', name:'魏延', title:'文長', icon:'🪓', unlock:6, arm:'步兵', hint:'第七章・長沙之戰後加入',
+desc:'勇猛善戰，子午谷奇謀。愈戰愈勇。',
+hp:140, mp:35, atk:25, def:12, int:10, spd:13, grow:{hp:15,mp:5,atk:4,def:2,int:1,spd:1},
+skills:[
+{ id:'ziwu', name:'子午谷奇謀', mp:18, target:'foe', desc:'2.0倍傷害，無視50%防禦', ef:{t:'dmg',mult:2.0,ignoreDef:0.5} },
+{ id:'kuanggu', name:'狂骨之勇', mp:14, target:'self', desc:'攻擊+30%(3回)＋回復15% HP', ef:{t:'buff',k:'atkUp',p:0.3,turns:3}, ef2:{t:'heal',pct:0.15} }
+]},
+machao: { id:'machao', name:'馬超', title:'孟起', icon:'🐎', unlock:7, arm:'騎兵', hint:'第八章・葭萌關之戰後加入',
+desc:'錦馬超，西涼鐵騎。衝鋒陷陣。',
+hp:125, mp:40, atk:24, def:11, int:10, spd:18, grow:{hp:13,mp:5,atk:4,def:2,int:1,spd:2},
+skills:[
+{ id:'tieqi', name:'鐵騎衝鋒', mp:16, target:'foe', desc:'2.0倍傷害，無視20%防禦', ef:{t:'dmg',mult:2.0,ignoreDef:0.2} },
+{ id:'jinma', name:'錦馬超', mp:14, target:'self', desc:'自身攻擊+35%，3回合', ef:{t:'buff',k:'atkUp',p:0.35,turns:3} }
+]}
+};
+
+/* ================= 計謀系統：隨等級解鎖，傷害按智力＋等級 ================= */
+const STRATS = [
+{ id:'huoji', name:'火計', icon:'🔥', unlock:1, mp:8, uses:3, type:'dmg', target:'foe', power:1.7, desc:'單體火攻' },
+{ id:'luoshi', name:'落石計', icon:'🪨', unlock:3, mp:12, uses:2, type:'dmg', target:'foe', power:2.6, desc:'單體重擊' },
+{ id:'yibing', name:'疑兵計', icon:'👥', unlock:5, mp:10, uses:2, type:'status', target:'foe', status:'pause', desc:'敵軍暫停行動（每回合45%識破）' },
+{ id:'shuiji', name:'水計', icon:'🌊', unlock:7, mp:16, uses:2, type:'dmg', target:'allFoes', power:1.25, desc:'全體水攻' },
+{ id:'hunluan', name:'混亂計', icon:'😵', unlock:9, mp:14, uses:2, type:'status', target:'foe', status:'confuse', desc:'敵軍混亂：或發呆或亂打（每回合40%清醒）' },
+{ id:'fanjian', name:'反間計', icon:'🎭', unlock:11, mp:16, uses:2, type:'status', target:'foe', status:'betray', desc:'敵將倒戈，全力攻擊自己人（每回合40%醒悟）' },
+{ id:'neihong', name:'內訌計', icon:'⚔️', unlock:13, mp:20, uses:1, type:'status', target:'allFoes', status:'infight', desc:'全體敵軍內訌互攻（每回合40%平息）' },
+{ id:'huoshao', name:'火燒連營', icon:'🔥', unlock:15, mp:24, uses:1, type:'dmg', target:'allFoes', power:2.1, desc:'全體烈焰' },
+{ id:'kongcheng', name:'空城計', icon:'🏯', unlock:17, mp:22, uses:1, type:'status', target:'allFoes', status:'pause', desc:'全體敵軍暫停行動（每回合45%識破）' },
+{ id:'kuangfeng', name:'狂風計', icon:'🌪️', unlock:20, mp:26, uses:1, type:'dmgStun', target:'allFoes', power:1.6, stunCh:0.5, desc:'全體風攻，一半機會眩暈' },
+];
+function stratUnlocked(st){ return S.level >= st.unlock; }
+function stratUsesLeft(id){ const st = STRATS.find(s=>s.id===id); return st.uses - ((B.stratUses&&B.stratUses[id])||0); }
+
+
+const ITEMS = {
+yaopin: { name:'金創藥', icon:'💊', price:50, unlock:1, heal:80, desc:'回復 HP 80'},
+dajin: { name:'大金創藥', icon:'🧪', price:120, unlock:1, heal:180, desc:'回復 HP 180'},
+xueshen: { name:'雪參丸', icon:'🌿', price:280, unlock:8, heal:350, desc:'回復 HP 350'},
+jiuhua: { name:'九花玉露丸', icon:'🌸', price:520, unlock:14, heal:600, desc:'回復 HP 600'},
+taiyi: { name:'太乙丹', icon:'🔮', price:900, unlock:20, heal:1000, desc:'回復 HP 1000'},
+jiu: { name:'杜康酒', icon:'🍶', price:40, unlock:1, mp:40, desc:'回復 MP 40'},
+zhuye: { name:'竹葉青', icon:'🎋', price:100, unlock:8, mp:100, desc:'回復 MP 100'},
+nverhong: { name:'女兒紅', icon:'🏺', price:220, unlock:15, mp:200, desc:'回復 MP 200'},
+liaoshang: { name:'療傷藥', icon:'🩹', price:150, unlock:1, desc:'令一名負傷武將重返戰場（回復50% HP）'},
+hunyuan: { name:'九轉還魂丹', icon:'💠', price:300, unlock:1, desc:'瀕死時自動復活，回復50% HP（被動）'}
+};
+
+const WEAPONS = [
+{ id:'w0', name:'木劍', atk:2, price:0, unlock:1},
+{ id:'w1', name:'環首刀', atk:6, price:150, unlock:1},
+{ id:'w2', name:'斬馬刀', atk:10, price:400, unlock:5},
+{ id:'w3', name:'點鋼槍', atk:14, price:900, unlock:10},
+{ id:'w4', name:'青龍偃月刀', atk:19, price:1800, unlock:15},
+{ id:'w5', name:'方天畫戟', atk:25, price:3200, unlock:20}
+];
+const ARMORS = [
+{ id:'a0', name:'布衣', def:1, price:0, unlock:1},
+{ id:'a1', name:'皮甲', def:4, price:120, unlock:1},
+{ id:'a2', name:'鐵鎧', def:7, price:350, unlock:5},
+{ id:'a3', name:'藤甲', def:10, price:800, unlock:10},
+{ id:'a4', name:'鎖子甲', def:14, price:1600, unlock:15},
+{ id:'a5', name:'玄鐵重鎧', def:19, price:3000, unlock:20}
+];
+
+/* 敵人：c = 章節 index (0-4)，數值自動遞增 */
+function mkEnemy(base){ return clone(base);}
+/* ================= 十章數據（建造器 v2：陣營小兵＋名將） ================= */
+/* 敵方難度：由「敵方等級 = 我方等級+5」縮放（見 scaleFoesToPlayerLevel），此處只設章節基準數值 */
+const FOE_HP_MUL = 1.0, FOE_ATK_MUL = 1.0;
+/* 各章自然進度下的預期等級（實測），每級差距約±4.5%攻防血 */
+const CHAPTER_BASE_LV = [1,5,7,9,12,14,16,18,21,23];
+function scaleFoesToPlayerLevel(){
+const hard = S.difficulty==='hard';
+const foeLv = hard ? S.level*3 : S.level + 5;
+const baseLv = CHAPTER_BASE_LV[S.chapter]||1;
+/* 困難模式：等級顯示3倍，但數值改用固定gap(15)＋隨玩家等級輕微成長；
+   舊版用 3倍等級計gap會令練級反懲罰（敵方指數成長 vs 我方線性成長） */
+const gap = hard ? 15 + (S.level - baseLv) : foeLv - baseLv;
+const mul = Math.pow(1.045, gap);
+/* 速度：以參戰我方平均速度為基準，敵方取 85%~115% 隨機值，令雙方回合交錯；
+   Boss 額外快一成，唔會再出現「我方行晒先到敵方」 */
+const fighters = S.units.filter(u=>!u.sitOut);
+const avgSpd = fighters.reduce((s,u)=>s+u.spd,0)/Math.max(1,fighters.length);
+B.foes.forEach(f=>{
+f.maxhp = f.hp = Math.round(f.hp*mul);
+f.atk = Math.round(f.atk*mul);
+f.def = Math.round(f.def*mul);
+f.lv = foeLv;
+f.spd = Math.max(1, Math.round(avgSpd*(f.isBoss?1.1:1)*(0.85+Math.random()*0.3)));
+});
+}
+/* ================= 兵種相剋 =================
+A組：步兵→弓兵→騎兵→步兵（步剋弓、弓剋騎、騎剋步）
+B組：賊兵→謀士→護衛→賊兵（賊剋謀、謀剋護、護剋賊）
+相剋時傷害×1.3 */
+const ARMS = {
+'步兵':{icon:'⚔️'}, '弓兵':{icon:'🏹'}, '騎兵':{icon:'🐎'},
+'賊兵':{icon:'🗡️'}, '謀士':{icon:'🎓'}, '護衛':{icon:'🛡️'}
+};
+const COUNTER = {
+'步兵':'弓兵', '弓兵':'騎兵', '騎兵':'步兵',
+'賊兵':'謀士', '謀士':'護衛', '護衛':'賊兵'
+};
+function typeMult(att, def){
+if(att && def && att.arm && def.arm && COUNTER[att.arm]===def.arm) return 1.3;
+return 1;
+}
+/* 有名敵將兵種（按名） */
+const NAME_ARM = {
+'呂布':'騎兵','張遼':'騎兵','曹純':'騎兵','虎豹騎':'騎兵','馬超':'騎兵','夏侯淵':'騎兵','文醜':'騎兵',
+'韓當':'弓兵','潘璋':'弓兵',
+'張寶':'謀士','張梁':'謀士','陸遜':'謀士','李典':'謀士','曹丕':'謀士','韓玄':'謀士',
+'許褚':'護衛','曹洪':'護衛','曹仁':'護衛',
+'程遠志':'賊兵','鄧茂':'賊兵','波才':'賊兵','孫仲':'賊兵','管亥':'賊兵','陳孫':'賊兵','張武':'賊兵',
+'卜己':'賊兵','陳蘭':'賊兵','雷薄':'賊兵',
+'沮授':'謀士','劉度':'謀士','趙範':'謀士',
+'曹性':'弓兵',
+'韓浩':'護衛',
+'孔秀':'步兵','郝萌':'步兵','呂曠':'步兵','呂翔':'步兵','鄧賢':'步兵','孫桓':'步兵','朱然':'步兵',
+'張曼成':'賊兵','高覽':'步兵','楊奉':'步兵','李豐':'步兵','魏續':'步兵','宋憲':'步兵',
+'卞喜':'步兵','王植':'步兵','夏侯蘭':'步兵','鮑隆':'步兵','陳應':'步兵','吳蘭':'步兵','徐盛':'步兵',
+'馬延':'騎兵','郭淮':'謀士',
+'彭脫':'賊兵','孫夏':'賊兵','趙弘':'賊兵','韓忠':'賊兵','黃邵':'賊兵',
+'牛輔':'騎兵','司馬俱':'賊兵','史渙':'步兵','朱靈':'步兵',
+'吳敦':'步兵','昌豨':'賊兵','尹禮':'步兵','樂就':'步兵',
+'侯成':'步兵','成廉':'步兵','魏續':'步兵','宋憲':'步兵',
+'韓福':'步兵','孟坦':'步兵','秦琪':'步兵',
+'張顗':'騎兵','焦觸':'步兵','張南':'步兵','蔡瑁':'步兵',
+'金旋':'謀士','鞏志':'謀士','楊齡':'步兵',
+'卓膺':'步兵','費觀':'步兵','雷銅':'步兵','王累':'謀士',
+'夏侯尚':'步兵','杜襲':'謀士','閻圃':'謀士','楊任':'步兵','楊昂':'步兵',
+'丁奉':'步兵','馬忠':'步兵','李異':'步兵','謝旌':'步兵','孫韶':'步兵','何儀':'賊兵','全琮':'步兵'
+};
+/* 陣營小兵兵種：[a普通, b精銳] */
+const FACTION_ARMS = {
+'黃巾':['賊兵','賊兵'], '黃巾餘黨':['賊兵','賊兵'],
+'西涼':['騎兵','騎兵'], '呂布軍':['騎兵','步兵'],
+'曹軍':['步兵','弓兵'], '袁紹軍':['步兵','弓兵'], '袁術軍':['步兵','弓兵'],
+'荊州軍':['步兵','弓兵'], '吳軍':['步兵','弓兵'],
+'益州軍':['步兵','護衛'], '魏軍':['步兵','騎兵']
+};
+/* 基本戰技：人人都有，每次使用扣 MP */
+const BASIC_SKILLS = [
+{ id:'tuji', name:'突擊', icon:'💥', mp:6, target:'foe', desc:'單體1.5倍傷害', ef:{t:'dmg',mult:1.5} },
+{ id:'luangong', name:'亂攻', icon:'🌪️', mp:8, target:'foe', desc:'隨機打兩位敵方，各0.7倍（剩一位打一位）', ef:{t:'hits',hits:2,mult:0.7,spread:true} },
+{ id:'fuji', name:'伏擊', icon:'🌙', mp:10, target:'foe', desc:'單體1.2倍，60%令對方停止行動1回合', ef:{t:'dmg',mult:1.2,stunCh:0.6} }
+];
+function addBasicSkills(u){
+u.skills = u.skills||[];
+BASIC_SKILLS.forEach(bs=>{
+if(!u.skills.some(s=>s.id===bs.id)) u.skills.push(clone(bs));
+});
+}
+function troop(ch, kind, o){
+const B = {
+a: {hp:50+16*ch, mp:10, atk:10+3*ch, def:3+0.8*ch, int:5, spd:7+0.5*ch, xp:10+4*ch, gold:15+6*ch},
+b: {hp:80+20*ch, mp:25, atk:14+3.2*ch, def:5+1*ch, int:6, spd:8+0.5*ch, xp:18+6*ch, gold:25+8*ch},
+e: {hp:135+26*ch,mp:35, atk:20+3.5*ch, def:9+1.2*ch, int:9, spd:11+0.6*ch, xp:60+14*ch, gold:80+22*ch},
+boss:{hp:180+45*ch,mp:60, atk:18+3*ch, def:8+1.2*ch, int:12, spd:10+0.7*ch, xp:100+32*ch,gold:130+45*ch, isBoss:true}
+}[kind];
+const t = Object.assign({skills:[]}, B, o);
+['hp','mp','atk','def','int','spd','xp','gold'].forEach(k=>{ t[k]=Math.max(1,Math.round(t[k]));});
+t.hp = Math.round(t.hp*FOE_HP_MUL); t.atk = Math.round(t.atk*FOE_ATK_MUL);
+if(t.name && NAME_ARM[t.name]) t.arm = NAME_ARM[t.name];
+if(!t.arm) t.arm = '步兵'; /* 預設步兵 */
+return t;
+}
+function esk(id, name, mp, ef, target){
+return {id, name, mp, target:target||'foe', desc:'', ef};
+}
+/* 陣營小兵：a=兵 b=精銳（按章節自動配數值） */
+const FACTIONS = {
+'黃巾': ['黃巾賊','黃巾力士','🥷','👹'],
+'西涼': ['西涼兵','董卓親衛','🐎','🛡️'],
+'袁紹軍': ['袁紹兵','袁紹精銳','🗡️','🛡️'],
+'黃巾餘黨':['黃巾餘黨','黃巾精銳','🥷','👹'],
+'曹軍': ['曹兵','曹軍精銳','⚔️','🛡️'],
+'呂布軍': ['呂布軍兵','呂布親衛','🐎','🛡️'],
+'袁術軍': ['袁術兵','袁術精銳','🗡️','🛡️'],
+'荊州軍': ['荊州兵','荊州精銳','⚓','🗡️'],
+'益州軍': ['益州兵','益州精銳','🎋','🛡️'],
+'吳軍': ['吳兵','吳軍精銳','⚓','🗡️'],
+'魏軍': ['魏軍兵','魏軍精銳','🛡️','🎖️']
+};
+function factionMinions(ch, faction){
+const f = FACTIONS[faction] || FACTIONS['曹軍'];
+const arms = FACTION_ARMS[faction] || FACTION_ARMS['曹軍'];
+return { a: troop(ch,'a',{name:f[0],icon:f[2],arm:arms[0]}), b: troop(ch,'b',{name:f[1],icon:f[3],arm:arms[1]})};
+}
+
+const CHAPTERS = buildChapters();
+function buildChapters(){
+const C = [];
+
+/* ---------- 第一章・布衣崛起與討伐黃巾 (184) ---------- */
+C.push({ title:'第一章・布衣崛起與討伐黃巾', year:'光和七年（184年）',
+story:[
+'東漢末年，朝綱敗壞，十常侍專權，賣官鬻爵，百姓流離失所。',
+'鉅鹿張角創立太平道，自稱「大賢良師」，頭裹黃巾，聚眾數十萬，天下大亂。',
+'涿縣劉備，字玄德，結識關羽、張飛，三人於桃花園祭告天地，結為異姓兄弟。',
+'得商人張世平、蘇雙資助，打造雙股劍、青龍偃月刀、丈八蛇矛，招募鄉勇五百。',
+'同鄉簡雍來投，公孫瓚帳下趙雲率援軍助陣。',
+'首戰大興山，劉關張初試啼聲——討伐黃巾，開始！'
+],
+troops:{
+e1: troop(0,'e',{name:'程遠志', icon:'🗡️', skills:[esk('hs','橫掃',12,{t:'dmg',mult:1.7})]}),
+e2: troop(0,'e',{name:'鄧茂', icon:'🔨', skills:[esk('mj','猛擊',12,{t:'dmg',mult:1.8})]}),
+e3: troop(0,'e',{name:'張寶', icon:'⛰️', skills:[esk('dgnz','地公之怒',12,{t:'dmg',mult:1.7})]}),
+e4: troop(0,'e',{name:'張梁', icon:'🌾', skills:[esk('rgz','人公咒',12,{t:'debuff',k:'atkDown',p:0.25,turns:3})]}),
+e5: troop(0,'e',{name:'波才', icon:'🌪️', skills:[esk('xfz','旋風斬',12,{t:'dmg',mult:1.8})]}),
+e6: troop(0,'e',{name:'卜己', icon:'🌾', skills:[esk('hj','黃巾餘燼',12,{t:'dmg',mult:1.7})]}),
+e7: troop(0,'e',{name:'張曼成', icon:'🔥', skills:[esk('hj','黃巾烈火',12,{t:'dmg',mult:1.7})]}),
+e8: troop(0,'e',{name:'彭脫', icon:'🌾', skills:[esk('pt','汝南黃巾',12,{t:'dmg',mult:1.6})]}),
+e9: troop(0,'e',{name:'孫夏', icon:'🔥', skills:[esk('sx','黃巾',12,{t:'dmg',mult:1.6})]}),
+e10: troop(0,'e',{name:'趙弘', icon:'⚔️', skills:[esk('zh','黃巾',12,{t:'dmg',mult:1.7})]}),
+e11: troop(0,'e',{name:'韓忠', icon:'🏯', skills:[esk('hz','宛城',12,{t:'dmg',mult:1.7})]}),
+e12: troop(0,'e',{name:'黃邵', icon:'🌾', skills:[esk('hs','黃巾',12,{t:'dmg',mult:1.6})]}),
+e13: troop(0,'e',{name:'何儀', icon:'🌾', skills:[esk('hy','黃巾',12,{t:'dmg',mult:1.6})]}),
+boss: troop(0,'boss',{name:'孫仲', icon:'🏹', skills:[esk('lzj','連珠箭',14,{t:'hits',hits:3,mult:0.7})]})
+},
+battles:[
+{ intro:'劉關張初試啼聲，程遠志、鄧茂、彭脫率黃巾軍殺來！', faction:'黃巾', party:['a','a','e1','e2','e8']},
+{ intro:'青州被圍，張寶、孫夏、何儀率軍攻城甚急！', faction:'黃巾', party:['a','e3','e13','e9','b']},
+{ intro:'廣宗城外，張梁、趙弘布下妖陣！', faction:'黃巾', party:['a','e10','e4','b','a']},
+{ intro:'潁川波才，曾大敗皇甫嵩，今捲土重來！卜己領餘黨助戰！', faction:'黃巾', party:['a','e5','e6','b','a']},
+{ intro:'與孫堅合攻宛城，孫仲、韓忠、黃邵親自守城，張寶張梁夾擊！', boss:true, faction:'黃巾', party:['e3','e7','boss','e11','e4'],
+pre:['孫仲：「宛城堅固，劉備小兒也敢來犯！」','你：「今日便射你於馬下！」'], drop:{ armor:'a2'}}
+],
+outro:'黃巾平定，劉備因功授安喜縣尉。然督郵索賄，張飛怒而鞭之，劉備掛印棄官而去。'});
+
+/* ---------- 第二章・諸侯討董與顛沛流離 (190) ---------- */
+C.push({ title:'第二章・諸侯討董與顛沛流離', year:'初平元年（190年）',
+story:[
+'董卓廢帝自立，焚燒洛陽，十八路諸侯會盟酸棗，共討董卓。',
+'劉備以平原相身份隨公孫瓚赴會，於帳下結識初出茅廬的趙雲，一見如故。',
+'虎牢關前，呂布連敗八路諸侯，天下震動。',
+'劉關張三人並出，三英戰呂布，殺得天昏地暗，呂布終敗走！',
+'此戰之後，劉備名震天下。然諸侯各懷異心，盟軍星散。',
+'北海孔融被管亥圍攻，徐州陶謙亦遭曹操兵鋒——四處救火，顛沛流離！'
+],
+troops:{
+e1: troop(1,'e',{name:'文醜', icon:'⚔️', skills:[esk('hsqj','橫掃千軍',14,{t:'dmg',mult:1.8})]}),
+e2: troop(1,'e',{name:'管亥', icon:'🌊', skills:[esk('dkf','大刀闊斧',12,{t:'dmg',mult:1.7})]}),
+e3: troop(1,'e',{name:'于禁', icon:'🎖️', skills:[esk('yz','嚴陣以待',12,{t:'dmg',mult:1.6})]}),
+e4: troop(1,'e',{name:'夏侯淵', icon:'🦅', skills:[esk('ss','神射',14,{t:'dmg',mult:1.9})]}),
+e5: troop(1,'e',{name:'樂進', icon:'⚡', skills:[esk('xd','先登',14,{t:'dmg',mult:1.8})]}),
+e6: troop(1,'e',{name:'沮授', icon:'📜', skills:[esk('jm','沮授獻策',12,{t:'debuff',k:'atkDown',p:0.25,turns:3})]}),
+e7: troop(1,'e',{name:'高覽', icon:'⚔️', skills:[esk('hl','河北上將',14,{t:'dmg',mult:1.8})]}),
+e8: troop(1,'e',{name:'牛輔', icon:'🐂', skills:[esk('nf','董卓女婿',14,{t:'dmg',mult:1.8})]}),
+e9: troop(1,'e',{name:'司馬俱', icon:'🌊', skills:[esk('sm','黃巾餘黨',12,{t:'dmg',mult:1.6})]}),
+e10: troop(1,'e',{name:'史渙', icon:'🗡️', skills:[esk('sh','曹軍',12,{t:'dmg',mult:1.7})]}),
+e11: troop(1,'e',{name:'朱靈', icon:'⚔️', skills:[esk('zl','曹軍',12,{t:'dmg',mult:1.7})]}),
+boss: troop(1,'boss',{name:'呂布', icon:'👺', skills:[
+esk('ft','方天畫戟',14,{t:'dmg',mult:2.0}),
+esk('ym','轅門射戟',12,{t:'debuff',k:'defDown',p:0.35,turns:3})]})
+},
+battles:[
+{ intro:'牛輔助戰，呂布挺戟躍馬，殺氣沖天——三英戰呂布！', boss:true, faction:'西涼', party:['a','e8','boss','b','a'],
+pre:['呂布：「我乃呂布，天下無敵！」','劉備：「雲長、翼德，隨我迎敵！」','你：「三英戰呂布，正在今日！」'], drop:{ weapon:'w3'}},
+{ intro:'奉公孫瓚之命迎擊袁紹，文醜、高覽縱馬殺來，沮授運籌帷幄！', faction:'袁紹軍', party:['a','e7','e1','e6','b']},
+{ intro:'管亥、司馬俱圍攻北海，劉備率三千精兵突入敵陣！', faction:'黃巾餘黨', party:['a','a','e2','e9','b']},
+{ intro:'曹操血洗徐州，劉備率軍救援，與于禁、史渙遭遇！', faction:'曹軍', party:['a','a','e3','e10','b']},
+{ intro:'曹操大軍壓境，夏侯淵、樂進、朱靈為先鋒！', boss:true, faction:'曹軍', party:['a','e5','boss','e11','b'],
+pre:['夏侯淵：「徐州城破，劉備小兒受死！」','你：「誓與徐州共存亡！」']}
+],
+outro:'陶謙病重，三讓徐州於劉備。呂布來投，劉備收留之，駐小沛——禍根暗種。'});
+
+/* ---------- 第三章・入主徐州與呂布之亂 (194) ---------- */
+C.push({ title:'第三章・入主徐州與呂布之亂', year:'興平元年（194年）',
+story:[
+'陶謙三讓徐州，劉備終領徐州牧。',
+'呂布被曹操擊敗來投，劉備力排眾議收留，令駐小沛。',
+'袁術派紀靈攻徐州，呂布轅門射戟，暫解兵戈。',
+'張飛醉酒鞭打曹豹，曹豹勾結呂布，呂布夜襲下邳！',
+'劉備家眷被俘，大軍潰散——徐州得而復失！'
+],
+troops:{
+e1: troop(2,'e',{name:'紀靈', icon:'🔱', skills:[esk('sjre','三尖兩刃刀',14,{t:'dmg',mult:1.8})]}),
+e2: troop(2,'e',{name:'曹豹', icon:'🐆', skills:[esk('fgyj','反骨一擊',12,{t:'dmg',mult:1.7})]}),
+e3: troop(2,'e',{name:'橋蕤', icon:'🗡️', skills:[esk('tz','突襲',12,{t:'dmg',mult:1.7})]}),
+e4: troop(2,'e',{name:'臧霸', icon:'🏔️', skills:[esk('ks','開山',14,{t:'dmg',mult:1.8})]}),
+e6: troop(2,'e',{name:'陳蘭', icon:'🏴', skills:[esk('jl','劫掠',12,{t:'dmg',mult:1.7})]}),
+e7: troop(2,'e',{name:'雷薄', icon:'🌩️', skills:[esk('lt','雷霆一擊',12,{t:'dmg',mult:1.7})]}),
+e8: troop(2,'e',{name:'楊奉', icon:'🏳️', skills:[esk('bb','白波',12,{t:'dmg',mult:1.7})]}),
+e9: troop(2,'e',{name:'李豐', icon:'🗡️', skills:[esk('lf','袁術舊部',12,{t:'dmg',mult:1.6})]}),
+e10: troop(2,'e',{name:'吳敦', icon:'⛰️', skills:[esk('wd','泰山',12,{t:'dmg',mult:1.6})]}),
+e11: troop(2,'e',{name:'昌豨', icon:'🏴', skills:[esk('cx','泰山賊',12,{t:'dmg',mult:1.7})]}),
+e12: troop(2,'e',{name:'尹禮', icon:'🗡️', skills:[esk('yl','泰山',12,{t:'dmg',mult:1.6})]}),
+e13: troop(2,'e',{name:'樂就', icon:'⚔️', skills:[esk('lj','袁術',12,{t:'dmg',mult:1.6})]}),
+boss: troop(2,'boss',{name:'呂布', icon:'👺', skills:[
+esk('ft','方天畫戟',14,{t:'dmg',mult:2.0}),
+esk('ym','轅門射戟',12,{t:'debuff',k:'defDown',p:0.35,turns:3})]})
+},
+battles:[
+{ intro:'紀靈率大軍攻徐州，陳蘭、李豐、樂就助戰，關羽出戰，三十回合不分勝負！', faction:'袁術軍', party:['e13','e9','e1','e6','b']},
+{ intro:'曹豹、吳敦開城獻降，呂布軍殺入下邳！', faction:'呂布軍', party:['b','e10','e2','b','a']},
+{ intro:'退往廣陵，袁術命橋蕤、雷薄、楊奉追擊！', faction:'袁術軍', party:['a','e3','e8','e7','b']},
+{ intro:'小沛招兵買馬，呂布命臧霸、昌豨、尹禮率軍來攻！', faction:'呂布軍', party:['a','e11','e4','e12','a']},
+{ intro:'呂布親自斷後路，臧霸夾擊——唯有死戰突圍！', boss:true, faction:'呂布軍', party:['b','e4','boss','b','a'],
+pre:['呂布：「劉備小兒，今日便是你的死期！」','你：「關張斷後，隨我殺出去！」'], drop:{ gold:150}}
+],
+outro:'劉備單騎逃往許都，投奔曹操。關羽被圍，張飛失散——兄弟星散，各奔前程。'});
+
+/* ---------- 第四章・許都驚魂與密謀反曹 (196) ---------- */
+C.push({ title:'第四章・許都驚魂與密謀反曹', year:'建安元年（196年）',
+story:[
+'許都，曹操邀劉備青梅煮酒：「天下英雄，唯使君與操耳。」劉備驚落筷子，借雷聲掩飾。',
+'漢獻帝咬破手指，血書衣帶詔，董承聯絡劉備密謀誅曹。',
+'劉備金蟬脫殼，請纓截擊袁術，率兵離開許都。',
+'斬車冑，奪徐州——與曹操徹底決裂！',
+'曹操親率大軍來攻，劉備夜劫曹營失敗，全軍覆沒。'
+],
+troops:{
+e1: troop(3,'e',{name:'紀靈', icon:'🔱', skills:[esk('sjre','三尖兩刃刀',14,{t:'dmg',mult:1.8})]}),
+e2: troop(3,'e',{name:'高順', icon:'🗡️', skills:[esk('xzzz','陷陣之志',14,{t:'dmg',mult:1.7})]}),
+e3: troop(3,'e',{name:'車冑', icon:'🎖️', skills:[esk('yz','嚴陣以待',12,{t:'dmg',mult:1.6})]}),
+e4: troop(3,'e',{name:'許褚', icon:'🐯', skills:[esk('hcmp','虎痴猛撲',16,{t:'dmg',mult:2.0})]}),
+e6: troop(3,'e',{name:'郝萌', icon:'🗡️', skills:[esk('fm','奮猛突擊',14,{t:'dmg',mult:1.8})]}),
+e7: troop(3,'e',{name:'曹性', icon:'🏹', skills:[esk('aj','暗箭傷人',12,{t:'dmg',mult:1.6,stunCh:0.3})]}),
+e8: troop(3,'e',{name:'魏續', icon:'🛡️', skills:[esk('wx','八健將',14,{t:'dmg',mult:1.8})]}),
+e9: troop(3,'e',{name:'宋憲', icon:'⚔️', skills:[esk('sx','八健將',14,{t:'dmg',mult:1.7})]}),
+e10: troop(3,'e',{name:'侯成', icon:'🍷', skills:[esk('hc','八健將',14,{t:'dmg',mult:1.7})]}),
+e11: troop(3,'e',{name:'成廉', icon:'⚔️', skills:[esk('cl','呂布將',14,{t:'dmg',mult:1.7})]}),
+boss: troop(3,'boss',{name:'呂布', icon:'👺', skills:[
+esk('ft','方天畫戟',14,{t:'dmg',mult:2.0}),
+esk('ym','轅門射戟',12,{t:'debuff',k:'defDown',p:0.35,turns:3})]}),
+bzhangliao: troop(3,'boss',{name:'張遼', icon:'🌟', skills:[
+esk('wzxyj','威震逍遙津',16,{t:'dmg',mult:2.0}),
+esk('tx','突襲',14,{t:'hits',hits:2,mult:0.9})]})
+},
+battles:[
+{ intro:'袁術稱帝失敗北上，張飛陣前斬紀靈！', faction:'袁術軍', party:['a','a','e1','b','b']},
+{ intro:'與曹操聯手攻呂布，先鋒戰高順於彭城，郝萌、魏續、侯成領兵助戰！', faction:'呂布軍', party:['e10','e8','e2','e6','b']},
+{ intro:'水淹下邳，擒殺呂布——曹性、宋憲、成廉拼死護主，就在今日死戰！', boss:true, faction:'呂布軍', party:['e11','e7','boss','e9','a'],
+pre:['呂布：「曹孟德，你竟用水淹！」','你：「多行不義，今日授首！」'], drop:{ gold:150}},
+{ intro:'斬殺車冑，奪回徐州！', faction:'曹軍', party:['a','a','e3','b','b']},
+{ intro:'曹操親征，張遼、許褚為先鋒，夜劫不成反被圍！', boss:true, faction:'曹軍', party:['b','e4','bzhangliao','b','a'],
+pre:['張遼：「合肥之威，今日再現！」','你：「死戰突圍，殺出一條血路！」']}
+],
+outro:'徐州兵敗，關羽被圍降曹（約法三章），張飛失散。劉備單騎走青州，投奔袁紹。'});
+
+/* ---------- 第五章・寄人籬下與兄弟重聚 (200) ---------- */
+C.push({ title:'第五章・寄人籬下與兄弟重聚', year:'建安五年（200年）',
+story:[
+'劉備投奔袁紹，察其優柔寡斷，非成事之主。',
+'關羽得知兄長下落，千里走單騎，過五關斬六將！',
+'古城相會：張飛誤會關羽降曹，關羽斬蔡陽自證，兄弟重聚，抱頭痛哭。',
+'官渡之後，劉備轉投荊州劉表，駐紮新野，感嘆「髀肉復生」。',
+'江夏張武、陳孫叛亂，劉備出兵平定，得名馬的盧。'
+],
+troops:{
+e1: troop(4,'e',{name:'曹洪', icon:'🛡️', skills:[esk('xy','驍勇',14,{t:'dmg',mult:1.8})]}),
+e2: troop(4,'e',{name:'蔡陽', icon:'🗡️', skills:[esk('tz','突襲',12,{t:'dmg',mult:1.7})]}),
+e3: troop(4,'e',{name:'許褚', icon:'🐯', skills:[esk('hcmp','虎痴猛撲',16,{t:'dmg',mult:2.2})]}),
+e4: troop(4,'e',{name:'張郃', icon:'🏹', skills:[esk('lzj','連珠箭',16,{t:'hits',hits:3,mult:0.75})]}),
+e5: troop(4,'e',{name:'陳孫', icon:'🦅', skills:[esk('tz','突襲',12,{t:'dmg',mult:1.6})]}),
+e6: troop(4,'e',{name:'孔秀', icon:'🚩', skills:[esk('sg','守關',12,{t:'dmg',mult:1.7})]}),
+e7: troop(4,'e',{name:'卞喜', icon:'🗡️', skills:[esk('bx','汜水關',12,{t:'dmg',mult:1.7})]}),
+e8: troop(4,'e',{name:'王植', icon:'🏯', skills:[esk('wz','滎陽太守',12,{t:'dmg',mult:1.6})]}),
+e9: troop(4,'e',{name:'韓福', icon:'🏯', skills:[esk('hf','洛陽',12,{t:'dmg',mult:1.7})]}),
+e10: troop(4,'e',{name:'孟坦', icon:'🗡️', skills:[esk('mt','洛陽',12,{t:'dmg',mult:1.6})]}),
+e11: troop(4,'e',{name:'秦琪', icon:'⚔️', skills:[esk('qq','蔡陽外甥',12,{t:'dmg',mult:1.6})]}),
+boss: troop(4,'boss',{name:'夏侯惇', icon:'👁️', skills:[esk('bs','拔矢啖睛',14,{t:'dmg',mult:1.9})]}),
+boss2: troop(4,'boss',{name:'張武', icon:'🐗', skills:[esk('mj','猛擊',14,{t:'dmg',mult:1.9})]})
+},
+battles:[
+{ intro:'延津之戰，曹軍勢大，文醜被關羽斬殺！', faction:'曹軍', party:['a','a','e1','b','b']},
+{ intro:'汝南游擊，蔡陽、孔秀、韓福、孟坦率軍圍剿！', faction:'曹軍', party:['e9','e2','e10','e6','b']},
+{ intro:'穰山之戰，趙雲大戰許褚、卞喜，寡不敵眾！', faction:'曹軍', party:['a','e7','e3','b','a']},
+{ intro:'夏侯惇、張郃、王植、秦琪追擊，張飛趙雲斷後！', boss:true, faction:'曹軍', party:['e11','e4','boss','e8','b'],
+pre:['夏侯惇：「劉備小兒，哪裡走！」','張飛：「燕人張翼德在此，誰敢來戰！」']},
+{ intro:'平定江夏，張武、陳孫負隅頑抗！', boss:true, faction:'荊州軍', party:['a','e5','boss2','b','a'],
+pre:['張武：「江夏是老子的地盤！」','你：「叛亂者，殺無赦！」']}
+],
+outro:'新野屯兵，劉備求賢若渴。徐庶來投，又薦：「伏龍、鳳雛，兩人得一，可安天下。」'});
+
+/* ---------- 第六章・三顧茅廬與臥龍出山 (207) ---------- */
+C.push({ title:'第六章・三顧茅廬與臥龍出山', year:'建安十二年（207年）',
+story:[
+'蔡瑁設宴欲殺劉備，伊籍報信，劉備騎的盧馬躍過檀溪，死裡逃生。',
+'水鏡先生司馬徽薦賢：「伏龍、鳳雛，得一可安天下。」',
+'劉備三顧隆中，終請得諸葛亮出山，《隆中對》定三分大計。',
+'博望坡，孔明初掌兵權，火攻大破夏侯惇！',
+'新野再敗曹仁，曹操百萬大軍南下，攜民渡江，邊戰邊退。'
+],
+joins:[{ id:'zhuge', lines:[
+'三顧茅廬，草廬之中，一位羽扇綸巾的青年迎了出來。',
+'諸葛亮：「亮雖不才，願效犬馬之勞，助主公興復漢室，還於舊都！」',
+'劉備大喜，拜為軍師。']}],
+troops:{
+e1: troop(5,'e',{name:'于禁', icon:'🎖️', skills:[esk('yz','嚴陣以待',12,{t:'dmg',mult:1.6})]}),
+e2: troop(5,'e',{name:'曹仁', icon:'🏯', skills:[esk('jsfj','堅守反擊',14,{t:'dmg',mult:1.8})]}),
+e3: troop(5,'e',{name:'曹純', icon:'🐆', skills:[esk('tx','突襲',14,{t:'dmg',mult:1.8})]}),
+e4: troop(5,'e',{name:'文聘', icon:'🏰', skills:[esk('js','堅守',12,{t:'dmg',mult:1.7})]}),
+e5: troop(5,'e',{name:'夏侯恩', icon:'🗡️', skills:[esk('dq','奪劍',12,{t:'dmg',mult:1.6})]}),
+e6: troop(5,'e',{name:'呂曠', icon:'⚔️', skills:[esk('sm','雙雄並進',14,{t:'dmg',mult:1.8})]}),
+e7: troop(5,'e',{name:'呂翔', icon:'🛡️', skills:[esk('sy','雙雄斷後',14,{t:'dmg',mult:1.7})]}),
+e8: troop(5,'e',{name:'夏侯蘭', icon:'🤝', skills:[esk('xl','同鄉',12,{t:'dmg',mult:1.6})]}),
+e9: troop(5,'e',{name:'馬延', icon:'🐎', skills:[esk('my','袁氏舊部',14,{t:'dmg',mult:1.7})]}),
+e10: troop(5,'e',{name:'張顗', icon:'🐎', skills:[esk('zy','袁氏舊部',14,{t:'dmg',mult:1.7})]}),
+e11: troop(5,'e',{name:'焦觸', icon:'⚔️', skills:[esk('jc','袁氏舊部',12,{t:'dmg',mult:1.6})]}),
+e12: troop(5,'e',{name:'張南', icon:'🛡️', skills:[esk('zn','袁氏舊部',12,{t:'dmg',mult:1.6})]}),
+e13: troop(5,'e',{name:'蔡瑁', icon:'⚓', skills:[esk('cm','荊州水軍',14,{t:'dmg',mult:1.8})]}),
+boss: troop(5,'boss',{name:'夏侯惇', icon:'👁️', skills:[esk('bs','拔矢啖睛',14,{t:'dmg',mult:1.9})]}),
+boss2: troop(5,'boss',{name:'曹純', icon:'🐆', skills:[
+esk('hbq','虎豹騎',16,{t:'dmg',mult:2.0}),
+esk('tx','突襲',14,{t:'hits',hits:2,mult:0.9})]})
+},
+battles:[
+{ intro:'孔明用兵，火燒博望坡！', boss:true, faction:'曹軍', party:['a','b','boss','e1','a'],
+pre:['夏侯惇：「劉備小兒，納命來！」','諸葛亮：「火攻之計，已成矣。」'], drop:{ gold:200}},
+{ intro:'曹仁捲土重來，呂曠、夏侯蘭助戰，新野城中再設火攻！', faction:'曹軍', party:['a','e8','e2','e6','b']},
+{ intro:'曹純率虎豹騎追擊，呂翔、馬延、張顗斷後，且戰且退！', faction:'曹軍', party:['a','e3','e7','e9','e10']},
+{ intro:'文聘、焦觸、張南率軍截擊，張飛斷後！', faction:'曹軍', party:['a','e4','e11','e12','b']},
+{ intro:'蔡瑁引荊州兵助戰，曹純率虎豹騎追至長坂坡，夏侯恩抱劍而來！', boss:true, faction:'曹軍', party:['b','e13','boss2','b','e5'],
+pre:['曹純：「虎豹騎在此，劉備休走！」','趙雲：「子龍在此，誰敢傷我主！」']}
+],
+outro:'江夏會面魯肅，孔明過江，舌戰群儒，孫劉聯盟遂成。'});
+
+/* ---------- 第七章・赤壁鏖兵與巧取荊州 (208) ---------- */
+C.push({ title:'第七章・赤壁鏖兵與巧取荊州', year:'建安十三年（208年）',
+story:[
+'曹操八十萬大軍南下，孫劉聯盟，周瑜都督水軍。',
+'孔明草船借箭，龐統獻連環計，黃蓋行苦肉計，萬事俱備，只欠東風。',
+'東風起，火燒赤壁，曹軍八十萬灰飛煙滅！',
+'劉備趁機奪取南郡，復取荊南四郡。',
+'零陵易定，唯長沙難下——老將黃忠，正在城頭！'
+],
+troops:{
+e1: troop(6,'e',{name:'李典', icon:'🗡️', skills:[esk('tz','突襲',12,{t:'dmg',mult:1.7})]}),
+e2: troop(6,'e',{name:'許褚', icon:'🐯', skills:[esk('hcmp','虎痴猛撲',16,{t:'dmg',mult:2.0})]}),
+e3: troop(6,'e',{name:'曹仁', icon:'🏯', skills:[esk('jsfj','堅守反擊',14,{t:'dmg',mult:1.8})]}),
+e4: troop(6,'e',{name:'刑道榮', icon:'🪓', skills:[esk('ksf','開山斧',12,{t:'dmg',mult:1.7})]}),
+e5: troop(6,'e',{name:'虎豹騎', icon:'🐆', skills:[esk('tx','突襲',14,{t:'dmg',mult:1.8})]}),
+e6: troop(6,'e',{name:'劉度', icon:'👔', skills:[esk('sz','死守零陵',12,{t:'dmg',mult:1.6})]}),
+e7: troop(6,'e',{name:'趙範', icon:'🏯', skills:[esk('sc','堅壁清野',12,{t:'debuff',k:'atkDown',p:0.2,turns:3})]}),
+e8: troop(6,'e',{name:'鮑隆', icon:'🏹', skills:[esk('bl','桂陽',12,{t:'dmg',mult:1.6})]}),
+e9: troop(6,'e',{name:'陳應', icon:'⚔️', skills:[esk('cy','桂陽',12,{t:'dmg',mult:1.7})]}),
+e10: troop(6,'e',{name:'金旋', icon:'👔', skills:[esk('jx','武陵太守',12,{t:'dmg',mult:1.6})]}),
+e11: troop(6,'e',{name:'鞏志', icon:'📜', skills:[esk('gz','武陵',12,{t:'dmg',mult:1.5})]}),
+e12: troop(6,'e',{name:'楊齡', icon:'⚔️', skills:[esk('yl2','武陵',12,{t:'dmg',mult:1.6})]}),
+boss: troop(6,'boss',{name:'韓玄', icon:'🎭', skills:[esk('wl','威令',14,{t:'dmg',mult:1.9})]})
+},
+battles:[
+{ intro:'火燒連船，李典斷後，追擊曹操潰軍！', faction:'曹軍', party:['a','e1','a','b','b']},
+{ intro:'許褚護曹操走華容道，虎豹騎斷後！', faction:'曹軍', party:['a','e5','e2','b','a']},
+{ intro:'周瑜曹仁兩敗俱傷，趙雲兵不血刃取南郡！', faction:'曹軍', party:['a','a','e3','b','b']},
+{ intro:'張飛趙雲攻荊南，劉度、趙範、金旋死守，鮑隆、刑道榮被生擒！', faction:'荊州軍', party:['e10','e6','e4','e7','e8']},
+{ intro:'長沙之戰：關羽戰黃忠不分勝負，鞏志、楊齡助戰，魏延殺韓玄獻城！', boss:true, faction:'荊州軍', party:['e11','e4','boss','e12','a'],
+pre:['韓玄：「黃忠老匹夫，竟敢通敵！」','魏延：「韓玄無道，我等降劉皇叔！」'],
+joinAfter:[
+{ id:'huangzhong', lines:['長沙城下，黃忠感劉備仁德，開城來投。','黃忠：「老夫雖年近六旬，尚能開三石之弓！」']},
+{ id:'weiyan', lines:['魏延：「魏延願為先鋒，赴湯蹈火，在所不辭！」']}]}
+],
+outro:'荊州底定。劉備以劉琦之名「借」荊州，東吳屢討不還，孫劉嫌隙漸生。'});
+
+/* ---------- 第八章・西進益州與謀奪西川 (211) ---------- */
+C.push({ title:'第八章・西進益州與謀奪西川', year:'建安十六年（211年）',
+story:[
+'張松獻西川地理圖，劉備以防張魯為名，率軍入蜀。',
+'葭萌關下，馬超夜戰張飛，挑燈大戰不分勝負，李恢說降馬超！',
+'劉備與劉璋決裂，宴斬楊懷、高沛，奪取涪關。',
+'雒城鏖戰，龐統殞命落鳳坡——軍師中伏，舉軍縞素！',
+'孔明率張飛趙雲入川，雁橋生擒張任，兵圍成都，劉璋出降。'
+],
+troops:{
+e1: troop(7,'e',{name:'馬超', icon:'🐎', skills:[esk('tqcf','鐵騎衝鋒',14,{t:'dmg',mult:2.0,ignoreDef:0.2})]}),
+e2: troop(7,'e',{name:'楊懷', icon:'🗡️', skills:[esk('tz','突襲',12,{t:'dmg',mult:1.6})]}),
+e3: troop(7,'e',{name:'高沛', icon:'🔨', skills:[esk('mj','猛擊',12,{t:'dmg',mult:1.6})]}),
+e4: troop(7,'e',{name:'劉璝', icon:'🏯', skills:[esk('js','堅守',12,{t:'dmg',mult:1.7})]}),
+e5: troop(7,'e',{name:'冷苞', icon:'❄️', skills:[esk('hb','寒冰',14,{t:'dmg',mult:1.8})]}),
+e6: troop(7,'e',{name:'鄧賢', icon:'🗡️', skills:[esk('fs','涪水死守',14,{t:'dmg',mult:1.8})]}),
+e7: troop(7,'e',{name:'吳蘭', icon:'🗡️', skills:[esk('wl','葭萌關',14,{t:'dmg',mult:1.7})]}),
+e8: troop(7,'e',{name:'卓膺', icon:'🗡️', skills:[esk('zy','益州',14,{t:'dmg',mult:1.7})]}),
+e9: troop(7,'e',{name:'費觀', icon:'🛡️', skills:[esk('fg','益州',14,{t:'dmg',mult:1.6})]}),
+e10: troop(7,'e',{name:'雷銅', icon:'⚡', skills:[esk('lt','葭萌關',14,{t:'dmg',mult:1.7})]}),
+e11: troop(7,'e',{name:'王累', icon:'📜', skills:[esk('wl','直諫',12,{t:'debuff',k:'atkDown',p:0.2,turns:3})]}),
+boss: troop(7,'boss',{name:'張任', icon:'🏹', skills:[esk('lzj','連珠箭',14,{t:'hits',hits:3,mult:0.8})]}),
+boss2: troop(7,'boss',{name:'冷苞', icon:'❄️', skills:[
+esk('hb','寒冰',14,{t:'dmg',mult:1.8}),
+esk('sj','死守',14,{t:'buff',k:'defUp',p:0.4,turns:3},'self')]})
+},
+battles:[
+{ intro:'馬超、卓膺挑燈夜戰張飛，李恢說降！', faction:'益州軍', party:['a','e8','e1','b','a'],
+joinAfter:[{ id:'machao', lines:[
+'葭萌關下，西涼馬超率部來投。',
+'馬超：「超久慕玄德仁義，願效前驅！」',
+'劉備得之大喜：「得孟起，益州可定矣！」']}]},
+{ intro:'宴斬楊懷、高沛，吳蘭死守，奪涪關！', faction:'益州軍', party:['a','e2','e3','e7','a']},
+{ intro:'雒城鏖戰，劉璝、費觀死守，王累諫阻，龐統殞命落鳳坡！', faction:'益州軍', party:['a','e4','e9','e11','a']},
+{ intro:'孔明設伏，雷銅拼死護主，金雁橋生擒張任！', boss:true, faction:'益州軍', party:['b','e10','boss','b','a'],
+pre:['張任：「蜀中男兒，寧死不降！」','諸葛亮：「忠義可嘉，奈何從賊。」']},
+{ intro:'冷苞、鄧賢死守成都，攻城！', boss:true, faction:'益州軍', party:['b','e6','boss2','b','a'],
+pre:['冷苞：「成都城高池深，爾等休想！」','你：「一鼓作氣，攻下成都！」']}
+],
+outro:'西川底定，劉璋出降。法正獻計取漢中，劉備進位漢中王，封關張馬黃趙為五虎大將！'});
+
+/* ---------- 第九章・漢中爭霸與進位漢中王 (219) ---------- */
+C.push({ title:'第九章・漢中爭霸與進位漢中王', year:'建安二十四年（219年）',
+story:[
+'曹操進軍漢中，劉備率大軍爭奪。',
+'巴西之戰，張飛大破張郃，保住益州門戶。',
+'黃忠、嚴顏攻克天蕩山，斬夏侯德。',
+'定軍山，法正擊鼓為號，黃忠俯衝斬殺夏侯淵！',
+'漢水之戰，趙雲空營退敵，「子龍一身都是膽也」。',
+'斜谷，曹操進退兩難，發出「雞肋」之嘆，終撤出漢中！'
+],
+troops:{
+e1: troop(8,'e',{name:'張郃', icon:'🏹', skills:[esk('lzj','連珠箭',16,{t:'hits',hits:3,mult:0.75})]}),
+e2: troop(8,'e',{name:'夏侯德', icon:'🔥', skills:[esk('fy','烈火',12,{t:'dmg',mult:1.7})]}),
+e3: troop(8,'e',{name:'徐晃', icon:'🪓', skills:[esk('ksf','開山斧',14,{t:'dmg',mult:1.9})]}),
+e4: troop(8,'e',{name:'曹休', icon:'🌟', skills:[esk('xy','驍勇',14,{t:'dmg',mult:1.8})]}),
+e6: troop(8,'e',{name:'韓浩', icon:'🛡️', skills:[esk('jw','禁衛',14,{t:'dmg',mult:1.7})]}),
+e7: troop(8,'e',{name:'郭淮', icon:'🧠', skills:[esk('gh','料事如神',14,{t:'debuff',k:'atkDown',p:0.2,turns:3})]}),
+e8: troop(8,'e',{name:'夏侯尚', icon:'🦅', skills:[esk('xs','夏侯',14,{t:'dmg',mult:1.8})]}),
+e9: troop(8,'e',{name:'杜襲', icon:'📜', skills:[esk('dx','參軍',12,{t:'debuff',k:'defDown',p:0.2,turns:3})]}),
+e10: troop(8,'e',{name:'閻圃', icon:'🧠', skills:[esk('yp','張魯謀士',14,{t:'debuff',k:'atkDown',p:0.25,turns:3})]}),
+e11: troop(8,'e',{name:'楊任', icon:'🗡️', skills:[esk('yr','葭萌關',14,{t:'dmg',mult:1.7})]}),
+e12: troop(8,'e',{name:'楊昂', icon:'⚔️', skills:[esk('ya','張魯部下',14,{t:'dmg',mult:1.7})]}),
+boss: troop(8,'boss',{name:'夏侯淵', icon:'🦅', skills:[esk('swtj','神威天降',16,{t:'dmg',mult:2.0})]}),
+boss2: troop(8,'boss',{name:'曹休', icon:'🌟', skills:[
+esk('xy','驍勇',14,{t:'dmg',mult:1.8}),
+esk('fq','奮起',14,{t:'buff',k:'atkUp',p:0.35,turns:3},'self')]})
+},
+battles:[
+{ intro:'張飛對峙張郃五十餘日，郭淮助戰，一戰破之！', faction:'魏軍', party:['a','a','e1','e7','b']},
+{ intro:'黃忠嚴顏攻天蕩山，夏侯尚、杜襲助戰，斬夏侯德！', faction:'魏軍', party:['a','e8','e2','e9','a']},
+{ intro:'閻圃獻策，法正鳴鼓，黃忠斬夏侯淵！', boss:true, faction:'魏軍', party:['b','e10','boss','b','a'],
+pre:['夏侯淵：「黃忠老兒，可敢出戰！」','法正：「老將軍，時機已到！」'], drop:{ gold:300}},
+{ intro:'漢水之戰，徐晃、韓浩率軍來爭！', faction:'魏軍', party:['a','e3','e6','a','b']},
+{ intro:'楊任、楊昂斷後，曹休且戰且退！', boss:true, faction:'魏軍', party:['b','e11','boss2','e12','a'],
+pre:['曹休：「丞相先行，某斷後！」','你：「莫走，留下命來！」']}
+],
+outro:'漢中大捷，劉備進位漢中王，勢力達頂峰。然荊州方向，風雲突變……'});
+
+/* ---------- 第十章・夷陵烽火與後漢中興 (改編結局) ---------- */
+C.push({ title:'第十章・夷陵烽火與後漢中興', year:'章武二年（222年）・改編',
+story:[
+'關羽敗走麥城，父子遇害；張飛又被部下張達、范彊刺殺。劉備悲憤交加，終日涕泣。',
+'曹丕篡漢建魏。劉備於成都稱帝，國號「漢」，延續漢統。',
+'為報兄弟之仇，劉備不顧勸阻，傾全國之兵，東征伐吳。',
+'秭歸初戰告捷，黃忠陣斬史蹟，逼近猇亭。',
+'陸遜堅守不戰，蜀軍連營七百里。天熱，移營入林——大禍將至！',
+'陸遜火燒連營！七百里營寨化為火海，蜀軍崩潰。',
+'馬鞍山上，吳軍四面圍攻。趙雲及時趕到，傅彤拼死斷後，劉備突出重圍！',
+'劉備退入白帝城，養傷數月。荊州舊部紛紛來投，吳軍退兵——天不亡漢！',
+'劉備整軍，命孔明鎮守成都，親率大軍由荊州北上，直搗中原！',
+'許昌城下，曹丕親率大軍迎戰。此戰——定鼎天下，再造大漢！'
+],
+troops:{
+e1: troop(9,'e',{name:'史蹟', icon:'🔪', skills:[esk('tz','突襲',12,{t:'dmg',mult:1.7})]}),
+e2: troop(9,'e',{name:'韓當', icon:'🌊', skills:[esk('fj','覆江',14,{t:'dmg',mult:1.8})]}),
+e3: troop(9,'e',{name:'潘璋', icon:'🪤', skills:[esk('fj2','設伏',14,{t:'dmg',mult:1.8})]}),
+e4: troop(9,'e',{name:'曹真', icon:'⚔️', skills:[esk('mj','猛擊',14,{t:'dmg',mult:1.9})]}),
+e6: troop(9,'e',{name:'孫桓', icon:'🐯', skills:[esk('hy','虎賁',14,{t:'dmg',mult:1.8})]}),
+e7: troop(9,'e',{name:'朱然', icon:'🔥', skills:[esk('dl','斷後',14,{t:'dmg',mult:1.8})]}),
+e8: troop(9,'e',{name:'徐盛', icon:'🛡️', skills:[esk('xs','江東',14,{t:'dmg',mult:1.8})]}),
+e9: troop(9,'e',{name:'丁奉', icon:'⚔️', skills:[esk('df','江東',14,{t:'dmg',mult:1.8})]}),
+e10: troop(9,'e',{name:'馬忠', icon:'🎯', skills:[esk('mz','擒關羽',14,{t:'dmg',mult:1.8})]}),
+e11: troop(9,'e',{name:'李異', icon:'🔥', skills:[esk('ly','夷陵先鋒',14,{t:'dmg',mult:1.7})]}),
+e12: troop(9,'e',{name:'謝旌', icon:'🗡️', skills:[esk('xj','夷陵',14,{t:'dmg',mult:1.6})]}),
+e13: troop(9,'e',{name:'孫韶', icon:'🐯', skills:[esk('ss','江東',14,{t:'dmg',mult:1.7})]}),
+e14: troop(9,'e',{name:'全琮', icon:'⚔️', skills:[esk('qc','江東',14,{t:'dmg',mult:1.7})]}),
+lxboss: troop(9,'boss',{name:'陸遜', icon:'🦊', skills:[
+esk('hg','火攻',16,{t:'dmg',mult:2.0,magic:true,burn:{t:2,base:6,scale:0.25}}),
+esk('sg','深溝高壘',12,{t:'buff',k:'defUp',p:0.4,turns:3},'self')]}),
+cpboss: troop(9,'boss',{name:'曹丕', icon:'👤', skills:[
+esk('tznw','天子之怒',18,{t:'dmg',mult:2.2}),
+esk('zl','詔令',14,{t:'debuff',k:'atkDown',p:0.3,turns:3})]})
+},
+battles:[
+{ intro:'水陸並進，丁奉、李異、全琮挑戰，黃忠陣斬史蹟！', faction:'吳軍', party:['e14','e9','e1','e11','b']},
+{ intro:'韓當、孫桓率吳軍挑戰，猇亭對峙！', faction:'吳軍', party:['a','e2','e6','a','b']},
+{ intro:'七百里連營化為火海！朱然、謝旌斷後，陸遜親督大軍！', boss:true, faction:'吳軍', party:['b','e7','lxboss','e12','a'],
+pre:['陸遜：「火燒連營之計已成！」','你：「護陛下突圍，死戰！」']},
+{ intro:'趙雲趕到，徐盛截擊，傅彤斷後，殺出重圍！', faction:'吳軍', party:['a','e3','e8','b','a']},
+{ intro:'馬忠、孫韶護駕，許昌城下決戰曹丕，再造大漢！', boss:true, faction:'魏軍', party:['e4','e10','cpboss','e13','a'],
+pre:['曹丕：「劉備小兒，也敢北望中原？」','劉備：「漢賊不兩立，今日復我河山！」'], drop:{ armor:'a5'}}
+],
+outro:'許昌城破，曹丕授首，孫權遣使稱臣。劉備還於舊都洛陽，改元建興，國號大漢——史稱「後漢中興」！'});
+
+return C;
+}
+
+/* ================= 每章一題・三國問答 ================= */
+const QUIZ = [
+{ q:'黃巾之亂的首領是誰？', options:['張角','劉備','曹操','董卓'], answer:0,
+explain:'張角創立太平道，自稱大賢良師，發動黃巾之亂。'},
+{ q:'虎牢關前，哪三人合戰呂布？', options:['劉備、關羽、張飛','曹操、劉備、孫堅','趙雲、馬超、黃忠','袁紹、袁術、公孫瓚'], answer:0,
+explain:'三英戰呂布：劉關張三人齊心，擊退天下第一猛將。'},
+{ q:'呂布的坐騎叫什麼名字？', options:['赤兔馬','的盧','絕影','爪黃飛電'], answer:0,
+explain:'「人中呂布，馬中赤兔」。'},
+{ q:'青梅煮酒論英雄，曹操說天下英雄只有誰和他？', options:['劉備','孫權','袁紹','呂布'], answer:0,
+explain:'「天下英雄，唯使君與操耳。」嚇得劉備落筷。'},
+{ q:'關羽千里走單騎，過幾關斬幾將？', options:['五關斬六將','三關斬三將','七關斬八將','一關斬一將'], answer:0,
+explain:'關羽護送二位嫂嫂，過五關斬六將，尋兄而去。'},
+{ q:'劉備三顧茅廬，請出了哪位軍師？', options:['諸葛亮','龐統','徐庶','法正'], answer:0,
+explain:'三顧隆中，諸葛亮出山，發表《隆中對》。'},
+{ q:'草船借箭，孔明一夜借了多少支箭？', options:['十萬','一萬','五萬','三千'], answer:0,
+explain:'「亮願立軍令狀，三日之內，造箭十萬。」'},
+{ q:'西川謀士龐統，殞命於何處？', options:['落鳳坡','定軍山','葭萌關','雒城'], answer:0,
+explain:'龐統進軍雒城，於落鳳坡中張任伏兵而亡。'},
+{ q:'定軍山一戰，斬殺夏侯淵的是誰？', options:['黃忠','趙雲','魏延','馬超'], answer:0,
+explain:'法正擊鼓為號，黃忠俯衝，一刀斬夏侯淵於馬下。'},
+{ q:'火燒連營，大敗劉備的東吳都督是誰？', options:['陸遜','周瑜','呂蒙','魯肅'], answer:0,
+explain:'陸遜堅守不戰，趁蜀軍懈怠，火燒七百里連營。'}
+];
+
+/* 劇情推進問答：每章第2戰、第4戰前各一題（答啱+5銀兩，答錯罰） */
+const PLOT_QUIZ = [
+[ /* 第一章 */
+{ q:'桃園結義，係邊三個人？', options:['劉備、關羽、張飛','劉備、趙雲、簡雍','關羽、張飛、趙雲','劉備、曹操、孫堅'], answer:0,
+explain:'涿縣桃園，劉關張祭告天地，結為異姓兄弟。'},
+{ q:'張角自稱咩名號？', options:['大賢良師','天公將軍','太平道人','黃天上師'], answer:0,
+explain:'張角創立太平道，自稱「大賢良師」，頭裹黃巾起義。'}
+],
+[ /* 第二章 */
+{ q:'十八路諸侯會盟，係為咗討伐邊個？', options:['董卓','呂布','袁紹','曹操'], answer:0,
+explain:'董卓廢帝焚洛陽，十八路諸侯會盟酸棗共討之。'},
+{ q:'三英戰呂布之後，呂布點收場？', options:['敗走','被擒','投降','戰死'], answer:0,
+explain:'劉關張三人並出，呂布不敵敗走，此戰劉備名震天下。'}
+],
+[ /* 第三章 */
+{ q:'陶謙幾次讓徐州畀劉備？', options:['三次','一次','兩次','五次'], answer:0,
+explain:'陶謙三讓徐州，劉備終領徐州牧。'},
+{ q:'劉備收留邊個，種下禍根？', options:['呂布','袁術','曹操','孫策'], answer:0,
+explain:'劉備收留來投嘅呂布，駐小沛——禍根暗種。'}
+],
+[ /* 第四章 */
+{ q:'衣帶詔係邊位皇帝發出嚟密謀反曹？', options:['漢獻帝','漢靈帝','漢少帝','漢光武帝'], answer:0,
+explain:'漢獻帝密下衣帶詔，命劉備等誅殺曹操。'},
+{ q:'劉備用咩藉口離開許都？', options:['請纓截擊袁術','奉詔討賊','回鄉探親','出使江東'], answer:0,
+explain:'劉備金蟬脫殼，請纓截擊袁術，率兵離開許都。'}
+],
+[ /* 第五章 */
+{ q:'古城相會，張飛誤會關羽，關羽斬邊個自證清白？', options:['蔡陽','許褚','張郃','夏侯惇'], answer:0,
+explain:'關羽斬蔡陽自證，兄弟三人古城相會，抱頭痛哭。'},
+{ q:'徐庶臨走前，向劉備推薦邊位軍師？', options:['諸葛亮','龐統','法正','郭嘉'], answer:0,
+explain:'徐庶走馬薦諸葛：「此人乃臥龍，先生得之如魚得水。」'}
+],
+[ /* 第六章 */
+{ q:'火燒博望坡，燒嘅係邊個嘅軍隊？', options:['夏侯惇','曹仁','許褚','張郃'], answer:0,
+explain:'孔明初出茅廬第一功：火燒博望坡，大敗夏侯惇。'},
+{ q:'蔡瑁設宴想殺劉備，係邊個報信救佢一命？', options:['伊籍','蒯越','蔡夫人','張允'], answer:0,
+explain:'伊籍密報蔡瑁殺機，劉備騎的盧躍過檀溪，死裡逃生。'}
+],
+[ /* 第七章 */
+{ q:'赤壁之戰，邊個獻連環計令曹軍戰船相連？', options:['龐統','諸葛亮','周瑜','黃蓋'], answer:0,
+explain:'龐統獻連環計，曹操將戰船相連，為火攻埋下伏筆。'},
+{ q:'邊個殺咗韓玄，獻長沙城投劉備？', options:['魏延','黃忠','趙雲','張飛'], answer:0,
+explain:'魏延怒斬韓玄，開城投降，黃忠亦歸順。'}
+],
+[ /* 第八章 */
+{ q:'張松獻咩圖畀劉備，引佢入西川？', options:['西川地形圖','天下輿圖','荊州戶籍圖','漢中布防圖'], answer:0,
+explain:'張松獻西川地圖，劉備得窺益州虛實，決意西進。'},
+{ q:'金雁橋邊個被生擒？', options:['張任','冷苞','劉璝','鄧賢'], answer:0,
+explain:'孔明設伏，於金雁橋生擒益州名將張任。'}
+],
+[ /* 第九章 */
+{ q:'曹操進退兩難，發出咩嘆息後撤出漢中？', options:['雞肋','時也命也','既生瑜何生亮','大勢去矣'], answer:0,
+explain:'「雞肋雞肋，食之無味，棄之可惜。」曹操終撤出漢中。'},
+{ q:'劉備打贏漢中之戰後，進位做咩？', options:['漢中王','皇帝','丞相','大將軍'], answer:0,
+explain:'眾將上表，劉備於沔陽進位漢中王，威震天下。'}
+],
+[ /* 第十章 */
+{ q:'夷陵之戰，陸遜用咩計大敗劉備？', options:['火攻','水攻','空城計','反間計'], answer:0,
+explain:'陸遜堅守半年，趁蜀軍懈怠，火燒七百里連營。'},
+{ q:'東征前夕，張飛被邊個刺殺？', options:['張達、范彊','馬忠','潘璋','陸遜'], answer:0,
+explain:'張飛醉酒鞭打士卒，被部下張達、范彊刺殺，劉備痛失三弟。'}
+]
+];
+
+/* ================= 每章小遊戲・決戰時機 ================= */
+const MINIGAMES = [
+{ name:'🎯 轅門射戟', desc:'劉備親自彎弓搭箭——在金色標記移到綠色區域時按下「射！」'},
+{ name:'🥁 擂鼓助威', desc:'兩軍對壘，擂鼓助威——在最佳時機擊鼓！'},
+{ name:'⚔️ 突圍', desc:'呂布親自斷後——趁敵軍空隙，殺出重圍！'},
+{ name:'🌙 夜劫曹營', desc:'月黑風高——在守衛最鬆懈的時機劫營！'},
+{ name:'🛡️ 斷後', desc:'為主公斷後——頂住追兵的關鍵一擊！'},
+{ name:'🔥 火攻', desc:'風向正好——在最佳時機放火燒營！'},
+{ name:'🚩 奪旗', desc:'先登奪旗——一鼓作氣拿下敵軍大旗！'},
+{ name:'🏯 攻城', desc:'攻城在即——在城門最薄弱的時機進攻！'},
+{ name:'🥁 擊鼓', desc:'法正親自擊鼓——為黃忠助威的關鍵時刻！'},
+{ name:'⚔️ 決戰許昌', desc:'畢其功於一役——直搗許昌的最後時機！'}
+];
+
+/* ================= 狀態 ================= */
+let S = null; // 玩家存檔狀態
+let B = null; // 戰鬥狀態
+
+function xpNeed(lv){ return 60 + lv*50;}
+function weaponOf(id){ return WEAPONS.find(w=>w.id===id) || WEAPONS[0];}
+function armorOf(id){ return ARMORS.find(a=>a.id===id) || ARMORS[0];}
+
+function newGame(heroId, subIds, difficulty){
+S = {
+heroId, level:1, xp:0, gold:120,
+difficulty: difficulty||'normal',
+units: [], bench: [],
+inv:{ yaopin:2, dajin:0, jiu:1, hunyuan:0, liaoshang:1},
+bag:[],
+chapter:0, battle:0, wins:0, turns:0, sparLeft: (difficulty==='hard'?3:10)
+};
+const main = mkHeroUnit(heroId); main.isMain = true;
+S.units.push(main);
+(subIds||[]).forEach(id=>S.units.push(mkHeroUnit(id)));
+save();
+}
+/* 以武將圖鑑建立單位（含基礎數值，隨等級同步） */
+function mkHeroUnit(id){
+const h = HEROES[id];
+const u = { id, name:h.name, title:h.title, icon:h.icon, isMain:false, side:'ally', arm:h.arm||'步兵',
+base:{hp:h.hp, mp:h.mp, atk:h.atk, def:h.def, int:h.int, spd:h.spd}, grow:h.grow,
+weapon:'w0', armor:'a0',
+skills: clone(h.skills), st:{}, alive:true, defending:false,
+train:{hp:0, mp:0}, skillLv:{} };
+addBasicSkills(u);
+syncUnit(u);
+u.hp = u.maxhp; u.mp = u.maxmp;
+return u;
+}
+function syncUnit(u){
+const b=u.base, g=u.grow, lv=S.level;
+const t=u.train||{hp:0,mp:0};
+u.maxhp=b.hp+g.hp*(lv-1)+(t.hp||0); u.maxmp=b.mp+g.mp*(lv-1)+(t.mp||0);
+u.atk=b.atk+g.atk*(lv-1); u.def=b.def+g.def*(lv-1);
+u.int=b.int+g.int*(lv-1); u.spd=b.spd+g.spd*(lv-1);
+u.hp=Math.min(u.maxhp, u.hp||u.maxhp); u.mp=Math.min(u.maxmp, u.mp||u.maxmp);
+}
+function syncAll(){ S.units.concat(S.bench||[]).forEach(syncUnit); }
+function isUnlocked(id){
+return S.units.some(u=>u.id===id) || (S.bench||[]).some(u=>u.id===id);
+}
+
+/* ================= 存檔 ================= */
+function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S));}catch(e){}}
+function hasSave(){ try{ return!!localStorage.getItem(SAVE_KEY);}catch(e){ return false;}}
+function loadGame(){
+try{
+const d = localStorage.getItem(SAVE_KEY);
+if(!d){ return;}
+S = JSON.parse(d);
+S.bench = S.bench||[];
+/* 舊存檔遷移：補 base 以便等級同步 */
+S.units.concat(S.bench).forEach(u=>{
+if(!u.base){ const h=HEROES[u.id];
+u.base={hp:h.hp,mp:h.mp,atk:h.atk,def:h.def,int:h.int,spd:h.spd}; u.grow=u.grow||h.grow; }
+if(!u.side) u.side='ally';
+/* 舊存檔遷移：補練兵數據 */
+u.train=u.train||{hp:0,mp:0}; u.skillLv=u.skillLv||{};
+/* 舊存檔遷移：全員裝備（舊版只有 S.weapon/S.armor 給主將） */
+if(u.weapon==null) u.weapon = (u.isMain && S.weapon) ? S.weapon : 'w0';
+if(u.armor==null) u.armor = (u.isMain && S.armor) ? S.armor : 'a0';
+});
+delete S.weapon; delete S.armor;
+if(!S.difficulty) S.difficulty='normal';
+if(S.sparLeft==null) S.sparLeft=(S.difficulty==='hard'?3:10);
+syncAll();
+if(S.chapter >= CHAPTERS.length){ show('scr-end'); renderEnd(); return;}
+renderHub(); show('scr-hub');
+}catch(e){}
+}
+
+/* ================= 畫面 ================= */
+function show(id){
+document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+$(id).classList.add('active');
+window.scrollTo(0,0);
+if(id==='scr-title'){ $('btn-continue').style.display = hasSave()? 'block': 'none';}
+}
+
+/* ================= 選角（主將＋4副將） ================= */
+let selMain=null, selSubs=[];
+function heroBtn(h, onclick, extra){
+return `<button class="btn secondary hero-pick ${extra||''}" onclick="${onclick}">
+<span class="icon">${h.icon}</span>
+<span><span class="nm">${h.name}・${h.title}</span><br>
+<span class="ds">${h.desc}<br>❤️${h.hp} 🔷${h.mp} ⚔️${h.atk} 🛡️${h.def} 🧠${h.int} 👟${h.spd}<br>
+<small>✨ ${h.skills.map(s=>s.name).join('、')}</small></span></span>
+</button>`;
+}
+function renderSelect(){
+$('sel-title').textContent='選擇你的主將（黃巾之亂・184年）';
+const c=$('sel-confirm'); if(c) c.style.display='none';
+const avail = Object.values(HEROES).filter(h=>h.unlock===0);
+$('hero-list').innerHTML = avail.map(h=>heroBtn(h, `selHero('${h.id}')`, '')).join('') +
+`<div class="muted center" style="margin-top:8px">💡 其餘武將將隨劇情推進逐一加入（如諸葛亮、馬超）</div>`;
+}
+let selHeroId = null;
+function selHero(id){
+selHeroId = id;
+const h = HEROES[id];
+$('diff-desc').innerHTML = `主將：${h.icon} <b>${h.name}</b>・${h.title}<br>請選擇難度（開局後不能更改）：`;
+show('scr-difficulty');
+}
+function pickDifficulty(diff){
+if(!selHeroId) return;
+const others = Object.values(HEROES).filter(h=>h.unlock===0 && h.id!==selHeroId).map(h=>h.id);
+newGame(selHeroId, others, diff);
+startChapter(0, true);
+}
+function pickMain(id){
+const others = Object.values(HEROES).filter(h=>h.unlock===0 && h.id!==id).map(h=>h.id);
+newGame(id, others, 'normal');
+startChapter(0, true);
+}
+
+/* ================= 劇情 ================= */
+let storyLines=[], storyCb=null, storyIdx=0, typing=false, typeTimer=null;
+function showStory(lines, cb){
+storyLines = lines; storyCb = cb; storyIdx = 0;
+show('scr-story');
+renderStoryLine();
+}
+function renderStoryLine(){
+const el = $('story-text');
+const full = storyLines[storyIdx];
+if(TEST){ el.textContent = full; typing=false; $('story-next').textContent = (storyIdx===storyLines.length-1)?'開始 →':'下一步 →'; return;}
+typing = true; el.textContent='';
+$('story-next').textContent = '跳過 ▸▸';
+let i=0; clearInterval(typeTimer);
+typeTimer = setInterval(()=>{
+el.textContent = full.slice(0, ++i);
+if(i>=full.length){ clearInterval(typeTimer); typing=false;
+$('story-next').textContent = (storyIdx===storyLines.length-1)?'開始 →':'下一步 →';}
+}, 34);
+}
+function storyNext(){
+if(typing){ clearInterval(typeTimer); typing=false;
+$('story-text').textContent = storyLines[storyIdx];
+$('story-next').textContent = (storyIdx===storyLines.length-1)?'開始 →':'下一步 →';
+return;
+}
+storyIdx++;
+if(storyIdx >= storyLines.length){ const cb=storyCb; storyCb=null; cb && cb();}
+else renderStoryLine();
+}
+
+/* ================= 章節 ================= */
+function startChapter(ci, fresh){
+S.chapter = ci; S.battle = 0; save();
+$('story-chapter').textContent = CHAPTERS[ci].title + '・' + CHAPTERS[ci].year;
+const afterIntro = ()=>{
+const joins = CHAPTERS[ci].joins||[];
+const afterJoins = ()=> showQuiz(ci, ()=>{ renderHub(); show('scr-hub'); });
+if(!joins.length){ afterJoins(); return; }
+const lines = [];
+joins.forEach(j=>{
+const h = HEROES[j.id];
+lines.push(...j.lines, `🎉 ${h.icon}${h.name}・${h.title}加入隊伍！`);
+if(!isUnlocked(j.id)) S.bench.push(mkHeroUnit(j.id));
+});
+syncAll(); save();
+lines.push('💡 新武將暫列板凳，到軍營「👥 陣容」可換上陣！');
+showStory(lines, afterJoins);
+};
+showStory(CHAPTERS[ci].story, afterIntro);
+}
+/* ================= 每章一題・三國問答 ================= */
+let quizCb = null;
+function showQuiz(ci, cb){
+const q = QUIZ[ci];
+quizCb = cb;
+$('quiz-q').innerHTML = `第${['一','二','三','四','五','六','七','八','九','十'][ci]}章・三國問答<br><b style="color:#f5c542">${q.q}</b>`;
+$('quiz-opts').innerHTML = q.options.map((op,i)=>
+`<button class="btn secondary" onclick="answerQuiz(${i},${ci})">${'甲乙丙丁'[i]}．${op}</button>`).join('');
+$('quiz-result').innerHTML = '<div class="muted center">答對獎勵 50 銀兩，答錯會有懲罰！</div>';
+$('quiz-next').style.display = 'none';
+show('scr-quiz');
+}
+function answerQuiz(i, ci){
+const q = QUIZ[ci];
+const correct = (i===q.answer);
+let punishMsg='';
+if(correct){ S.gold += 50; save(); sfx.win(); }
+else { sfx.lose(); punishMsg = applyPunishment(); }
+$('quiz-result').innerHTML = correct
+? `<span style="color:#9fd6a4">✅ 答對！獎勵 50 銀兩。</span><br><small class="muted">${q.explain}</small>`
+: `<span style="color:#ff9a8a">❌ 答錯了。正確答案：${q.options[q.answer]}</span><br><small class="muted">${q.explain}</small><br><span style="color:#ff9a8a">⚠️ 懲罰：${punishMsg}</span>`;
+$('quiz-opts').innerHTML = '';
+$('quiz-next').style.display = 'block';
+renderHub();
+}
+function quizNext(){ const cb=quizCb; quizCb=null; if(cb) cb(); }
+function quizNextBtn(){ if(plotQuizQ) plotQuizNext(); else quizNext(); }
+
+/* ---- 劇情推進問答（每章第2、4戰前） ---- */
+let plotQuizCb = null, plotQuizQ = null;
+function showPlotQuiz(ci, qi, cb){
+const q = PLOT_QUIZ[ci][qi];
+plotQuizQ = q; plotQuizCb = cb;
+const chName = ['一','二','三','四','五','六','七','八','九','十'][ci];
+$('quiz-q').innerHTML = `第${chName}章・劇情問答<br><b style="color:#f5c542">${q.q}</b>`;
+$('quiz-opts').innerHTML = q.options.map((op,i)=>
+`<button class="btn secondary" onclick="answerPlotQuiz(${i})">${'甲乙丙丁'[i]}．${op}</button>`).join('');
+$('quiz-result').innerHTML = '<div class="muted center">答對獎勵 5 銀兩，答錯會有懲罰！</div>';
+$('quiz-next').style.display = 'none';
+show('scr-quiz');
+}
+function answerPlotQuiz(i){
+const q = plotQuizQ;
+const correct = (i===q.answer);
+let punishMsg='';
+if(correct){ S.gold += 5; save(); sfx.win(); }
+else { sfx.lose(); punishMsg = applyPunishment(); }
+$('quiz-result').innerHTML = correct
+? `<span style="color:#9fd6a4">✅ 答對！獎勵 5 銀兩。</span><br><small class="muted">${q.explain}</small>`
+: `<span style="color:#ff9a8a">❌ 答錯了。正確答案：${q.options[q.answer]}</span><br><small class="muted">${q.explain}</small><br><span style="color:#ff9a8a">⚠️ 懲罰：${punishMsg}</span>`;
+$('quiz-opts').innerHTML = '';
+$('quiz-next').style.display = 'block';
+renderHub();
+}
+function plotQuizNext(){ const cb=plotQuizCb; plotQuizCb=null; plotQuizQ=null; if(cb) cb(); }
+
+/* ================= 軍營 ================= */
+function renderHub(){
+$('hub-gold').textContent = S.gold;
+const diffTag = S.difficulty==='hard' ? ' <span style="color:#ff6b6b;font-size:14px">🔴困難</span>' : ' <span style="color:#9fd6a4;font-size:14px">🟢普通</span>';
+$('hub-diff').innerHTML = diffTag;
+$('hub-hero').innerHTML = S.units.map(u=>
+`<div style="display:flex;gap:8px;align-items:center;margin:8px 0">
+<span style="font-size:34px">${u.icon}</span>
+<div style="flex:1"><div class="nm" style="font-size:16px">${u.name}・${u.title} <span class="lvl">Lv.${S.level}</span>${u.isMain?' ⭐主將':''}</div>
+<div class="bar" style="height:12px"><div class="fill hp" style="width:${100*u.hp/u.maxhp}%"></div></div>
+<div class="bar" style="height:12px"><div class="fill mp" style="width:${100*u.mp/u.maxmp}%"></div></div>
+<div class="stat-line">❤️${u.hp}/${u.maxhp} 🔷${u.mp}/${u.maxmp} ⚔️${unitAtk(u)} 🛡️${unitDef(u)} 🧠${u.int} 👟${u.spd}</div>
+<div class="stat-line">🗡️${weaponOf(u.weapon||'w0').name}(+${weaponOf(u.weapon||'w0').atk}) 🥋${armorOf(u.armor||'a0').name}(+${armorOf(u.armor||'a0').def})</div></div></div>`).join('') +
+`<div class="muted">💡 每人獨立裝備；全軍一齊升級。</div>`;
+const ch = CHAPTERS[S.chapter];
+let punishHtml = '';
+if(S.punish){
+punishHtml = S.punish.type==='bench'
+? `<br>⚠️ <b style="color:#ff9a8a">懲罰生效中：${HEROES[S.punish.heroId].name}下一戰不能出場！</b>`
+: `<br>⚠️ <b style="color:#ff9a8a">懲罰生效中：下一戰敵方攻擊+${Math.round(S.punish.pct*100)}%！</b>`;
+}
+$('hub-progress').innerHTML =
+`📍 <b style="color:#f5c542">${ch.title}</b><br>下一戰：第 ${S.battle+1} / ${ch.battles.length} 戰${ch.battles[S.battle].boss?'（⚠️ Boss 戰）':''}・5v5 陣容戰<br>🪑 板凳：${S.bench.length}人待命${S.bench.length?'（👥 陣容可換人）':''}${punishHtml}`;
+}
+function rest(){
+S.units.forEach(u=>{ u.hp=u.maxhp; u.mp=u.maxmp; u.alive=true; u.st={}; });
+save(); renderHub(); sfx.heal();
+}
+/* ================= 陣容管理 ================= */
+let teamSel = -1;
+function openTeam(){ teamSel=-1; renderTeam(); show('scr-team'); }
+function renderTeam(){
+$('team-battle').innerHTML = S.units.map((u,i)=>
+`<div class="shop-row" ${u.isMain?'':`onclick="selectBattle(${i})" style="cursor:pointer;${teamSel===i?'background:#3a2412;border-radius:8px;':''}"`}>
+<div class="info">${u.icon} ${u.name}・${u.title} <small>Lv${S.level} ❤️${u.hp}/${u.maxhp}</small>${u.isMain?' ⭐主將':''}${teamSel===i?' ✅':''}</div>
+${u.isMain?'<small class="muted">不可更換</small>':'<small class="muted">點選</small>'}</div>`).join('');
+$('team-bench').innerHTML = S.bench.length ? S.bench.map((u,j)=>
+`<div class="shop-row" onclick="selectBench(${j})" style="cursor:pointer">
+<div class="info">${u.icon} ${u.name}・${u.title} <small>Lv${S.level} ❤️${u.hp}/${u.maxhp}</small></div>
+<small class="muted">點選交換</small></div>`).join('')
+: '<div class="muted center">板凳空空如也——隨劇情推進會有更多武將加入</div>';
+const locked = Object.values(HEROES).filter(h=>!isUnlocked(h.id));
+$('team-locked').innerHTML = locked.length ? locked.map(h=>
+`<div class="shop-row" style="opacity:.55"><div class="info">${h.icon} ${h.name}・${h.title} <small>🔒 ${h.hint||'隨劇情加入'}</small></div></div>`).join('')
+: '<div class="muted center">全部武將已登場！</div>';
+}
+function selectBattle(i){
+if(S.units[i].isMain) return;
+teamSel = (teamSel===i ? -1 : i);
+$('team-hint').textContent = teamSel>=0 ? `已選 ${S.units[teamSel].name}，再點板凳武將進行交換` : '先點選出戰武將，再點板凳武將進行交換（主將不可更換）';
+renderTeam();
+}
+function selectBench(j){
+if(teamSel<0 || S.units[teamSel].isMain){ $('team-hint').textContent='請先點選一位出戰武將（主將除外）'; return; }
+const tmp = S.units[teamSel];
+S.units[teamSel] = S.bench[j];
+S.bench[j] = tmp;
+S.units[teamSel].hp = S.units[teamSel].maxhp; S.units[teamSel].mp = S.units[teamSel].maxmp;
+S.units[teamSel].alive = true; S.units[teamSel].st = {};
+teamSel = -1;
+save(); renderTeam();
+$('team-hint').textContent='交換成功！';
+}
+function goBattle(){
+const ch = CHAPTERS[S.chapter], bt = ch.battles[S.battle];
+const start = ()=>{
+const lines = [bt.intro].concat(bt.pre||[]);
+showStory(lines, ()=>{
+if(bt.boss) showMinigame(S.chapter, ()=>startBattle());
+else startBattle();
+});
+};
+/* 每章第2戰、第4戰前：劇情推進問答 */
+if(S.battle===1) showPlotQuiz(S.chapter, 0, start);
+else if(S.battle===3) showPlotQuiz(S.chapter, 1, start);
+else start();
+}
+
+/* ================= 決戰小遊戲（時機條） ================= */
+let mgCb=null, mgTimer=null, mgPos=0, mgDir=1, mgCenter=50, mgWidth=18, mgDone=false;
+function showMinigame(ci, cb){
+const m = MINIGAMES[ci];
+mgCb = cb; mgDone = false;
+$('mg-title').textContent = m.name;
+$('mg-desc').textContent = m.desc + '（在綠色區域按下，贏了獎勵 80 銀兩，輸了會有懲罰！）';
+$('mg-result').innerHTML = '';
+$('mg-go').style.display = 'block';
+$('mg-next').style.display = 'none';
+mgCenter = 20 + Math.random()*60;
+mgPos = 0; mgDir = 1;
+const zone = $('mg-zone');
+zone.style.left = (mgCenter-mgWidth/2)+'%';
+zone.style.width = mgWidth+'%';
+show('scr-minigame');
+clearInterval(mgTimer);
+mgTimer = setInterval(()=>{
+mgPos += mgDir*2.4;
+if(mgPos>=100){ mgPos=100; mgDir=-1; }
+if(mgPos<=0){ mgPos=0; mgDir=1; }
+$('mg-marker').style.left = mgPos+'%';
+}, 30);
+}
+function mgShoot(){
+if(mgDone) return;
+mgDone = true;
+clearInterval(mgTimer);
+const win = Math.abs(mgPos-mgCenter) <= mgWidth/2;
+if(win){
+S.gold += 80; save(); sfx.win();
+$('mg-result').innerHTML = '<span style="color:#9fd6a4">✅ 成功！士氣大振，獎勵 80 銀兩。</span>';
+} else {
+const msg = applyPunishment(); sfx.lose();
+$('mg-result').innerHTML = `<span style="color:#ff9a8a">❌ 失敗！</span><br><span style="color:#ff9a8a">⚠️ 懲罰：${msg}</span>`;
+}
+$('mg-go').style.display = 'none';
+$('mg-next').style.display = 'block';
+renderHub();
+}
+function mgNext(){
+const cb = mgCb; mgCb = null;
+clearInterval(mgTimer);
+if(cb) cb();
+}
+
+/* ================= 練兵場 ================= */
+let trainSel = 0;
+function ownedHeroes(){ return S.units.concat(S.bench||[]); }
+function openTrain(){ trainSel = 0; renderTrain(); show('scr-train'); }
+function renderTrain(){
+const heroes = ownedHeroes();
+if(!heroes.length) return;
+if(trainSel >= heroes.length) trainSel = 0;
+const u = heroes[trainSel];
+$('train-gold').textContent = S.gold;
+$('train-heroes').innerHTML = heroes.map((h,i)=>
+`<button class="btn secondary small" style="min-width:66px;${i===trainSel?'border:2px solid #f5c542;':''}" onclick="trainSel=${i};renderTrain()">${h.icon}<br><small>${h.name}</small></button>`).join('');
+const t = u.train||{hp:0,mp:0};
+$('train-info').innerHTML =
+`<div class="center" style="font-size:20px">${u.icon} <b>${u.name}</b>・${u.title} <span class="lvl">Lv.${S.level}</span>${u.isMain?' ⭐主將':''}</div>`+
+`<div class="stat-line center">❤️ ${u.maxhp}${t.hp?` <small style="color:#9fd6a4">(+${t.hp}練兵)</small>`:''} 🔷 ${u.maxmp}${t.mp?` <small style="color:#9fd6a4">(+${t.mp}練兵)</small>`:''}</div>`+
+`<div class="stat-line center">經驗：${S.xp} / ${xpNeed(S.level)}</div>`;
+const cXp = 40*S.level, cHp = 30*S.level, cMp = 30*S.level;
+const xpGain = Math.round(xpNeed(S.level)*0.4);
+$('train-actions').innerHTML =
+`<button class="btn secondary" onclick="trainXp()" ${S.gold<cXp?'disabled':''}>🏃 操練<br><small>${cXp}銀兩 → 經驗+${xpGain}</small></button>`+
+`<button class="btn secondary" onclick="trainStat('hp')" ${S.gold<cHp?'disabled':''}>❤️ 體魄<br><small>${cHp}銀兩 → HP上限+10</small></button>`+
+`<button class="btn secondary" onclick="trainStat('mp')" ${S.gold<cMp?'disabled':''}>🔷 養氣<br><small>${cMp}銀兩 → MP上限+6</small></button>`+
+`<button class="btn" onclick="startSpar()" ${(S.sparLeft||0)<=0?'disabled':''}>⚔️ 操練對戰<br><small>與士兵切磋贏經驗（正式戰鬥前剩 ${S.sparLeft||0} 次）</small></button>`;
+$('train-skills').innerHTML = '<div class="muted center" style="margin-bottom:6px">⚔️ 演武：技能升級（每級+15%威力，最高Lv5）</div>' +
+u.skills.map(sk=>{
+const lv = skillLvOf(u, sk), cost = 60*lv, maxed = lv>=5;
+return `<div class="shop-row"><div class="info">✨ ${sk.name} <b>Lv.${lv}</b>${lv>1?` <small style="color:#9fd6a4">(+${(lv-1)*15}%威力)</small>`:''}<br><small class="muted">${sk.desc||''}</small></div>`+
+`<button class="btn secondary small" ${maxed||S.gold<cost?'disabled':''} onclick="trainSkill('${sk.id}')">${maxed?'已滿級':`升級 ${cost}💰`}</button></div>`;
+}).join('');
+}
+function trainXp(){
+const cost = 40*S.level;
+if(S.gold < cost) return;
+S.gold -= cost;
+const gain = Math.round(xpNeed(S.level)*0.4);
+S.xp += gain;
+let ups = 0;
+while(S.xp >= xpNeed(S.level)){ S.xp -= xpNeed(S.level); S.level++; ups++; }
+if(ups > 0) syncAll();
+save(); renderTrain();
+$('train-msg').innerHTML = `🏃 操練完成！經驗 +${gain}${ups?`，<b style="color:#f5c542">全軍升級 Lv.${S.level}！</b>`:''}`;
+sfx.skill();
+}
+function trainStat(k){
+const cost = 30*S.level;
+if(S.gold < cost) return;
+const u = ownedHeroes()[trainSel];
+if(!u) return;
+S.gold -= cost;
+u.train = u.train||{hp:0,mp:0};
+if(k==='hp') u.train.hp += 10; else u.train.mp += 6;
+syncUnit(u);
+save(); renderTrain();
+$('train-msg').innerHTML = k==='hp' ? '❤️ 體魄提升！HP上限 +10' : '🔷 養氣有成！MP上限 +6';
+sfx.heal();
+}
+function trainSkill(skid){
+const u = ownedHeroes()[trainSel];
+if(!u) return;
+const sk = u.skills.find(s=>s.id===skid);
+if(!sk) return;
+const lv = skillLvOf(u, sk);
+if(lv >= 5 || S.gold < 60*lv) return;
+S.gold -= 60*lv;
+u.skillLv = u.skillLv||{};
+u.skillLv[skid] = lv+1;
+save(); renderTrain();
+$('train-msg').innerHTML = `⚔️ ${sk.name} 升至 <b>Lv.${lv+1}</b>！威力 +${lv*15}%`;
+sfx.skill();
+}
+
+/* ================= 操練對戰（正式戰鬥前最多10次） ================= */
+function sparSoldier(i){
+const lv = S.level;
+const icons = ['🗡️','🛡️','🏹','🔨','⚔️'];
+return {
+name:'操練士兵', icon:icons[i%5], arm:'步兵',
+hp: Math.round(40+15*lv), mp:10,
+atk: Math.round(8+2.8*lv), def: Math.round(3+0.9*lv), int:5, spd: Math.round(7+0.4*lv),
+xp: Math.round((20+8*lv)*0.6), gold: 5+2*lv, skills:[]
+};
+}
+function startSpar(){
+if((S.sparLeft||0) <= 0){ $('train-msg').innerHTML = '⚠️ 操練對戰次數已用完，打完下一場正式戰鬥會回復。'; return; }
+S.sparLeft--;
+S.units.forEach(u=>{ u.hp=u.maxhp; u.mp=u.maxmp; u.st={}; u.alive=true; u.defending=false; u.sitOut=false; u.wounded=false;});
+B = { foes: [0,1,2,3,4].map(i=>{ const f = mkUnit(sparSoldier(i),'foe',false); f.lv = S.level;
+f.spd = Math.max(1, Math.round(S.units.reduce((s,u)=>s+u.spd,0)/S.units.length*(0.85+Math.random()*0.3)));
+return f; }),
+boss:false, drop:null, over:false, round:0, pending:null, active:null,
+tgtFoe:0, tgtAlly:0, isSpar:true, stratUses:{} };
+save();
+$('postbattle').innerHTML='';
+show('scr-battle');
+$('blog').innerHTML='';
+blog(`<span class="sys">—— 操練對戰（剩餘 ${S.sparLeft} 次）——</span>`);
+blog(`<span class="sys">與操練士兵切磋，勝利可獲經驗值！</span>`);
+$('turn-banner').textContent='⚔️ 操練開始……';
+renderBattlefield();
+battleLoop();
+}
+function endSparBattle(win){
+B.over = true;
+B.pending=null; B.active=null;
+$('turn-banner').textContent='';
+S.units.forEach(u=>{ u.sitOut=false; u.wounded=false; });
+if(win){
+const xp = B.foes.reduce((s,f)=>s+f.xp,0);
+const gold = B.foes.reduce((s,f)=>s+f.gold,0);
+blog(`<span class="sys">🎉 操練勝利！獲得 ${xp} 經驗、${gold} 銀兩。</span>`);
+S.xp += xp; S.gold += gold;
+let ups = 0;
+while(S.xp >= xpNeed(S.level)){ S.xp -= xpNeed(S.level); S.level++; ups++; }
+if(ups>0){
+syncAll();
+blog(`<span class="sys">⬆️ <b>全軍升級！Lv.${S.level}</b> 全屬性提升！</span>`);
+sfx.skill();
+} else {
+S.units.forEach(u=>{ if(u.alive){ u.hp=Math.min(u.maxhp,u.hp+Math.round(u.maxhp*0.25)); u.mp=Math.min(u.maxmp,u.mp+Math.round(u.maxmp*0.25));}});
+}
+} else {
+sfx.lose();
+blog(`<span class="foe">💀 操練失敗……回練兵場再接再厲。</span>`);
+S.units.forEach(u=>{ u.hp=u.maxhp; u.mp=u.maxmp; u.alive=true; u.st={}; u.wounded=false;});
+}
+save(); renderBattlefield();
+const btn = document.createElement('button');
+btn.className='btn'; btn.textContent='🏋️ 返回練兵場';
+btn.onclick = ()=>{ renderTrain(); show('scr-train'); };
+$('postbattle').innerHTML=''; $('postbattle').appendChild(btn);
+hideSub();
+}
+
+/* ================= 商店 ================= */
+function ownedEquip(id){
+if(S.bag.includes(id)) return true;
+return S.units.concat(S.bench||[]).some(u=>u.weapon===id||u.armor===id);
+}
+/* 困難模式商店貴五成 */
+function shopPrice(p){ return S.difficulty==='hard' ? Math.ceil(p*1.5) : p; }
+function openShop(){
+$('shop-gold').textContent = S.gold;
+let html = '';
+/* 醫療／道具：按等級解鎖 */
+Object.entries(ITEMS).forEach(([id,it])=>{
+if((it.unlock||1) > S.level) return;
+if(id==='liaoshang' && S.difficulty==='hard') return; /* 困難模式退場不能重入，唔賣療傷藥 */
+const n = S.inv[id]||0;
+html += `<div class="shop-row"><div class="info">${it.icon} ${it.name} <small>${it.desc}</small><br><small>擁有：${n}</small></div>
+<div><div class="muted center">${shopPrice(it.price)}💰</div>
+<button class="btn small" onclick="buyItem('${id}')" ${S.gold<shopPrice(it.price)?'disabled':''}>買</button></div></div>`;
+});
+/* 武器／防具：已解鎖(Lv)且未擁有嘅先顯示；買咗就補下一個未解鎖（預告） */
+function equipRows(list, isW){
+let h = '';
+list.filter(eq=>eq.price>0 && eq.unlock<=S.level && !ownedEquip(eq.id)).forEach(eq=>{
+h += `<div class="shop-row"><div class="info">${isW?'🗡️':'🥋'} ${eq.name} <small>+${isW?eq.atk:eq.def}${isW?'攻擊':'防禦'}</small></div>
+<div><div class="muted center">${shopPrice(eq.price)}💰</div>
+<button class="btn small" onclick="buyEquip('${eq.id}')" ${S.gold<shopPrice(eq.price)?'disabled':''}>買</button></div></div>`;
+});
+const nxt = list.find(eq=>eq.price>0 && !ownedEquip(eq.id) && eq.unlock>S.level);
+if(nxt) h += `<div class="shop-row"><div class="info muted">🔒 ${nxt.name} <small>+${isW?nxt.atk:nxt.def}${isW?'攻擊':'防禦'}</small><br><small>Lv.${nxt.unlock} 解鎖，新貨即將上架</small></div>
+<div><div class="muted center">${nxt.price}💰</div></div></div>`;
+return h;
+}
+html += equipRows(WEAPONS, true) + equipRows(ARMORS, false);
+$('shop-list').innerHTML = html;
+show('scr-shop');
+}
+function buyItem(id){
+const it = ITEMS[id];
+const price = shopPrice(it.price);
+if(S.gold < price) return;
+S.gold -= price; S.inv[id] = (S.inv[id]||0)+1;
+save(); openShop(); sfx.heal();
+}
+function buyEquip(id){
+const isW = id[0]==='w';
+const eq = isW? WEAPONS.find(w=>w.id===id): ARMORS.find(a=>a.id===id);
+const price = shopPrice(eq.price);
+if(S.gold < price) return;
+S.gold -= price; S.bag.push(id);
+// 自動換給該類裝備最弱的隊員（若新裝更強）
+autoEquipToWeakest(id);
+save(); openShop(); sfx.skill();
+}
+
+/* ================= 裝備（全員獨立） ================= */
+let equipSel = 0;
+function selEquipHero(i){ equipSel = i; openEquip(); }
+function equippedIds(){
+const s = new Set();
+S.units.concat(S.bench||[]).forEach(u=>{ if(u.weapon) s.add(u.weapon); if(u.armor) s.add(u.armor); });
+return s;
+}
+function openEquip(){
+if(equipSel >= S.units.length) equipSel = 0;
+const u = S.units[equipSel];
+const w = weaponOf(u.weapon||'w0'), a = armorOf(u.armor||'a0');
+let tabs = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">';
+S.units.forEach((uu,i)=>{
+tabs += `<button class="btn small ${i===equipSel?'':'secondary'}" onclick="selEquipHero(${i})">${uu.icon}${uu.name}</button>`;
+});
+tabs += '</div>';
+$('equip-cur').innerHTML = tabs + `<div class="stat-line">🎖️ <b>${u.icon} ${u.name}</b> 現正使用：<br>🗡️ <b>${w.name}</b>（攻擊+${w.atk}）${u.weapon!=='w0'?` <button class="btn small" onclick="unequipItem(true)">脫下</button>`:''}<br>🥋 <b>${a.name}</b>（防禦+${a.def}）${u.armor!=='a0'?` <button class="btn small" onclick="unequipItem(false)">脫下</button>`:''}</div>`;
+const eqSet = equippedIds();
+const bag = S.bag.filter(id=>!eqSet.has(id));
+$('equip-bag').innerHTML = bag.length
+? bag.map(id=>{
+const isW = id[0]==='w';
+const eq = isW?weaponOf(id):armorOf(id);
+return `<div class="shop-row"><div class="info">${isW?'🗡️':'🥋'} ${eq.name} <small>+${isW?eq.atk:eq.def}${isW?'攻擊':'防禦'}</small></div>
+<button class="btn small" onclick="equipItem('${id}')">畀${u.name}裝備</button></div>`;
+}).join('')
+: '<div class="muted center">背囊空空如也</div>';
+show('scr-equip');
+}
+function equipItem(id){
+const u = S.units[equipSel];
+if(!u) return;
+if(id[0]==='w') u.weapon=id; else u.armor=id;
+save(); openEquip();
+}
+function unequipItem(isW){
+const u = S.units[equipSel];
+if(!u) return;
+if(isW) u.weapon='w0'; else u.armor='a0';
+save(); openEquip(); sfx.hit();
+}
+
+/* ================= 戰鬥（5v5） ================= */
+function mkUnit(tpl, side, isMain){
+const u = clone(tpl);
+u.side = side; u.isMain =!!isMain; u.alive = true;
+u.maxhp = u.hp; u.maxmp = u.mp; u.st = {}; u.defending = false;
+if(!u.arm) u.arm = '步兵';
+addBasicSkills(u);
+return u;
+}
+function unitAtk(u){ return u.atk + weaponOf(u.weapon||'w0').atk;}
+function unitDef(u){ return u.def + armorOf(u.armor||'a0').def;}
+/* 全員裝備：自動換給該類裝備最弱的隊員（若新裝更強），回傳有冇換上 */
+function autoEquipToWeakest(id){
+const isW = id[0]==='w';
+const eq = isW? weaponOf(id) : armorOf(id);
+let weakest=null, weakestVal = isW? eq.atk : eq.def;
+S.units.forEach(u=>{
+const v = isW? weaponOf(u.weapon||'w0').atk : armorOf(u.armor||'a0').def;
+if(v < weakestVal){ weakestVal = v; weakest = u; }
+});
+if(weakest){ if(isW) weakest.weapon=id; else weakest.armor=id; }
+return weakest;
+}
+
+function applyPunishment(){
+let msg='';
+if(Math.random()<0.5){
+const cands = S.units.filter(u=>!u.isMain);
+const u = cands[rnd(0,cands.length-1)];
+S.punish = {type:'bench', heroId:u.id, battles:1};
+msg = `${u.icon}${u.name}被罰下一場不能出場！`;
+} else {
+S.punish = {type:'enemyAtk', pct:0.25, battles:1};
+msg = '敵軍士氣大振，下一戰敵方攻擊+25%！';
+}
+save();
+return msg;
+}
+function startBattle(){
+const bt = CHAPTERS[S.chapter].battles[S.battle];
+const troops = CHAPTERS[S.chapter].troops;
+const FM = factionMinions(S.chapter, bt.faction);
+const sitOutId = (S.punish && S.punish.type==='bench') ? S.punish.heroId : null;
+S.units.forEach(u=>{ u.hp=u.maxhp; u.mp=u.maxmp; u.st={}; u.alive=true; u.defending=false; u.sitOut=(u.id===sitOutId); u.wounded=false;});
+B = { foes: bt.party.map(k=>mkUnit((k==='a'||k==='b')?FM[k]:troops[k],'foe',false)),
+boss:!!bt.boss, drop: bt.drop||null, over:false,
+round:0, pending:null, active:null, tgtFoe:0, tgtAlly:0, stratUses:{}};
+scaleFoesToPlayerLevel(); /* 敵方等級 = 我方等級+5 */
+if(S.punish && S.punish.type==='enemyAtk'){
+B.foes.forEach(f=>{ f.atk = Math.round(f.atk*(1+S.punish.pct)); });
+}
+S.turns++;
+$('postbattle').innerHTML='';
+show('scr-battle');
+$('blog').innerHTML='';
+blog(`<span class="sys">—— ${CHAPTERS[S.chapter].title}・第${S.battle+1}戰 ——</span>`);
+if(sitOutId){ const uo=S.units.find(u=>u.id===sitOutId); blog(`<span class="foe">⚠️ 懲罰生效：${uo.icon}${uo.name}本場禁賽！</span>`); }
+if(S.punish && S.punish.type==='enemyAtk'){ blog(`<span class="foe">⚠️ 懲罰生效：敵方攻擊+${Math.round(S.punish.pct*100)}%！</span>`); }
+blog(`<span class="sys">我方五將 vs 敵方五將，開戰！</span>`);
+blog(`<span class="foe">⚠️ 敵方等級 Lv.${S.difficulty==='hard'?S.level*3:S.level+5}（${S.difficulty==='hard'?'三倍於我方':'高於我方5級'}）！</span>`);
+$('turn-banner').textContent='⚔️ 兩軍對壘……';
+renderBattlefield();
+battleLoop();
+}
+
+function blog(html){
+const el = $('blog');
+el.innerHTML += `<div>${html}</div>`;
+el.scrollTop = el.scrollHeight;
+}
+function statusChips(st){
+let h='';
+if(st.burn) h+=`<span class="chip">🔥燃燒${st.burn.t}回</span>`;
+if(st.stun) h+=`<span class="chip">💫眩暈</span>`;
+if(st.pause) h+=`<span class="chip">👥疑兵</span>`;
+if(st.confuse) h+=`<span class="chip">😵混亂</span>`;
+if(st.infight) h+=`<span class="chip">⚔️內訌</span>`;
+if(st.betray) h+=`<span class="chip">🎭反間</span>`;
+if(st.atkDown) h+=`<span class="chip">🔻攻-${Math.round(st.atkDown.p*100)}%</span>`;
+if(st.atkUp) h+=`<span class="chip">🔺攻+${Math.round(st.atkUp.p*100)}%</span>`;
+if(st.defDown) h+=`<span class="chip">🔻防-${Math.round(st.defDown.p*100)}%</span>`;
+if(st.defUp) h+=`<span class="chip">🔺防+${Math.round(st.defUp.p*100)}%</span>`;
+return h;
+}
+function atkMul(st){ let m=1; if(st.atkDown) m*=(1-st.atkDown.p); if(st.atkUp) m*=(1+st.atkUp.p); return m;}
+function defMul(st){ let m=1; if(st.defDown) m*=(1-st.defDown.p); if(st.defUp) m*=(1+st.defUp.p); return m;}
+
+/* 受傷／負傷結算（含九轉還魂丹）：我方HP歸零→負傷撤退，可用療傷藥救回 */
+function hurtUnit(u, dmg){
+if(u.defending) dmg = Math.round(dmg/2);
+dmg = Math.max(1, dmg);
+u.hp -= dmg;
+let revived=false;
+if(u.hp<=0){
+if(u.side==='ally' && (S.inv.hunyuan||0)>0){
+S.inv.hunyuan--; u.hp=Math.round(u.maxhp/2); revived=true;
+blog(`<span class="sys">💠 九轉還魂丹發動！${u.name} 起死回生，回復 ${u.hp} HP！</span>`);
+sfx.heal();
+} else if(u.side==='ally'){
+u.hp=0; u.alive=false; u.wounded=true;
+blog(`<span class="foe">🩹 ${u.icon} ${u.name} 負傷撤退！使用🩹療傷藥可令其重返戰場。</span>`);
+sfx.lose();
+} else { u.hp=0; u.alive=false; blog(`<span class="foe">💀 ${u.icon} ${u.name} 陣亡！</span>`);}
+}
+return { dealt:dmg, revived, killed:!u.alive};
+}
+function dealDamage(att, def, mult, o){
+o = o||{};
+const power = o.magic? att.int*atkMul(att.st): unitAtk(att)*atkMul(att.st);
+const dv = unitDef(def)*defMul(def.st);
+const tm = o.noCounter? 1 : typeMult(att, def);
+let dmg = Math.round((power*mult - dv*(1-(o.ignoreDef||0)))*0.8*tm + rnd(-2,2));
+const crit = Math.random() < (o.critCh!=null?o.critCh:0.12);
+if(crit) dmg = Math.round(dmg*1.5);
+const r = hurtUnit(def, dmg);
+return { dealt:r.dealt, crit, killed:r.killed, revived:r.revived, counter:tm>1};
+}
+
+/* 回合開始狀態結算：回傳 true 表示跳過本回合 */
+function tickStart(u){
+if(!u.alive) return true;
+if(u.st.burn){
+const d = u.st.burn.dmg;
+blog(`<span class="foe">🔥 ${u.name} 受到燃燒傷害 ${d}！</span>`);
+hurtUnit(u, d);
+u.st.burn.t--;
+if(u.st.burn.t<=0) delete u.st.burn;
+if(!u.alive) return true;
+}
+['atkDown','atkUp','defDown','defUp'].forEach(k=>{ if(u.st[k]){ u.st[k].t--; if(u.st[k].t<=0) delete u.st[k];}});
+if(u.st.stun){ delete u.st.stun; blog(`<span class="sys">💫 ${u.name} 眩暈中，無法行動！</span>`); return true;}
+/* 計謀狀態：疑兵暫停行動；混亂／內訌／反間每回合隨機解除 */
+if(u.st.pause){
+if(Math.random()<0.45){ delete u.st.pause; blog(`<span class="sys">👁️ ${u.icon}${u.name} 識破疑兵，恢復行動！</span>`); }
+else { blog(`<span class="sys">👥 ${u.icon}${u.name} 被疑兵所惑，按兵不動！</span>`); return true; }
+}
+['confuse','infight','betray'].forEach(k=>{
+if(u.st[k] && Math.random()<0.4){ delete u.st[k]; blog(`<span class="sys">✨ ${u.icon}${u.name} 恢復清醒！</span>`); }
+});
+return false;
+}
+
+async function battleLoop(){
+while(!B.over){
+B.round++;
+const order = S.units.concat(B.foes).filter(u=>u.alive && !u.sitOut)
+.sort((a,b)=> (b.spd-a.spd) || (Math.random()-0.5));
+for(const u of order){
+if(B.over) break;
+if(!u.alive) continue;
+u.defending = false;
+const skip = tickStart(u);
+renderBattlefield();
+if(skip){ checkEnd(); if(!B.over) await sleep(TEST?0:350); continue;}
+B.active = u; renderBattlefield();
+if(u.side==='ally') await allyTurn(u);
+else await foeTurn(u);
+B.active = null; B.targeting = null;
+renderBattlefield();
+checkEnd();
+if(!B.over) await sleep(TEST?0:300);
+}
+}
+}
+
+/* ---- 我方回合：等玩家輸入 ---- */
+function allyTurn(u){
+return new Promise(res=>{ B.pending={unit:u, resolve:res}; showTurnBanner();});
+}
+/* 單手模式：當前目標管理 */
+function ensureTargets(){
+if(!B) return;
+const af = B.foes.map((f,i)=>f.alive?i:-1).filter(i=>i>=0);
+if(!af.includes(B.tgtFoe)) B.tgtFoe = af.length? af[0] : -1;
+const aa = S.units.map((a,i)=>(a.alive && !a.sitOut)?i:-1).filter(i=>i>=0);
+if(!aa.includes(B.tgtAlly)) B.tgtAlly = aa.length? aa[0] : -1;
+}
+function cycleTarget(){
+if(!B || B.over) return;
+ensureTargets();
+const af = B.foes.map((f,i)=>f.alive?i:-1).filter(i=>i>=0);
+if(af.length<2) return;
+B.tgtFoe = af[(af.indexOf(B.tgtFoe)+1)%af.length];
+renderBattlefield(); sfx.hit();
+}
+function showTurnBanner(){
+const el = $('turn-banner');
+if(B.pending){
+const u = B.pending.unit;
+const tf = B.foes[B.tgtFoe];
+const ta = S.units[B.tgtAlly];
+el.innerHTML = `⚔️ 輪到 <b>${u.icon} ${u.name}</b> 行動` + (tf?`・🎯${tf.icon}${tf.name}`:'') + (ta&&ta!==u?`・💚${ta.icon}${ta.name}`:'');
+} else {
+el.textContent = '';
+}
+}
+function finishAllyTurn(){
+const p = B.pending; B.pending = null;
+showTurnBanner();
+if(p) p.resolve();
+}
+
+/* 單手模式：所有行動直接打當前目標（🎯），唔使再撳多下 */
+function doAllyAction(kind, arg){
+if(!B || B.over ||!B.pending) return;
+const u = B.pending.unit;
+hideSub();
+ensureTargets();
+if(kind==='attack'){
+const t = B.foes[B.tgtFoe];
+if(!t){ blog('<span class="sys">沒有可攻擊的目標。</span>'); return; }
+const r = dealDamage(u, t, 1, {critCh:0.12});
+blog(`<span class="me">⚔️ ${u.icon} ${u.name} 攻擊 ${t.icon}${t.name}，造成 <span class="dmg">${r.dealt}</span> 傷害${r.counter?' <b>（相剋！）</b>':''}${r.crit?'（暴擊！）':''}${r.killed?'（擊破！）':''}</span>`);
+r.crit?sfx.crit():sfx.hit(); shakeEl('battlefield');
+} else if(kind==='defend'){
+u.defending = true;
+blog(`<span class="me">🛡️ ${u.icon} ${u.name} 擺出守勢，受到的傷害減半。</span>`);
+} else if(kind==='skill'){
+const sk = u.skills.find(s=>s.id===arg);
+if(!sk) return;
+if(u.mp < sk.mp){ blog(`<span class="sys">${u.name} 計謀值不足！需要 ${sk.mp}，現有 ${Math.floor(u.mp)}。</span>`); return;}
+if(sk.target==='self'){ execSkill(u, sk, u); }
+else if(sk.target==='allFoes' || sk.target==='allAllies'){
+u.mp -= sk.mp; sfx.skill();
+blog(`<span class="me">${u.icon} ${u.name} 使出【${sk.name}】！</span>`);
+const list = sk.target==='allFoes' ? B.foes.filter(f=>f.alive) : S.units.filter(a=>a.alive);
+list.forEach(t=>execSkill(u, sk, t, true));
+}
+else if(sk.target==='ally'){
+const t = S.units[B.tgtAlly];
+if(!t || !t.alive){ blog('<span class="sys">沒有有效的我方目標。</span>'); return; }
+execSkill(u, sk, t);
+}
+else {
+const t = B.foes[B.tgtFoe];
+if(!t){ blog('<span class="sys">沒有可攻擊的目標。</span>'); return; }
+execSkill(u, sk, t);
+}
+} else if(kind==='strat'){
+const st = STRATS.find(s=>s.id===arg);
+if(!st || !stratUnlocked(st)) return;
+const tlist = st.target==='allFoes' ? B.foes.filter(f=>f.alive) : [B.foes[B.tgtFoe]].filter(t=>t&&t.alive);
+if(!tlist.length){ blog('<span class="sys">沒有有效的目標。</span>'); return; }
+if(u.mp < st.mp){ blog(`<span class="sys">${u.name} 計謀值不足！需要 ${st.mp}，現有 ${Math.floor(u.mp)}。</span>`); return; }
+if(stratUsesLeft(st.id)<=0){ blog(`<span class="sys">【${st.name}】本場次數已用完。</span>`); return; }
+u.mp -= st.mp;
+B.stratUses = B.stratUses||{};
+B.stratUses[st.id] = (B.stratUses[st.id]||0)+1;
+sfx.skill();
+skillCutin(u, st);
+blog(`<span class="me">${u.icon} ${u.name} 使出計謀【${st.icon}${st.name}】！</span>`);
+const lvScale = 1 + 0.03*(S.level-1);
+if(st.type==='dmg' || st.type==='dmgStun'){
+tlist.forEach(t=>{
+const r = dealDamage(u, t, st.power*lvScale, {magic:true, critCh:0.1});
+blog(`<span class="me">${st.icon} ${t.icon}${t.name}受到 <span class="dmg">${r.dealt}</span> 傷害${r.counter?' <b>（相剋！）</b>':''}${r.crit?'（暴擊！）':''}${r.killed?'（擊破！）':''}</span>`);
+if(st.type==='dmgStun' && t.alive && Math.random()<(st.stunCh||0)){ t.st.stun={t:1}; blog(`<span class="sys">💫 ${t.icon}${t.name} 被狂風吹暈！</span>`); }
+});
+} else if(st.type==='status'){
+tlist.forEach(t=>{ t.st[st.status]={t:99}; });
+blog(`<span class="me">${st.icon} ${tlist.map(t=>t.icon+t.name).join('、')}中計！</span>`);
+}
+} else if(kind==='item'){
+const n = S.inv[arg]||0;
+if(arg==='hunyuan' || n<=0){ blog('<span class="sys">無法使用這個道具（九轉還魂丹是被動觸發）。</span>'); return;}
+if(arg==='liaoshang'){
+const w = S.units.find(a=>a.wounded && !a.alive);
+if(!w){ blog('<span class="sys">沒有負傷的武將。</span>'); return; }
+useItemOn(u, arg, w);
+} else {
+let t = S.units[B.tgtAlly];
+if(!t || !t.alive || t.sitOut){
+t = S.units.filter(a=>a.alive && !a.sitOut).sort((a,b)=>a.hp/a.maxhp-b.hp/b.maxhp)[0];
+}
+if(!t){ blog('<span class="sys">沒有有效的我方目標。</span>'); return; }
+useItemOn(u, arg, t);
+}
+} else return;
+renderBattlefield();
+finishAllyTurn();
+}
+
+/* 單手模式：撳公仔＝設為當前目標（🎯），之後攻擊／技能／道具直接打佢 */
+function cancelTarget(){ /* 舊 targeting 模式已移除，保留接口兼容 */ }
+function onUnitClick(side, idx){
+if(!B || B.over) return;
+const list = side==='foe'? B.foes : S.units;
+const t = list[idx];
+if(!t) return;
+if(side==='foe'){ if(t.alive){ B.tgtFoe = idx; showTurnBanner(); renderBattlefield(); } }
+else { if(t.alive && !t.sitOut){ B.tgtAlly = idx; showTurnBanner(); renderBattlefield(); } }
+}
+
+/* 技能等級：每級+15%威力，最高Lv5；我方技能再隨等級成長（每級+2%） */
+function skillLvOf(u, sk){ return (u.skillLv && u.skillLv[sk.id]) || 1; }
+function skillPower(u, sk){
+const t = 1 + 0.15*(skillLvOf(u, sk)-1);
+const l = (u.side==='ally') ? 1 + 0.02*(S.level-1) : 1;
+return t*l;
+}
+/* 特技 cut-in 畫面效果 */
+let cutinTimer = null;
+function skillCutin(user, sk){
+const el = $('skill-cutin');
+if(!el) return;
+el.innerHTML = `<div class="cutin-name${user.side==='ally'?'':' foe'}">${user.icon} ${user.name}・${sk.name}</div>`;
+el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+clearTimeout(cutinTimer);
+cutinTimer = setTimeout(()=>el.classList.remove('show'), 820);
+}
+/* 技能執行（支援 ef2 第二效果） */
+function execSkill(user, sk, target, noMp){
+if(!noMp) user.mp -= sk.mp;
+sfx.skill();
+skillCutin(user, sk);
+const ef = sk.ef;
+const pm = skillPower(user, sk);
+const cls = user.side==='ally'? 'me': 'foe';
+const applyEf = (e, tgt)=>{
+if(e.t==='dmg'){
+const r = dealDamage(user, tgt, e.mult*pm, {ignoreDef:e.ignoreDef, critCh:(e.crit!=null?e.crit:0.12), magic:e.magic});
+blog(`<span class="${cls}">${user.icon} ${user.name}【${sk.name}】對${tgt.icon}${tgt.name}造成 <span class="dmg">${r.dealt}</span> 傷害${r.counter?' <b>（相剋！）</b>':''}${r.crit?'（暴擊！）':''}${r.killed?'（擊破！）':''}</span>`);
+if(r.crit) sfx.crit();
+if(e.burn && tgt.alive){ tgt.st.burn={t:e.burn.t, dmg:Math.round(e.burn.base + user.int*e.burn.scale)}; blog(`<span class="${cls}">🔥 ${tgt.name} 燃燒${e.burn.t}回合！</span>`);}
+if(e.stun && tgt.alive){ tgt.st.stun={t:1}; blog(`<span class="${cls}">💫 ${tgt.name} 眩暈1回合！</span>`);}
+if(e.stunCh && tgt.alive && Math.random()<e.stunCh){ tgt.st.stun={t:1}; blog(`<span class="${cls}">💫 ${tgt.name} 被伏擊，停止行動1回合！</span>`);}
+shakeEl('battlefield');
+} else if(e.t==='hits'){
+let total=0, kills=0, counterHit=false;
+if(e.spread){
+/* 亂攻：隨機抽最多 hits 位唔同嘅敵方（敵方用時抽我方），各打一下；唔夠人就打剩低嗰啲 */
+const pool = (user.side==='ally'? B.foes : S.units).filter(x=>x.alive);
+for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const tmp=pool[i]; pool[i]=pool[j]; pool[j]=tmp; }
+const picked = pool.slice(0, e.hits);
+const parts = [];
+picked.forEach(tgt=>{
+if(!tgt.alive) return;
+const r=dealDamage(user,tgt,e.mult*pm,{critCh:(e.crit!=null?e.crit:0.1)});
+total+=r.dealt; if(r.killed) kills++; if(r.counter) counterHit=true;
+parts.push(`${tgt.icon}${tgt.name}${r.dealt}`);
+});
+blog(`<span class="${cls}">${user.icon} ${user.name}【${sk.name}】亂攻 ${parts.join('、')}，共造成 <span class="dmg">${total}</span> 傷害${counterHit?' <b>（相剋！）</b>':''}${kills?'（擊破！）':''}</span>`);
+} else {
+for(let i=0;i<e.hits && tgt.alive;i++){ const r=dealDamage(user,tgt,e.mult*pm,{critCh:(e.crit!=null?e.crit:0.1)}); total+=r.dealt; if(r.killed) kills++; if(r.counter) counterHit=true;}
+blog(`<span class="${cls}">${user.icon} ${user.name}【${sk.name}】${e.hits}連擊，對${tgt.icon}${tgt.name}共造成 <span class="dmg">${total}</span> 傷害${counterHit?' <b>（相剋！）</b>':''}${kills?'（擊破！）':''}</span>`);
+}
+sfx.hit(); shakeEl('battlefield');
+} else if(e.t==='heal'){
+const h=Math.round(tgt.maxhp*e.pct*pm); tgt.hp=Math.min(tgt.maxhp,tgt.hp+h);
+blog(`<span class="${cls}">💚 ${user.icon} ${user.name}【${sk.name}】，${tgt.name} 回復 ${h} HP！</span>`); sfx.heal();
+} else if(e.t==='mp'){
+user.mp=Math.min(user.maxmp,user.mp+e.amt);
+blog(`<span class="${cls}">🔷 ${user.name}【${sk.name}】回復 ${e.amt} 計謀值。</span>`);
+} else if(e.t==='buff'){
+tgt.st[e.k]={p:e.p,t:e.turns};
+blog(`<span class="${cls}">🔺 ${user.icon} ${user.name}【${sk.name}】，${tgt.name}${e.k==='atkUp'?'攻擊':'防禦'}上升${Math.round(e.p*100)}%（${e.turns}回合）</span>`);
+} else if(e.t==='debuff'){
+tgt.st[e.k]={p:e.p,t:e.turns};
+blog(`<span class="${cls}">🔻 ${user.icon} ${user.name}【${sk.name}】，${tgt.name}${e.k==='atkDown'?'攻擊':'防禦'}下降${Math.round(e.p*100)}%（${e.turns}回合）</span>`);
+}
+};
+applyEf(ef, target);
+if(sk.ef2) applyEf(sk.ef2, user);
+}
+
+/* 道具：目標為我方單位 */
+function useItemOn(user, itemId, target){
+S.inv[itemId]--;
+const it = ITEMS[itemId]||{};
+if(it.heal){
+const h=Math.min(target.maxhp-target.hp,it.heal); target.hp+=h;
+blog(`<span class="me">${it.icon} ${user.name} 對 ${target.name} 使用${it.name}，回復 ${h} HP。</span>`);
+} else if(it.mp){
+target.mp=Math.min(target.maxmp,target.mp+it.mp);
+blog(`<span class="me">${it.icon} ${user.name} 讓 ${target.name} 飲下${it.name}，回復 ${it.mp} MP。</span>`);
+} else if(itemId==='liaoshang'){
+target.alive=true; target.wounded=false; target.st={}; target.defending=false;
+target.hp=Math.round(target.maxhp*0.5);
+blog(`<span class="me">🩹 ${user.name} 對 ${target.name} 使用療傷藥，${target.name} 傷癒重返戰場（回復 ${target.hp} HP）！</span>`);
+}
+sfx.heal();
+}
+
+/* ---- 敵方回合：AI ---- */
+async function foeTurn(u){
+/* 混亂：或發呆，或敵我不分亂打 */
+if(u.st.confuse){
+if(Math.random()<0.5){
+blog(`<span class="foe">😵 ${u.icon} ${u.name} 混亂中，不知所措！</span>`);
+} else {
+const all = S.units.concat(B.foes).filter(a=>a.alive);
+const t = all[rnd(0,all.length-1)];
+const r = dealDamage(u, t, 1.0, {critCh:0.1});
+blog(`<span class="${t.side==='ally'?'foe':'me'}">😵 ${u.icon} ${u.name} 胡亂攻擊 ${t.icon}${t.name}，造成 <span class="dmg">${r.dealt}</span> 傷害${r.counter?' <b>（相剋！）</b>':''}${r.killed?'（擊破！）':''}</span>`);
+r.crit?sfx.crit():sfx.hit();
+}
+shakeEl('battlefield');
+await sleep(TEST?0:450);
+return;
+}
+const hostile = u.st.infight || u.st.betray;
+let targets = hostile ? B.foes.filter(a=>a.alive && a!==u) : S.units.filter(a=>a.alive);
+if(!targets.length){
+if(hostile){
+/* 內訌到無自己人可打，捶胸自傷 */
+const r = dealDamage(u, u, 1.0, {critCh:0});
+blog(`<span class="me">⚔️ ${u.icon} ${u.name} 內訌攻心，捶胸自傷 <span class="dmg">${r.dealt}</span>！</span>`);
+sfx.hit(); shakeEl('battlefield');
+await sleep(TEST?0:450);
+}
+return;
+}
+let t;
+if(Math.random()<0.3) t = targets.slice().sort((a,b)=>a.hp/a.maxhp - b.hp/b.maxhp)[0];
+else t = targets[rnd(0,targets.length-1)];
+let sk = null;
+if(!hostile && u.skills && u.skills.length && u.mp>0 && Math.random()<(S.difficulty==='hard'?0.9:0.45)){
+const av = u.skills.filter(s=>(s.mp||0)<=u.mp);
+if(av.length) sk = av[rnd(0,av.length-1)];
+}
+if(sk){
+execSkill(u, sk, sk.target==='self'? u: t);
+} else {
+const mult = u.st.betray ? 1.5 : 1.0;
+const verb = u.st.betray ? '倒戈一擊' : (u.st.infight ? '內訌互攻' : '攻擊');
+const r = dealDamage(u, t, mult, {critCh:0.1});
+blog(`<span class="${t.side==='ally'?'foe':'me'}">${u.st.betray?'🎭':(u.st.infight?'⚔️':'')}${u.icon} ${u.name}${verb} ${t.icon}${t.name}，造成 <span class="dmg">${r.dealt}</span> 傷害${r.counter?' <b>（相剋！）</b>':''}${r.crit?'（暴擊！）':''}${t.defending?'（已減半）':''}${r.killed?'（擊破！）':''}</span>`);
+r.crit?sfx.crit():sfx.hit();
+}
+shakeEl('battlefield');
+await sleep(TEST?0:450);
+}
+
+/* ---- 勝負判定 ---- */
+function checkEnd(){
+if(B.over) return;
+if(B.foes.every(f=>!f.alive)) endBattle(true);
+else if(S.units.every(a=>!a.alive)) endBattle(false);
+}
+
+function endBattle(win){
+if(B.isSpar){ endSparBattle(win); return; }
+B.over = true;
+if(B.pending){ const p=B.pending; B.pending=null; p.resolve();}
+B.pending=null; B.targeting=null; B.active=null;
+$('turn-banner').textContent='';
+/* 懲罰結算：一場過後解除 */
+S.units.forEach(u=>{ u.sitOut=false; });
+if(S.punish){ S.punish.battles--; if(S.punish.battles<=0) S.punish=null; save(); }
+if(win){
+S.wins++;
+sfx.win();
+const xp = B.foes.reduce((s,f)=>s+f.xp,0);
+const gold = B.foes.reduce((s,f)=>s+f.gold,0);
+blog(`<span class="sys">🎉 勝利！獲得 ${xp} 經驗、${gold} 銀兩。</span>`);
+S.xp += xp; S.gold += gold;
+if(B.drop){
+if(B.drop.weapon){
+const wq = WEAPONS.find(w=>w.id===B.drop.weapon);
+if(ownedEquip(wq.id)){ S.gold += Math.round(wq.price/2); blog(`<span class="sys">🎁 ${wq.name} 已經有啦，折成 ${Math.round(wq.price/2)} 銀兩！</span>`); }
+else {
+S.bag.push(wq.id);
+const wu = autoEquipToWeakest(wq.id);
+blog(`<span class="sys">🎁 獲得武器${wq.name}！${wu? wu.icon+wu.name+'已自動換上':'已放入背囊'}。</span>`);
+}
+}
+if(B.drop.armor){
+const ar = ARMORS.find(a=>a.id===B.drop.armor);
+if(ownedEquip(ar.id)){ S.gold += Math.round(ar.price/2); blog(`<span class="sys">🎁 ${ar.name} 已經有啦，折成 ${Math.round(ar.price/2)} 銀兩！</span>`); }
+else {
+S.bag.push(ar.id);
+const au = autoEquipToWeakest(ar.id);
+blog(`<span class="sys">🎁 獲得防具${ar.name}！${au? au.icon+au.name+'已自動換上':'已放入背囊'}。</span>`);
+}
+}
+if(B.drop.gold){ S.gold += B.drop.gold; blog(`<span class="sys">🎁 額外繳獲 ${B.drop.gold} 銀兩！</span>`);}
+} else if(Math.random()<0.3){
+S.inv.yaopin = (S.inv.yaopin||0)+1;
+blog(`<span class="sys">🎁 搜刮到 金創藥×1。</span>`);
+}
+let ups = 0;
+while(S.xp >= xpNeed(S.level)){ S.xp -= xpNeed(S.level); S.level++; ups++;}
+if(ups>0){
+S.units.concat(S.bench).forEach(u=>{ syncUnit(u); if(u.alive){ u.hp=u.maxhp; u.mp=u.maxmp; } });
+blog(`<span class="sys">⬆️ <b>全軍升級！Lv.${S.level}</b> 全屬性提升，體力全回復！</span>`);
+sfx.skill();
+} else {
+S.units.forEach(u=>{ if(u.alive){ u.hp=Math.min(u.maxhp,u.hp+Math.round(u.maxhp*0.25)); u.mp=Math.min(u.maxmp,u.mp+Math.round(u.maxmp*0.25));}});
+}
+S.battle++;
+S.sparLeft = (S.difficulty==='hard'?3:10); /* 正式戰鬥打完，操練對戰次數回復 */
+save(); renderBattlefield();
+const showPostBtn = ()=>{
+show('scr-battle');
+const done = S.battle >= CHAPTERS[S.chapter].battles.length;
+const btn = document.createElement('button');
+btn.className='btn';
+if(S.chapter >= CHAPTERS.length-1 && done){
+btn.textContent = '🏆 迎接結局';
+btn.onclick = ()=>{ showStory([CHAPTERS[S.chapter].outro], ()=>{ S.chapter++; save(); renderEnd(); show('scr-end');});};
+} else if(done){
+btn.textContent = '📜 本章完結 → 下一章';
+btn.onclick = ()=>{ showStory([CHAPTERS[S.chapter].outro], ()=> startChapter(S.chapter+1));};
+} else {
+btn.textContent = '⚔️ 下一戰';
+btn.onclick = ()=> goBattle();
+}
+$('postbattle').innerHTML=''; $('postbattle').appendChild(btn);
+hideSub();
+};
+/* 戰後加入武將（如長沙之戰後黃忠、魏延來投） */
+const bt = CHAPTERS[S.chapter].battles[S.battle-1];
+const newJoins = (bt.joinAfter||[]).filter(j=>!isUnlocked(j.id));
+if(newJoins.length){
+const lines = [];
+newJoins.forEach(j=>{
+const h = HEROES[j.id];
+lines.push(...j.lines, `🎉 ${h.icon}${h.name}・${h.title}加入隊伍！`);
+S.bench.push(mkHeroUnit(j.id));
+});
+syncAll(); save();
+lines.push('💡 新武將暫列板凳，到軍營「👥 陣容」可換上陣！');
+showStory(lines, showPostBtn);
+} else showPostBtn();
+} else {
+sfx.lose();
+blog(`<span class="foe">💀 全軍覆沒……退回軍營重整旗鼓。</span>`);
+S.units.forEach(u=>{ u.hp=u.maxhp; u.mp=u.maxmp; u.alive=true; u.st={}; u.defending=false;});
+save(); renderBattlefield();
+const btn = document.createElement('button');
+btn.className='btn'; btn.textContent='🏕️ 返回軍營再戰';
+btn.onclick = ()=>{ renderHub(); show('scr-hub');};
+$('postbattle').innerHTML=''; $('postbattle').appendChild(btn);
+hideSub();
+}
+}
+
+/* ---- 戰鬥 UI ---- */
+function renderBattlefield(){
+renderSide('ally');
+renderSide('foe');
+}
+function renderSide(side){
+const list = side==='ally'? S.units: B.foes;
+const el = $(side==='ally'? 'ally-units': 'foe-units');
+el.innerHTML = list.map((u,i)=>{
+const cls = ['unit'];
+if(!u.alive) cls.push('dead');
+if(u.sitOut) cls.push('dead');
+if(B.active===u) cls.push('active');
+const isTgt = (side==='foe' && i===B.tgtFoe) || (side==='ally' && i===B.tgtAlly);
+if(isTgt && u.alive) cls.push('istgt');
+const hpPct = Math.max(0,100*u.hp/u.maxhp), mpPct = Math.max(0,100*u.mp/u.maxmp);
+return `<div class="${cls.join(' ')}" onclick="onUnitClick('${side}',${i})">`+
+`<span class="uicon">${u.alive?u.icon:(u.wounded?'🩹':'💀')}</span><div class="uinfo">`+
+`<div class="uname">${isTgt&&u.alive?'🎯':''}${u.isBoss?'👹 ':''}${u.name} <span class="ulv">Lv${u.lv!=null?u.lv:S.level}</span>${u.isMain?' ⭐':''}<br><small class="muted">${ARMS[u.arm]?ARMS[u.arm].icon:''}${u.arm||''}</small></div>`+
+`<div class="bar"><div class="fill hp" style="width:${hpPct}%"></div><span class="barnum">${Math.max(0,Math.ceil(u.hp))}/${u.maxhp}</span></div>`+
+(side==='ally'?`<div class="bar"><div class="fill mp" style="width:${mpPct}%"></div><span class="barnum">${Math.max(0,Math.floor(u.mp))}/${u.maxmp}</span></div>`:'')+
+`<div class="ustatus">${u.wounded?'<span class="chip">🩹負傷</span>':''}${u.sitOut?'<span class="chip">⛔禁賽</span>':''}${statusChips(u.st)}${u.defending?'<span class="chip">🛡️防守</span>':''}</div>`+
+`</div></div>`;
+}).join('');
+}
+function revealSub(){
+const s = $('subrow');
+s.classList.add('show');
+/* 細熒幕：自動碌去選單，唔會跌出畫面底 */
+if(s.scrollIntoView) s.scrollIntoView({block:'nearest'});
+}
+function hideSub(){ const s=$('subrow'); s.classList.remove('show'); s.innerHTML='';}
+function showSkills(){
+if(!B ||!B.pending) return;
+const u = B.pending.unit;
+const s=$('subrow');
+s.innerHTML = u.skills.map(sk=>
+`<button class="btn secondary small" onclick="doAllyAction('skill','${sk.id}')" ${u.mp<sk.mp?'disabled':''}>`+
+`✨ ${sk.name} <small>Lv.${skillLvOf(u,sk)}${skillLvOf(u,sk)>1?`（+${(skillLvOf(u,sk)-1)*15}%）`:''}</small>（${sk.mp} MP）<br><small>${sk.desc}</small></button>`).join('') +
+`<button class="btn small" onclick="hideSub()">取消</button>`;
+revealSub();
+}
+function showStrats(){
+if(!B ||!B.pending) return;
+const u = B.pending.unit;
+const s=$('subrow');
+s.innerHTML = '<div class="muted center" style="margin-bottom:4px">📜 計謀（傷害按智力＋等級計算，每場限用次數）</div>' +
+STRATS.map(st=>{
+const un = stratUnlocked(st), left = stratUsesLeft(st.id);
+const dis = !un || left<=0 || u.mp<st.mp;
+return `<button class="btn secondary small" onclick="doAllyAction('strat','${st.id}')" ${dis?'disabled':''}>`+
+`${st.icon} ${st.name}${un?'':' 🔒Lv.'+st.unlock}<br><small>${st.desc}（剩${left}次，${st.mp} MP）</small></button>`;
+}).join('') +
+`<button class="btn small" onclick="hideSub()">取消</button>`;
+revealSub();
+}
+function showItems(){
+if(!B ||!B.pending) return;
+const u = B.pending.unit;
+const s=$('subrow');
+const usable = Object.entries(ITEMS).filter(([id])=>id!=='hunyuan' && (S.inv[id]||0)>0 && !(id==='liaoshang' && S.difficulty==='hard'));
+s.innerHTML = `<div class="muted" style="margin-bottom:6px">${u.icon}${u.name} 使用道具 → 再點選我方目標</div>` +
+(usable.length? usable.map(([id,it])=>
+`<button class="btn secondary small" onclick="doAllyAction('item','${id}')">`+
+`${it.icon} ${it.name}×${S.inv[id]}<br><small>${it.desc}</small></button>`).join('')
+: '<div class="muted center">沒有可用道具</div>') +
+`<button class="btn small" onclick="hideSub()">取消</button>`;
+revealSub();
+}
+function shakeEl(id){ const el=$(id); if(!el) return; el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');}
+/* ================= 結局 ================= */
+function renderEnd(){
+const m = S.units[0];
+$('end-text').innerHTML =
+'許昌城破，曹丕授首，孫權遣使稱臣。劉備還於舊都洛陽，大赦天下，改元建興，國號大漢。<br><br>後世史書如此記載：<br><br>「<b style="color:#f5c542">昭烈皇帝</b>，弘毅寬厚，知人待士。歷盡艱險，終成大業——史稱<b style="color:#f5c542">後漢中興</b>。」<br><br>—— 傳奇落幕，青史留名 ——';
+$('end-stats').innerHTML =
+`👤 主將：${m.icon} ${m.name}・${m.title}<br>📊 等級：<b>Lv.${S.level}</b>（全軍）<br>⚔️ 戰勝場次：<b>${S.wins}</b><br>🗡️ 武器：${weaponOf(m.weapon||'w0').name}　🥋 防具：${armorOf(m.armor||'a0').name}<br>👥 陣容：${S.units.map(u=>u.icon+u.name).join('、')}`;
+}
+
+/* ================= 測試鉤子 ================= */
+window.SG = {
+get S(){ return S;}, get B(){ return B;},
+newGame, startBattle, doAllyAction, onUnitClick, cancelTarget, endBattle,
+unitAtk, unitDef, xpNeed, dealDamage, hurtUnit, useItemOn, HEROES, CHAPTERS, ITEMS,
+goBattle, buyItem, buyEquip, equipItem, unequipItem, selEquipHero, autoEquipToWeakest, rest, save, loadGame,
+startChapter, show, pickMain, mkHeroUnit, syncAll, isUnlocked,
+openTeam, selectBattle, selectBench, showQuiz, answerQuiz, quizNext, QUIZ,
+showMinigame, mgShoot, mgNext, applyPunishment, factionMinions, MINIGAMES,
+openTrain, renderTrain, trainXp, trainStat, trainSkill, skillLvOf, skillPower,
+renderBattlefield, renderSide, ensureTargets, cycleTarget, skillCutin,
+startSpar, endSparBattle, sparSoldier, checkEnd,
+showStrats, stratUnlocked, stratUsesLeft, STRATS, foeTurn, tickStart,
+ARMS, COUNTER, NAME_ARM, FACTION_ARMS, BASIC_SKILLS, typeMult, addBasicSkills,
+WEAPONS, ARMORS, ownedEquip, openShop, openEquip,
+PLOT_QUIZ, showPlotQuiz, answerPlotQuiz, plotQuizNext, shopPrice,
+selHero, pickDifficulty
+};
+
+/* ================= 初始化 ================= */
+renderSelect();
+show('scr-title');
+</script>
+</body>
+</html>

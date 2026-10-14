@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>自然語言魔法 | AI小遊戲</title>
+<style>
+:root{--ink:#1f2937;--muted:#6b7280;--bg:#fdf4ff;--card:#fff;--purple:#7c3aed;--green:#16a34a;--red:#dc2626;--amber:#d97706}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--ink);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+header{background:linear-gradient(135deg,#6d28d9,#a855f7);color:#fff;padding:16px;text-align:center}
+header h1{margin:0;font-size:20px}
+nav{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 12px;display:flex;gap:2px;overflow-x:auto}
+nav a{padding:12px 14px;text-decoration:none;color:var(--muted);font-weight:600;font-size:13px;white-space:nowrap}
+.wrap{max-width:560px;margin:0 auto;padding:16px}
+.hud{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.pill{background:var(--card);border-radius:20px;padding:8px 14px;font-size:14px;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.phase{background:var(--card);border-radius:14px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:12px}
+.phase h3{margin:0 0 4px;font-size:17px}
+.phase .tip{font-size:13px;color:var(--muted);margin:0 0 14px}
+.sent{display:flex;flex-wrap:wrap;align-items:stretch;justify-content:center;margin:8px 0}
+.ch{background:#f3f4f6;border-radius:8px;min-width:46px;min-height:52px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;margin:2px 0}
+.gap{width:22px;min-height:52px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:6px;margin:2px 0}
+.gap .mark{width:4px;height:34px;border-radius:2px;background:#e5e7eb}
+.gap.cut .mark{background:var(--red);width:7px}
+.gap:active{background:#fee2e2}
+.words{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:10px 0}
+.wchip{min-height:52px;padding:8px 16px;border-radius:12px;background:#f3f4f6;font-size:17px;font-weight:700;border:3px solid transparent;cursor:pointer}
+.wchip.sel{border-color:var(--purple);background:#ede9fe}
+.wchip .pt{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-top:2px;min-height:15px}
+.wchip.ok{background:#dcfce7;border-color:var(--green)}
+.wchip.bad{background:#fee2e2;border-color:var(--red)}
+.posrow{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:6px}
+.posbtn{min-height:52px;padding:10px 18px;font-size:16px;font-weight:700;border:none;border-radius:12px;cursor:pointer;background:#e0e7ff;color:#3730a3}
+.posbtn:active{transform:scale(.95)}
+.actbtn{width:100%;min-height:56px;font-size:17px;font-weight:800;border:none;border-radius:12px;background:var(--purple);color:#fff;cursor:pointer;margin-top:14px}
+.feedback{font-size:15px;font-weight:700;text-align:center;margin-top:10px;min-height:24px}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.overlay.hidden{display:none}
+.sheet{background:#fff;border-radius:16px;padding:24px;max-width:440px;width:100%;max-height:88vh;overflow-y:auto}
+.sheet h2{margin:0 0 12px;font-size:20px}
+.sheet p,.sheet li{font-size:15px;line-height:1.7}
+.sheet ul{padding-left:20px}
+.concept{background:#f5f3ff;border-left:4px solid var(--purple);border-radius:8px;padding:12px 14px;margin:14px 0;font-size:14px}
+.startbtn{width:100%;min-height:56px;font-size:18px;font-weight:800;border:none;border-radius:12px;background:var(--purple);color:#fff;cursor:pointer;margin-top:8px}
+</style>
+</head>
+<body>
+<header><h1>✨ 自然語言魔法</h1></header>
+<nav>
+<a href="index.html">🏠 首頁</a><a href="maths.html">📐 數學</a><a href="videos.html">🎬 影片</a><a href="games.html">🎮 遊戲</a><a href="stem.html">🔬 STEM</a><a href="ai.html">🤖 AI</a><a href="news.html">📰 資訊</a>
+</nav>
+<div class="wrap">
+  <div class="hud">
+    <div class="pill">第 <span id="qnum">1</span>/5 題</div>
+    <div class="pill">⭐ <span id="score">0</span></div>
+  </div>
+  <div class="phase" id="phase1">
+    <h3>第一步：斷詞</h3>
+    <p class="tip">撳字與字之間嘅空位，加入斷詞記號（紅線）。斷完撳「斷詞完成」。</p>
+    <div class="sent" id="sent"></div>
+    <button class="actbtn" id="cutDone">斷詞完成</button>
+    <div class="feedback" id="fb1"></div>
+  </div>
+  <div class="phase" id="phase2" style="display:none">
+    <h3>第二步：詞性標註</h3>
+    <p class="tip">先撳一個詞，再撳下面嘅詞性掣。標完所有詞撳「提交標註」。</p>
+    <div class="words" id="words"></div>
+    <div class="posrow" id="posrow"></div>
+    <button class="actbtn" id="tagDone">提交標註</button>
+    <div class="feedback" id="fb2"></div>
+  </div>
+</div>
+<div class="overlay" id="intro">
+  <div class="sheet">
+    <h2>✨ 自然語言魔法</h2>
+    <p><b>玩法：</b>AI 睇中文第一步係<b>斷詞</b>——將連埋一齊嘅字切成一個個詞；第二步係<b>詞性標註</b>——判斷每個詞係名詞、動詞定形容詞。</p>
+    <ul>
+      <li>撳字之間嘅空位加斷詞線</li>
+      <li>撳詞語再撳詞性，完成標註</li>
+      <li>共 5 句，愈後愈難</li>
+    </ul>
+    <div class="concept">💡 <b>AI概念：NLP（自然語言處理）</b><br>英文有空格分詞，中文冇！「小明快樂地跑步」——AI 要自己判斷邊度斷開。斷錯詞，成句意思就錯晒。之後仲要標詞性，AI 先至理解到句子結構。呢啲就係 NLP 嘅基本功。</div>
+    <button class="startbtn" id="startBtn">開始施法</button>
+  </div>
+</div>
+<div class="overlay hidden" id="endOverlay">
+  <div class="sheet" style="text-align:center">
+    <h2>🎉 完成！</h2>
+    <p id="endText" style="font-size:16px"></p>
+    <button class="startbtn" id="againBtn">再玩一次</button>
+  </div>
+</div>
+<script>
+(function(){
+'use strict';
+var QS=[
+  {s:'我愛香港',w:[['我','O'],['愛','V'],['香港','N']]},
+  {s:'小明快樂地跑步',w:[['小明','N'],['快樂','A'],['地','O'],['跑步','V']]},
+  {s:'貓在桌上睡覺',w:[['貓','N'],['在','O'],['桌上','N'],['睡覺','V']]},
+  {s:'她聰明又漂亮',w:[['她','O'],['聰明','A'],['又','O'],['漂亮','A']]},
+  {s:'我們明天去旅行',w:[['我們','O'],['明天','N'],['去','V'],['旅行','N']]}
+];
+var POSL={N:'名詞',V:'動詞',A:'形容詞',O:'其他'};
+var qi=0,score=0,selWord=-1;
+function $(id){return document.getElementById(id);}
+function renderSent(){
+  var q=QS[qi],box=$('sent');box.innerHTML='';
+  var chars=q.s.split('');
+  chars.forEach(function(ch,i){
+    var c=document.createElement('div');c.className='ch';c.textContent=ch;box.appendChild(c);
+    if(i<chars.length-1){
+      var g=document.createElement('div');g.className='gap';g.dataset.i=i;
+      var m=document.createElement('div');m.className='mark';g.appendChild(m);
+      g.addEventListener('click',function(){g.classList.toggle('cut');});
+      box.appendChild(g);
+    }
+  });
+  $('qnum').textContent=qi+1;$('fb1').textContent='';
+  $('phase1').style.display='block';$('phase2').style.display='none';
+}
+function trueCuts(q){
+  var cuts=[],pos=0;
+  q.w.forEach(function(w,i){pos+=w[0].length;if(i<q.w.length-1)cuts.push(pos-1);});
+  return cuts;
+}
+$('cutDone').addEventListener('click',function(){
+  var q=QS[qi],userCuts=[];
+  $('sent').querySelectorAll('.gap').forEach(function(g){if(g.classList.contains('cut'))userCuts.push(+g.dataset.i);});
+  var tc=trueCuts(q);
+  var correct=userCuts.filter(function(c){return tc.indexOf(c)>=0;}).length;
+  var p=userCuts.length?correct/userCuts.length:0, r=tc.length?correct/tc.length:0;
+  var f1=(p+r)?2*p*r/(p+r):0, pts=Math.round(f1*50);
+  score+=pts;$('score').textContent=score;
+  $('fb1').textContent='斷詞得分：'+pts+'/50（正確斷位 '+correct+'/'+tc.length+'）';
+  $('fb1').style.color=f1>=0.8?'#16a34a':'#d97706';
+  setTimeout(setupTagging,1200);
+});
+function setupTagging(){
+  var q=QS[qi];
+  $('phase1').style.display='none';$('phase2').style.display='block';$('fb2').textContent='';selWord=-1;
+  var wb=$('words');wb.innerHTML='';
+  q.w.forEach(function(w,i){
+    var d=document.createElement('div');d.className='wchip';d.dataset.i=i;
+    d.innerHTML=w[0]+'<span class="pt"></span>';
+    d.addEventListener('click',function(){
+      selWord=i;
+      wb.querySelectorAll('.wchip').forEach(function(x){x.classList.remove('sel');});
+      d.classList.add('sel');
+    });
+    wb.appendChild(d);
+  });
+  var pr=$('posrow');pr.innerHTML='';
+  Object.keys(POSL).forEach(function(k){
+    var b=document.createElement('button');b.className='posbtn';b.textContent=POSL[k];
+    b.addEventListener('click',function(){
+      if(selWord<0)return;
+      var chip=wb.children[selWord];
+      chip.dataset.pos=k;chip.querySelector('.pt').textContent=POSL[k];
+      chip.classList.remove('sel');selWord=-1;
+    });
+    pr.appendChild(b);
+  });
+}
+$('tagDone').addEventListener('click',function(){
+  var q=QS[qi],chips=$('words').children,ok=0;
+  for(var i=0;i<chips.length;i++){
+    var c=chips[i],mine=c.dataset.pos,trueP=q.w[i][1];
+    c.classList.remove('ok','bad');
+    if(mine===trueP){c.classList.add('ok');ok++;}
+    else{c.classList.add('bad');c.querySelector('.pt').textContent+='（正解:'+POSL[trueP]+'）';}
+  }
+  var pts=Math.round(ok/chips.length*50);
+  score+=pts;$('score').textContent=score;
+  $('fb2').textContent='標註：'+ok+'/'+chips.length+' 正確，得 '+pts+'/50 分';
+  $('fb2').style.color=ok===chips.length?'#16a34a':'#d97706';
+  setTimeout(function(){
+    qi++;
+    if(qi<QS.length){renderSent();}
+    else{
+      $('endText').innerHTML='總分 <b>'+score+'</b> / 500！<br>'+(score>=400?'🏆 NLP大師！AI都要跟你學斷詞！':score>=250?'👍 唔錯！繼續練習就更準。':'💪 唔緊要，斷詞連AI都覺得難，多玩幾次啦！');
+      $('endOverlay').classList.remove('hidden');
+    }
+  },2200);
+});
+$('againBtn').addEventListener('click',function(){
+  qi=0;score=0;$('score').textContent='0';
+  $('endOverlay').classList.add('hidden');renderSent();
+});
+$('startBtn').addEventListener('click',function(){$('intro').classList.add('hidden');renderSent();});
+})();
+</script>
+</body>
+</html>

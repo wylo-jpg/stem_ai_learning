@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>AI 定人類？| AI 小遊戲</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei","PingFang HK",sans-serif;background:linear-gradient(135deg,#240b36,#3c096c,#5a189a);color:#eee;min-height:100vh}
+.wrap{max-width:680px;margin:0 auto;padding:16px 14px 60px}
+.topnav{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.topnav a{color:#d0b3ff;text-decoration:none;font-size:14px;background:rgba(255,255,255,.08);padding:8px 14px;border-radius:20px}
+header{text-align:center;padding:10px 0 4px}
+header h1{margin:6px 0;font-size:26px}
+header p{margin:0;color:#cdb4f6;font-size:14px}
+.intro{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:14px 16px;margin:14px 0;font-size:14px;line-height:1.7}
+.intro b{color:#ffd166}
+.hud{display:flex;gap:10px;margin:12px 0}
+.hud .box{flex:1;background:rgba(0,0,0,.35);border-radius:12px;padding:10px;text-align:center}
+.hud .v{font-size:22px;font-weight:800;color:#ffd166}
+.hud .l{font-size:12px;color:#cdb4f6}
+.progress{background:rgba(0,0,0,.35);border-radius:10px;height:12px;overflow:hidden;margin-bottom:4px}
+.progress>div{height:100%;background:linear-gradient(90deg,#9d4edd,#ffd166);width:0%;transition:width .4s}
+.card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:18px;margin:12px 0}
+.qtag{display:inline-block;background:rgba(157,78,221,.35);border-radius:20px;padding:4px 14px;font-size:13px;margin-bottom:10px}
+.passage{background:rgba(0,0,0,.35);border-radius:12px;padding:16px;font-size:16px;line-height:1.8;margin-bottom:16px;border:1px solid rgba(255,255,255,.1)}
+.vs{display:flex;gap:12px}
+.vs button{flex:1;border:none;border-radius:14px;padding:18px 8px;font-size:17px;font-weight:800;cursor:pointer;color:#fff}
+.vs button:active{transform:scale(.96)}
+#btnAI{background:linear-gradient(135deg,#9d4edd,#5a189a)}
+#btnHu{background:linear-gradient(135deg,#ff9f1c,#e0701a)}
+.vs button:disabled{opacity:.5}
+.explain{display:none;margin-top:14px;border-radius:12px;padding:14px;font-size:14px;line-height:1.8}
+.explain.right{background:rgba(6,214,160,.12);border:1px solid rgba(6,214,160,.5)}
+.explain.wrong{background:rgba(233,69,96,.12);border:1px solid rgba(233,69,96,.5)}
+.explain .ans{font-size:17px;font-weight:800;margin-bottom:6px}
+.explain .why{color:#ddd}
+.explain .why b{color:#ffd166}
+#nextQ{display:none;width:100%;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:800;background:linear-gradient(135deg,#ffd166,#f4a261);color:#3c096c;margin-top:12px;cursor:pointer}
+.final{text-align:center;display:none}
+.final .big{font-size:60px;margin:10px 0}
+.final h2{color:#ffd166}
+.streak{color:#ff9f1c;font-weight:800}
+footer{text-align:center;color:#9d8bc7;font-size:12px;margin-top:24px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="topnav"><a href="ai.html">← AI 專區</a><a href="games.html">← 遊戲區</a><a href="index.html">🏠 首頁</a></div>
+<header><h1>🕵️ AI 定人類？</h1><p>憑蛛絲馬跡，估下段文字邊個寫</p></header>
+
+<div class="intro">
+<b>🎮 玩法：</b>每次會show一段文字，你估係 <b>🤖 AI 寫</b> 定 <b>🧑 人類寫</b>。估完會話你知答案同埋破綻喺邊。連續估中仲有連擊獎勵！<br>
+<b>💡 AI 概念：</b>生成式 AI 嘅文字有固定「口癖」：結構太工整、語氣太官方、冇真實經歷、成日用「首先、其次、總而言之」。識破呢啲特徵，就識得批判性咁睇 AI 內容。
+</div>
+
+<div class="hud">
+<div class="box"><div class="v" id="qN">1/10</div><div class="l">題目</div></div>
+<div class="box"><div class="v" id="sc">0</div><div class="l">得分</div></div>
+<div class="box"><div class="v streak" id="st">🔥0</div><div class="l">連擊</div></div>
+</div>
+<div class="progress"><div id="pbar"></div></div>
+
+<div class="card" id="qCard">
+<div class="qtag" id="qTag">第 1 題</div>
+<div class="passage" id="passage"></div>
+<div class="vs">
+<button id="btnAI" onclick="answer('ai')">🤖 AI 寫嘅</button>
+<button id="btnHu" onclick="answer('hu')">🧑 人類寫嘅</button>
+</div>
+<div class="explain" id="exp"></div>
+<button id="nextQ" onclick="nextQ()">下一題 →</button>
+</div>
+
+<div class="card final" id="finalCard">
+<div class="big" id="fE">🏆</div>
+<h2 id="fT"></h2>
+<p id="fD" style="color:#cdb4f6;line-height:1.8"></p>
+<button id="nextQ2" style="display:block;width:100%;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:800;background:linear-gradient(135deg,#9d4edd,#5a189a);color:#fff;cursor:pointer" onclick="location.reload()">↺ 再挑戰</button>
+</div>
+
+<footer>教學資源共享 · AI 定人類？</footer>
+</div>
+
+<script>
+var QS=[
+{t:"我覺得讀書真係好攰，琴日溫到兩點，今日個腦好似漿糊咁。阿媽仲叫我飲湯，我話唔飲，佢黑面成晚。唉，DSE 仲有幾個月，頂硬上啦。",a:"hu",w:"✅ 係<b>人類</b>寫嘅！破綻：有真實生活細節（阿媽叫飲湯、黑面）、口語（漿糊、頂硬上）、情緒起伏。AI 好少寫得咁「貼地」。"},
+{t:"總而言之，讀書是一件非常重要的事情。首先，我們應該制定合理的學習計劃；其次，我們需要保持良好的作息；最後，堅持不懈是成功的關鍵。",a:"ai",w:"✅ 係<b>AI</b>寫嘅！破綻：「總而言之、首先、其次、最後」四件套，結構工整到似說明書，內容空泛冇個人經歷——典型 AI 口癖。"},
+{t:"琴晚打機打到唔記得做功課，今朝抄阿強份，點知佢都係抄阿明嘅，兩個一齊錯晒，老師話要見家長，GG 啦今次。",a:"hu",w:"✅ 係<b>人類</b>寫嘅！破綻：具體糗事（抄功課抄錯）、人名（阿強、阿明）、網絡用語（GG），有血有肉。AI 唔會「自爆」啲咁真實嘅衰嘢。"},
+{t:"作為一個 AI 語言模型，我很樂意為你解答這個問題。光合作用是植物將光能轉化為化學能的過程，對生態系統至關重要。",a:"ai",w:"✅ 係<b>AI</b>寫嘅！破綻：開口就「作為一個 AI 語言模型」，教科書式定義，零個人色彩。見到呢句開場白，九成九係 AI。"},
+{t:"呢間茶餐廳啲乾炒牛河真係唔掂，河粉痴埋一舊，牛肉又鞋，仲要等咗成半粒鐘。下次都係去對面嗰間算啦，起碼快手啲。",a:"hu",w:"✅ 係<b>人類</b>寫嘅！破綻：具體食評（痴埋一舊、牛肉鞋）、個人判斷（下次去對面間）、口語。AI 寫食評通常會好「持平」，唔會咁串。"},
+{t:"值得注意的是，人工智能的發展帶來了前所未有的機遇與挑戰。我們必須以負責任的態度，推動技術向善，讓科技更好地服務人類社會。",a:"ai",w:"✅ 係<b>AI</b>寫嘅！破綻：「值得注意的是」「前所未有」「技術向善」——官方腔、口號式，乜都講等於乜都冇講。AI 最鍾意寫呢類「安全答案」。"},
+{t:"我阿婆成日話，細個嗰陣時屋企窮到冇鞋着，行路返學要行成粒鐘。而家我哋搭車遲兩分鐘就呱呱嘈，真係身在福中不知福。",a:"hu",w:"✅ 係<b>人類</b>寫嘅！破綻：家族回憶（阿婆講古）、對比今昔、口語感嘆。呢啲跨代情感，AI 模仿唔到個味道。"},
+{t:"以下為你整理三個重點：一、保持充足睡眠有助記憶鞏固；二、分散學習比集中溫習更有效；三、適度運動能提升專注力。希望對你有幫助！",a:"ai",w:"✅ 係<b>AI</b>寫嘅！破綻：一、二、三列點式，「希望對你有幫助」收尾——客服式結構。內容啱但冇靈魂，係 AI 懶人包嘅典型寫法。"},
+{t:"屌，部電腦又 hang 機，份功課未 save！重開之後得返個標題，我今晚唔使瞓啦…聽日一定畀阿 Sir 屌到飛起。",a:"hu",w:"✅ 係<b>人類</b>寫嘅！破綻：粗口發洩、真實災難（冇 save 功課）、省略號嘅無奈。AI 被設定唔會講粗口，呢啲真情流露假唔嚟。"},
+{t:"在當今快速發展的數位時代，掌握資訊科技能力已成為不可或缺的素養。透過持續學習，我們能夠更好地適應未來社會的變化與需求。",a:"ai",w:"✅ 係<b>AI</b>寫嘅！破綻：「在當今…的時代」「不可或缺」「持續學習」——作文範文腔，句子冇主角、冇故事。AI 寫議論文最鍾意呢種「放諸四海皆準」嘅空話。"}];
+var i=0,score=0,streak=0,best=0;
+function render(){
+  document.getElementById('qN').textContent=(i+1)+'/10';
+  document.getElementById('qTag').textContent='第 '+(i+1)+' 題';
+  document.getElementById('passage').textContent='「'+QS[i].t+'」';
+  document.getElementById('exp').style.display='none';
+  document.getElementById('nextQ').style.display='none';
+  document.getElementById('btnAI').disabled=false;
+  document.getElementById('btnHu').disabled=false;
+  document.getElementById('pbar').style.width=(i/10*100)+'%';
+}
+function answer(g){
+  document.getElementById('btnAI').disabled=true;
+  document.getElementById('btnHu').disabled=true;
+  var ok=g===QS[i].a,exp=document.getElementById('exp');
+  if(ok){score+=10+Math.min(streak,5)*2;streak++;best=Math.max(best,streak);}
+  else{streak=0;}
+  exp.className='explain '+(ok?'right':'wrong');
+  exp.innerHTML='<div class="ans">'+(ok?'🎉 估中！+'+(10+Math.min(streak-1,5)*2)+' 分':'😅 估錯咗…')+'</div><div class="why">'+QS[i].w+'</div>';
+  exp.style.display='block';
+  document.getElementById('sc').textContent=score;
+  document.getElementById('st').textContent='🔥'+streak;
+  document.getElementById('nextQ').textContent=(i===9)?'睇成績 🏆':'下一題 →';
+  document.getElementById('nextQ').style.display='block';
+  window.scrollTo(0,document.body.scrollHeight);
+}
+function nextQ(){
+  if(i<9){i++;render();window.scrollTo(0,0);}
+  else{
+    document.getElementById('qCard').style.display='none';
+    var f=document.getElementById('finalCard');f.style.display='block';
+    var e=document.getElementById('fE'),t=document.getElementById('fT'),d=document.getElementById('fD');
+    if(score>=110){e.textContent='🏆';t.textContent='AI 偵探！';d.innerHTML='得分 <b>'+score+'</b>！你對 AI 文字嘅口癖瞭如指掌，以後唔會咁易被 AI 內容呃到。記住：批判性思考先係最強嘅防騙技能！';}
+    else if(score>=70){e.textContent='🔍';t.textContent='偵探學徒';d.innerHTML='得分 <b>'+score+'</b>。已經捉到唔少破綻！記住 AI 三大口癖：<b>結構太工整、語氣太官方、冇真實經歷</b>。';}
+    else{e.textContent='🌱';t.textContent='新手偵探';d.innerHTML='得分 <b>'+score+'</b>。唔緊要，再玩多次，今次留意：見到「首先、其次、總而言之」同「作為 AI」呢啲，九成係 AI！';}
+    window.scrollTo(0,0);
+  }
+}
+render();
+</script>
+</body>
+</html>

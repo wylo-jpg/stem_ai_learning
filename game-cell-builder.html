@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<title>細胞結構拼圖</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei","PingFang HK",sans-serif;background:#f0fdf4;color:#1f2937;line-height:1.6;touch-action:manipulation}
+header{background:linear-gradient(135deg,#15803d,#4ade80);color:#fff;padding:16px;text-align:center}
+header h1{margin:0;font-size:22px}
+header p{margin:4px 0 0;font-size:13px;opacity:.9}
+.topbar{display:flex;justify-content:space-between;align-items:center;max-width:560px;margin:0 auto;padding:10px 14px}
+.topbar a{color:#15803d;font-weight:700;text-decoration:none;font-size:15px}
+.badge{background:#fff;border:2px solid #15803d;color:#15803d;border-radius:20px;padding:4px 14px;font-weight:800;font-size:15px}
+main{max-width:560px;margin:0 auto;padding:12px 14px 40px}
+.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:14px}
+.cell-wrap{display:flex;justify-content:center}
+svg{width:100%;max-width:420px;height:auto}
+.zone{cursor:pointer;fill:rgba(21,128,61,0);stroke:rgba(21,128,61,.35);stroke-width:2;stroke-dasharray:6 4}
+.zone.done{fill:rgba(34,197,94,.25);stroke:#15803d;stroke-dasharray:none}
+.zone.wrong{animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.zlabel{font-size:11px;font-weight:800;fill:#15803d;text-anchor:middle;pointer-events:none}
+.tray{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:4px}
+.chip{min-height:48px;padding:10px 18px;border-radius:24px;border:2px solid #15803d;background:#f0fdf4;color:#14532d;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer}
+.chip.sel{background:#15803d;color:#fff}
+.chip.used{opacity:.35;pointer-events:none}
+.msg{text-align:center;font-weight:800;font-size:17px;min-height:28px;margin-top:8px}
+.msg.ok{color:#15803d}.msg.bad{color:#dc2626}
+.fact{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 14px;font-size:14px;margin-top:10px}
+.concept{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:12px;font-size:14px}
+.concept b{color:#15803d}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.overlay .box{background:#fff;border-radius:16px;padding:24px;max-width:440px;width:100%;max-height:85vh;overflow:auto}
+.overlay h2{margin:0 0 10px;font-size:20px;color:#15803d}
+.overlay p,.overlay li{font-size:15px}
+.overlay .box button{background:#15803d;color:#fff;min-height:52px;font-size:18px;font-weight:800;width:100%;margin-top:14px;border:none;border-radius:12px;font-family:inherit;cursor:pointer}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<header><h1>🌱 細胞結構拼圖</h1><p>將細胞器放到正確位置！</p></header>
+<div class="topbar"><a href="games.html">← 返回遊戲</a><div class="badge">已完成 <span id="done">0</span>/7</div></div>
+<main>
+<div class="card">
+<div class="cell-wrap">
+<svg viewBox="0 0 420 340" id="cellSvg">
+<rect x="14" y="14" width="392" height="312" rx="60" fill="#fefce8" stroke="#a16207" stroke-width="8"/>
+<rect x="30" y="30" width="360" height="280" rx="48" fill="#ecfdf5" stroke="#f59e0b" stroke-width="4"/>
+<ellipse cx="300" cy="230" rx="70" ry="52" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
+<circle cx="130" cy="120" r="52" fill="#fbcfe8" stroke="#be185d" stroke-width="3"/>
+<circle cx="130" cy="120" r="18" fill="#be185d"/>
+<ellipse cx="250" cy="100" rx="46" ry="28" fill="#fed7aa" stroke="#c2410c" stroke-width="3" transform="rotate(-20 250 100)"/>
+<ellipse cx="120" cy="250" rx="52" ry="30" fill="#bbf7d0" stroke="#15803d" stroke-width="3" transform="rotate(15 120 250)"/>
+<ellipse cx="120" cy="250" rx="34" ry="18" fill="#86efac" transform="rotate(15 120 250)"/>
+<rect class="zone" data-k="wall" x="14" y="14" width="392" height="312" rx="60"/>
+<rect class="zone" data-k="membrane" x="30" y="286" width="140" height="24" rx="12"/>
+<circle class="zone" data-k="nucleus" cx="130" cy="120" r="52"/>
+<ellipse class="zone" data-k="mito" cx="250" cy="100" rx="46" ry="28"/>
+<ellipse class="zone" data-k="chloro" cx="120" cy="250" rx="52" ry="30"/>
+<ellipse class="zone" data-k="vacuole" cx="300" cy="230" rx="70" ry="52"/>
+<rect class="zone" data-k="cyto" x="180" y="188" width="64" height="38" rx="10"/>
+</svg>
+</div>
+<div class="msg" id="msg">先撳下面嘅名稱，再撳圖中虛線位置</div>
+</div>
+<div class="card">
+<div class="tray" id="tray"></div>
+<div class="fact hidden" id="fact"></div>
+</div>
+<div class="card concept">
+<b>💡 科學原理</b><br>
+植物細胞有<b>細胞壁</b>（支撐保護）同<b>葉綠體</b>（光合作用），呢兩樣動物細胞係冇嘅！<b>線粒體</b>負責呼吸作用釋放能量，<b>細胞核</b>控制成個細胞，<b>液泡</b>儲存水分同養分。
+</div>
+</main>
+<div class="overlay" id="intro">
+<div class="box">
+<h2>🌱 點玩？</h2>
+<ul>
+<li>下面有 7 個細胞器名稱，上面幅圖有 7 個虛線位置。</li>
+<li><b>先撳名稱</b>，再<b>撳圖中對應嘅虛線框</b>。</li>
+<li>放啱會變綠色鎖定，仲有功能解說；放錯會震一震。</li>
+<li>7 個全部放啱就過關！</li>
+</ul>
+<button onclick="document.getElementById('intro').classList.add('hidden')">開始！</button>
+</div>
+</div>
+<script>
+const items=[
+ {k:'wall',name:'細胞壁',fact:'喺最出面，堅硬有彈性，支撐同保護細胞。植物、真菌、細菌先有，動物細胞冇！'},
+ {k:'membrane',name:'細胞膜',fact:'控制物質出入細胞，好似個保安咁。所有細胞都有。'},
+ {k:'nucleus',name:'細胞核',fact:'細胞嘅「大腦」，入面有 DNA，控制細胞所有活動同遺傳。'},
+ {k:'mito',name:'線粒體',fact:'細胞嘅「發電廠」，做呼吸作用釋放能量，供細胞用。'},
+ {k:'chloro',name:'葉綠體',fact:'入面有葉綠素，做光合作用將光能變化學能。植物同藻類先有！'},
+ {k:'vacuole',name:'液泡',fact:'儲存水分、養分同廢物。植物細胞嘅液泡好大，幫手保持堅挺。'},
+ {k:'cyto',name:'細胞質',fact:'啫喱狀液體，細胞器浮喺入面，好多化學反應喺度進行。'}
+];
+let sel=null,doneCount=0;
+const tray=document.getElementById('tray');
+items.forEach(it=>{
+  const b=document.createElement('button');
+  b.className='chip';b.textContent=it.name;b.dataset.k=it.k;
+  b.onclick=()=>{
+    document.querySelectorAll('.chip').forEach(c=>c.classList.remove('sel'));
+    b.classList.add('sel');sel=it;
+    flash('已選「'+it.name+'」，撳圖中虛線位置','');
+  };
+  tray.appendChild(b);
+});
+document.querySelectorAll('.zone').forEach(z=>{
+  z.addEventListener('click',()=>{
+    if(z.classList.contains('done'))return;
+    if(!sel){flash('先揀一個細胞器名稱！','bad');return;}
+    if(z.dataset.k===sel.k){
+      z.classList.add('done');
+      document.querySelector('.chip[data-k="'+sel.k+'"]').classList.add('used');
+      doneCount++;
+      document.getElementById('done').textContent=doneCount;
+      flash('✅ 啱！「'+sel.name+'」放好咗','ok');
+      const f=document.getElementById('fact');
+      f.classList.remove('hidden');
+      f.innerHTML='<b>📖 '+sel.name+'：</b>'+sel.fact;
+      sel=null;
+      document.querySelectorAll('.chip').forEach(c=>c.classList.remove('sel'));
+      if(doneCount===items.length)flash('🏆 全部完成！你係細胞大師！','ok');
+    }else{
+      z.classList.add('wrong');setTimeout(()=>z.classList.remove('wrong'),400);
+      flash('❌ 唔係呢度，再諗下！','bad');
+    }
+  });
+});
+function flash(t,cls){const m=document.getElementById('msg');m.textContent=t;m.className='msg '+cls;}
+</script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>推薦系統大作戰 | AI 小遊戲</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei","PingFang HK",sans-serif;background:linear-gradient(135deg,#3a1c71,#d76d77,#ffaf7b);color:#eee;min-height:100vh}
+.wrap{max-width:680px;margin:0 auto;padding:16px 14px 60px}
+.topnav{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.topnav a{color:#fde68a;text-decoration:none;font-size:14px;background:rgba(255,255,255,.12);padding:8px 14px;border-radius:20px}
+header{text-align:center;padding:10px 0 4px}
+header h1{margin:6px 0;font-size:26px}
+header p{margin:0;color:#fde68a;font-size:14px}
+.intro{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:14px 16px;margin:14px 0;font-size:14px;line-height:1.7}
+.intro b{color:#fde68a}
+.hud{display:flex;gap:10px;margin:12px 0}
+.hud .box{flex:1;background:rgba(0,0,0,.35);border-radius:12px;padding:10px;text-align:center}
+.hud .v{font-size:22px;font-weight:800;color:#fde68a}
+.hud .l{font-size:12px;color:#fcd34d}
+.ucard{background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:14px;margin:10px 0}
+.ucard .uname{font-size:15px;font-weight:800;margin-bottom:8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:rgba(255,255,255,.14);border-radius:20px;padding:8px 14px;font-size:14px}
+.chip.me{background:rgba(253,224,71,.25);border:1px solid rgba(253,224,71,.6)}
+.simgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0}
+@media(max-width:480px){.simgrid{grid-template-columns:1fr}}
+.sim{background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px;font-size:13px}
+.sim .sn{font-weight:800;margin-bottom:6px;font-size:14px}
+.sim .mv{margin:3px 0}
+.candgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.cbtn{border:none;border-radius:14px;padding:20px 8px;font-size:17px;font-weight:800;cursor:pointer;color:#fff;min-height:76px;background:linear-gradient(135deg,#7c3aed,#a855f7)}
+.cbtn:active{transform:scale(.96)}
+.cbtn:disabled{opacity:.6}
+.cbtn.right{outline:4px solid #22c55e}
+.cbtn.wrongpick{outline:4px solid #ef4444}
+.fb{display:none;border-radius:12px;padding:14px;font-size:15px;line-height:1.7;margin:10px 0;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.2)}
+.fb b{color:#fde68a}
+#nextBtn{display:none;width:100%;border:none;border-radius:12px;padding:15px;font-size:16px;font-weight:800;cursor:pointer;min-height:56px;color:#fff;background:linear-gradient(135deg,#f59e0b,#ef4444);margin-top:6px}
+.final{text-align:center;display:none;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.2);border-radius:16px;padding:24px 18px;margin:12px 0}
+.final .big{font-size:56px}
+.final h2{color:#fde68a;margin:8px 0}
+.final p{color:#fef3c7;line-height:1.8;font-size:14px}
+footer{text-align:center;color:#f3d9a4;font-size:12px;margin-top:24px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="topnav"><a href="ai.html">← AI 專區</a><a href="games.html">← 遊戲區</a><a href="index.html">🏠 首頁</a></div>
+<header><h1>🎬 推薦系統大作戰</h1><p>估下 AI 會推咩戲俾阿明</p></header>
+<div class="intro">
+<b>🎮 玩法：</b>阿明鍾意睇某幾套戲。下面有 3 個「口味同佢好似」嘅用戶，同埋佢哋鍾意嘅戲。你要扮演推薦 AI，估下邊套戲最值得推俾阿明（佢未睇過嘅）。<br>
+<b>💡 AI 概念：</b>協同過濾（Collaborative Filtering）——「同你口味似嘅人鍾意嘅嘢，你好大機會都鍾意」。Netflix、YouTube、Spotify 背後都係咁諗嘢！
+</div>
+<div class="hud">
+<div class="box"><div class="v" id="rnd">第 1/5 輪</div><div class="l">回合</div></div>
+<div class="box"><div class="v" id="sc">0</div><div class="l">得分 /100</div></div>
+<div class="box"><div class="v" id="st">🔥0</div><div class="l">連擊</div></div>
+</div>
+<div class="ucard"><div class="uname">🧑 阿明鍾意睇：</div><div class="chips" id="meChips"></div></div>
+<div style="font-size:14px;color:#fde68a;margin:12px 0 4px"><b>👥 口味相似嘅用戶鍾意：</b></div>
+<div class="simgrid" id="simGrid"></div>
+<div style="font-size:15px;font-weight:800;margin:14px 0 4px">🎯 你會推薦邊套俾阿明？</div>
+<div class="candgrid" id="candGrid"></div>
+<div class="fb" id="fb"></div>
+<button id="nextBtn">下一輪 →</button>
+<div class="final" id="finalCard">
+<div class="big" id="fE">🏆</div>
+<h2 id="fT"></h2>
+<p id="fD"></p>
+<button class="cbtn" style="width:100%;background:linear-gradient(135deg,#f59e0b,#ef4444)" onclick="location.reload()">↺ 再挑戰</button>
+</div>
+<footer>教學資源共享 · 邊玩邊學 AI</footer>
+</div>
+<script>
+var ROUNDS=[
+ {me:['🦸 復仇者聯盟','🦖 侏羅紀公園','🥋 功夫'],
+  sims:[['🦸 復仇者聯盟','🦖 侏羅紀公園','🚀 星際啟示錄','🕶️ 無間道'],
+        ['🦸 復仇者聯盟','🥋 功夫','🚀 星際啟示錄','🧙 哈利波特'],
+        ['🦖 侏羅紀公園','🥋 功夫','🧸 玩具總動員','🚀 星際啟示錄']],
+  cands:['🚀 星際啟示錄','🚢 鐵達尼號','👻 千與千尋','🎓 那些年'],ans:0,
+  why:'3 個口味相似嘅用戶都鍾意《星際啟示錄》，而且阿明未睇過 → 協同過濾話呢套最穩陣！'},
+ {me:['👻 千與千尋','🧸 玩具總動員','🧙 哈利波特'],
+  sims:[['👻 千與千尋','🧸 玩具總動員','🎓 那些年','🥋 功夫'],
+        ['🧸 玩具總動員','🧙 哈利波特','🎓 那些年','🚢 鐵達尼號'],
+        ['👻 千與千尋','🧙 哈利波特','🚀 星際啟示錄','🎓 那些年']],
+  cands:['🎓 那些年','🦸 復仇者聯盟','🕶️ 無間道','🦖 侏羅紀公園'],ans:0,
+  why:'3 個相似用戶都鍾意《那些年》→ 雖然係青春片唔係奇幻片，但數據話「呢班人」會受，阿明好大機會都啱！呢個就係協同過濾勁嘅地方：唔使明點解，齋睇行為。'},
+ {me:['🕶️ 無間道','🥋 功夫','🎓 那些年'],
+  sims:[['🕶️ 無間道','🥋 功夫','🧙 哈利波特','🦸 復仇者聯盟'],
+        ['🥋 功夫','🎓 那些年','🧙 哈利波特','🚢 鐵達尼號'],
+        ['🕶️ 無間道','🎓 那些年','🦖 侏羅紀公園','🧙 哈利波特']],
+  cands:['🧙 哈利波特','👻 千與千尋','🚀 星際啟示錄','🧸 玩具總動員'],ans:0,
+  why:'3 個相似用戶都鍾意《哈利波特》。你可能會諗「阿明睇開港產片，推魔法片？」——但協同過濾唔理類型，淨係信數據！'},
+ {me:['🚀 星際啟示錄','🦸 復仇者聯盟','🧙 哈利波特'],
+  sims:[['🚀 星際啟示錄','🦸 復仇者聯盟','🦖 侏羅紀公園','🥋 功夫'],
+        ['🦸 復仇者聯盟','🧙 哈利波特','🦖 侏羅紀公園','🕶️ 無間道'],
+        ['🚀 星際啟示錄','🧙 哈利波特','👻 千與千尋','🦖 侏羅紀公園']],
+  cands:['🦖 侏羅紀公園','🚢 鐵達尼號','🎓 那些年','🧸 玩具總動員'],ans:0,
+  why:'3 個相似用戶都鍾意《侏羅紀公園》。阿明鍾意科幻+奇幻，冒險片好大機會啱佢口味！'},
+ {me:['🚢 鐵達尼號','🎓 那些年','👻 千與千尋'],
+  sims:[['🚢 鐵達尼號','🎓 那些年','🧸 玩具總動員','🥋 功夫'],
+        ['🎓 那些年','👻 千與千尋','🧸 玩具總動員','🧙 哈利波特'],
+        ['🚢 鐵達尼號','👻 千與千尋','🚀 星際啟示錄','🧸 玩具總動員']],
+  cands:['🧸 玩具總動員','🦸 復仇者聯盟','🕶️ 無間道','🦖 侏羅紀公園'],ans:0,
+  why:'3 個相似用戶都鍾意《玩具總動員》。文藝片迷都收貨嘅動畫，跨類型推薦成功！'}
+];
+var r=0,score=0,streak=0;
+function render(){
+  var R=ROUNDS[r],i,j;
+  document.getElementById('rnd').textContent='第 '+(r+1)+'/5 輪';
+  var mc=document.getElementById('meChips');mc.innerHTML='';
+  for(i=0;i<R.me.length;i++){var s=document.createElement('span');s.className='chip me';s.textContent=R.me[i];mc.appendChild(s);}
+  var sg=document.getElementById('simGrid');sg.innerHTML='';
+  var names=['👩 阿儀','👨 阿強','👧 小文'];
+  for(i=0;i<3;i++){var d=document.createElement('div');d.className='sim';
+    var h='<div class="sn">'+names[i]+'</div>';
+    for(j=0;j<R.sims[i].length;j++)h+='<div class="mv">'+R.sims[i][j]+'</div>';
+    d.innerHTML=h;sg.appendChild(d);}
+  var cg=document.getElementById('candGrid');cg.innerHTML='';
+  for(i=0;i<4;i++)(function(i){
+    var b=document.createElement('button');b.className='cbtn';b.textContent=R.cands[i];
+    b.onclick=function(){pick(i,b);};cg.appendChild(b);
+  })(i);
+  document.getElementById('fb').style.display='none';
+  document.getElementById('nextBtn').style.display='none';
+}
+function pick(i,btn){
+  var R=ROUNDS[r];
+  var btns=document.getElementById('candGrid').children;
+  for(var k=0;k<btns.length;k++)btns[k].disabled=true;
+  btns[R.ans].classList.add('right');
+  var fb=document.getElementById('fb');fb.style.display='block';
+  if(i===R.ans){
+    var pts=20+Math.min(streak*5,10);score+=pts;streak++;
+    fb.innerHTML='<b>✅ 推薦成功！+'+pts+' 分</b><br>'+R.why;
+  }else{
+    btn.classList.add('wrongpick');streak=0;
+    fb.innerHTML='<b>❌ 阿明冇乜興趣…正確係《'+R.cands[R.ans]+'》</b><br>'+R.why;
+  }
+  document.getElementById('sc').textContent=score;
+  document.getElementById('st').textContent='🔥'+streak;
+  document.getElementById('nextBtn').style.display='block';
+}
+document.getElementById('nextBtn').onclick=function(){
+  r++;
+  if(r<5)render();
+  else{
+    document.getElementById('nextBtn').style.display='none';
+    document.getElementById('finalCard').style.display='block';
+    document.getElementById('fE').textContent=score>=85?'🏆':(score>=60?'🎉':'🎬');
+    document.getElementById('fT').textContent='五輪完成！總分 '+score+' / 100';
+    document.getElementById('fD').innerHTML='你啱啱用咗<b>協同過濾</b>做推薦！<br>現實中嘅 Netflix 同 YouTube 仲會考慮埋：你睇咗幾耐、有冇撳讚、咩時間睇等等，個模型複雜好多。<br>不過核心諗法一樣：<b>搵同你似嘅人，睇佢哋鍾意咩</b>。';
+    document.getElementById('finalCard').scrollIntoView();
+  }
+};
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>波動模擬器</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#020617;color:#e0f2fe;line-height:1.6}
+header{background:linear-gradient(135deg,#1e3a8a,#0369a1);padding:18px 16px;text-align:center}
+header h1{margin:0;font-size:22px}
+header p{margin:4px 0 0;font-size:13px;opacity:.85}
+.back{display:block;text-align:center;background:#0c1a3a;color:#7dd3fc;text-decoration:none;padding:12px;font-size:16px;font-weight:600}
+.wrap{max-width:640px;margin:0 auto;padding:12px 14px 40px}
+canvas{width:100%;height:300px;background:#0a1128;border-radius:12px;display:block;touch-action:none}
+.panel{background:#0c1a3a;border-radius:12px;padding:14px;margin-top:12px}
+.row{display:flex;gap:10px;align-items:center;margin:10px 0;flex-wrap:wrap}
+label{font-size:15px;min-width:96px}
+input[type=range]{flex:1;min-width:140px;height:44px;accent-color:#38bdf8}
+.val{font-size:16px;font-weight:700;color:#7dd3fc;min-width:80px;text-align:right}
+button{min-height:52px;font-size:18px;font-weight:700;border:none;border-radius:10px;padding:10px 18px;cursor:pointer}
+.btn-p{background:#0284c7;color:#fff;width:100%}
+.btn-p:active{transform:scale(.98)}
+.ro-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+.ro{background:#020617;border-radius:8px;padding:10px;text-align:center}
+.ro .k{font-size:11px;color:#7dd3fc}
+.ro .v{font-size:17px;font-weight:800}
+#msg{min-height:52px;font-size:16px;text-align:center;padding:8px;color:#fef08a;font-weight:600}
+.score{font-size:15px;text-align:center;color:#fbbf24;font-weight:700}
+.modebar{display:flex;gap:8px;margin-bottom:4px}
+.modebar button{flex:1;background:#1e293b;color:#cbd5e1;min-height:48px;font-size:16px;font-weight:700;border-radius:10px;border:none}
+.modebar button.on{background:#0284c7;color:#fff}
+#overlay{position:fixed;inset:0;background:rgba(2,6,23,.97);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+#overlay .card{background:#0c1a3a;border-radius:16px;padding:24px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto}
+#overlay h2{margin-top:0;color:#7dd3fc}
+#overlay p{font-size:15px}
+#overlay .go{width:100%;background:#0284c7;color:#fff;margin-top:12px}
+</style>
+</head>
+<body>
+<header><h1>波動模擬器</h1><p>調頻率振幅 · 即時睇波形 · 挑戰疊波</p></header>
+<a class="back" href="games.html">← 返回遊戲列表</a>
+<div class="wrap">
+<div class="modebar"><button id="mFree" class="on">🔬 自由探索</button><button id="mChal">🏆 挑戰模式</button></div>
+<canvas id="cv"></canvas>
+<div class="panel">
+<div class="row"><label for="freq">頻率 f</label><input type="range" id="freq" min="0.5" max="3" step="0.1" value="1.2"><span class="val" id="freqV">1.2 Hz</span></div>
+<div class="row"><label for="amp">振幅 A</label><input type="range" id="amp" min="10" max="80" step="5" value="40"><span class="val" id="ampV">40 px</span></div>
+<div class="ro-grid">
+<div class="ro"><div class="k">週期 T=1/f</div><div class="v" id="rT">0.83 s</div></div>
+<div class="ro"><div class="k">波長 =v/f</div><div class="v" id="rL">200 px</div></div>
+<div class="ro"><div class="k">波速 v</div><div class="v">240 px/s</div></div>
+</div>
+<div class="row"><button class="btn-p" id="btnCheck" style="display:none">🎯 提交答案！</button></div>
+</div>
+<div id="msg"></div>
+<div class="score" id="score"></div>
+</div>
+<div id="overlay"><div class="card">
+<h2>波動模擬器</h2>
+<p><b>玩法：</b>拖滑桿改變頻率同振幅，睇下波形點變。頻率愈高，波動愈密；振幅愈大，波動愈高。</p>
+<p><b>🏆 挑戰模式：</b>畫面會出現一條虛線目標波，你要調到同佢完全重疊！共 3 關。</p>
+<p><b>💡 物理原理：</b>波速 v = f × 波長。頻率 f 決定每秒起伏幾多次，波長係兩個波峰之間嘅距離。振幅決定能量大細 —— 同頻率無關！</p>
+<button class="go" onclick="document.getElementById('overlay').style.display='none'">開始玩波！</button>
+</div></div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+var W=0,H=0;
+function resize(){var d=Math.min(window.devicePixelRatio||1,2);W=cv.clientWidth;H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);}
+window.addEventListener('resize',resize); resize();
+var V=240, f=1.2, A=40, t=0;
+var mode='free', round=0, attempts=0, score=0, tF=0, tA=0;
+function upd(){
+  f=parseFloat(document.getElementById('freq').value);
+  A=parseFloat(document.getElementById('amp').value);
+  document.getElementById('freqV').textContent=f.toFixed(1)+' Hz';
+  document.getElementById('ampV').textContent=A+' px';
+  document.getElementById('rT').textContent=(1/f).toFixed(2)+' s';
+  document.getElementById('rL').textContent=Math.round(V/f)+' px';
+}
+document.getElementById('freq').addEventListener('input',upd);
+document.getElementById('amp').addEventListener('input',upd);
+function waveY(x,ff,aa,tt){var k=2*Math.PI*ff/V;return aa*Math.sin(k*x-2*Math.PI*ff*tt);}
+function drawWave(ff,aa,tt,color,dash){
+  ctx.strokeStyle=color;ctx.lineWidth=3;
+  if(dash)ctx.setLineDash([8,6]);else ctx.setLineDash([]);
+  ctx.beginPath();
+  for(var x=0;x<=W;x+=3){var y=H/2-waveY(x,ff,aa,tt);if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}
+  ctx.stroke();ctx.setLineDash([]);
+}
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='rgba(125,211,252,.15)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();
+  if(mode==='chal')drawWave(tF,tA,t,'rgba(251,191,36,.75)',true);
+  drawWave(f,A,t,'#38bdf8',false);
+  ctx.fillStyle='#7dd3fc';ctx.font='12px sans-serif';ctx.textAlign='left';
+  if(mode==='chal')ctx.fillText('虛線 = 目標波，實線 = 你的波',10,20);
+}
+function setMode(m){
+  mode=m;
+  document.getElementById('mFree').className=m==='free'?'on':'';
+  document.getElementById('mChal').className=m==='chal'?'on':'';
+  document.getElementById('btnCheck').style.display=m==='chal'?'':'none';
+  document.getElementById('msg').textContent='';
+  if(m==='chal'){round=0;score=0;newRound();}else document.getElementById('score').textContent='';
+}
+document.getElementById('mFree').addEventListener('click',function(){setMode('free');});
+document.getElementById('mChal').addEventListener('click',function(){setMode('chal');});
+function newRound(){
+  attempts=0;
+  tF=Math.round((0.8+Math.random()*1.8)*10)/10;
+  tA=20+Math.floor(Math.random()*12)*5;
+  document.getElementById('score').textContent='第 '+(round+1)+' / 3 關　總分：'+score;
+  document.getElementById('msg').textContent='🎯 目標：頻率 '+tF.toFixed(1)+' Hz，振幅 '+tA+' px —— 調到兩條波重疊！';
+}
+document.getElementById('btnCheck').addEventListener('click',function(){
+  attempts++;
+  var df=Math.abs(f-tF), da=Math.abs(A-tA);
+  if(df<0.06&&da<3){
+    var pts=Math.max(20,100-(attempts-1)*15);score+=pts;
+    document.getElementById('msg').textContent='✅ 完美重疊！+'+pts+' 分';
+    round++;
+    if(round>=3){
+      var best=0;try{best=parseInt(localStorage.getItem('waveBest')||'0');}catch(e){}
+      var nb='';if(score>best){try{localStorage.setItem('waveBest',score);}catch(e){}nb=' 🏅 新紀錄！';}
+      document.getElementById('score').textContent='🎉 完成！總分：'+score+' / 300'+nb;
+      setTimeout(function(){if(mode==='chal'){round=0;score=0;newRound();}},2500);
+    }else setTimeout(newRound,1800);
+  }else{
+    var hint=df>=0.06?('頻率差 '+df.toFixed(1)+' Hz'):('振幅差 '+da+' px');
+    document.getElementById('msg').textContent='❌ 未重疊：'+hint+'（第 '+attempts+' 次）';
+  }
+  if(round<3)document.getElementById('score').textContent='第 '+(round+1)+' / 3 關　總分：'+score;
+});
+var last=performance.now();
+function loop(now){var dt=Math.min((now-last)/1000,0.05);last=now;t+=dt;draw();requestAnimationFrame(loop);}
+upd();loop();
+})();
+</script>
+</body>
+</html>

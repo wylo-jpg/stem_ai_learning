@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>方程賽車 Linear Equation Racer</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:#16211a;color:#fff;font-family:"PingFang HK","Microsoft JhengHei",sans-serif;height:100%;}
+  body{display:block;height:100%;overflow:hidden;}
+  #wrap{position:relative;width:100vw;height:100vh;height:100dvh;background:#000;overflow:hidden;}
+  canvas{width:100%;height:100%;display:block;touch-action:none;object-fit:contain;background:#000;}
+  #hud{position:absolute;top:0;left:0;right:0;display:flex;gap:8px;justify-content:center;padding:calc(8px + env(safe-area-inset-top)) 8px 8px;pointer-events:none;z-index:5;flex-wrap:wrap;}
+  #hud span{background:rgba(0,0,0,.62);border:1px solid rgba(255,255,255,.25);padding:6px 14px;border-radius:20px;font-size:16px;font-weight:bold;}
+  #boostTag{position:absolute;top:56px;left:50%;transform:translateX(-50%);background:#ff8c1a;color:#fff;font-weight:bold;padding:6px 18px;border-radius:20px;display:none;z-index:5;animation:pop .3s;}
+  @keyframes pop{from{transform:translateX(-50%) scale(.6);}to{transform:translateX(-50%) scale(1);}}
+  .panel{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.62);z-index:20;padding:12px;}
+  #qPanel .card{max-width:520px;}
+  #qPanel .eq{font-size:56px;}
+  .card{background:#fffdf4;color:#222;border-radius:18px;padding:22px 26px;max-width:440px;width:100%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.5);max-height:100%;overflow:auto;}
+  .card h1{margin:0 0 8px;font-size:30px;}
+  .card h2{margin:0 0 6px;font-size:24px;}
+  .card p{font-size:15px;line-height:1.7;margin:8px 0;}
+  .bigbtn{display:inline-block;margin-top:12px;background:#2f9e44;color:#fff;border:none;font-size:22px;font-weight:bold;padding:14px 54px;border-radius:14px;cursor:pointer;box-shadow:0 4px 0 #1e6e2e;}
+  .bigbtn:active{transform:translateY(2px);box-shadow:none;}
+  .eq{font-family:Georgia,"Times New Roman",serif;font-size:46px;margin:10px 0;letter-spacing:1px;}
+  .eq i{font-style:italic;}
+  .ansline{font-size:30px;margin:6px 0;min-height:44px;font-family:Georgia,serif;}
+  #ansBox{display:inline-block;min-width:120px;border-bottom:3px solid #333;padding:0 8px;}
+  #keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
+  #keypad button{font-size:24px;padding:12px 0;border-radius:10px;border:2px solid #ccc;background:#f4f4f4;cursor:pointer;touch-action:manipulation;}
+  #keypad button:active{background:#ddd;}
+  #keypad .wide{grid-column:span 2;}
+  #keypad #btnOk{background:#2f9e44;color:#fff;border-color:#2f9e44;font-weight:bold;}
+  #feedback{font-size:22px;font-weight:bold;min-height:34px;margin-top:8px;}
+  .stars{color:#e8a100;font-size:18px;letter-spacing:2px;}
+  #countEl{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-size:110px;font-weight:bold;color:#fff;text-shadow:0 4px 20px rgba(0,0,0,.8);z-index:15;pointer-events:none;}
+  #touch{position:absolute;left:0;right:0;bottom:0;display:none;justify-content:space-between;padding:0 14px calc(14px + env(safe-area-inset-bottom));z-index:8;pointer-events:none;}
+  body.touch #touch{display:flex;}
+  .tcluster{display:flex;gap:14px;pointer-events:auto;}
+  .tbtn{width:84px;height:84px;border-radius:50%;border:3px solid rgba(255,255,255,.5);background:rgba(0,0,0,.45);color:#fff;font-size:34px;touch-action:none;user-select:none;-webkit-user-select:none;}
+  .tbtn.on{background:rgba(255,200,40,.7);}
+  #rotateHint{display:none;position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.68);padding:8px 18px;border-radius:20px;font-size:15px;z-index:6;pointer-events:none;white-space:nowrap;}
+  @media (orientation:portrait) and (pointer:coarse){#rotateHint{display:block;}}
+  /* 直向手機：自動轉做橫向全熒幕玩 */
+  @media (orientation:portrait) and (pointer:coarse){
+    #wrap{width:100vh;width:100dvh;height:100vw;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) rotate(90deg);}
+    #rotateHint{display:none;}
+  }
+  #touch2p{position:absolute;left:0;right:0;bottom:0;display:none;justify-content:space-between;padding:0 14px calc(14px + env(safe-area-inset-bottom));z-index:8;pointer-events:none;}
+  body.touch.mode2p #touch2p{display:flex;}
+  body.touch.mode2p #touch{display:none;}
+  .tcluster2p{display:grid;grid-template-columns:repeat(2,78px);gap:12px;pointer-events:auto;}
+  .tlabel{grid-column:span 2;text-align:center;font-size:22px;text-shadow:0 2px 4px #000;}
+  .seg{background:#eee;border:2px solid #ccc;border-radius:10px;font-size:17px;padding:8px 20px;cursor:pointer;margin:0 4px;}
+  .seg.on{background:#2f7bff;color:#fff;border-color:#2f7bff;font-weight:bold;}
+  .frac{display:inline-flex;flex-direction:column;vertical-align:middle;font-size:.62em;text-align:center;margin:0 3px;line-height:1.25;}
+  .frac>span:first-child{border-bottom:2px solid currentColor;padding:0 5px;}
+  .stand{display:flex;align-items:center;gap:10px;justify-content:center;font-size:19px;margin:6px 0;}
+  .dot{width:18px;height:18px;border-radius:50%;display:inline-block;border:2px solid #333;}
+  #jsdiag{position:fixed;z-index:999;top:36%;left:12px;right:12px;background:#c92a2a;color:#fff;border-radius:14px;padding:20px 16px;font-size:18px;line-height:1.7;text-align:center;box-shadow:0 6px 30px rgba(0,0,0,.5);}
+  .kbd{background:#eee;border:1px solid #bbb;border-bottom-width:3px;border-radius:6px;padding:1px 8px;font-size:14px;}
+</style>
+</head>
+<body>
+<div id="jsdiag">⚠️ 遊戲載入唔到<br><span style="font-size:15px;">呢個瀏覽器開唔起個遊戲。請用 Chrome 直接開呢個檔案，或者話返畀 Muse 知你見到呢行紅字。</span></div>
+<div id="wrap">
+  <canvas id="game" width="960" height="640"></canvas>
+  <div id="rotateHint">🔄 打橫部手機玩，畫面更大更好揸</div>
+  <div id="hud">
+    <span id="lapEl">第 1/3 圈</span>
+    <span id="posEl">第 4 名</span>
+    <span id="scoreEl">✓ 0/0</span>
+  </div>
+  <div id="boostTag">⚡ TURBO 加速中！</div>
+  <div id="countEl">3</div>
+
+  <div id="startScreen" class="panel" style="display:flex;">
+    <div class="card">
+      <h1>🏎️ 方程賽車</h1>
+      <p><b>玩法：</b>同電腦車鬥快，跑 <b>3 圈</b>！<br>
+      賽道上有 <b style="color:#b97b00;">？金色閘門</b>，衝過去會彈出一條<br><b>一元一次方程</b>，答啱即刻 <b style="color:#e8590c;">⚡ Turbo 加速 3 秒</b>！</p>
+      <p>🖥️ <b>1人：</b><span class="kbd">W</span><span class="kbd">A</span><span class="kbd">S</span><span class="kbd">D</span> 或方向鍵<br>
+      👥 <b>2人對戰：</b>玩家一用 <span class="kbd">WASD</span>，玩家二用方向鍵<br>
+      📱 手機：用畫面下方按鈕揸車（2人模式左右各一組）</p>
+      <p style="font-size:13px;color:#666;">題目由淺入深：x + a = b → ax + b = c → 兩邊都有 x → 括號方程</p>
+      <p>題目類型：<button class="seg on" id="qIntBtn">整數</button><button class="seg" id="qFracBtn">分數／小數</button></p>
+      <button class="bigbtn" id="startBtn1P">🏁 1人比賽</button><br>
+      <button class="bigbtn" id="startBtn2P" style="background:#7048c8;box-shadow:0 4px 0 #4a2e8a;">👥 2人對戰</button><br>
+      <button class="bigbtn" id="startBtnTT" style="background:#0c8599;box-shadow:0 4px 0 #066573;">⏱️ 計時挑戰</button>
+      <p style="font-size:13px;color:#666;margin-top:10px;">⏱️ 計時挑戰：一個人跑 3 圈鬥最快，過閘答題照樣有 Turbo，最佳時間會記低</p>
+    </div>
+  </div>
+
+  <div id="qPanel" class="panel">
+    <div class="card">
+      <h2>🧮 解方程攞 Turbo！</h2>
+      <div id="qWho" style="display:none;font-size:20px;font-weight:bold;margin-bottom:4px;"></div>
+      <div class="stars" id="qStars">★☆☆☆☆</div>
+      <div class="eq" id="qText">3<i>x</i> + 5 = 20</div>
+      <div class="ansline"><i>x</i> = <span id="ansBox"></span></div>
+      <div id="keypad">
+        <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+        <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+        <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+        <button data-k="-">−</button><button data-k="0">0</button><button data-k="back">⌫</button>
+        <button data-k="." id="kDot" style="display:none;">.</button><button data-k="/" id="kSlash" style="display:none;">⁄</button><button data-k="clear">清除</button>
+        <button data-k="ok" id="btnOk" class="wide" style="grid-column:span 3;">確定 ✓</button>
+      </div>
+      <div id="feedback"></div>
+    </div>
+  </div>
+
+  <div id="endPanel" class="panel">
+    <div class="card">
+      <h1 id="endTitle">🏁 比賽結束！</h1>
+      <div id="standings"></div>
+      <p id="endStats" style="font-size:16px;"></p>
+      <button class="bigbtn" id="againBtn">🔄 再玩一次</button>
+    </div>
+  </div>
+
+  <div id="touch">
+    <div class="tcluster">
+      <button class="tbtn" id="tLeft">◀</button>
+      <button class="tbtn" id="tRight">▶</button>
+    </div>
+    <div class="tcluster">
+      <button class="tbtn" id="tDown">▼</button>
+      <button class="tbtn" id="tUp">▲</button>
+    </div>
+  </div>
+  <div id="touch2p">
+    <div class="tcluster2p">
+      <div class="tlabel">🔵</div>
+      <button class="tbtn" data-p="1" data-k="left">◀</button>
+      <button class="tbtn" data-p="1" data-k="right">▶</button>
+      <button class="tbtn" data-p="1" data-k="up">▲</button>
+      <button class="tbtn" data-p="1" data-k="down">▼</button>
+    </div>
+    <div class="tcluster2p">
+      <div class="tlabel">🟢</div>
+      <button class="tbtn" data-p="2" data-k="left">◀</button>
+      <button class="tbtn" data-p="2" data-k="right">▶</button>
+      <button class="tbtn" data-p="2" data-k="up">▲</button>
+      <button class="tbtn" data-p="2" data-k="down">▼</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+document.getElementById('jsdiag').style.display='none';
+/* ================= 基本設定 ================= */
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const TAU=Math.PI*2;
+const W=960,H=640,CX=480,CY=330,RX=380,RY=245,NW=150,ROAD=120,LAPS=3;
+const canvas=$('game'),ctx=canvas.getContext('2d');
+let now=0,lastT=0,state='menu',paused=false;
+
+/* ================= 賽道 ================= */
+const spow=(v,e)=>Math.sign(v)*Math.pow(Math.abs(v),e);
+function centerline(t){const a=t*TAU;
+  return{x:CX+RX*spow(Math.cos(a),0.65),y:CY+RY*spow(Math.sin(a),0.65)};}
+const wp=[];for(let i=0;i<NW;i++)wp.push(centerline(i/NW));
+const dist2=(ax,ay,bx,by)=>{const dx=ax-bx,dy=ay-by;return dx*dx+dy*dy;};
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);
+  c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+
+const bg=document.createElement('canvas');bg.width=W;bg.height=H;
+const bctx=bg.getContext('2d');
+const mask=document.createElement('canvas');mask.width=W;mask.height=H;
+const mctx=mask.getContext('2d',{willReadFrequently:true});
+
+function drawRoad(c){
+  c.fillStyle='#4c8a52';c.fillRect(0,0,W,H);
+  const path=()=>{c.beginPath();wp.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.closePath();};
+  path();c.strokeStyle='#ffffff';c.lineWidth=ROAD+12;c.lineJoin='round';c.stroke();
+  path();c.strokeStyle='#6e6e6e';c.lineWidth=ROAD;c.stroke();
+  path();c.strokeStyle='rgba(255,255,255,.5)';c.lineWidth=4;c.setLineDash([24,26]);c.stroke();c.setLineDash([]);
+  // 起點格仔線（用灰階，唔會畀當成牆）
+  const p0=wp[0],p1=wp[1],dx=p1.x-p0.x,dy=p1.y-p0.y,L=Math.hypot(dx,dy),nx=-dy/L,ny=dx/L;
+  const sq=12,half=ROAD/2-4;
+  for(let r=0;r<2;r++)for(let s=-half;s<half;s+=sq){
+    const off=s+(r%2?sq/2:0);if(off>half-sq)continue;
+    c.fillStyle=((Math.round(s/sq)+r)%2===0)?'#dddddd':'#555555';
+    c.save();c.translate(p0.x+nx*off,p0.y+ny*off);c.rotate(Math.atan2(dy,dx));
+    c.fillRect(-sq/2,-sq/2,sq,sq);c.restore();
+  }
+}
+drawRoad(bctx);drawRoad(mctx);
+const pxData=mctx.getImageData(0,0,W,H).data;
+function classify(x,y){
+  x|=0;y|=0;
+  if(x<0||y<0||x>=W||y>=H)return 'wall';
+  const i=(y*W+x)*4,r=pxData[i],g=pxData[i+1],b=pxData[i+2];
+  const mx=Math.max(r,g,b),mn=Math.min(r,g,b);
+  if(mx-mn<50){const avg=(r+g+b)/3;return(avg>=40&&avg<=235)?'road':'wall';}
+  return 'grass';
+}
+// 樹（淨係種喺草地）
+const trees=[];let tries=0;
+while(trees.length<42&&tries<1200){tries++;
+  const x=Math.random()*W,y=Math.random()*H;
+  if(classify(x,y)==='grass'&&trees.every(t=>dist2(x,y,t.x,t.y)>75*75))
+    trees.push({x,y,r:13+Math.random()*13});
+}
+trees.forEach(t=>{bctx.fillStyle='#2f6b34';bctx.beginPath();bctx.arc(t.x,t.y,t.r,0,TAU);bctx.fill();
+  bctx.fillStyle='#3d8544';bctx.beginPath();bctx.arc(t.x-t.r*0.25,t.y-t.r*0.25,t.r*0.6,0,TAU);bctx.fill();});
+
+/* 金色問號閘門 */
+const GATE_T=[0.22,0.47,0.72];
+const gates=GATE_T.map(t=>{
+  const p=centerline(t),q=centerline(t+0.004);
+  const dx=q.x-p.x,dy=q.y-p.y,L=Math.hypot(dx,dy);
+  return{x:p.x,y:p.y,nx:-dy/L,ny:dx/L};
+});
+
+/* ================= 音效 ================= */
+let AC=null;
+function tone(f,d,type,v){type=type||'sine';v=v||0.12;
+  try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+  const o=AC.createOscillator(),g=AC.createGain();
+  o.type=type;o.frequency.value=f;g.gain.value=v;
+  o.connect(g);g.connect(AC.destination);o.start();
+  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+d);
+  o.stop(AC.currentTime+d);}catch(e){}}
+
+/* ================= 車手 ================= */
+function makeKart(name,color,isAI){
+  return{name,color,isAI,x:0,y:0,angle:0,speed:0,lap:1,wp:0,progress:0,
+    boostT:0,gateCd:[0,0,0],gateHits:0,correct:0,answered:0,boosts:0,
+    aiOffset:(Math.random()-0.5)*60,aiSkill:0.9+Math.random()*0.18};
+}
+let karts=[],humans=[];
+function setupKarts(){
+  karts=[];humans=[];
+  const p1=makeKart(mode==='1P'?'你':'🔵 玩家一','#2f7bff',false);
+  p1.input=in1;humans.push(p1);karts.push(p1);
+  if(mode==='2P'){
+    const p2=makeKart('🟢 玩家二','#40c060',false);
+    p2.input=in2;humans.push(p2);karts.push(p2);
+  }
+  const aiDefs=[['紅色閃電','#ff5252'],['黃色子彈','#ffc531'],['紫色旋風','#b060ff']];
+  const nAI=mode==='1P'?3:(mode==='2P'?2:0);
+  for(let i=0;i<nAI;i++)karts.push(makeKart(aiDefs[i][0],aiDefs[i][1],true));
+  // 起步排位（人類玩家排最後，方便超車）
+  karts.forEach((k,ki)=>{
+    const idx=((NW-6-(karts.length-1-ki)*3)%NW+NW)%NW;
+    const p0=wp[idx],p1=wp[(idx+1)%NW];
+    const dx=p1.x-p0.x,dy=p1.y-p0.y,L=Math.hypot(dx,dy);
+    const lane=(ki%2===0?-1:1)*30;
+    k.x=p0.x+(-dy/L)*lane;k.y=p0.y+(dx/L)*lane;
+    k.angle=Math.atan2(dy,dx);k.wp=idx;k.progress=idx;
+  });
+}
+function leaderProgress(){return Math.max.apply(null,humans.map(h=>h.progress));}
+function angDiff(a,b){let d=a-b;while(d>Math.PI)d-=TAU;while(d<-Math.PI)d+=TAU;return d;}
+
+/* ================= 輸入 ================= */
+const in1={up:0,down:0,left:0,right:0};
+const in2={up:0,down:0,left:0,right:0};
+let mode='1P';
+const keyMap={KeyW:['in1','up'],KeyS:['in1','down'],KeyA:['in1','left'],KeyD:['in1','right'],
+  ArrowUp:['in2','up'],ArrowDown:['in2','down'],ArrowLeft:['in2','left'],ArrowRight:['in2','right']};
+const inputs={in1,in2};
+window.addEventListener('keydown',e=>{
+  const m=keyMap[e.code];
+  if(m){
+    if(mode==='1P')in1[m[1]]=1;   // 1P：WASD 同方向鍵都揸同一部車
+    else inputs[m[0]][m[1]]=1;     // 2P：P1=WASD，P2=方向鍵
+    e.preventDefault();
+  }
+  if(e.code==='Enter'&&$('qPanel').style.display==='flex')submitAnswer();
+});
+window.addEventListener('keyup',e=>{
+  const m=keyMap[e.code];
+  if(m){in1[m[1]]=0;in2[m[1]]=0;}
+});
+function bindHold(el,inp,name){
+  const on=e=>{e.preventDefault();inp[name]=1;el.classList.add('on');};
+  const off=e=>{e.preventDefault();inp[name]=0;el.classList.remove('on');};
+  el.addEventListener('pointerdown',on);
+  el.addEventListener('pointerup',off);el.addEventListener('pointercancel',off);el.addEventListener('pointerleave',off);
+}
+bindHold($('tUp'),in1,'up');bindHold($('tDown'),in1,'down');
+bindHold($('tLeft'),in1,'left');bindHold($('tRight'),in1,'right');
+document.querySelectorAll('#touch2p .tbtn').forEach(b=>{
+  bindHold(b,b.dataset.p==='1'?in1:in2,b.dataset.k);
+});
+if('ontouchstart'in window)document.body.classList.add('touch');
+document.addEventListener('touchmove',e=>{if(e.target===canvas)e.preventDefault();},{passive:false});
+
+/* ================= 題目 ================= */
+function R(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+function genQ(tier){
+  let x,a,b,c,d,s;
+  if(tier===1){x=R(2,15);a=R(1,20);s='x + '+a+' = '+(x+a);}
+  else if(tier===2){a=R(2,6);x=R(2,9);b=R(1,15);s=a+'x + '+b+' = '+(a*x+b);}
+  else if(tier===3){a=R(2,6);x=R(3,9);b=R(1,a*x-2);s=a+'x − '+b+' = '+(a*x-b);}
+  else if(tier===4){x=R(2,8);c=R(1,4);a=c+R(1,4);b=R(1,12);d=(a-c)*x+b;
+    s=a+'x + '+b+' = '+c+'x + '+d;}
+  else{a=R(2,5);x=R(2,8);b=R(1,9);s=a+'(x + '+b+') = '+(a*(x+b));}
+  return{text:s.replace(/x/g,'<i>x</i>'),ans:x,tier:tier};
+}
+const tierFor=h=>h<=2?1:h<=4?2:h<=6?3:h<=8?4:5;
+let qMode='int'; // 'int' 整數版，'frac' 分數／小數版
+/* ---------- 分數／小數題目 ---------- */
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){const t=a%b;a=b;b=t;}return a||1;}
+function fracHTML(n,d){
+  if(d===1)return String(n);
+  const g=gcd(n,d);n/=g;d/=g;
+  if(d<0){n=-n;d=-d;}
+  return '<span class="frac"><span>'+n+'</span><span>'+d+'</span></span>';
+}
+function dec(n){return String(Math.round(n*100)/100);}
+function genQF(tier){
+  let html,value,ansText,verify;
+  if(tier===1){ // x + p/q = (xq+p)/q
+    const f=[[1,2],[1,3],[2,3],[1,4],[3,4]][R(0,4)];
+    const p=f[0],q=f[1],x=R(2,9);
+    html='<i>x</i> + '+fracHTML(p,q)+' = '+fracHTML(x*q+p,q);
+    value=x;ansText=String(x);
+    verify=()=>Math.abs((x+p/q)-((x*q+p)/q))<1e-9;
+  }else if(tier===2){ // (p/q)x + a = (aq+px)/q
+    const f=[[1,2],[2,3],[3,4],[1,3],[3,5]][R(0,4)];
+    const p=f[0],q=f[1],x=R(2,8),a=R(1,9);
+    html=fracHTML(p,q)+'<i>x</i> + '+a+' = '+fracHTML(a*q+p*x,q);
+    value=x;ansText=String(x);
+    verify=()=>Math.abs(((p/q)*x+a)-((a*q+p*x)/q))<1e-9;
+  }else if(tier===3){ // (p/q)x = 分數，答案係分數
+    const f=[[2,3],[3,4],[1,2],[4,5],[3,5]][R(0,4)];
+    const p=f[0],q=f[1];
+    const xf=[[1,2],[3,2],[2,3],[3,4],[5,4],[4,3]][R(0,5)];
+    const xn=xf[0],xd=xf[1],g=gcd(xn,xd);
+    html=fracHTML(p,q)+'<i>x</i> = '+fracHTML(p*xn,q*xd);
+    value=xn/xd;ansText=(xn/g)+'/'+(xd/g);
+    verify=()=>Math.abs((p/q)*value-((p*xn)/(q*xd)))<1e-9;
+  }else if(tier===4){ // 小數係數，整數答案
+    const a=[0.5,1.5,2.5,0.25,1.25][R(0,4)];
+    const b=[0.5,1.5,2.5,0.75][R(0,3)];
+    const x=R(2,9);
+    html=dec(a)+'<i>x</i> + '+dec(b)+' = '+dec(a*x+b);
+    value=x;ansText=String(x);
+    verify=()=>Math.abs(a*x+b-(a*x+b))<1e-9;
+  }else{ // ax + b = c，小數答案
+    const a=R(2,5),b=[0.5,1.5,2.5][R(0,2)];
+    const x=[1.5,2.5,3.5,4.5,0.5][R(0,4)];
+    html=a+'<i>x</i> + '+dec(b)+' = '+dec(a*x+b);
+    value=x;ansText=dec(x);
+    verify=()=>Math.abs(a*value+b-(a*x+b))<1e-9;
+  }
+  return {html:html,value:value,ansText:ansText,verify:verify};
+}
+function parseAns(s){
+  s=(s||'').trim();
+  if(!s||s==='-'||s==='/'||s==='.'||s==='-.')return NaN;
+  if(s.indexOf('/')>=0){
+    const parts=s.split('/');
+    if(parts.length!==2)return NaN;
+    const n=parseFloat(parts[0]),d=parseFloat(parts[1]);
+    if(isNaN(n)||isNaN(d)||d===0)return NaN;
+    return n/d;
+  }
+  const v=parseFloat(s);
+  return isNaN(v)?NaN:v;
+}
+let currentQ=null,currentKart=null,answerStr='',qLocked=false;
+function openQuestion(k){
+  paused=true;qLocked=false;answerStr='';currentKart=k;
+  const tier=tierFor(k.gateHits+1);k.gateHits++;
+  if(qMode==='frac'){const q=genQF(tier);currentQ={html:q.html,value:q.value,ansText:q.ansText};}
+  else{const q=genQ(tier);currentQ={html:q.text,value:q.ans,ansText:String(q.ans)};}
+  $('qText').innerHTML=currentQ.html;
+  $('qStars').textContent='★'.repeat(tier)+'☆'.repeat(5-tier);
+  $('kDot').style.display=qMode==='frac'?'':'none';
+  $('kSlash').style.display=qMode==='frac'?'':'none';
+  const qw=$('qWho');
+  if(mode==='2P'){qw.style.display='block';
+    qw.textContent=(k===humans[0]?'🔵 輪到玩家一答題':'🟢 輪到玩家二答題');}
+  else qw.style.display='none';
+  $('ansBox').textContent='';$('feedback').textContent='';
+  $('qPanel').style.display='flex';
+  tone(520,0.12,'sine',0.1);
+}
+function submitAnswer(){
+  if(qLocked||!currentQ||!currentKart)return;
+  const v=parseAns(answerStr);
+  if(isNaN(v))return;
+  qLocked=true;currentKart.answered++;
+  const fb=$('feedback');
+  if(Math.abs(v-currentQ.value)<1e-9){
+    currentKart.correct++;currentKart.boosts++;currentKart.boostT=3;
+    fb.style.color='#2f9e44';fb.textContent='✓ 答啱！Turbo 加速！';
+    tone(660,0.12);setTimeout(()=>tone(880,0.18),110);
+  }else{
+    fb.style.color='#d6336c';fb.textContent='✗ 正確答案係 x = '+currentQ.ansText;
+    tone(200,0.28,'sawtooth',0.1);
+  }
+  setTimeout(()=>{$('qPanel').style.display='none';paused=false;},1500);
+}
+document.querySelectorAll('#keypad button').forEach(b=>{
+  b.addEventListener('pointerdown',e=>{
+    e.preventDefault();
+    if(qLocked)return;
+    const k=b.dataset.k;
+    if(k==='ok')submitAnswer();
+    else if(k==='back')answerStr=answerStr.slice(0,-1);
+    else if(k==='clear')answerStr='';
+    else if(answerStr.length<10){
+      if(k==='-'&&answerStr!=='')return;
+      if(k==='.'&&(answerStr.indexOf('.')>=0||answerStr.indexOf('/')>=0))return;
+      if(k==='/'&&(answerStr.indexOf('/')>=0||answerStr===''||answerStr==='-'))return;
+      answerStr+=k;
+    }
+    $('ansBox').textContent=answerStr;
+    tone(700,0.05,'sine',0.05);
+  });
+});
+
+/* ================= 物理更新 ================= */
+function updateKart(k,dt){
+  if(k.boostT>0)k.boostT-=dt;
+  const boosting=k.boostT>0;
+  const maxSp=boosting?360:235,acc=boosting?300:190;
+  if(k.isAI){
+    const li=(k.wp+8)%NW,tp=wp[li];
+    const p0=wp[k.wp],p1=wp[(k.wp+1)%NW];
+    let dx=p1.x-p0.x,dy=p1.y-p0.y;const L=Math.hypot(dx,dy)||1;
+    const tx=tp.x+(-dy/L)*k.aiOffset,ty=tp.y+(dx/L)*k.aiOffset;
+    const d=angDiff(Math.atan2(ty-k.y,tx-k.x),k.angle);
+    k.angle+=clamp(d,-2.8*dt,2.8*dt);
+    let target=maxSp*k.aiSkill;
+    const diff=leaderProgress()-k.progress;
+    if(diff>NW*0.6)target*=1.12;else if(diff<-NW*0.6)target*=0.9;
+    k.speed+=clamp(target-k.speed,-400*dt,acc*dt);
+    k.speed=clamp(k.speed,0,maxSp);
+  }else{
+    const inp=k.input||in1;
+    if(inp.up)k.speed+=acc*dt;
+    else if(inp.down)k.speed-=340*dt;
+    else k.speed-=k.speed*0.7*dt;
+    k.speed=clamp(k.speed,0,maxSp);
+    const steer=(inp.left?-1:0)+(inp.right?1:0);
+    if(steer&&k.speed>5)k.angle+=steer*2.4*dt*clamp(k.speed/120,0.35,1);
+  }
+  const nx2=k.x+Math.cos(k.angle)*k.speed*dt,
+        ny2=k.y+Math.sin(k.angle)*k.speed*dt;
+  const fx=nx2+Math.cos(k.angle)*16,fy=ny2+Math.sin(k.angle)*16;
+  if(classify(fx,fy)==='wall'){k.speed*=0.35;}
+  else{k.x=nx2;k.y=ny2;
+    if(classify(nx2,ny2)==='grass')k.speed=Math.min(k.speed,80);}
+  let guard=0;
+  while(guard++<8){
+    const ni=(k.wp+1)%NW;
+    if(dist2(k.x,k.y,wp[ni].x,wp[ni].y)<30*30){
+      const prev=k.wp;k.wp=ni;
+      if(prev>NW*0.75&&ni<NW*0.25)k.lap++;
+    }else break;
+  }
+  k.progress=k.lap*NW+k.wp;
+  if(state==='racing'){
+    gates.forEach((g,gi)=>{
+      if(now-k.gateCd[gi]>6&&dist2(k.x,k.y,g.x,g.y)<48*48){
+        k.gateCd[gi]=now;
+        if(k.isAI){k.answered++;if(Math.random()<0.75){k.correct++;k.boostT=3;}}
+        else openQuestion(k);
+      }
+    });
+  }
+}
+
+/* ================= 繪製 ================= */
+function drawKart(k){
+  ctx.save();ctx.translate(k.x,k.y);ctx.rotate(k.angle);
+  if(k.boostT>0){
+    const f=10+Math.random()*10;
+    ctx.fillStyle='#ff8c1a';
+    ctx.beginPath();ctx.moveTo(-13,-7);ctx.lineTo(-13-f,0);ctx.lineTo(-13,7);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#ffd23e';
+    ctx.beginPath();ctx.moveTo(-13,-4);ctx.lineTo(-13-f*0.55,0);ctx.lineTo(-13,4);ctx.closePath();ctx.fill();
+  }
+  ctx.fillStyle='#1a1a1a';
+  ctx.fillRect(-12,-13,9,6);ctx.fillRect(5,-13,9,6);
+  ctx.fillRect(-12,7,9,6);ctx.fillRect(5,7,9,6);
+  ctx.fillStyle=k.color;rr(ctx,-15,-9,30,18,6);ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.45)';ctx.lineWidth=2;rr(ctx,-15,-9,30,18,6);ctx.stroke();
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(3,0,5.5,0,TAU);ctx.fill();
+  ctx.fillStyle='#333';ctx.fillRect(3,-5.5,5,11);
+  if(!k.isAI){ctx.strokeStyle='#ffd23e';ctx.lineWidth=3;
+    ctx.beginPath();ctx.arc(0,0,21,0,TAU);ctx.stroke();}
+  ctx.restore();
+}
+function render(){
+  ctx.drawImage(bg,0,0);
+  gates.forEach((g,i)=>{
+    const pulse=1+0.09*Math.sin(now*5+i*2);
+    ctx.save();ctx.translate(g.x,g.y);ctx.rotate(Math.atan2(g.ny,g.nx));ctx.scale(pulse,pulse);
+    ctx.fillStyle='rgba(255,196,40,.93)';rr(ctx,-ROAD*0.44,-14,ROAD*0.88,28,9);ctx.fill();
+    ctx.strokeStyle='#7a5200';ctx.lineWidth=3;rr(ctx,-ROAD*0.44,-14,ROAD*0.88,28,9);ctx.stroke();
+    ctx.fillStyle='#5a3c00';ctx.font='bold 21px sans-serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('?',0,2);
+    ctx.restore();
+  });
+  karts.forEach(drawKart);
+}
+
+/* ================= HUD / 流程 ================= */
+function ordinal(n){return'第 '+n+' 名';}
+function rankOf(k){return 1+karts.filter(o=>o!==k&&o.progress>k.progress).length;}
+function fmt(t){const m=Math.floor(t/60),s=t-m*60;return m+':'+(s<10?'0':'')+s.toFixed(2);}
+let ttElapsed=0,ttLaps=[],ttPrevLap=1,ttLastLapT=0,ttBest=null;
+function updateHUD(){
+  const tag=$('boostTag');
+  if(mode==='TT'){
+    const h=humans[0];
+    $('lapEl').textContent='第 '+Math.min(h.lap,LAPS)+'/'+LAPS+' 圈';
+    $('posEl').textContent='⏱ '+fmt(ttElapsed);
+    const best=ttLaps.length?Math.min.apply(null,ttLaps):null;
+    $('scoreEl').textContent='最快圈 '+(best?fmt(best):'--:--')+'  ✓'+h.correct+'/'+h.answered;
+    tag.style.display=h.boostT>0?'block':'none';
+    tag.textContent='⚡ TURBO 加速中！';
+  }else if(mode==='1P'){
+    const p=humans[0];
+    $('lapEl').textContent='第 '+Math.min(p.lap,LAPS)+'/'+LAPS+' 圈';
+    $('posEl').textContent=ordinal(rankOf(p));
+    $('scoreEl').textContent='✓ '+p.correct+'/'+p.answered;
+    tag.style.display=p.boostT>0?'block':'none';
+    tag.textContent='⚡ TURBO 加速中！';
+  }else{
+    const a=humans[0],b=humans[1];
+    $('lapEl').textContent='🔵第'+Math.min(a.lap,LAPS)+'/'+LAPS+'圈 🟢第'+Math.min(b.lap,LAPS)+'/'+LAPS+'圈';
+    $('posEl').textContent='🔵第'+rankOf(a)+'名 🟢第'+rankOf(b)+'名';
+    $('scoreEl').textContent='🔵✓'+a.correct+'/'+a.answered+' 🟢✓'+b.correct+'/'+b.answered;
+    const ab=a.boostT>0,bb=b.boostT>0;
+    tag.style.display=(ab||bb)?'block':'none';
+    tag.textContent=(ab&&bb)?'⚡ 雙重 TURBO！':'⚡ TURBO 加速中！';
+  }
+}
+function finishRace(){
+  state='finished';
+  const order=[...karts].sort((a,b)=>b.progress-a.progress);
+  if(mode==='TT'){
+    const h=humans[0];
+    const best=Math.min.apply(null,ttLaps);
+    let nb=ttBest,rec='';
+    if(!ttBest||ttElapsed<ttBest){nb=ttElapsed;rec=' 🎉新紀錄！';
+      try{localStorage.setItem('eqracer_tt_best',String(ttElapsed));}catch(e){}}
+    $('endTitle').textContent='⏱️ 挑戰完成！'+rec;
+    $('standings').innerHTML=ttLaps.map((t,i)=>
+      '<div class="stand">第 '+(i+1)+' 圈　<b>'+fmt(t)+'</b></div>').join('');
+    $('endStats').innerHTML='總時間 <b>'+fmt(ttElapsed)+'</b>　最快圈速 <b>'+fmt(best)+'</b><br>'+
+      '歷史最佳：<b>'+(nb?fmt(nb):'--:--')+'</b><br>'+
+      '答啱 <b>'+h.correct+'</b>/'+h.answered+' 題，Turbo <b>×'+h.boosts+'</b>';
+    $('endPanel').style.display='flex';
+    [523,659,784,1046].forEach((f,i)=>setTimeout(()=>tone(f,0.2),i*160));
+    return;
+  }
+  if(mode==='1P'){
+    $('endTitle').textContent=order[0]===humans[0]?'🏆 冠軍！好嘢！':'🏁 比賽結束！';
+  }else{
+    $('endTitle').textContent='🏆 '+order[0].name+' 奪冠！';
+  }
+  $('standings').innerHTML=order.map((k,i)=>
+    '<div class="stand"><span class="dot" style="background:'+k.color+'"></span>'+
+    '<b>第 '+(i+1)+' 名</b>　'+k.name+(mode==='1P'&&k===humans[0]?'（你）':'')+
+    '　<span style="font-size:14px;color:#666;">✓ '+k.correct+'/'+k.answered+'</span></div>').join('');
+  $('endStats').innerHTML=humans.map(h=>
+    h.name+'：答啱 <b>'+h.correct+'</b>/'+h.answered+' 題，Turbo <b>×'+h.boosts+'</b>').join('<br>');
+  $('endPanel').style.display='flex';
+  [523,659,784,1046].forEach((f,i)=>setTimeout(()=>tone(f,0.2),i*160));
+}
+let cdT=0;const countEl=$('countEl');
+function startGame(m){
+  mode=m;
+  document.body.classList.toggle('mode2p',m==='2P');
+  setupKarts();
+  if(m==='TT'){
+    ttElapsed=0;ttLaps=[];ttPrevLap=1;ttLastLapT=0;
+    try{const v=parseFloat(localStorage.getItem('eqracer_tt_best'));ttBest=(v>0?v:null);}catch(e){ttBest=null;}
+  }
+  $('startScreen').style.display='none';
+  state='countdown';cdT=3.2;countEl.style.display='flex';countEl.textContent='3';
+  tone(440,0.15);
+}
+$('startBtn1P').addEventListener('click',()=>startGame('1P'));
+$('startBtn2P').addEventListener('click',()=>startGame('2P'));
+$('startBtnTT').addEventListener('click',()=>startGame('TT'));
+$('qIntBtn').addEventListener('click',()=>{qMode='int';
+  $('qIntBtn').classList.add('on');$('qFracBtn').classList.remove('on');tone(600,0.08);});
+$('qFracBtn').addEventListener('click',()=>{qMode='frac';
+  $('qFracBtn').classList.add('on');$('qIntBtn').classList.remove('on');tone(600,0.08);});
+$('againBtn').addEventListener('click',()=>location.reload());
+
+function loop(ts){
+  requestAnimationFrame(loop);
+  const t=ts/1000;
+  const dt=Math.min(0.05,t-(lastT||t));lastT=t;now=t;
+  if(state==='countdown'){
+    cdT-=dt;
+    if(cdT<=0){state='racing';countEl.textContent='GO!';
+      tone(880,0.5);setTimeout(()=>{countEl.style.display='none';},800);}
+    else{const s=String(Math.ceil(cdT));
+      if(countEl.textContent!==s&&s!=='0'){countEl.textContent=s;tone(440,0.15);}}
+  }
+  if(state==='racing'&&!paused){
+    karts.forEach(k=>updateKart(k,dt));
+    if(mode==='TT'){
+      ttElapsed+=dt;
+      const h=humans[0];
+      if(h.lap>ttPrevLap){
+        ttLaps.push(ttElapsed-ttLastLapT);
+        ttLastLapT=ttElapsed;ttPrevLap=h.lap;
+      }
+    }
+    updateHUD();
+    if(humans.length&&humans.every(h=>h.lap>LAPS))finishRace();
+  }
+  render();
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

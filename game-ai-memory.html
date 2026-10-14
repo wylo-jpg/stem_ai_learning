@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>AI記憶配對 | AI小遊戲</title>
+<style>
+:root{--ink:#1f2937;--muted:#6b7280;--bg:#fff7ed;--card:#fff;--blue:#2563eb;--green:#16a34a;--red:#dc2626;--amber:#d97706}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--ink);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+header{background:linear-gradient(135deg,#c2410c,#f97316);color:#fff;padding:16px;text-align:center}
+header h1{margin:0;font-size:20px}
+nav{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 12px;display:flex;gap:2px;overflow-x:auto}
+nav a{padding:12px 14px;text-decoration:none;color:var(--muted);font-weight:600;font-size:13px;white-space:nowrap}
+.wrap{max-width:560px;margin:0 auto;padding:16px}
+.hud{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.pill{background:var(--card);border-radius:20px;padding:8px 14px;font-size:14px;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+#focusBtn{min-height:48px;padding:10px 18px;font-size:15px;font-weight:800;border:none;border-radius:12px;background:#fef3c7;color:#92400e;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+#focusBtn:disabled{background:#e5e7eb;color:#9ca3af}
+#board{display:grid;gap:8px;width:100%}
+.mcard{position:relative;aspect-ratio:3/3.4;border:none;border-radius:12px;cursor:pointer;font-size:15px;font-weight:700;min-height:76px;perspective:600px;background:transparent;padding:0}
+.mcard .inner{position:absolute;inset:0;transition:transform .35s;transform-style:preserve-3d;border-radius:12px}
+.mcard.up .inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px;box-shadow:0 2px 6px rgba(0,0,0,.12)}
+.back{background:linear-gradient(135deg,#f97316,#fb923c);color:#fff;font-size:26px}
+.front{background:#fff;transform:rotateY(180deg);font-size:14px;line-height:1.4;text-align:center;border:3px solid #fdba74}
+.mcard.done .front{border-color:var(--green);background:#dcfce7}
+.strbar{position:absolute;left:8px;right:8px;bottom:6px;height:6px;border-radius:3px;background:rgba(255,255,255,.35);overflow:hidden}
+.strbar i{display:block;height:100%;border-radius:3px;background:#fff;transition:width .3s}
+.mcard.faded .back{background:#9ca3af}
+.mcard.faded{cursor:not-allowed}
+.warn{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;margin-bottom:10px;display:none}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.overlay.hidden{display:none}
+.sheet{background:#fff;border-radius:16px;padding:24px;max-width:440px;width:100%;max-height:88vh;overflow-y:auto}
+.sheet h2{margin:0 0 12px;font-size:20px}
+.sheet p,.sheet li{font-size:15px;line-height:1.7}
+.sheet ul{padding-left:20px}
+.concept{background:#fff7ed;border-left:4px solid #f97316;border-radius:8px;padding:12px 14px;margin:14px 0;font-size:14px}
+.startbtn{width:100%;min-height:56px;font-size:18px;font-weight:800;border:none;border-radius:12px;background:#f97316;color:#fff;cursor:pointer;margin-top:8px}
+</style>
+</head>
+<body>
+<header><h1>🧠 AI記憶配對</h1></header>
+<nav>
+<a href="index.html">🏠 首頁</a><a href="maths.html">📐 數學</a><a href="videos.html">🎬 影片</a><a href="games.html">🎮 遊戲</a><a href="stem.html">🔬 STEM</a><a href="ai.html">🤖 AI</a><a href="news.html">📰 資訊</a>
+</nav>
+<div class="wrap">
+  <div class="hud">
+    <div class="pill">第 <span id="round">1</span>/3 輪</div>
+    <div class="pill">⭐ <span id="score">0</span></div>
+    <div class="pill">🎯 注意力 <span id="att">8</span></div>
+    <button id="focusBtn">🧠 專注一下 (-2)</button>
+  </div>
+  <div class="warn" id="warn">⚠️ 有記憶衰退咗！用「專注一下」幫AI記返！</div>
+  <div id="board"></div>
+</div>
+<div class="overlay" id="intro">
+  <div class="sheet">
+    <h2>🧠 AI記憶配對</h2>
+    <p><b>玩法：</b>經典翻牌配對——中文AI名詞配英文。但呢個AI記性唔好：</p>
+    <ul>
+      <li>🃏 每張牌有<b>記憶強度</b>（牌底白色能量條），會隨時間衰退</li>
+      <li>🌫️ 強度歸零會「遺忘」變灰，撳唔到</li>
+      <li>🧠 撳「專注一下」幫所有牌恢復記憶（扣2點注意力）</li>
+      <li>✅ 配對成功 +3 注意力</li>
+      <li>共3輪：4對 → 6對 → 8對</li>
+    </ul>
+    <div class="concept">💡 <b>AI概念：注意力機制</b><br>AI嘅記憶都有限！大型語言模型一次只能「記住」有限長度嘅文字（context window），太耐之前嘅嘢會被遺忘。現代AI用<b>注意力機制（Attention）</b>決定邊啲資訊重要、要記住，唔重要嘅就忘記——就好似你而家要決定專注邊張牌一樣。</div>
+    <button class="startbtn" id="startBtn">開始訓練記憶</button>
+  </div>
+</div>
+<div class="overlay hidden" id="endOverlay">
+  <div class="sheet" style="text-align:center">
+    <h2 id="endTitle">完成！</h2>
+    <p id="endText" style="font-size:16px"></p>
+    <button class="startbtn" id="nextBtn">下一輪</button>
+  </div>
+</div>
+<script>
+(function(){
+'use strict';
+var TERMS=[
+  ['神經網絡','Neural Network'],['機器學習','Machine Learning'],
+  ['深度學習','Deep Learning'],['自然語言處理','NLP'],
+  ['電腦視覺','Computer Vision'],['強化學習','Reinforcement Learning'],
+  ['決策樹','Decision Tree'],['大型語言模型','LLM']
+];
+var ROUNDS=[4,6,8];
+var round=0,score=0,att=8,cards=[],first=-1,lock=false,timer=null,matched=0,totalPairs=0;
+function $(id){return document.getElementById(id);}
+function shuffled(a){var r=a.slice();for(var i=r.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=r[i];r[i]=r[j];r[j]=t;}return r;}
+function startRound(){
+  var n=ROUNDS[round],terms=shuffled(TERMS).slice(0,n),deck=[];
+  terms.forEach(function(t,pi){deck.push({pi:pi,txt:t[0]});deck.push({pi:pi,txt:t[1]});});
+  deck=shuffled(deck);
+  cards=deck.map(function(d){return {pi:d.pi,txt:d.txt,up:false,done:false,str:100};});
+  first=-1;lock=false;matched=0;totalPairs=n;
+  $('round').textContent=round+1;$('warn').style.display='none';
+  var board=$('board');board.innerHTML='';
+  var cols=n<=4?4:4;
+  board.style.gridTemplateColumns='repeat('+cols+',1fr)';
+  cards.forEach(function(cd,i){
+    var b=document.createElement('button');b.className='mcard';b.dataset.i=i;
+    b.innerHTML='<span class="inner"><span class="face back">🧠<span class="strbar"><i></i></span></span><span class="face front">'+cd.txt+'</span></span>';
+    b.addEventListener('click',function(){flip(i);});
+    board.appendChild(b);
+  });
+  render();
+  clearInterval(timer);
+  timer=setInterval(function(){
+    var anyFaded=false;
+    cards.forEach(function(cd){
+      if(!cd.done&&!cd.up){cd.str=Math.max(0,cd.str-2);if(cd.str===0)anyFaded=true;}
+    });
+    $('warn').style.display=anyFaded?'block':'none';
+    render();
+  },1000);
+}
+function render(){
+  var kids=$('board').children;
+  for(var i=0;i<cards.length;i++){
+    var cd=cards[i],b=kids[i];
+    b.classList.toggle('up',cd.up||cd.done);
+    b.classList.toggle('done',cd.done);
+    b.classList.toggle('faded',cd.str===0&&!cd.done);
+    var bar=b.querySelector('.strbar i');
+    if(bar)bar.style.width=cd.str+'%';
+  }
+  $('att').textContent=att;
+  $('focusBtn').disabled=att<2;
+}
+function flip(i){
+  var cd=cards[i];
+  if(lock||cd.up||cd.done||cd.str===0)return;
+  cd.up=true;
+  if(first===-1){first=i;}
+  else{
+    lock=true;
+    var a=cards[first],bi=i;
+    setTimeout(function(){
+      if(a.pi===cards[bi].pi){
+        a.done=true;cards[bi].done=true;matched++;
+        att+=3;score+=100;
+        $('score').textContent=score;
+        if(matched===totalPairs){roundDone();}
+      }else{
+        a.up=false;cards[bi].up=false;
+        a.str=Math.max(0,a.str-15);cards[bi].str=Math.max(0,cards[bi].str-15);
+      }
+      first=-1;lock=false;render();
+    },650);
+  }
+  render();
+}
+$('focusBtn').addEventListener('click',function(){
+  if(att<2)return;
+  att-=2;
+  cards.forEach(function(cd){if(!cd.done)cd.str=Math.min(100,cd.str+40);});
+  $('warn').style.display='none';
+  render();
+});
+function roundDone(){
+  clearInterval(timer);
+  var bonus=att*10;
+  score+=bonus;$('score').textContent=score;
+  if(round<ROUNDS.length-1){
+    $('endTitle').textContent='第 '+(round+1)+' 輪完成！';
+    $('endText').innerHTML='注意力獎勵 +'+bonus+' 分<br>下一輪有 '+ROUNDS[round+1]+' 對，記性挑戰更大！';
+    $('nextBtn').textContent='下一輪';
+  }else{
+    $('endTitle').textContent='🎉 訓練完成！';
+    var rank=score>=2400?'🏆 記憶大師！你嘅注意力分配好過AI！':score>=1600?'👍 優秀嘅AI訓練員！':'💪 繼續努力，記住善用注意力！';
+    $('endText').innerHTML='總分 <b>'+score+'</b> 分<br>'+rank;
+    $('nextBtn').textContent='再玩一次';
+  }
+  $('endOverlay').classList.remove('hidden');
+}
+$('nextBtn').addEventListener('click',function(){
+  $('endOverlay').classList.add('hidden');
+  if(round<ROUNDS.length-1){round++;}else{round=0;score=0;att=8;$('score').textContent='0';}
+  startRound();
+});
+$('startBtn').addEventListener('click',function(){$('intro').classList.add('hidden');startRound();});
+})();
+</script>
+</body>
+</html>

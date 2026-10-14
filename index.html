@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>教學資源共享</title>
+<style>
+:root{--blue:#2563eb;--ink:#1f2937;--muted:#6b7280;--bg:#f3f4f6}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+.hero{background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#fff;padding:60px 24px;text-align:center}
+.hero h1{margin:0 0 12px;font-size:32px}
+.hero p{margin:0;opacity:.9;font-size:15px;max-width:600px;margin:0 auto}
+nav{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 16px;display:flex;gap:4px;overflow-x:auto;position:sticky;top:0;z-index:10}
+nav a{padding:14px 18px;text-decoration:none;color:var(--muted);font-weight:600;font-size:14px;white-space:nowrap;border-bottom:3px solid transparent}
+nav a.active{color:var(--blue);border-bottom-color:var(--blue)}
+main{max-width:1000px;margin:0 auto;padding:40px 16px 60px}
+.sections{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.section{background:#fff;border-radius:14px;padding:32px 28px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.08);text-decoration:none;color:var(--ink);transition:transform .15s}
+.section:hover{transform:translateY(-4px)}
+.section .icon{font-size:48px;margin-bottom:12px}
+.section h2{margin:0 0 8px;font-size:20px}
+.section p{margin:0;font-size:13.5px;color:var(--muted)}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:30px}
+</style>
+</head>
+<body>
+<div class="hero">
+<h1>📚 教學資源共享</h1>
+<p>數學 · STEM · AI — 互動工具、練習、遊戲，免費畀學生同老師用</p>
+</div>
+<nav>
+<a href="index.html" class="active">🏠 首頁</a>
+<a href="maths.html">📐 數學</a>
+<a href="videos.html">🎬 影片</a>
+<a href="games.html">🎮 遊戲</a>
+<a href="stem.html">🔬 STEM</a>
+<a href="ai.html">🤖 AI</a>
+<a href="news.html">📰 資訊</a>
+</nav>
+<main>
+<div class="sections">
+<a class="section" href="maths.html">
+<div class="icon">📐</div>
+<h2>數學科</h2>
+<p>互動教學工具、Quiz、DSE 出題機、數學遊戲</p>
+</a>
+<a class="section" href="stem.html">
+<div class="icon">🔬</div>
+<h2>STEM</h2>
+<p>創科班教材、學生活動、比賽資訊</p>
+</a>
+<a class="section" href="ai.html">
+<div class="icon">🤖</div>
+<h2>AI</h2>
+<p>AI 教學資源、學生機會、工具推介</p>
+</a>
+<a class="section" href="games.html">
+<div class="icon">🎮</div>
+<h2>數學遊戲</h2>
+<p>邊玩邊學，手機都玩到</p>
+</a>
+</div>
+</main>
+<footer>教學資源共享 · 歡迎老師同學生使用</footer>
+</body>
+</html>

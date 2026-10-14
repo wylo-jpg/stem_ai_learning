@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>火箭瞄準</title>
+<style>
+:root{--blue:#2563eb;--ink:#1f2937;--muted:#6b7280;--bg:#f3f4f6;--card:#fff;--green:#16a34a;--red:#dc2626}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;touch-action:manipulation}
+header{background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#fff;padding:22px 20px;text-align:center}
+header h1{margin:0 0 6px;font-size:24px}
+header p{margin:0;opacity:.92;font-size:13.5px}
+nav{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 16px;display:flex;gap:4px;overflow-x:auto;position:sticky;top:0;z-index:10}
+nav a{padding:12px 16px;text-decoration:none;color:var(--muted);font-weight:600;font-size:14px;white-space:nowrap;border-bottom:3px solid transparent}
+nav a.active{color:var(--blue);border-bottom-color:var(--blue)}
+main{max-width:1000px;margin:0 auto;padding:18px 14px 50px}
+.hud{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--card);border-radius:12px;padding:12px 14px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:12px}
+.hud .stat{background:#eff6ff;border-radius:8px;padding:6px 12px;font-weight:700;font-size:14px}
+.hud .stat small{display:block;font-weight:400;color:var(--muted);font-size:11px}
+.panel{background:var(--card);border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.08);padding:14px;margin-bottom:12px}
+.ctrl{margin:10px 0}
+.ctrl label{display:flex;justify-content:space-between;font-weight:700;font-size:15px;margin-bottom:4px}
+.ctrl label b{color:var(--blue)}
+input[type=range]{width:100%;height:44px;accent-color:var(--blue);cursor:pointer}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.btn{border:none;border-radius:10px;padding:14px 26px;font-size:16px;font-weight:700;cursor:pointer;color:#fff;background:var(--blue);min-height:52px;flex:1}
+.btn:active{transform:scale(.96)}
+.btn.green{background:var(--green)}
+.btn.red{background:var(--red)}
+.btn.gray{background:#9ca3af}
+.canvas-wrap{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.08);padding:8px}
+canvas{width:100%;height:auto;display:block;border-radius:8px}
+.eq{background:#1e293b;color:#fde68a;border-radius:10px;padding:10px 14px;font-size:13.5px;margin-top:12px;font-family:Consolas,monospace}
+.eq small{color:#94a3b8;font-family:"Segoe UI",sans-serif}
+.info{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px 14px;font-size:13.5px;margin-top:12px;min-height:48px}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px}
+.overlay.hide{display:none}
+.sheet{background:#fff;border-radius:16px;max-width:520px;width:100%;padding:26px;max-height:88vh;overflow:auto}
+.sheet h2{margin:0 0 10px;font-size:22px}
+.sheet p,.sheet li{font-size:14.5px}
+.sheet ul{padding-left:20px}
+.sheet .btn{width:100%;margin-top:14px}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:26px}
+</style>
+</head>
+<body>
+<header>
+<h1>🚀 火箭瞄準</h1>
+<p>調較角度同力度，射中目標！學拋物線同重力</p>
+</header>
+<nav>
+<a href="index.html">🏠 首頁</a>
+<a href="maths.html">📐 數學</a>
+<a href="videos.html">🎬 影片</a>
+<a href="games.html" class="active">🎮 遊戲</a>
+<a href="stem.html">🔬 STEM</a>
+<a href="ai.html">🤖 AI</a>
+</nav>
+<main>
+<div class="hud">
+<div class="stat"><small>關卡</small><span id="hLevel">1 / 5</span></div>
+<div class="stat"><small>剩餘火箭</small>🚀×<span id="hRockets">5</span></div>
+<div class="stat"><small>風速</small><span id="hWind">0</span></div>
+<div class="stat"><small>總分</small><span id="hScore">0</span></div>
+</div>
+<div class="canvas-wrap"><canvas id="cv" width="960" height="600"></canvas></div>
+<div class="panel">
+<div class="ctrl">
+<label>🎯 發射角度 <b><span id="vAng">45</span>°</b></label>
+<input type="range" id="rAng" min="15" max="80" value="45">
+</div>
+<div class="ctrl">
+<label>🔥 發射力度 <b><span id="vPow">55</span></b></label>
+<input type="range" id="rPow" min="10" max="100" value="55">
+</div>
+<div class="btnrow">
+<button class="btn red" id="btnFire" onclick="fire()">🚀 發射！</button>
+<button class="btn gray" onclick="togglePrev()">👁 預覽軌跡：<span id="prevState">開</span></button>
+</div>
+</div>
+<div class="eq"><small>📐 拋物線軌跡：</small><br>y = x·tanθ − g·x² / (2v₀²cos²θ)<br><small>虛線就係按呢條式計出嚟嘅預測軌跡</small></div>
+<div class="info" id="info">等緊發射…</div>
+</main>
+<footer>教學資源共享 · 歡迎老師同學生使用</footer>
+
+<div class="overlay" id="helpOv">
+<div class="sheet">
+<h2>🚀 點玩？</h2>
+<ul>
+<li>用滑桿調較<b>發射角度</b>（15°–80°）同<b>發射力度</b>。</li>
+<li>撳 <b>🚀 發射</b>，火箭就會按拋物線飛出去。</li>
+<li>射中🎯目標就過關！每關有 5 支火箭。</li>
+<li>後面關卡會有<b>風</b>（← →），會吹偏火箭，要預先修正。</li>
+<li>虛線係<b>預測軌跡</b>，係按物理公式計出嚟嘅，唔係估㗎！</li>
+</ul>
+<p>📐 背後嘅物理：火箭受重力影響，水平方向等速、垂直方向減速，形成<b>拋物線</b>。45° 發射射得最遠；有風就要好似射箭咁「預判」風向。</p>
+<button class="btn" onclick="document.getElementById('helpOv').classList.add('hide')">開始發射！</button>
+</div>
+</div>
+
+<div class="overlay hide" id="resOv">
+<div class="sheet" style="text-align:center">
+<h2 id="resTitle"></h2>
+<p id="resText" style="font-size:15px"></p>
+<button class="btn green" id="resBtn" onclick="closeResult()">下一關 →</button>
+</div>
+</div>
+
+<script>
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const W=960,H=600,GX=80,GY=520,GRAV=500;
+const LEVELS=[
+ {tx:[420,560],wind:0,plat:false,tr:30},
+ {tx:[560,700],wind:20,plat:false,tr:28},
+ {tx:[640,800],wind:40,plat:true,tr:26},
+ {tx:[700,880],wind:60,plat:true,tr:24},
+ {tx:[500,880],wind:85,plat:true,tr:22}
+];
+let level=0,score=0,rockets=5,wind=0,tx=500,ty=GY,tr=30,plat=false;
+let flying=false,rx=0,ry=0,rvx=0,rvy=0,ft=0,showPrev=true,trail=[];
+let parts=[],done=false;
+
+const rAng=document.getElementById('rAng'),rPow=document.getElementById('rPow');
+rAng.oninput=()=>document.getElementById('vAng').textContent=rAng.value;
+rPow.oninput=()=>document.getElementById('vPow').textContent=rPow.value;
+
+function buildLevel(){
+ const L=LEVELS[level];
+ tx=L.tx[0]+Math.random()*(L.tx[1]-L.tx[0]);
+ plat=L.plat;tr=L.tr;
+ wind=(Math.random()<0.5?-1:1)*L.wind*(0.7+Math.random()*0.6);
+ ty=plat?GY-90-Math.random()*60:GY;
+ rockets=5;flying=false;done=false;trail=[];parts=[];
+ document.getElementById('hLevel').textContent=(level+1)+' / '+LEVELS.length;
+ document.getElementById('hRockets').textContent=rockets;
+ document.getElementById('hWind').textContent=(wind>0?'→ ':'← ')+Math.abs(Math.round(wind));
+ document.getElementById('hScore').textContent=score;
+ setInfo('第 '+(level+1)+' 關：目標出現喇！'+(plat?'今次目標喺台上面。':'')+(Math.abs(wind)>5?'小心風向！':''));
+}
+function setInfo(s){document.getElementById('info').innerHTML=s;}
+function togglePrev(){showPrev=!showPrev;document.getElementById('prevState').textContent=showPrev?'開':'閂';}
+function params(){
+ const th=+rAng.value*Math.PI/180;
+ const v=250+(+rPow.value)*7;
+ return{th,v};
+}
+function fire(){
+ if(flying||done||rockets<=0)return;
+ rockets--;document.getElementById('hRockets').textContent=rockets;
+ const{th,v}=params();
+ rvx=v*Math.cos(th);rvy=-v*Math.sin(th);
+ rx=GX;ry=GY-24;ft=0;flying=true;trail=[];
+ setInfo('發射！初速 '+Math.round(v)+'，角度 '+rAng.value+'°…');
+}
+function explode(x,y){
+ for(let i=0;i<26;i++)parts.push({x,y,vx:(Math.random()-0.5)*400,vy:-Math.random()*350,t:0,c:['#f97316','#fbbf24','#ef4444','#fde68a'][i%4]});
+}
+function step(dt){
+ if(flying){
+  ft+=dt;
+  // 水平：等速 + 風嘅加速度；垂直：重力加速度 → 拋物線
+  rvy+=GRAV*dt;
+  rx+=(rvx+wind*ft)*dt;
+  ry+=rvy*dt;
+  trail.push([rx,ry]);if(trail.length>120)trail.shift();
+  const d=Math.hypot(rx-tx,ry-(ty-14));
+  if(d<tr+10){ // 命中
+   flying=false;explode(tx,ty-14);
+   const gain=Math.round(120-d*2)+rockets*25;
+   score+=Math.max(60,gain);
+   document.getElementById('hScore').textContent=score;
+   setInfo('🎯 正中目標！偏離 '+Math.round(d)+'px，得分 +'+Math.max(60,gain)+'。');
+   setTimeout(()=>levelDone(),1100);return;
+  }
+  if(ry>=GY+10||rx>W+40||rx<-40||ry<-40){
+   flying=false;
+   const missD=Math.round(Math.hypot(Math.min(Math.max(rx,0),W)-tx,Math.min(ry,GY)-(ty-14)));
+   if(rockets<=0){setTimeout(()=>gameOver(),700);}
+   else setInfo('💨 未中！落點偏離約 '+missD+'px，試下調角度／力度。仲有 '+rockets+' 支火箭。');
+  }
+ }
+ for(const p of parts){p.t+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=600*dt;}
+ parts=parts.filter(p=>p.t<1.2);
+}
+let nextAction='next';
+function levelDone(){
+ done=true;nextAction=(level<LEVELS.length-1)?'next':'restart';
+ const ov=document.getElementById('resOv');
+ document.getElementById('resTitle').textContent=level<LEVELS.length-1?'🎉 命中目標！':'🏆 全部完成！';
+ document.getElementById('resText').textContent=level<LEVELS.length-1?
+  '漂亮嘅一擊！總分 '+score+'。下一關更難…':'你係神射手！總分 '+score+'。';
+ document.getElementById('resBtn').textContent=level<LEVELS.length-1?'下一關 →':'再玩一次';
+ ov.classList.remove('hide');
+}
+function gameOver(){
+ done=true;nextAction='retry';
+ const ov=document.getElementById('resOv');
+ document.getElementById('resTitle').textContent='😅 火箭用晒喇';
+ document.getElementById('resText').textContent='今次差少少，總分 '+score+'。再挑戰一次啦！';
+ document.getElementById('resBtn').textContent='重玩呢關';
+ ov.classList.remove('hide');
+}
+function closeResult(){
+ document.getElementById('resOv').classList.add('hide');
+ if(nextAction==='next'){level++;buildLevel();}
+ else if(nextAction==='retry'){buildLevel();}
+ else{level=0;score=0;buildLevel();}
+}
+function drawPrev(){
+ if(flying||done||!showPrev)return;
+ const{th,v}=params();
+ const vx=v*Math.cos(th),vy=v*Math.sin(th);
+ ctx.strokeStyle='rgba(37,99,235,.55)';ctx.lineWidth=3;ctx.setLineDash([8,8]);
+ ctx.beginPath();
+ let x=GX,y=GY-24;
+ ctx.moveTo(x,y);
+ for(let t=0.05;t<4;t+=0.05){
+  x=GX+vx*t+0.5*wind*t*t;
+  y=GY-24-vy*t+0.5*GRAV*t*t;
+  if(y>GY+20||x>W+20)break;
+  ctx.lineTo(x,y);
+ }
+ ctx.stroke();ctx.setLineDash([]);
+}
+function draw(){
+ ctx.clearRect(0,0,W,H);
+ const g=ctx.createLinearGradient(0,0,0,H);
+ g.addColorStop(0,'#0c4a6e');g.addColorStop(.7,'#0369a1');g.addColorStop(.7,'#4d7c0f');g.addColorStop(1,'#3f6212');
+ ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ // 星星
+ ctx.fillStyle='#fff';
+ for(let i=0;i<40;i++){const sx=(i*173)%W,sy=(i*97)%300;ctx.globalAlpha=.5+.5*Math.sin(Date.now()/500+i);ctx.fillRect(sx,sy,2,2);}
+ ctx.globalAlpha=1;
+ // 地面
+ ctx.fillStyle='#3f6212';ctx.fillRect(0,GY,W,H-GY);
+ ctx.fillStyle='#4d7c0f';ctx.fillRect(0,GY,W,8);
+ // 發射台
+ ctx.fillStyle='#64748b';ctx.fillRect(GX-26,GY-24,52,24);
+ ctx.fillStyle='#475569';ctx.fillRect(GX-30,GY-8,60,8);
+ // 平台
+ if(plat){ctx.fillStyle='#92400e';ctx.fillRect(tx-44,ty,GY-ty,88);
+  ctx.fillStyle='#b45309';ctx.fillRect(tx-48,ty-6,96,10);}
+ // 目標
+ ctx.fillStyle='#dc2626';ctx.beginPath();ctx.arc(tx,ty-14,tr,0,7);ctx.fill();
+ ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(tx,ty-14,tr*0.66,0,7);ctx.fill();
+ ctx.fillStyle='#dc2626';ctx.beginPath();ctx.arc(tx,ty-14,tr*0.33,0,7);ctx.fill();
+ ctx.font='26px serif';ctx.textAlign='center';ctx.fillText('🎯',tx,ty-8);
+ // 預覽
+ drawPrev();
+ // 軌跡
+ if(trail.length>1){ctx.strokeStyle='rgba(249,115,22,.7)';ctx.lineWidth=3;ctx.beginPath();
+  ctx.moveTo(trail[0][0],trail[0][1]);for(const p of trail)ctx.lineTo(p[0],p[1]);ctx.stroke();}
+ // 火箭
+ if(flying){const ang=Math.atan2(rvy,rvx+wind*ft);
+  ctx.save();ctx.translate(rx,ry);ctx.rotate(ang);
+  ctx.font='30px serif';ctx.textAlign='center';ctx.fillText('🚀',0,8);ctx.restore();}
+ else if(!done){const{th}=params();
+  ctx.save();ctx.translate(GX,GY-24);ctx.rotate(-th);
+  ctx.font='30px serif';ctx.textAlign='left';ctx.fillText('🚀',-6,10);ctx.restore();}
+ // 粒子
+ for(const p of parts){ctx.globalAlpha=1-p.t/1.2;ctx.fillStyle=p.c;
+  ctx.beginPath();ctx.arc(p.x,p.y,5*(1-p.t/1.5),0,7);ctx.fill();}
+ ctx.globalAlpha=1;
+ // 風向
+ if(Math.abs(wind)>5){ctx.fillStyle='#fff';ctx.font='bold 20px sans-serif';ctx.textAlign='right';
+  ctx.fillText((wind>0?'風 → ':'風 ← ')+Math.abs(Math.round(wind)),W-16,36);}
+}
+let last=0;
+function loop(ts){const dt=Math.min(0.05,(ts-last)/1000||0.016);last=ts;step(dt);draw();requestAnimationFrame(loop);}
+buildLevel();requestAnimationFrame(loop);
+</script>
+</body>
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>人臉檢測模擬</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#0f172a;color:#e2e8f0;touch-action:manipulation;line-height:1.6}
+header{background:#1e293b;padding:12px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:5}
+header a{color:#93c5fd;text-decoration:none;font-size:16px;min-height:44px;display:flex;align-items:center}
+header h1{margin:0;font-size:18px;flex:1}
+#hud{display:flex;gap:8px;padding:10px 12px;flex-wrap:wrap}
+.hud-box{background:#1e293b;border-radius:10px;padding:8px 14px;font-size:15px;flex:1;min-width:90px;text-align:center}
+.hud-box b{color:#fbbf24;font-size:18px}
+#scene-wrap{padding:0 12px;max-width:640px;margin:0 auto}
+svg#scene{width:100%;height:auto;border-radius:12px;background:#1e293b;touch-action:none;display:block}
+.overlay{position:fixed;inset:0;background:rgba(2,6,23,.92);display:flex;align-items:center;justify-content:center;z-index:20;padding:20px}
+.overlay.hidden{display:none}
+.panel{background:#1e293b;border-radius:16px;padding:24px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto}
+.panel h2{margin:0 0 10px;font-size:20px}
+.panel p{font-size:15px;color:#cbd5e1;margin:8px 0}
+.concept{background:#0c4a6e;border-radius:10px;padding:12px 14px;margin:12px 0;font-size:14px}
+.concept b{color:#7dd3fc}
+button.big{display:block;width:100%;min-height:52px;margin-top:14px;background:#2563eb;color:#fff;border:0;border-radius:12px;font-size:18px;font-weight:700;cursor:pointer}
+button.big:active{background:#1d4ed8}
+#flash{position:fixed;inset:0;pointer-events:none;z-index:15;opacity:0;transition:opacity .15s}
+#roundmsg{text-align:center;font-size:16px;min-height:28px;color:#fbbf24;font-weight:700;padding:4px}
+footer{text-align:center;color:#64748b;font-size:12px;padding:16px}
+.found-box{stroke:#22c55e;stroke-width:3;fill:none;rx:8}
+</style>
+</head>
+<body>
+<header><a href="ai.html">← 返回</a><h1>📷 人臉檢測模擬</h1></header>
+<div id="hud">
+<div class="hud-box">第 <b id="h-round">1</b>/3 關</div>
+<div class="hud-box">已框 <b id="h-found">0</b>/<span id="h-total">0</span></div>
+<div class="hud-box">⏱ <b id="h-time">60</b>s</div>
+<div class="hud-box">分數 <b id="h-score">0</b></div>
+</div>
+<div id="roundmsg"></div>
+<div id="scene-wrap"><svg id="scene" viewBox="0 0 400 320"></svg></div>
+<div id="flash"></div>
+
+<div class="overlay" id="intro">
+<div class="panel">
+<h2>📷 人臉檢測模擬</h2>
+<p><b>玩法：</b>每關會出現一個場景，入面有若干個人。<b>用手指篤每個人塊面</b>，框出所有人臉！留意有啲圓形唔係人臉（氣球、波、太陽），篤錯會扣分。每關限時，搵晒所有面就過關。</p>
+<div class="concept"><b>💡 AI概念 — 電腦視覺：</b>人臉檢測係電腦視覺最經典嘅應用。AI 會學識由像素中搵出「面部特徵」（眼、鼻、口嘅排列），再用框標出位置。你手機解鎖用嘅 Face ID、相機自動對焦，都係靠呢啲技術。AI 有時都會認錯——就好似你篤錯氣球一樣，叫「誤判」(false positive)。</div>
+<button class="big" onclick="startGame()">開始挑戰</button>
+</div>
+</div>
+
+<div class="overlay hidden" id="end">
+<div class="panel">
+<h2 id="end-title">🎉 完成！</h2>
+<p id="end-text"></p>
+<div class="concept" id="end-concept"></div>
+<button class="big" onclick="location.reload()">再玩一次</button>
+<a href="ai.html" style="display:block;text-align:center;margin-top:10px;color:#93c5fd;min-height:44px;line-height:44px">返回 AI 資源頁</a>
+</div>
+</div>
+
+<footer>單檔離線遊戲 · 教學資源共享</footer>
+
+<script>
+const SKIN=['#ffd9b3','#f1c27d','#e0ac69','#c68642','#8d5524'];
+const SHIRT=['#ef4444','#3b82f6','#22c55e','#eab308','#a855f7','#ec4899','#14b8a6','#f97316'];
+const HAIR=['#1f2937','#4a3226','#6b7280','#92400e'];
+
+function rng(seed){let s=seed;return()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;}}
+
+function person(x,y,s,flip,r){
+  const skin=SKIN[Math.floor(r()*SKIN.length)],shirt=SHIRT[Math.floor(r()*SHIRT.length)],hair=HAIR[Math.floor(r()*HAIR.length)];
+  const f=flip?-1:1;
+  return `<g transform="translate(${x},${y}) scale(${f*s},${s})">
+    <rect x="-12" y="10" width="24" height="32" rx="9" fill="${shirt}"/>
+    <rect x="-12" y="10" width="24" height="10" rx="5" fill="rgba(255,255,255,.15)"/>
+    <circle cx="0" cy="0" r="14" fill="${skin}"/>
+    <path d="M-14,-2 A14,14 0 0 1 14,-2 L14,-5 A14,10 0 0 0 -14,-5 Z" fill="${hair}"/>
+    <circle cx="-5" cy="0" r="2" fill="#1f2937"/><circle cx="5" cy="0" r="2" fill="#1f2937"/>
+    <path d="M-4,6 Q0,9 4,6" stroke="#1f2937" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  </g>`;
+}
+function balloon(x,y,r){
+  const c=['#ef4444','#3b82f6','#eab308','#a855f7'][Math.floor(r()*4)];
+  return `<g><ellipse cx="${x}" cy="${y}" rx="14" ry="17" fill="${c}" opacity=".85"/><line x1="${x}" y1="${y+17}" x2="${x}" y2="${y+44}" stroke="#94a3b8" stroke-width="1.5"/></g>`;
+}
+function sun(x,y){return `<g><circle cx="${x}" cy="${y}" r="22" fill="#fbbf24"/>${[0,45,90,135,180,225,270,315].map(a=>{const rad=a*Math.PI/180;return `<line x1="${x+Math.cos(rad)*28}" y1="${y+Math.sin(rad)*28}" x2="${x+Math.cos(rad)*38}" y2="${y+Math.sin(rad)*38}" stroke="#fbbf24" stroke-width="3" stroke-linecap="round"/>`}).join('')}</g>`;}
+
+const SCENES=[
+ {name:"🌳 公園",time:60,seed:11,bg:"#14532d",
+  spots:[[60,120,1],[150,90,1.15],[245,130,0.95],[330,95,1.1],[200,210,1.05]],
+  deco:(r)=>sun(350,40)+balloon(90,220,r)+balloon(300,240,r)},
+ {name:"🏫 課室",time:60,seed:22,bg:"#7c2d12",
+  spots:[[50,100,1],[130,80,0.9],[210,105,1.1],[290,85,0.95],[360,110,1],[95,205,1.05],[250,215,0.9]],
+  deco:(r)=>`<rect x="0" y="0" width="400" height="46" fill="#1e3a5f"/><rect x="150" y="8" width="100" height="30" rx="4" fill="#0f2a4a"/>`+balloon(330,250,r)},
+ {name:"🎪 嘉年華",time:75,seed:33,bg:"#4a1d96",
+  spots:[[40,90,0.9],[110,120,1.1],[180,85,0.95],[250,115,1.05],[320,90,1],[365,130,0.9],[80,215,1],[200,225,1.1],[310,220,0.95]],
+  deco:(r)=>sun(200,36)+balloon(150,260,r)+balloon(255,265,r)+`<circle cx="120" cy="250" r="12" fill="#e2e8f0"/><circle cx="300" cy="60" r="10" fill="#e2e8f0"/>`}
+];
+
+let round=0,found=0,score=0,timeLeft=0,timer=null,faces=[],playing=false;
+
+function renderScene(){
+  const sc=SCENES[round],r=rng(sc.seed);
+  const svg=document.getElementById('scene');
+  faces=sc.spots.map(([x,y,s])=>({x,y,r:14*s,found:false}));
+  let html=`<rect width="400" height="320" fill="${sc.bg}"/><rect y="270" width="400" height="50" fill="rgba(0,0,0,.25)"/>`;
+  html+=sc.deco(r);
+  sc.spots.forEach(([x,y,s],i)=>{
+    const flip=r()>0.5;
+    html+=person(x,y,s,flip,r);
+    html+=`<g id="box${i}" style="display:none"><rect x="${x-16*s}" y="${y-16*s}" width="${32*s}" height="${32*s}" class="found-box"/><text x="${x+16*s-4}" y="${y-16*s-4}" font-size="16" fill="#22c55e">✓</text></g>`;
+  });
+  svg.innerHTML=html;
+  document.getElementById('h-total').textContent=faces.length;
+  document.getElementById('h-found').textContent='0';
+  document.getElementById('h-round').textContent=round+1;
+  document.getElementById('roundmsg').textContent=sc.name+'：搵出 '+faces.length+' 塊面！';
+}
+
+function svgCoords(evt){
+  const svg=document.getElementById('scene');
+  const pt=svg.createSVGPoint();pt.x=evt.clientX;pt.y=evt.clientY;
+  return pt.matrixTransform(svg.getScreenCTM().inverse());
+}
+
+document.getElementById('scene').addEventListener('pointerdown',e=>{
+  if(!playing)return;
+  e.preventDefault();
+  const p=svgCoords(e);
+  let hit=-1;
+  faces.forEach((f,i)=>{
+    if(!f.found&&Math.hypot(p.x-f.x,p.y-f.y)<=f.r+8)hit=i;
+  });
+  if(hit>=0){
+    faces[hit].found=true;found++;
+    document.getElementById('box'+hit).style.display='block';
+    score+=10;found++;
+    document.getElementById('h-score').textContent=score;
+    document.getElementById('h-found').textContent=faces.filter(f=>f.found).length;
+    flash('rgba(34,197,94,.25)');
+    if(faces.every(f=>f.found))nextRound();
+  }else{
+    score=Math.max(0,score-3);
+    document.getElementById('h-score').textContent=score;
+    flash('rgba(239,68,68,.3)');
+    document.getElementById('roundmsg').textContent='⚠️ 嗰個唔係人臉！扣 3 分';
+  }
+});
+
+function flash(c){const f=document.getElementById('flash');f.style.background=c;f.style.opacity=1;setTimeout(()=>f.style.opacity=0,160);}
+
+function startGame(){
+  document.getElementById('intro').classList.add('hidden');
+  round=0;score=0;found=0;
+  document.getElementById('h-score').textContent='0';
+  startRound();
+}
+function startRound(){
+  renderScene();playing=true;
+  timeLeft=SCENES[round].time;
+  document.getElementById('h-time').textContent=timeLeft;
+  clearInterval(timer);
+  timer=setInterval(()=>{
+    timeLeft--;
+    document.getElementById('h-time').textContent=timeLeft;
+    if(timeLeft<=10)document.getElementById('h-time').style.color='#ef4444';
+    else document.getElementById('h-time').style.color='';
+    if(timeLeft<=0){clearInterval(timer);playing=false;gameOver(false);}
+  },1000);
+}
+function nextRound(){
+  clearInterval(timer);playing=false;
+  const bonus=Math.floor(timeLeft/2);score+=bonus;
+  document.getElementById('h-score').textContent=score;
+  document.getElementById('roundmsg').textContent=`✅ 過關！時間獎勵 +${bonus} 分`;
+  setTimeout(()=>{
+    round++;
+    if(round>=SCENES.length){gameOver(true);}
+    else startRound();
+  },1400);
+}
+function gameOver(win){
+  const totalFaces=SCENES.reduce((a,s)=>a+s.spots.length,0);
+  const stars=win?(score>=280?'⭐⭐⭐':score>=200?'⭐⭐':'⭐'):'—';
+  document.getElementById('end-title').textContent=win?'🎉 全部過關！':'⏱ 時間到！';
+  document.getElementById('end-text').innerHTML=`總分：<b style="color:#fbbf24;font-size:22px">${score}</b><br>評級：${stars}<br>你成功框出 ${found} 塊人臉。`;
+  document.getElementById('end-concept').innerHTML='<b>💡 諗一諗：</b>現實嘅人臉檢測 AI 每秒要處理幾十格畫面，仲要應付側面、戴口罩、光線不足等情況。你覺得 AI 點樣先可以減少「誤判」？';
+  document.getElementById('end').classList.remove('hidden');
+}
+</script>
+</body>
+</html>

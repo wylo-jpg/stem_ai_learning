@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>電腦視覺拼圖 | AI小遊戲</title>
+<style>
+:root{--ink:#1f2937;--muted:#6b7280;--bg:#f0f4ff;--card:#fff;--blue:#2563eb;--green:#16a34a;--red:#dc2626}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--ink);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+header{background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#fff;padding:16px;text-align:center}
+header h1{margin:0;font-size:20px}
+nav{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 12px;display:flex;gap:2px;overflow-x:auto}
+nav a{padding:12px 14px;text-decoration:none;color:var(--muted);font-weight:600;font-size:13px;white-space:nowrap}
+.wrap{max-width:520px;margin:0 auto;padding:16px}
+.hud{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.pill{background:var(--card);border-radius:20px;padding:8px 14px;font-size:14px;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.btnrow{display:flex;gap:8px;margin-bottom:12px}
+button.big{flex:1;min-height:52px;font-size:16px;font-weight:700;border:none;border-radius:12px;cursor:pointer}
+.btn-hint{background:#fef3c7;color:#92400e}
+.btn-view{background:#e0e7ff;color:#3730a3}
+.btn-view.on{background:#3730a3;color:#fff}
+#board{display:grid;gap:6px;width:100%;max-width:400px;margin:0 auto}
+.tile{aspect-ratio:1;border:none;border-radius:10px;cursor:pointer;position:relative;min-height:60px;transition:transform .12s;box-shadow:0 2px 5px rgba(0,0,0,.12)}
+.tile:active{transform:scale(.96)}
+.tile.sel{outline:4px solid var(--blue);outline-offset:-4px}
+.tile.glow{animation:glow 1s ease 2}
+@keyframes glow{0%,100%{box-shadow:0 2px 5px rgba(0,0,0,.12)}50%{box-shadow:0 0 0 5px var(--green)}}
+.tile .ailabel{display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;background:rgba(0,0,0,.55);border-radius:10px;padding:2px;text-align:center;line-height:1.3}
+#board.aiview .tile .ailabel{display:flex}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.overlay.hidden{display:none}
+.sheet{background:#fff;border-radius:16px;padding:24px;max-width:440px;width:100%;max-height:88vh;overflow-y:auto}
+.sheet h2{margin:0 0 12px;font-size:20px}
+.sheet p,.sheet li{font-size:15px;line-height:1.7}
+.sheet ul{padding-left:20px}
+.concept{background:#eff6ff;border-left:4px solid var(--blue);border-radius:8px;padding:12px 14px;margin:14px 0;font-size:14px}
+.startbtn{width:100%;min-height:56px;font-size:18px;font-weight:800;border:none;border-radius:12px;background:var(--blue);color:#fff;cursor:pointer;margin-top:8px}
+.stars{font-size:28px;letter-spacing:4px}
+</style>
+</head>
+<body>
+<header><h1>🧩 電腦視覺拼圖</h1></header>
+<nav>
+<a href="index.html">🏠 首頁</a><a href="maths.html">📐 數學</a><a href="videos.html">🎬 影片</a><a href="games.html">🎮 遊戲</a><a href="stem.html">🔬 STEM</a><a href="ai.html">🤖 AI</a><a href="news.html">📰 資訊</a>
+</nav>
+<div class="wrap">
+  <div class="hud">
+    <div class="pill">關卡 <span id="lv">1</span>/3</div>
+    <div class="pill">🔀 <span id="moves">0</span> 步</div>
+    <div class="pill">⏱️ <span id="time">0</span>s</div>
+    <div class="pill">⭐ <span id="score">0</span></div>
+  </div>
+  <div class="btnrow">
+    <button class="big btn-hint" id="hintBtn">💡 AI提示 (<span id="hints">2</span>)</button>
+    <button class="big btn-view" id="viewBtn">👁️ AI視角</button>
+  </div>
+  <div id="board"></div>
+</div>
+
+<div class="overlay" id="intro">
+  <div class="sheet">
+    <h2>🧩 電腦視覺拼圖</h2>
+    <p><b>玩法：</b>圖像碎片被打散了！撳一塊碎片，再撳另一塊，兩塊就會交換位置。將馬賽克圖拼返原樣就過關。</p>
+    <ul>
+      <li>👁️ <b>AI視角</b>：睇下 AI 點樣「睇」呢幅圖——佢會為每塊碎片估顏色同信心度</li>
+      <li>⚠️ 留意：AI 有時會睇錯！信心度低嘅判斷未必啱</li>
+      <li>💡 AI提示：會閃一閃 3 塊已經放啱位置嘅碎片</li>
+    </ul>
+    <div class="concept">💡 <b>AI概念：圖像識別</b><br>AI 睇圖唔係真係「睇」，而係將圖像拆成像素網格，逐區分析顏色同紋理，再分類判斷。光線、角度或者相似顏色好容易令 AI 誤判——所以現實中嘅人臉識別、自動駕駛都要經過大量訓練同驗證，唔可以盲信 AI 嘅判斷。</div>
+    <button class="startbtn" id="startBtn">開始挑戰</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="endOverlay">
+  <div class="sheet" style="text-align:center">
+    <h2 id="endTitle">過關！</h2>
+    <div class="stars" id="endStars">⭐⭐⭐</div>
+    <p id="endText"></p>
+    <button class="startbtn" id="nextBtn">下一關</button>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+var C={W:'#f1f5f9',R:'#ef4444',G:'#22c55e',B:'#1f2937',P:'#f9a8d4'};
+var NAMES={W:'白',R:'紅',G:'綠',B:'黑',P:'粉'};
+var LEVELS=[
+  {name:'蘋果',n:3,art:['W','G','W','R','R','W','W','R','W'],mis:[1,5]},
+  {name:'大蘋果',n:4,art:['W','W','G','W','W','R','R','W','R','R','R','R','W','R','R','W'],mis:[2,8,13]},
+  {name:'熊貓',n:4,art:['B','W','W','B','W','B','B','W','W','B','P','W','W','W','W','W'],mis:[0,10,15]}
+];
+var lv=0,tiles=[],sel=-1,moves=0,secs=0,timer=null,score=0,hints=2,aiView=false;
+
+var board=document.getElementById('board');
+function $(id){return document.getElementById(id);}
+
+function shuffled(a){
+  var r=a.slice();
+  for(var i=r.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=r[i];r[i]=r[j];r[j]=t;}
+  if(r.every(function(v,i){return v===a[i];})){var k=Math.floor(Math.random()*(r.length-1));var t2=r[k];r[k]=r[k+1];r[k+1]=t2;}
+  return r;
+}
+
+function startLevel(){
+  var L=LEVELS[lv];
+  tiles=shuffled(L.art);
+  sel=-1;moves=0;secs=0;hints=2;aiView=false;
+  $('lv').textContent=lv+1;$('moves').textContent='0';$('time').textContent='0';$('hints').textContent='2';
+  $('viewBtn').classList.remove('on');board.classList.remove('aiview');
+  board.style.gridTemplateColumns='repeat('+L.n+',1fr)';
+  board.innerHTML='';
+  for(var i=0;i<tiles.length;i++){
+    (function(idx){
+      var b=document.createElement('button');
+      b.className='tile';b.dataset.i=idx;
+      b.addEventListener('click',function(){tap(idx);});
+      board.appendChild(b);
+    })(i);
+  }
+  render();
+  clearInterval(timer);
+  timer=setInterval(function(){secs++;$('time').textContent=secs;},1000);
+}
+
+function render(){
+  var L=LEVELS[lv];
+  var kids=board.children;
+  for(var i=0;i<tiles.length;i++){
+    var b=kids[i];
+    b.style.background=C[tiles[i]];
+    b.classList.toggle('sel',i===sel);
+    var lbl=b.querySelector('.ailabel');
+    if(!lbl){lbl=document.createElement('span');lbl.className='ailabel';b.appendChild(lbl);}
+    var isMis=L.mis.indexOf(i)>=0;
+    if(isMis){
+      var wrongs=Object.keys(C).filter(function(k){return k!==tiles[i];});
+      var w=wrongs[Math.floor(Math.random()*wrongs.length)];
+      lbl.textContent=NAMES[w]+' '+(52+Math.floor(Math.random()*16))+'% ⚠️';
+    }else{
+      lbl.textContent=NAMES[tiles[i]]+' '+(88+Math.floor(Math.random()*12))+'%';
+    }
+  }
+}
+
+function tap(i){
+  if(sel===-1){sel=i;}
+  else if(sel===i){sel=-1;}
+  else{
+    if(tiles[sel]!==tiles[i]){
+      var t=tiles[sel];tiles[sel]=tiles[i];tiles[i]=t;moves++;
+      $('moves').textContent=moves;
+    }
+    sel=-1;
+    if(checkWin()){win();}
+  }
+  render();
+}
+
+function checkWin(){
+  var L=LEVELS[lv];
+  return tiles.every(function(v,i){return v===L.art[i];});
+}
+
+function win(){
+  clearInterval(timer);
+  var pts=Math.max(100,1200-moves*20-secs*3);
+  score+=pts;$('score').textContent=score;
+  var stars=pts>=900?'⭐⭐⭐':(pts>=600?'⭐⭐':'⭐');
+  $('endStars').textContent=stars;
+  if(lv<LEVELS.length-1){
+    $('endTitle').textContent='第 '+(lv+1)+' 關完成！';
+    $('endText').textContent='用咗 '+moves+' 步、'+secs+' 秒，得 '+pts+' 分。下一關更難！';
+    $('nextBtn').textContent='下一關';
+  }else{
+    $('endTitle').textContent='🎉 全部過關！';
+    $('endText').textContent='總分 '+score+' 分！你已經體驗過 AI 點樣睇圖——記住，AI 嘅判斷有時會錯，唔好盲信。';
+    $('nextBtn').textContent='再玩一次';
+  }
+  $('endOverlay').classList.remove('hidden');
+}
+
+$('hintBtn').addEventListener('click',function(){
+  if(hints<=0)return;
+  hints--;$('hints').textContent=hints;
+  var L=LEVELS[lv],kids=board.children,shown=0;
+  for(var i=0;i<tiles.length&&shown<3;i++){
+    if(tiles[i]===L.art[i]&&!kids[i].classList.contains('glow')){kids[i].classList.add('glow');shown++;}
+  }
+  setTimeout(function(){for(var j=0;j<kids.length;j++)kids[j].classList.remove('glow');},2100);
+});
+$('viewBtn').addEventListener('click',function(){
+  aiView=!aiView;
+  $('viewBtn').classList.toggle('on',aiView);
+  board.classList.toggle('aiview',aiView);
+  render();
+});
+$('nextBtn').addEventListener('click',function(){
+  $('endOverlay').classList.add('hidden');
+  if(lv<LEVELS.length-1){lv++;}else{lv=0;score=0;$('score').textContent='0';}
+  startLevel();
+});
+$('startBtn').addEventListener('click',function(){
+  $('intro').classList.add('hidden');
+  startLevel();
+});
+})();
+</script>
+</body>
+</html>

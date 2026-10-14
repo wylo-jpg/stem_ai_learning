@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>單擺實驗室</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.6}
+header{background:linear-gradient(135deg,#1e1b4b,#4c1d95);padding:18px 16px;text-align:center}
+header h1{margin:0;font-size:22px}
+header p{margin:4px 0 0;font-size:13px;opacity:.85}
+.back{display:block;text-align:center;background:#1e293b;color:#93c5fd;text-decoration:none;padding:12px;font-size:16px;font-weight:600}
+.wrap{max-width:640px;margin:0 auto;padding:12px 14px 40px}
+canvas{width:100%;height:340px;background:#111c33;border-radius:12px;display:block;touch-action:none}
+.panel{background:#1e293b;border-radius:12px;padding:14px;margin-top:12px}
+.row{display:flex;gap:10px;align-items:center;margin:10px 0;flex-wrap:wrap}
+label{font-size:15px;min-width:90px}
+input[type=range]{flex:1;min-width:140px;height:44px;accent-color:#a78bfa}
+.val{font-size:16px;font-weight:700;color:#c4b5fd;min-width:70px;text-align:right}
+button{min-height:48px;font-size:17px;font-weight:700;border:none;border-radius:10px;padding:10px 18px;cursor:pointer}
+.btn-p{background:#7c3aed;color:#fff;flex:1}
+.btn-s{background:#334155;color:#e2e8f0;flex:1}
+.btn-p:active,.btn-s:active{transform:scale(.97)}
+.readout{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.ro{background:#0f172a;border-radius:8px;padding:10px;text-align:center}
+.ro .k{font-size:12px;color:#94a3b8}
+.ro .v{font-size:20px;font-weight:800;color:#a5b4fc}
+#msg{min-height:52px;font-size:16px;text-align:center;padding:8px;color:#fde68a;font-weight:600}
+.modebar{display:flex;gap:8px;margin-bottom:4px}
+.modebar button{flex:1;background:#334155;color:#cbd5e1}
+.modebar button.on{background:#7c3aed;color:#fff}
+.formula{background:#0f172a;border:1px dashed #7c3aed;border-radius:8px;padding:10px;text-align:center;font-size:17px;margin-top:8px}
+#overlay{position:fixed;inset:0;background:rgba(2,6,23,.96);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+#overlay .card{background:#1e293b;border-radius:16px;padding:24px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto}
+#overlay h2{margin-top:0;color:#c4b5fd}
+#overlay p{font-size:15px}
+#overlay .go{width:100%;background:#7c3aed;color:#fff;margin-top:12px}
+.score{font-size:15px;text-align:center;color:#fbbf24;font-weight:700}
+</style>
+</head>
+<body>
+<header><h1>🕰️ 單擺實驗室</h1><p>調擺長 · 量週期 · 發現單擺定律</p></header>
+<a class="back" href="games.html">← 返回遊戲列表</a>
+<div class="wrap">
+  <div class="modebar">
+    <button id="mFree" class="on">🔬 自由探索</button>
+    <button id="mChal">🏆 挑戰模式</button>
+  </div>
+  <canvas id="cv"></canvas>
+  <div class="panel">
+    <div class="row">
+      <label for="len">擺長 L</label>
+      <input type="range" id="len" min="0.2" max="2" step="0.05" value="1">
+      <span class="val" id="lenV">1.00 m</span>
+    </div>
+    <div class="row">
+      <button class="btn-s" id="btnRS">↻ 重置擺動</button>
+      <button class="btn-p" id="btnGo" style="display:none">📏 開始測量</button>
+    </div>
+    <div class="readout">
+      <div class="ro"><div class="k">理論週期</div><div class="v" id="tTheory">2.01 s</div></div>
+      <div class="ro"><div class="k">實測週期</div><div class="v" id="tMeas">—</div></div>
+    </div>
+    <div class="formula">T = 2π√(L/g)　　g = 9.8 m/s²</div>
+    <div id="msg"></div>
+    <div class="score" id="score"></div>
+  </div>
+</div>
+<div id="overlay">
+  <div class="card">
+    <h2>🕰️ 單擺實驗室</h2>
+    <p><b>玩法：</b>拖動滑桿改變擺長，觀察單擺擺動快慢有咩變化。系統會自動量度實際週期，同理論值比較。</p>
+    <p><b>🏆 挑戰模式：</b>每關會畀一個目標週期，你要調啱擺長，誤差 ±0.05 秒內過關，共 3 關，嘗試次數愈少分愈高！</p>
+    <p><b>💡 物理原理：</b>單擺週期公式 T = 2π√(L/g)。留意：週期只同擺長 L 有關，同擺錘重量、擺幅（細角度時）無關！擺長愈長，擺得愈慢。</p>
+    <button class="go" onclick="document.getElementById('overlay').style.display='none'">開始實驗！</button>
+  </div>
+</div>
+<script>
+(function(){
+"use strict";
+var g=9.8, L=1.0, theta=0.45, omega=0, simT=0;
+var mode='free', round=0, attempts=0, score=0;
+var targets=[1.0,1.8,2.5];
+var measuring=false, measurePeaks=[], measureL=0;
+var peaks=[], prevOmega=0, lastPeakT=-1;
+var cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+var W=0,H=0;
+function resize(){
+  var dpr=Math.min(window.devicePixelRatio||1,2);
+  W=cv.clientWidth; H=cv.clientHeight;
+  cv.width=W*dpr; cv.height=H*dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+window.addEventListener('resize',resize); resize();
+var theory=function(l){return 2*Math.PI*Math.sqrt(l/g);};
+function fmt(x){return x.toFixed(2)+' s';}
+function updTheory(){
+  document.getElementById('lenV').textContent=L.toFixed(2)+' m';
+  document.getElementById('tTheory').textContent=fmt(theory(L));
+}
+document.getElementById('len').addEventListener('input',function(e){
+  L=parseFloat(e.target.value); updTheory();
+  if(measuring){ startMeasure(); }
+});
+document.getElementById('btnRS').addEventListener('click',function(){
+  theta=0.45; omega=0; simT=0; peaks=[]; lastPeakT=-1; prevOmega=0;
+  document.getElementById('tMeas').textContent='—';
+});
+function step(h){
+  var a=-(g/L)*Math.sin(theta);
+  omega+=a*h; theta+=omega*h; simT+=h;
+  if(prevOmega>0&&omega<=0){
+    if(lastPeakT>=0){ peaks.push(simT-lastPeakT); if(peaks.length>5)peaks.shift(); }
+    lastPeakT=simT;
+    if(measuring){ measurePeaks.push(simT); }
+  }
+  prevOmega=omega;
+}
+function avg(a){ if(!a.length)return 0; var s=0; for(var i=0;i<a.length;i++)s+=a[i]; return s/a.length; }
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  var px=W/2, py=56;
+  var scale=(H-110)/2.0;
+  var bx=px+Math.sin(theta)*L*scale, by=py+Math.cos(theta)*L*scale;
+  ctx.strokeStyle='#475569'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(20,py); ctx.lineTo(W-20,py); ctx.stroke();
+  ctx.fillStyle='#64748b';
+  ctx.beginPath(); ctx.arc(px,py,7,0,7); ctx.fill();
+  ctx.strokeStyle='#c4b5fd'; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(bx,by); ctx.stroke();
+  var gr=ctx.createRadialGradient(bx,by,2,bx,by,20);
+  gr.addColorStop(0,'#ddd6fe'); gr.addColorStop(1,'#7c3aed');
+  ctx.fillStyle=gr; ctx.beginPath(); ctx.arc(bx,by,18,0,7); ctx.fill();
+  ctx.fillStyle='#94a3b8'; ctx.font='13px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('支點',px,py-14);
+  ctx.fillText('擺長 '+L.toFixed(2)+' m',(px+bx)/2-30,(py+by)/2);
+}
+var last=performance.now();
+function loop(now){
+  var dt=Math.min((now-last)/1000,0.05); last=now;
+  var n=Math.ceil(dt/0.002), h=dt/n;
+  for(var i=0;i<n;i++) step(h);
+  if(peaks.length>=2 && !measuring){
+    document.getElementById('tMeas').textContent=fmt(avg(peaks.slice(-3)));
+  }
+  if(measuring && measurePeaks.length>=4){
+    var iv=[]; for(var j=1;j<measurePeaks.length;j++) iv.push(measurePeaks[j]-measurePeaks[j-1]);
+    finishMeasure(avg(iv));
+  }
+  draw(); requestAnimationFrame(loop);
+}
+function setMode(m){
+  mode=m;
+  document.getElementById('mFree').className=m==='free'?'on':'';
+  document.getElementById('mChal').className=m==='chal'?'on':'';
+  document.getElementById('btnGo').style.display=m==='chal'?'':'none';
+  document.getElementById('msg').textContent='';
+  if(m==='chal'){ round=0; attempts=0; score=0; newRound(); }
+  else { document.getElementById('score').textContent=''; }
+}
+document.getElementById('mFree').addEventListener('click',function(){setMode('free');});
+document.getElementById('mChal').addEventListener('click',function(){setMode('chal');});
+function newRound(){
+  attempts=0;
+  document.getElementById('score').textContent='第 '+(round+1)+' / 3 關　總分：'+score;
+  document.getElementById('msg').textContent='🎯 目標週期：'+targets[round].toFixed(2)+' s　調好擺長後按「開始測量」';
+}
+function startMeasure(){
+  measuring=true; measurePeaks=[]; measureL=L;
+  theta=0.45; omega=0; simT=0; lastPeakT=-1; prevOmega=0;
+  document.getElementById('msg').textContent='📏 測量中…請稍候';
+  document.getElementById('btnGo').disabled=true;
+}
+document.getElementById('btnGo').addEventListener('click',startMeasure);
+function finishMeasure(mv){
+  measuring=false;
+  document.getElementById('btnGo').disabled=false;
+  document.getElementById('tMeas').textContent=fmt(mv);
+  attempts++;
+  var err=Math.abs(mv-targets[round]);
+  if(err<=0.05){
+    var pts=Math.max(20,100-(attempts-1)*15); score+=pts;
+    document.getElementById('msg').textContent='✅ 過關！實測 '+mv.toFixed(2)+' s，誤差 '+err.toFixed(3)+' s（+'+pts+' 分）';
+    round++;
+    if(round>=3){
+      var best=0; try{best=parseInt(localStorage.getItem('pendBest')||'0');}catch(e){}
+      var nb=''; if(score>best){try{localStorage.setItem('pendBest',score);}catch(e){} nb=' 🏅 新紀錄！';}
+      document.getElementById('score').textContent='🎉 完成！總分：'+score+' / 300'+nb;
+      document.getElementById('msg').textContent+=' 按「挑戰模式」可再玩一次';
+      setTimeout(function(){ if(mode==='chal'){round=0;score=0;} },100);
+    } else { setTimeout(newRound,1800); }
+  } else {
+    document.getElementById('msg').textContent='❌ 實測 '+mv.toFixed(2)+' s，差 '+err.toFixed(2)+' s，再調下擺長試試（第 '+attempts+' 次）';
+  }
+  document.getElementById('score').textContent = round<3 ? '第 '+(round+1)+' / 3 關　總分：'+score : document.getElementById('score').textContent;
+}
+updTheory(); requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

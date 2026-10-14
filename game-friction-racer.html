@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>摩擦力賽車</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#18181b;color:#fafafa;line-height:1.6}
+header{background:linear-gradient(135deg,#7f1d1d,#dc2626);padding:18px 16px;text-align:center}
+header h1{margin:0;font-size:22px}
+header p{margin:4px 0 0;font-size:13px;opacity:.85}
+.back{display:block;text-align:center;background:#27272a;color:#fca5a5;text-decoration:none;padding:12px;font-size:16px;font-weight:600}
+.wrap{max-width:640px;margin:0 auto;padding:12px 14px 40px}
+canvas{width:100%;height:300px;background:#27272a;border-radius:12px;display:block;touch-action:none}
+.panel{background:#27272a;border-radius:12px;padding:14px;margin-top:12px}
+.surf{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.surf button{min-height:56px;font-size:15px;font-weight:700;border-radius:10px;border:2px solid #52525b;background:#3f3f46;color:#e4e4e7}
+.surf button.on{border-color:#fbbf24;background:#451a03;color:#fff}
+button.big{min-height:72px;font-size:22px;font-weight:800;border:none;border-radius:12px;width:100%;background:#dc2626;color:#fff;margin-top:8px}
+button.big:active{transform:scale(.97)}
+button.big:disabled{background:#52525b}
+.hud{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+.ro{background:#18181b;border-radius:8px;padding:8px;text-align:center}
+.ro .k{font-size:11px;color:#a1a1aa}
+.ro .v{font-size:17px;font-weight:800}
+#msg{min-height:56px;font-size:16px;text-align:center;padding:8px;color:#fde68a;font-weight:600}
+.score{font-size:15px;text-align:center;color:#fbbf24;font-weight:700}
+#overlay{position:fixed;inset:0;background:rgba(24,24,27,.97);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+#overlay .card{background:#27272a;border-radius:16px;padding:24px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto}
+#overlay h2{margin-top:0;color:#fca5a5}
+#overlay p{font-size:15px}
+#overlay .go{width:100%;background:#dc2626;color:#fff;margin-top:12px;min-height:52px;font-size:18px;font-weight:700;border:none;border-radius:10px}
+table{width:100%;font-size:13px;border-collapse:collapse;margin:8px 0}
+td,th{border:1px solid #52525b;padding:6px;text-align:center}
+th{background:#3f3f46}
+</style>
+</head>
+<body>
+<header><h1>🏎️ 摩擦力賽車</h1><p>睇準時機剎車 · 停入目標區</p></header>
+<a class="back" href="games.html">← 返回遊戲列表</a>
+<div class="wrap">
+<canvas id="cv"></canvas>
+<div class="panel">
+<div style="font-size:15px;font-weight:700;margin-bottom:4px">今回合路面（已鎖定）：<span id="surfName" style="color:#fbbf24"></span></div>
+<div class="surf" id="surfBtns"></div>
+<table><tr><th>路面</th><th>🧊 冰面</th><th>🌧️ 濕路</th><th>🛣️ 乾路</th></tr>
+<tr><th>摩擦係數 μ</th><td>0.08</td><td>0.35</td><td>0.70</td></tr></table>
+<div class="hud">
+<div class="ro"><div class="k">車速</div><div class="v" id="hV">—</div></div>
+<div class="ro"><div class="k">已行駛</div><div class="v" id="hD">0 m</div></div>
+<div class="ro"><div class="k">理論剎車距離</div><div class="v" id="hB">—</div></div>
+</div>
+<button class="big" id="btnGo">🏁 開車</button>
+<button class="big" id="btnBrake" style="display:none">🛑 剎車！</button>
+</div>
+<div id="msg"></div>
+<div class="score" id="score"></div>
+</div>
+<div id="overlay"><div class="card">
+<h2>🏎️ 摩擦力賽車</h2>
+<p><b>玩法：</b>架車會自動向前行，睇準時機撳「剎車」，要令架車停喺綠色目標區內！唔同路面摩擦力唔同，冰面會滑好遠。</p>
+<p><b>🏆 計分：</b>共 3 回合，愈近目標中心分愈高。衝過頭或者停得太早都冇分！</p>
+<p><b>💡 物理原理：</b>剎車距離 = v² / (2μg)。車速愈快、摩擦係數 μ 愈細，剎車距離愈長。所以落雨天同冰面要預留更長距離！</p>
+<button class="go" onclick="document.getElementById('overlay').style.display='none'">開車！</button>
+</div></div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+var W=0,H=0;
+function resize(){var d=Math.min(window.devicePixelRatio||1,2);W=cv.clientWidth;H=cv.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);}
+window.addEventListener('resize',resize); resize();
+var G=9.8, TRACK=90;
+var surfs=[{n:'🧊 冰面',mu:0.08},{n:'🌧️ 濕路',mu:0.35},{n:'🛣️ 乾路',mu:0.70}];
+var round=0, score=0, state='idle';
+var v0=0, mu=0, v=0, x=0, braking=false, zoneX=0, zoneW=10, surfName='';
+function bx(m){return 30+(m/TRACK)*(W-60);}
+function newRound(){
+  var s=surfs[Math.floor(Math.random()*3)];
+  mu=s.mu; surfName=s.n;
+  v0=[16,20,24][Math.floor(Math.random()*3)];
+  v=v0; x=0; braking=false; state='ready';
+  zoneW=10; zoneX=18+Math.random()*(TRACK-36-zoneW);
+  document.getElementById('surfName').textContent=surfName+'（μ='+mu+'）';
+  document.getElementById('hB').textContent=(v0*v0/(2*mu*G)).toFixed(1)+' m';
+  document.getElementById('hV').textContent=(v0*3.6).toFixed(0)+' km/h';
+  document.getElementById('btnGo').style.display='';
+  document.getElementById('btnBrake').style.display='none';
+  document.getElementById('btnGo').disabled=false;
+  document.getElementById('score').textContent='第 '+(round+1)+' / 3 回合　總分：'+score;
+  document.getElementById('msg').textContent='第 '+(round+1)+' 回合：車速 '+(v0*3.6).toFixed(0)+' km/h，'+surfName+'。目標區在 '+zoneX.toFixed(0)+'–'+(zoneX+zoneW).toFixed(0)+' m';
+  var box=document.getElementById('surfBtns');box.innerHTML='';
+  surfs.forEach(function(q){
+    var b=document.createElement('button');b.textContent=q.n+' μ='+q.mu;
+    if(q.mu===mu)b.className='on';b.disabled=true;box.appendChild(b);
+  });
+}
+document.getElementById('btnGo').addEventListener('click',function(){
+  state='run';
+  document.getElementById('btnGo').style.display='none';
+  document.getElementById('btnBrake').style.display='';
+});
+document.getElementById('btnBrake').addEventListener('click',function(){
+  if(state==='run'){braking=true;state='brake';this.style.display='none';}
+});
+function finish(){
+  state='done';
+  var zc=zoneX+zoneW/2, dist=Math.abs(x-zc);
+  var pts=0, txt='';
+  if(dist<=zoneW/2){pts=Math.round(100*(1-dist/(zoneW/2)*0.5));txt='✅ 完美停入目標區！';}
+  else if(dist<=zoneW/2+8){pts=Math.round(50*(1-(dist-zoneW/2)/8));txt='😐 差少少，偏離 '+dist.toFixed(1)+' m';}
+  else{pts=0;txt=x<zc?'❌ 停得太早！':'❌ 衝過頭！';}
+  score+=pts;
+  document.getElementById('msg').textContent=txt+' 停車位置 '+x.toFixed(1)+' m（+'+pts+' 分）';
+  round++;
+  if(round<3)setTimeout(newRound,2400);
+  else{
+    var best=0;try{best=parseInt(localStorage.getItem('fricBest')||'0');}catch(e){}
+    var nb='';if(score>best){try{localStorage.setItem('fricBest',score);}catch(e){}nb=' 🏅 新紀錄！';}
+    setTimeout(function(){document.getElementById('msg').textContent='🎉 3 回合完成！總分：'+score+' / 300'+nb;},2400);
+  }
+}
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  var ry=H*0.55;
+  ctx.fillStyle='#3f3f46';ctx.fillRect(20,ry-24,W-40,64);
+  ctx.strokeStyle='#71717a';ctx.lineWidth=2;ctx.setLineDash([10,8]);
+  ctx.beginPath();ctx.moveTo(20,ry+8);ctx.lineTo(W-20,ry+8);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='rgba(74,222,128,.35)';
+  ctx.fillRect(bx(zoneX),ry-24,bx(zoneX+zoneW)-bx(zoneX),64);
+  ctx.fillStyle='#4ade80';ctx.font='bold 12px sans-serif';ctx.textAlign='center';
+  ctx.fillText('目標區',(bx(zoneX)+bx(zoneX+zoneW))/2,ry-30);
+  ctx.fillStyle='#71717a';ctx.font='10px sans-serif';
+  for(var m=0;m<=TRACK;m+=15){ctx.fillText(m+'m',bx(m),ry+52);}
+  var cxp=bx(Math.min(x,TRACK));
+  ctx.fillStyle=braking?'#fbbf24':'#ef4444';
+  var skid=braking&&v>0.5;
+  ctx.beginPath();
+  ctx.moveTo(cxp-22,ry-14);ctx.lineTo(cxp+2,ry-14);ctx.lineTo(cxp+10,ry-24);ctx.lineTo(cxp+22,ry-22);ctx.lineTo(cxp+22,ry-2);ctx.lineTo(cxp-22,ry-2);
+  ctx.closePath();ctx.fill();
+  ctx.fillStyle='#18181b';
+  ctx.beginPath();ctx.arc(cxp-12,ry+2,7,0,7);ctx.fill();
+  ctx.beginPath();ctx.arc(cxp+12,ry+2,7,0,7);ctx.fill();
+  if(skid){
+    ctx.strokeStyle='rgba(251,191,36,.6)';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(cxp-20,ry+9);ctx.lineTo(cxp-44,ry+9);ctx.stroke();
+  }
+  if(state==='brake'&&v>0.1){
+    ctx.fillStyle='#fbbf24';ctx.font='bold 14px sans-serif';
+    ctx.fillText('剎車中…',cxp,ry-40);
+  }
+}
+var last=performance.now();
+function loop(now){
+  var dt=Math.min((now-last)/1000,0.05);last=now;
+  if(state==='run'){x+=v*dt;}
+  else if(state==='brake'){
+    v-=mu*G*dt;if(v<=0){v=0;finish();}
+    x+=v*dt;
+    if(x>=TRACK){x=TRACK;finish();}
+  }
+  document.getElementById('hD').textContent=x.toFixed(1)+' m';
+  if(state==='run'||state==='brake')document.getElementById('hV').textContent=(v*3.6).toFixed(0)+' km/h';
+  draw();requestAnimationFrame(loop);
+}
+newRound();loop();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>STEM 最新資訊</title>
+<style>
+:root{--blue:#2563eb;--green:#059669;--ink:#1f2937;--muted:#6b7280;--bg:#f3f4f6;--card:#fff}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--ink);line-height:1.7}
+header{background:linear-gradient(135deg,#065f46,#059669);color:#fff;padding:28px 24px;text-align:center}
+header h1{margin:0 0 8px;font-size:26px}
+header p{margin:0;opacity:.9;font-size:14px}
+nav{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 16px;display:flex;gap:4px;overflow-x:auto;position:sticky;top:0;z-index:10}
+nav a{padding:14px 18px;text-decoration:none;color:var(--muted);font-weight:600;font-size:14px;white-space:nowrap;border-bottom:3px solid transparent}
+nav a.active{color:var(--blue);border-bottom-color:var(--blue)}
+main{max-width:900px;margin:0 auto;padding:24px 16px 60px}
+.update-note{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:12px 18px;font-size:13px;color:#065f46;margin-bottom:24px}
+.news-card{background:var(--card);border-radius:12px;padding:20px 24px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.news-card .tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;margin-bottom:10px}
+.tag.comp{background:#dbeafe;color:#1d4ed8}
+.tag.course{background:#fef3c7;color:#92400e}
+.tag.event{background:#e0e7ff;color:#4338ca}
+.tag.policy{background:#f3e8ff;color:#6b21a8}
+.news-card h3{margin:0 0 8px;font-size:17px}
+.news-card p{margin:0 0 10px;font-size:14px;color:#374151}
+.news-card .meta{font-size:12px;color:var(--muted)}
+.news-card a.src{color:var(--green);font-size:13px;font-weight:600;text-decoration:none}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:30px}
+</style>
+</head>
+<body>
+<header>
+<h1>📰 STEM 最新資訊</h1>
+<p>香港學生 STEM 訓練課程 · 比賽 · 活動</p>
+</header>
+<nav>
+<a href="index.html">🏠 首頁</a>
+<a href="maths.html">📐 數學</a>
+<a href="videos.html">🎬 影片</a>
+<a href="games.html">🎮 遊戲</a>
+<a href="stem.html">🔬 STEM</a>
+<a href="ai.html">🤖 AI</a>
+<a href="news.html" class="active">📰 資訊</a>
+</nav>
+<main>
+<div class="update-note">📅 最後更新：14-10-2026 · 每週自動更新</div>
+
+<div class="news-card">
+<span class="tag comp">比賽</span>
+<h3>第三屆亞太區 STEM 機器人任務大賽</h3>
+<p>歡迎小學、中學及公開組參加。1-3人一隊，可用任何品牌可編程積木（LEGO SPIKE、EV3、Arduino等）。另設到校實戰工作坊。</p>
+<div class="meta">截止報名：20-11-2026 ｜ 截止遞交：21-12-2026 ｜ 賽果公布：28-12-2026</div>
+<p><a class="src" href="https://www.hkassociationofculture.com/post/%E7%AC%AC%E4%B8%89%E5%B1%86%E4%BA%9E%E5%A4%AA%E5%8D%80stem%E6%A9%9F%E5%99%A8%E4%BA%BA%E4%BB%BB%E5%8B%99%E5%A4%A7%E8%B3%BD" target="_blank" rel="noopener">詳情及報名 →</a></p>
+</div>
+
+<div class="news-card">
+<span class="tag comp">比賽</span>
+<h3>AI 航天科技比賽 2026</h3>
+<p>由香港兒童基金會主辦，主題為「AI × 火星探索研究」。鼓勵全港中小學生運用 AI 與航天科技知識，圍繞火星環境、資源、探測任務創作作品。現已接受報名。</p>
+<div class="meta">主辦：香港兒童基金會 ｜ 對象：全港中小學生</div>
+<p><a class="src" href="https://www.theminelab.org" target="_blank" rel="noopener">比賽網站 →</a></p>
+</div>
+
+<div class="news-card">
+<span class="tag comp">比賽</span>
+<h3>Samsung Solve for Tomorrow 2026</h3>
+<p>歡迎全港小學、中學及大專學生組隊（2-5人）參加。第一階段只需遞交概念提案，入圍 36 強後有專家工作坊指導。重視 AI 科技應用同社會影響力。</p>
+<div class="meta">組別：小學組／中學組／大專組 ｜ 報名截止：16-10-2026</div>
+<p><a class="src" href="https://www.samsung.com/hk/offer/solvefortomorrow/" target="_blank" rel="noopener">詳情及報名 →</a></p>
+</div>
+
+<div class="news-card">
+<span class="tag comp">比賽</span>
+<h3>國民身份認同應用程式設計比賽 2026/27</h3>
+<p>香港教育城主辦，分小學組（P4-P6）及初中組（S1-S3）。以 App 設計推廣認識國家，可選歷史、體藝、文化遺產、科技航天等主題。4人一隊，經學校報名。</p>
+<div class="meta">報名：02-10-2026 至 21-12-2026 ｜ 遞交作品：14-12-2026 至 08-01-2027</div>
+<p><a class="src" href="https://student.edcity.hk/pri/zh-hant/piccks-post/202627/nationalidentity/" target="_blank" rel="noopener">詳情及報名 →</a></p>
+</div>
+
+<div class="news-card">
+<span class="tag course">課程</span>
+<h3>香港資優教育學苑 — AI 及 STEM 資優課程</h3>
+<p>學苑提供多元資優課程，包括人工智能、天文學、環境科學、鑑證科學等。早前舉辦「課程展示日2026」，學員可體驗 AI 機械臂、星圖探索等活動。</p>
+<div class="meta">對象：資優教育學苑學員（中小學生）</div>
+<p><a class="src" href="https://hkage.edu.hk" target="_blank" rel="noopener">學苑網站 →</a></p>
+</div>
+
+<div class="news-card">
+<span class="tag policy">政策</span>
+<h3>政府「AI for All」計劃</h3>
+<p>創新科技及工業局推出 AI 全民計劃，提供 AI 大師班、實戰學習機會，並連繫學生與僱主。配合 2026-27 財政預算案，推動全港 AI 素養及數碼技能發展。</p>
+<div class="meta">推出日期：14-07-2026 ｜ 主辦：創新科技及工業局、HKSTP</div>
+</div>
+
+</main>
+<footer>教學資源共享 · 歡迎老師同學生使用</footer>
+</body>
+</html>

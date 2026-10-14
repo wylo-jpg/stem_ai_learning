@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>&#25976;&#23416;&#25945;&#23416;&#24433;&#29255;</title>
+<style>
+:root{--blue:#2563eb;--red:#dc2626;--ink:#1f2937;--muted:#6b7280;--bg:#f3f4f6;--card:#fff}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+header{background:linear-gradient(135deg,#7f1d1d,#dc2626);color:#fff;padding:28px 24px;text-align:center}
+header h1{margin:0 0 8px;font-size:26px}
+header p{margin:0;opacity:.9;font-size:14px}
+nav{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 16px;display:flex;gap:4px;overflow-x:auto;position:sticky;top:0;z-index:10}
+nav a{padding:14px 18px;text-decoration:none;color:var(--muted);font-weight:600;font-size:14px;white-space:nowrap;border-bottom:3px solid transparent}
+nav a.active{color:var(--blue);border-bottom-color:var(--blue)}
+main{max-width:1100px;margin:0 auto;padding:24px 16px 60px}
+.sec-title{font-size:24px;font-weight:800;margin:36px 0 6px}
+.sec-title:first-of-type{margin-top:8px}
+.sec-sub{color:var(--muted);font-size:13px;margin-bottom:12px}
+.group-title{font-size:20px;font-weight:700;margin:28px 0 14px;padding-bottom:8px;border-bottom:2px solid #e5e7eb}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.card{background:var(--card);border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.card .thumb{position:relative;background:#000;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.card .thumb .play{font-size:48px;color:#fff;opacity:.9}
+.card .thumb .count{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.8);color:#fff;font-size:11px;padding:2px 8px;border-radius:4px}
+.card .body{padding:14px 16px}
+.card .body h3{margin:0 0 6px;font-size:15px}
+.card .body .meta{font-size:12px;color:var(--muted)}
+.card .body a{color:var(--red);font-size:13px;font-weight:600;text-decoration:none}
+.arch-list{background:var(--card);border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.arch-item{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;text-decoration:none;color:var(--ink);border-bottom:1px solid #f3f4f6}
+.arch-item:last-child{border-bottom:none}
+.arch-item:hover{background:#fef2f2}
+.arch-title{font-size:14px;font-weight:600}
+.arch-count{font-size:12px;color:var(--muted);white-space:nowrap;margin-left:12px}
+.player-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:100;align-items:center;justify-content:center;padding:20px}
+.player-modal.open{display:flex}
+.player-wrap{width:100%;max-width:900px;aspect-ratio:16/9;background:#000;border-radius:8px;overflow:hidden;position:relative}
+.player-wrap iframe{width:100%;height:100%;border:0}
+.close-btn{position:absolute;top:-40px;right:0;color:#fff;font-size:28px;cursor:pointer;background:none;border:none}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:30px}
+@media(max-width:640px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+<h1>&#127916; &#25976;&#23416;&#25945;&#23416;&#24433;&#29255;</h1>
+<p>&#25353;&#35506;&#38988;&#20998;&#39006; &#183; &#19968;&#38283;&#21363;&#35211;&#22075;&#26377; &#183; &#40670;&#25802;&#21363;&#25773;</p>
+</header>
+<nav>
+<a href="index.html">&#127968; &#39318;&#38913;</a>
+<a href="maths.html">&#128202; &#25976;&#23416;</a>
+<a href="videos.html" class="active">&#127916; &#24433;&#29255;</a>
+<a href="games.html">&#127918; &#36938;&#25138;</a>
+<a href="stem.html">&#128300; STEM</a>
+<a href="ai.html">&#129302; AI</a>
+<a href="news.html">📰 資訊</a>
+</nav>
+<main>
+<div class="sec-title" id="teach">&#128202; &#25945;&#23416;&#29255;</div>
+<div class="group-title">M2（17）</div><div class="grid">
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQoGUnK_vNupJIx8semDX9dm')"><span class="play">&#9654;</span><span class="count">27 &#26781;&#29255;</span></div>
+<div class="body"><h3>M2 Mathematical Induction</h3><div class="meta">27 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQoGUnK_vNupJIx8semDX9dm" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrrAQxMxDDhisNr7d6cDiAO')"><span class="play">&#9654;</span><span class="count">17 &#26781;&#29255;</span></div>
+<div class="body"><h3>M2 Binomial Theorem</h3><div class="meta">17 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrrAQxMxDDhisNr7d6cDiAO" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQp7aG9mwVBjMNKIPAFxe8Mm')"><span class="play">&#9654;</span><span class="count">62 &#26781;&#29255;</span></div>
+<div class="body"><h3>M2 Trigonometry</h3><div class="meta">62 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQp7aG9mwVBjMNKIPAFxe8Mm" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQphyMtggTIjtImrXVdvZcMV')"><span class="play">&#9654;</span><span class="count">19 &#26781;&#29255;</span></div>
+<div class="body"><h3>M2 Limit and e</h3><div class="meta">19 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQphyMtggTIjtImrXVdvZcMV" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqjX4rEjea_neCHTl8xpbKM')"><span class="play">&#9654;</span><span class="count">22 &#26781;&#29255;</span></div>
+<div class="body"><h3>M2 Differentiation</h3><div class="meta">22 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqjX4rEjea_neCHTl8xpbKM" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqc01popxRRBaOHbnqtXQTr')"><span class="play">&#9654;</span><span class="count">20 &#26781;&#29255;</span></div>
+<div class="body"><h3>M2 Differentiation Techniques</h3><div class="meta">20 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqc01popxRRBaOHbnqtXQTr" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQo1-dZpNDuG_Etjj_DTsesZ')"><span class="play">&#9654;</span><span class="count">23 &#26781;&#29255;</span></div>
+<div class="body"><h3>M2 Application of Differentiation (Graph)</h3><div class="meta">23 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQo1-dZpNDuG_Etjj_DTsesZ" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQpmUfAzVUjto2iB19pmDJ_x')"><span class="play">&#9654;</span><span class="count">8 &#26781;&#29255;</span></div>
+<div class="body"><h3>M2 Application of Differentiation (Optimization &amp; Rate of Change)</h3><div class="meta">8 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpmUfAzVUjto2iB19pmDJ_x" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQoTBU_MWeSyjur5VAi17qfu')"><span class="play">&#9654;</span><span class="count">28 &#26781;&#29255;</span></div>
+<div class="body"><h3>M2 Indefinite Integral</h3><div class="meta">28 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQoTBU_MWeSyjur5VAi17qfu" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQoD5robDtmpcfmgfOblJph2')"><span class="play">&#9654;</span><span class="count">1 &#26781;&#29255;</span></div>
+<div class="body"><h3>M2 Application of Indefinite Integration</h3><div class="meta">1 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQoD5robDtmpcfmgfOblJph2" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQo8b8ka2zMW92B3NpfWckii')"><span class="play">&#9654;</span><span class="count">22 &#26781;&#29255;</span></div>
+<div class="body"><h3>M2 Definite Integral</h3><div class="meta">22 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQo8b8ka2zMW92B3NpfWckii" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQohyDVLgFEdDmD-zfcu6nC_')"><span class="play">&#9654;</span><span class="count">9 &#26781;&#29255;</span></div>
+<div class="body"><h3>M2 Application of Definite Integral</h3><div class="meta">9 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQohyDVLgFEdDmD-zfcu6nC_" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQorBa7c5fy_AhjE_HijIJL8')"><span class="play">&#9654;</span><span class="count">6 &#26781;&#29255;</span></div>
+<div class="body"><h3>M2 Application of Integration</h3><div class="meta">6 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQorBa7c5fy_AhjE_HijIJL8" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqmZ27vOS_gU0OX7tWqVp7L')"><span class="play">&#9654;</span><span class="count">25 &#26781;&#29255;</span></div>
+<div class="body"><h3>M2 Matrix</h3><div class="meta">25 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqmZ27vOS_gU0OX7tWqVp7L" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQonC6CM40pugYYrw4u6D3F2')"><span class="play">&#9654;</span><span class="count">20 &#26781;&#29255;</span></div>
+<div class="body"><h3>M2 System of Equations</h3><div class="meta">20 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQonC6CM40pugYYrw4u6D3F2" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQoZjbSCRoKHeOrQe-8Q1mm-')"><span class="play">&#9654;</span><span class="count">28 &#26781;&#29255;</span></div>
+<div class="body"><h3>M2 Vector</h3><div class="meta">28 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQoZjbSCRoKHeOrQe-8Q1mm-" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqXTMqTujI4kYmEXx5N3LKS')"><span class="play">&#9654;</span><span class="count">3 &#26781;&#29255;</span></div>
+<div class="body"><h3>M2 Summation</h3><div class="meta">3 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqXTMqTujI4kYmEXx5N3LKS" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+</div>
+<div class="group-title">Core（76）</div><div class="grid">
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQo9jCDG00TO4DhdezNXFHWn')"><span class="play">&#9654;</span><span class="count">1 &#26781;&#29255;</span></div>
+<div class="body"><h3>S1 Oxford New Century</h3><div class="meta">1 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQo9jCDG00TO4DhdezNXFHWn" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQplRGVaULyUizGi4rTMi7Aw')"><span class="play">&#9654;</span><span class="count">28 &#26781;&#29255;</span></div>
+<div class="body"><h3>S2 Oxford New Century Textbook</h3><div class="meta">28 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQplRGVaULyUizGi4rTMi7Aw" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQoTEUgTH_SMmrXNDaYBRcRW')"><span class="play">&#9654;</span><span class="count">16 &#26781;&#29255;</span></div>
+<div class="body"><h3>S3 Oxford New Century Textbook</h3><div class="meta">16 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQoTEUgTH_SMmrXNDaYBRcRW" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqgWALldkt8jXroRq4dF5nK')"><span class="play">&#9654;</span><span class="count">80 &#26781;&#29255;</span></div>
+<div class="body"><h3>Properties of Circle (II)</h3><div class="meta">80 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqgWALldkt8jXroRq4dF5nK" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrO-q12lKmsl3FWN0xBe2zW')"><span class="play">&#9654;</span><span class="count">43 &#26781;&#29255;</span></div>
+<div class="body"><h3>Locus</h3><div class="meta">43 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrO-q12lKmsl3FWN0xBe2zW" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQoSS1l7hyEs35pNalix-lub')"><span class="play">&#9654;</span><span class="count">56 &#26781;&#29255;</span></div>
+<div class="body"><h3>Rational Function</h3><div class="meta">56 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQoSS1l7hyEs35pNalix-lub" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQoZGcNdVI_tAwQOU9b3Fr0i')"><span class="play">&#9654;</span><span class="count">41 &#26781;&#29255;</span></div>
+<div class="body"><h3>Algebraic Fractions</h3><div class="meta">41 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQoZGcNdVI_tAwQOU9b3Fr0i" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQpUu48r5HP3H__SnGgX8rAN')"><span class="play">&#9654;</span><span class="count">53 &#26781;&#29255;</span></div>
+<div class="body"><h3>More about Equation</h3><div class="meta">53 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpUu48r5HP3H__SnGgX8rAN" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqpCOhKNdhVsf33UhlFMllW')"><span class="play">&#9654;</span><span class="count">16 &#26781;&#29255;</span></div>
+<div class="body"><h3>Quadratic Equation Word Problems</h3><div class="meta">16 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqpCOhKNdhVsf33UhlFMllW" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqSniRNLKm3AN7LtVFBEvnP')"><span class="play">&#9654;</span><span class="count">13 &#26781;&#29255;</span></div>
+<div class="body"><h3>Introduction of Polynomials</h3><div class="meta">13 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqSniRNLKm3AN7LtVFBEvnP" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrdaYkjANqLe8SesxQy2w5h')"><span class="play">&#9654;</span><span class="count">16 &#26781;&#29255;</span></div>
+<div class="body"><h3>Rational and Irrational Numbers</h3><div class="meta">16 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrdaYkjANqLe8SesxQy2w5h" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrpdLlbTX00fIS5P5qQl1uE')"><span class="play">&#9654;</span><span class="count">18 &#26781;&#29255;</span></div>
+<div class="body"><h3>Trigonometry in 2D Application (II)</h3><div class="meta">18 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrpdLlbTX00fIS5P5qQl1uE" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqduqHCH5RQPiMQ5q4Wk6Su')"><span class="play">&#9654;</span><span class="count">20 &#26781;&#29255;</span></div>
+<div class="body"><h3>Area Ratio</h3><div class="meta">20 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqduqHCH5RQPiMQ5q4Wk6Su" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQohGnp6F_HzvyUPCU3IlTAP')"><span class="play">&#9654;</span><span class="count">18 &#26781;&#29255;</span></div>
+<div class="body"><h3>Permutation and Combination</h3><div class="meta">18 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQohGnp6F_HzvyUPCU3IlTAP" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLVUXE_WBn2qk')"><span class="play">&#9654;</span><span class="count">1 &#26781;&#29255;</span></div>
+<div class="body"><h3>Basic Percentage</h3><div class="meta">1 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLVUXE_WBn2qk" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrAweHohtj5K9KHCdViI7gN')"><span class="play">&#9654;</span><span class="count">1 &#26781;&#29255;</span></div>
+<div class="body"><h3>Symmetry and Transformation</h3><div class="meta">1 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrAweHohtj5K9KHCdViI7gN" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQpSLRBGktjbXAn0bi_bpVYy')"><span class="play">&#9654;</span><span class="count">12 &#26781;&#29255;</span></div>
+<div class="body"><h3>Directed Numbers</h3><div class="meta">12 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpSLRBGktjbXAn0bi_bpVYy" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQreVF3BcAkfZwWKQx4RemAs')"><span class="play">&#9654;</span><span class="count">11 &#26781;&#29255;</span></div>
+<div class="body"><h3>Linear Equations</h3><div class="meta">11 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQreVF3BcAkfZwWKQx4RemAs" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQobmFTrlf6_jBlHkQZlIVay')"><span class="play">&#9654;</span><span class="count">38 &#26781;&#29255;</span></div>
+<div class="body"><h3>Simultaneous linear equations with 2 unknowns</h3><div class="meta">38 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQobmFTrlf6_jBlHkQZlIVay" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrUQv2P0eftU3Ca5jMj_T0a')"><span class="play">&#9654;</span><span class="count">59 &#26781;&#29255;</span></div>
+<div class="body"><h3>Change of Subject</h3><div class="meta">59 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrUQv2P0eftU3Ca5jMj_T0a" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqtQi511emKhAURpxT4aQjH')"><span class="play">&#9654;</span><span class="count">33 &#26781;&#29255;</span></div>
+<div class="body"><h3>Basic Law of Indices</h3><div class="meta">33 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqtQi511emKhAURpxT4aQjH" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrGKoXJ8XTGJu4vPcYwfoPq')"><span class="play">&#9654;</span><span class="count">67 &#26781;&#29255;</span></div>
+<div class="body"><h3>More about Law of Indices</h3><div class="meta">67 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrGKoXJ8XTGJu4vPcYwfoPq" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQoNI2uofKLtOWhYXnHz5Mh3')"><span class="play">&#9654;</span><span class="count">13 &#26781;&#29255;</span></div>
+<div class="body"><h3>Basic Factorization</h3><div class="meta">13 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQoNI2uofKLtOWhYXnHz5Mh3" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQppWsw-YDxCV-V-6JHKDJJa')"><span class="play">&#9654;</span><span class="count">81 &#26781;&#29255;</span></div>
+<div class="body"><h3>More about Factorization</h3><div class="meta">81 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQppWsw-YDxCV-V-6JHKDJJa" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrhBHDpzWzK9So34MvOHTEv')"><span class="play">&#9654;</span><span class="count">179 &#26781;&#29255;</span></div>
+<div class="body"><h3>Quadratic Equation</h3><div class="meta">179 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrhBHDpzWzK9So34MvOHTEv" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQp0akeDzRBk7FIq7vewxdGa')"><span class="play">&#9654;</span><span class="count">86 &#26781;&#29255;</span></div>
+<div class="body"><h3>Quadratic Function and Graph</h3><div class="meta">86 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQp0akeDzRBk7FIq7vewxdGa" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqoXMInRPgP2v2pIk06yQyo')"><span class="play">&#9654;</span><span class="count">43 &#26781;&#29255;</span></div>
+<div class="body"><h3>More about graphs</h3><div class="meta">43 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqoXMInRPgP2v2pIk06yQyo" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrO5Uov67iN6Ahcw09TBqbj')"><span class="play">&#9654;</span><span class="count">92 &#26781;&#29255;</span></div>
+<div class="body"><h3>More about Polynomial</h3><div class="meta">92 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrO5Uov67iN6Ahcw09TBqbj" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQq31-3yrFuotfHxYNkHDNBA')"><span class="play">&#9654;</span><span class="count">62 &#26781;&#29255;</span></div>
+<div class="body"><h3>Exponential Function</h3><div class="meta">62 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQq31-3yrFuotfHxYNkHDNBA" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQoOWmuXCLEosDoawE6KhAI7')"><span class="play">&#9654;</span><span class="count">139 &#26781;&#29255;</span></div>
+<div class="body"><h3>Logarithmic Function</h3><div class="meta">139 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQoOWmuXCLEosDoawE6KhAI7" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQotNMzMSwt6vDDTIybYdDAh')"><span class="play">&#9654;</span><span class="count">30 &#26781;&#29255;</span></div>
+<div class="body"><h3>Basic Identities</h3><div class="meta">30 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQotNMzMSwt6vDDTIybYdDAh" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQozgeGdE1XgLYdyyOnf5rqo')"><span class="play">&#9654;</span><span class="count">54 &#26781;&#29255;</span></div>
+<div class="body"><h3>Rate, Ratio and Proportion</h3><div class="meta">54 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQozgeGdE1XgLYdyyOnf5rqo" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqX7EBWux_eh26FDuUYzeTq')"><span class="play">&#9654;</span><span class="count">72 &#26781;&#29255;</span></div>
+<div class="body"><h3>More about Percentage</h3><div class="meta">72 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqX7EBWux_eh26FDuUYzeTq" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQr1QleTbny9E7U6Q4bzitxY')"><span class="play">&#9654;</span><span class="count">78 &#26781;&#29255;</span></div>
+<div class="body"><h3>Variation</h3><div class="meta">78 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQr1QleTbny9E7U6Q4bzitxY" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQotJWqNjMFRXEUO3VUkc-_I')"><span class="play">&#9654;</span><span class="count">135 &#26781;&#29255;</span></div>
+<div class="body"><h3>Sequences and Series</h3><div class="meta">135 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQotJWqNjMFRXEUO3VUkc-_I" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQpNA1QWZwe9GrKCuGb8QJGy')"><span class="play">&#9654;</span><span class="count">20 &#26781;&#29255;</span></div>
+<div class="body"><h3>Linear programming</h3><div class="meta">20 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpNA1QWZwe9GrKCuGb8QJGy" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrk4F6tkCfsu1-AFFxOoVlt')"><span class="play">&#9654;</span><span class="count">35 &#26781;&#29255;</span></div>
+<div class="body"><h3>Introduction of Function</h3><div class="meta">35 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrk4F6tkCfsu1-AFFxOoVlt" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQpRp15vKtPOG4ff_Zaf0H-V')"><span class="play">&#9654;</span><span class="count">31 &#26781;&#29255;</span></div>
+<div class="body"><h3>Introduction of Inequality</h3><div class="meta">31 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpRp15vKtPOG4ff_Zaf0H-V" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQq_DpLyBhBHcUukuQ18EorN')"><span class="play">&#9654;</span><span class="count">47 &#26781;&#29255;</span></div>
+<div class="body"><h3>More about Inequality</h3><div class="meta">47 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQq_DpLyBhBHcUukuQ18EorN" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrQHJMe7P7qx4sGGmxGMMZL')"><span class="play">&#9654;</span><span class="count">35 &#26781;&#29255;</span></div>
+<div class="body"><h3>Compounded Linear Inequality</h3><div class="meta">35 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrQHJMe7P7qx4sGGmxGMMZL" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQoBq4XHVL2O6yJEpqApTqD1')"><span class="play">&#9654;</span><span class="count">30 &#26781;&#29255;</span></div>
+<div class="body"><h3>Introduction of Probability</h3><div class="meta">30 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQoBq4XHVL2O6yJEpqApTqD1" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrtsXhhttrjwfDS4NH-p6gQ')"><span class="play">&#9654;</span><span class="count">94 &#26781;&#29255;</span></div>
+<div class="body"><h3>More about Probability</h3><div class="meta">94 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrtsXhhttrjwfDS4NH-p6gQ" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQq1VoVdTck48LnMypJdoABK')"><span class="play">&#9654;</span><span class="count">58 &#26781;&#29255;</span></div>
+<div class="body"><h3>Measure of Central Tendency</h3><div class="meta">58 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQq1VoVdTck48LnMypJdoABK" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqmBL1W6r1EnqAkwtpYOvpI')"><span class="play">&#9654;</span><span class="count">48 &#26781;&#29255;</span></div>
+<div class="body"><h3>Measure of Dispersion</h3><div class="meta">48 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqmBL1W6r1EnqAkwtpYOvpI" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrddeSeKlliLU8Y0V9Zpoo8')"><span class="play">&#9654;</span><span class="count">40 &#26781;&#29255;</span></div>
+<div class="body"><h3>Statistic</h3><div class="meta">40 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrddeSeKlliLU8Y0V9Zpoo8" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQquaEih274ikgabGFuFR5hG')"><span class="play">&#9654;</span><span class="count">20 &#26781;&#29255;</span></div>
+<div class="body"><h3>Different Statistical Graphs</h3><div class="meta">20 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQquaEih274ikgabGFuFR5hG" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQr0DeN6BwlhPBrLTBnr2pNK')"><span class="play">&#9654;</span><span class="count">35 &#26781;&#29255;</span></div>
+<div class="body"><h3>Basic Trigonometry</h3><div class="meta">35 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQr0DeN6BwlhPBrLTBnr2pNK" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQquakyK3-bzQ1sHELlHK5NY')"><span class="play">&#9654;</span><span class="count">37 &#26781;&#29255;</span></div>
+<div class="body"><h3>More about Trigonometry</h3><div class="meta">37 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQquakyK3-bzQ1sHELlHK5NY" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqosGJz8Y3FkR749M3LJbBh')"><span class="play">&#9654;</span><span class="count">37 &#26781;&#29255;</span></div>
+<div class="body"><h3>Trigonometry in 2D application (I)</h3><div class="meta">37 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqosGJz8Y3FkR749M3LJbBh" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrPw-szaP0KOZyT8K1nCTJG')"><span class="play">&#9654;</span><span class="count">62 &#26781;&#29255;</span></div>
+<div class="body"><h3>Trigonometry in 3D</h3><div class="meta">62 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrPw-szaP0KOZyT8K1nCTJG" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqddzO3RihLg4GW_bCTVkbF')"><span class="play">&#9654;</span><span class="count">49 &#26781;&#29255;</span></div>
+<div class="body"><h3>Solving Triangle</h3><div class="meta">49 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqddzO3RihLg4GW_bCTVkbF" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQq-yyI9XuOrbjxGTDwzDfyb')"><span class="play">&#9654;</span><span class="count">17 &#26781;&#29255;</span></div>
+<div class="body"><h3>Pythagoras Theorem</h3><div class="meta">17 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQq-yyI9XuOrbjxGTDwzDfyb" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrSFV-bMffjUu96pQA2bBR7')"><span class="play">&#9654;</span><span class="count">37 &#26781;&#29255;</span></div>
+<div class="body"><h3>Angles of parallel lines</h3><div class="meta">37 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrSFV-bMffjUu96pQA2bBR7" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQoJD8tYQmFlxA79ZJvP7bWx')"><span class="play">&#9654;</span><span class="count">32 &#26781;&#29255;</span></div>
+<div class="body"><h3>Angles of intersecting lines</h3><div class="meta">32 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQoJD8tYQmFlxA79ZJvP7bWx" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrhhLkRiMV7ZZW97voz0LIu')"><span class="play">&#9654;</span><span class="count">26 &#26781;&#29255;</span></div>
+<div class="body"><h3>Angles in Polygon</h3><div class="meta">26 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrhhLkRiMV7ZZW97voz0LIu" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQogvKkHuUzlYIUkBPj9aB3H')"><span class="play">&#9654;</span><span class="count">84 &#26781;&#29255;</span></div>
+<div class="body"><h3>Quadrilateral</h3><div class="meta">84 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQogvKkHuUzlYIUkBPj9aB3H" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqLk49qPNDnXs35c2T3VXla')"><span class="play">&#9654;</span><span class="count">57 &#26781;&#29255;</span></div>
+<div class="body"><h3>Similar and Congruence</h3><div class="meta">57 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqLk49qPNDnXs35c2T3VXla" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrcZWQXEbQKLkddwMPlTJqC')"><span class="play">&#9654;</span><span class="count">65 &#26781;&#29255;</span></div>
+<div class="body"><h3>Deductive Geometry</h3><div class="meta">65 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrcZWQXEbQKLkddwMPlTJqC" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQpSj95dKAkNG52jZLND30A3')"><span class="play">&#9654;</span><span class="count">57 &#26781;&#29255;</span></div>
+<div class="body"><h3>Plane Geometry</h3><div class="meta">57 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpSj95dKAkNG52jZLND30A3" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqzFgEIg3ofzaFzJvXNfvWQ')"><span class="play">&#9654;</span><span class="count">109 &#26781;&#29255;</span></div>
+<div class="body"><h3>Properties of Circle (I)</h3><div class="meta">109 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqzFgEIg3ofzaFzJvXNfvWQ" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQou4tIknsTg4AjUzfpTrnmr')"><span class="play">&#9654;</span><span class="count">118 &#26781;&#29255;</span></div>
+<div class="body"><h3>Equation of Straight Lines</h3><div class="meta">118 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQou4tIknsTg4AjUzfpTrnmr" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQoQQ8O4zDu2jzS4iLHhj3mi')"><span class="play">&#9654;</span><span class="count">83 &#26781;&#29255;</span></div>
+<div class="body"><h3>Equation of Circle</h3><div class="meta">83 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQoQQ8O4zDu2jzS4iLHhj3mi" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQoCmi-Vj-vppWeXjxT1teyL')"><span class="play">&#9654;</span><span class="count">17 &#26781;&#29255;</span></div>
+<div class="body"><h3>Introduction of Coordinate Geometry</h3><div class="meta">17 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQoCmi-Vj-vppWeXjxT1teyL" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQpfor2EtTpVLKi747v4ATqn')"><span class="play">&#9654;</span><span class="count">80 &#26781;&#29255;</span></div>
+<div class="body"><h3>More about Coordinate Geometry</h3><div class="meta">80 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpfor2EtTpVLKi747v4ATqn" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqdBY8Zdc3DKvQmJ1yhASvi')"><span class="play">&#9654;</span><span class="count">9 &#26781;&#29255;</span></div>
+<div class="body"><h3>Area and Volume II</h3><div class="meta">9 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqdBY8Zdc3DKvQmJ1yhASvi" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQpvYFJRPLthmJazZzt0GvPi')"><span class="play">&#9654;</span><span class="count">90 &#26781;&#29255;</span></div>
+<div class="body"><h3>Area and Volume III</h3><div class="meta">90 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpvYFJRPLthmJazZzt0GvPi" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQpLR4fvgME-1hZ0LQn_S-Iu')"><span class="play">&#9654;</span><span class="count">1 &#26781;&#29255;</span></div>
+<div class="body"><h3>3D Figures</h3><div class="meta">1 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpLR4fvgME-1hZ0LQn_S-Iu" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqOe1K5JexuU5qa_-8qHuIQ')"><span class="play">&#9654;</span><span class="count">9 &#26781;&#29255;</span></div>
+<div class="body"><h3>Polar Coordinates</h3><div class="meta">9 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqOe1K5JexuU5qa_-8qHuIQ" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQpPNfy2sGq0_lzpJrMoSiRi')"><span class="play">&#9654;</span><span class="count">39 &#26781;&#29255;</span></div>
+<div class="body"><h3>Complex Number</h3><div class="meta">39 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpPNfy2sGq0_lzpJrMoSiRi" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqZpsjM6Ozth2mSA6LsadKp')"><span class="play">&#9654;</span><span class="count">29 &#26781;&#29255;</span></div>
+<div class="body"><h3>Approximation and Error</h3><div class="meta">29 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqZpsjM6Ozth2mSA6LsadKp" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqWsBDG-C-qvak52kATRQLw')"><span class="play">&#9654;</span><span class="count">9 &#26781;&#29255;</span></div>
+<div class="body"><h3>Scientific Notation</h3><div class="meta">9 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqWsBDG-C-qvak52kATRQLw" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQr48Gb3gdoDtBGwBn12L62c')"><span class="play">&#9654;</span><span class="count">20 &#26781;&#29255;</span></div>
+<div class="body"><h3>Number with different bases and change of bases</h3><div class="meta">20 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQr48Gb3gdoDtBGwBn12L62c" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQo5mp6ixXf7qLAzCgBYz5xt')"><span class="play">&#9654;</span><span class="count">63 &#26781;&#29255;</span></div>
+<div class="body"><h3>4 centres and 4 special lines</h3><div class="meta">63 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQo5mp6ixXf7qLAzCgBYz5xt" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQovr1pa3GnGZn3d7l1Uj0Zd')"><span class="play">&#9654;</span><span class="count">5 &#26781;&#29255;</span></div>
+<div class="body"><h3>Distance Time Graph</h3><div class="meta">5 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQovr1pa3GnGZn3d7l1Uj0Zd" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQreIxYUsG7_9mruixdE9fNz')"><span class="play">&#9654;</span><span class="count">86 &#26781;&#29255;</span></div>
+<div class="body"><h3>MC Technique</h3><div class="meta">86 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQreIxYUsG7_9mruixdE9fNz" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQro4w63rOEFsRh3rrK_nV8e')"><span class="play">&#9654;</span><span class="count">11 &#26781;&#29255;</span></div>
+<div class="body"><h3>Olympiad Math Algebra</h3><div class="meta">11 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQro4w63rOEFsRh3rrK_nV8e" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+</div>
+<div class="group-title">Assignment 系列（14）</div><div class="grid">
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQo6rBQiOUJja7yeOMzWK1FY')"><span class="play">&#9654;</span><span class="count">1 &#26781;&#29255;</span></div>
+<div class="body"><h3>Assignment: Angles and Parallel Lines</h3><div class="meta">1 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQo6rBQiOUJja7yeOMzWK1FY" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqRn0CbIx5sy9vQFY_TnwE1')"><span class="play">&#9654;</span><span class="count">1 &#26781;&#29255;</span></div>
+<div class="body"><h3>Assignment: Similar and Congruence</h3><div class="meta">1 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqRn0CbIx5sy9vQFY_TnwE1" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqHdfsHYHrgti_WIOB-jzWE')"><span class="play">&#9654;</span><span class="count">1 &#26781;&#29255;</span></div>
+<div class="body"><h3>Assignment: Linear Equations in 2 Unknowns</h3><div class="meta">1 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqHdfsHYHrgti_WIOB-jzWE" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQpCvtbpxie78PYOtzxwRSs2')"><span class="play">&#9654;</span><span class="count">2 &#26781;&#29255;</span></div>
+<div class="body"><h3>Assignment: Introduction of Polynomials</h3><div class="meta">2 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpCvtbpxie78PYOtzxwRSs2" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQoBUayIrJtI5jgxChVbpPkw')"><span class="play">&#9654;</span><span class="count">1 &#26781;&#29255;</span></div>
+<div class="body"><h3>Assignment: Identity</h3><div class="meta">1 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQoBUayIrJtI5jgxChVbpPkw" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQpjNA-TFHAIjsSu9f-A_4bB')"><span class="play">&#9654;</span><span class="count">1 &#26781;&#29255;</span></div>
+<div class="body"><h3>Assignment: More about Probability</h3><div class="meta">1 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpjNA-TFHAIjsSu9f-A_4bB" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQq3IMkQamncjeX8PETSo00P')"><span class="play">&#9654;</span><span class="count">2 &#26781;&#29255;</span></div>
+<div class="body"><h3>Assignment: Complex Number</h3><div class="meta">2 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQq3IMkQamncjeX8PETSo00P" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqYmZRRjKCMud8bYZWlv4db')"><span class="play">&#9654;</span><span class="count">6 &#26781;&#29255;</span></div>
+<div class="body"><h3>Assignment: Approximation and Error</h3><div class="meta">6 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqYmZRRjKCMud8bYZWlv4db" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQr8b6pI5W_kOkK1cZfRGX2o')"><span class="play">&#9654;</span><span class="count">8 &#26781;&#29255;</span></div>
+<div class="body"><h3>Assignment: Introduction of Function</h3><div class="meta">8 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQr8b6pI5W_kOkK1cZfRGX2o" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrdk6C4ubBzGAX6NfGbveyd')"><span class="play">&#9654;</span><span class="count">2 &#26781;&#29255;</span></div>
+<div class="body"><h3>Assignment: Inequality</h3><div class="meta">2 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrdk6C4ubBzGAX6NfGbveyd" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQonCMV_Y-ERusxSRTaGO7w1')"><span class="play">&#9654;</span><span class="count">13 &#26781;&#29255;</span></div>
+<div class="body"><h3>Assignment: Quadratic Equation</h3><div class="meta">13 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQonCMV_Y-ERusxSRTaGO7w1" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrahARNsJKTvRcvDD932cUc')"><span class="play">&#9654;</span><span class="count">18 &#26781;&#29255;</span></div>
+<div class="body"><h3>Assignment: More about Equation</h3><div class="meta">18 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrahARNsJKTvRcvDD932cUc" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqAAq-7FyrlKQLu8zkb7aZa')"><span class="play">&#9654;</span><span class="count">8 &#26781;&#29255;</span></div>
+<div class="body"><h3>Assignment: Equation of Straight Lines</h3><div class="meta">8 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqAAq-7FyrlKQLu8zkb7aZa" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQq6Yq78vWKnXcLqzaWiE3TY')"><span class="play">&#9654;</span><span class="count">19 &#26781;&#29255;</span></div>
+<div class="body"><h3>Assignment: Logarithm</h3><div class="meta">19 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQq6Yq78vWKnXcLqzaWiE3TY" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+</div>
+<div class="group-title">練習系列（4）</div><div class="grid">
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrwE8kCmCOv0dWYKu5TzWUg')"><span class="play">&#9654;</span><span class="count">23 &#26781;&#29255;</span></div>
+<div class="body"><h3>Revision Exercise</h3><div class="meta">23 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrwE8kCmCOv0dWYKu5TzWUg" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrZ1sJ3SfyQf53QxT4_EvdB')"><span class="play">&#9654;</span><span class="count">10 &#26781;&#29255;</span></div>
+<div class="body"><h3>Daily Assignment</h3><div class="meta">10 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrZ1sJ3SfyQf53QxT4_EvdB" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQoKIA74VPn_6_e9GqMLyPh8')"><span class="play">&#9654;</span><span class="count">2 &#26781;&#29255;</span></div>
+<div class="body"><h3>Book Supplementary Exercise</h3><div class="meta">2 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQoKIA74VPn_6_e9GqMLyPh8" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQre65XFin7TfLGXzJmcgJk7')"><span class="play">&#9654;</span><span class="count">2 &#26781;&#29255;</span></div>
+<div class="body"><h3>Remedial Program</h3><div class="meta">2 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQre65XFin7TfLGXzJmcgJk7" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+</div>
+<div class="group-title">工具（3）</div><div class="grid">
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQq6h525Pt7VOsqdTGPfskNX')"><span class="play">&#9654;</span><span class="count">17 &#26781;&#29255;</span></div>
+<div class="body"><h3>Calculator</h3><div class="meta">17 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQq6h525Pt7VOsqdTGPfskNX" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQq2-q7UgkzlfCozxFAQbXNB')"><span class="play">&#9654;</span><span class="count">1 &#26781;&#29255;</span></div>
+<div class="body"><h3>Excel to Make Math Exercises</h3><div class="meta">1 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQq2-q7UgkzlfCozxFAQbXNB" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqfQRr8x-N_wlCQ4Z3Jxusc')"><span class="play">&#9654;</span><span class="count">4 &#26781;&#29255;</span></div>
+<div class="body"><h3>Quick Tips</h3><div class="meta">4 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqfQRr8x-N_wlCQ4Z3Jxusc" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+</div>
+<div class="group-title">其他（2）</div><div class="grid">
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQpP-14b3FkV3JyA13qYE9DD')"><span class="play">&#9654;</span><span class="count">28 &#26781;&#29255;</span></div>
+<div class="body"><h3>Catching Star</h3><div class="meta">28 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpP-14b3FkV3JyA13qYE9DD" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQofSJwYR5tQonfpauJaaTFT')"><span class="play">&#9654;</span><span class="count">1 &#26781;&#29255;</span></div>
+<div class="body"><h3>Motivational Video</h3><div class="meta">1 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQofSJwYR5tQonfpauJaaTFT" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+</div>
+<div class="sec-title" id="exam">&#128221; &#35430;&#21367;&#29255;</div>
+<div class="group-title">S6 Mock（10）</div><div class="grid">
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqgQf4lGZvbKc1fjrIqOe2S')"><span class="play">&#9654;</span><span class="count">1 &#26781;&#29255;</span></div>
+<div class="body"><h3>2025 S6 Core Mock</h3><div class="meta">1 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqgQf4lGZvbKc1fjrIqOe2S" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQohuN-OQC4QibKeg9OmlxQ7')"><span class="play">&#9654;</span><span class="count">1 &#26781;&#29255;</span></div>
+<div class="body"><h3>2025 S6 M2 Mock</h3><div class="meta">1 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQohuN-OQC4QibKeg9OmlxQ7" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrcCpIUOT5rsZq0sazj0iIX')"><span class="play">&#9654;</span><span class="count">2 &#26781;&#29255;</span></div>
+<div class="body"><h3>2024 S6 Mock Core</h3><div class="meta">2 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrcCpIUOT5rsZq0sazj0iIX" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqZYWkdZhcUaFscFNXxKSBR')"><span class="play">&#9654;</span><span class="count">2 &#26781;&#29255;</span></div>
+<div class="body"><h3>2024 S6 Mock M2</h3><div class="meta">2 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqZYWkdZhcUaFscFNXxKSBR" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqcZj85z7Ssx-GHoAnJa9yZ')"><span class="play">&#9654;</span><span class="count">64 &#26781;&#29255;</span></div>
+<div class="body"><h3>2023 S6 Mock Core</h3><div class="meta">64 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqcZj85z7Ssx-GHoAnJa9yZ" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqIhqwKgSaTYUCF61TW-wYp')"><span class="play">&#9654;</span><span class="count">12 &#26781;&#29255;</span></div>
+<div class="body"><h3>2023 S6 Mock M2</h3><div class="meta">12 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqIhqwKgSaTYUCF61TW-wYp" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrqDtuw5mmmgiffXH1HHa65')"><span class="play">&#9654;</span><span class="count">65 &#26781;&#29255;</span></div>
+<div class="body"><h3>2022 S6 Mock Core</h3><div class="meta">65 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrqDtuw5mmmgiffXH1HHa65" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQowV4HuxaGiAv7nPel8W-uZ')"><span class="play">&#9654;</span><span class="count">12 &#26781;&#29255;</span></div>
+<div class="body"><h3>2021 S6 M2 Mock</h3><div class="meta">12 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQowV4HuxaGiAv7nPel8W-uZ" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrSE9pJsNkiB5Qi8AP2_Plx')"><span class="play">&#9654;</span><span class="count">66 &#26781;&#29255;</span></div>
+<div class="body"><h3>Aristo Mock 2024</h3><div class="meta">66 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrSE9pJsNkiB5Qi8AP2_Plx" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQpGuf7jxGUltjcA__O665Wv')"><span class="play">&#9654;</span><span class="count">2 &#26781;&#29255;</span></div>
+<div class="body"><h3>Aristo Mock 2023</h3><div class="meta">2 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpGuf7jxGUltjcA__O665Wv" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+</div>
+<div class="group-title">校內試（26）</div><div class="grid">
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQpnRwzQejh89rLRr6RklchO')"><span class="play">&#9654;</span><span class="count">5 &#26781;&#29255;</span></div>
+<div class="body"><h3>2526 EOY</h3><div class="meta">5 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpnRwzQejh89rLRr6RklchO" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQp1ImPvPPbbta-9jRxkfr9T')"><span class="play">&#9654;</span><span class="count">12 &#26781;&#29255;</span></div>
+<div class="body"><h3>2526 EOY S5 M2</h3><div class="meta">12 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQp1ImPvPPbbta-9jRxkfr9T" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQq7ImcuQtcn4nYbrgmKoxan')"><span class="play">&#9654;</span><span class="count">4 &#26781;&#29255;</span></div>
+<div class="body"><h3>2526 UT</h3><div class="meta">4 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQq7ImcuQtcn4nYbrgmKoxan" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrfsTg44M9UVOZLumGD2c0n')"><span class="play">&#9654;</span><span class="count">6 &#26781;&#29255;</span></div>
+<div class="body"><h3>2425 T1</h3><div class="meta">6 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrfsTg44M9UVOZLumGD2c0n" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQpYCnid5cXoBP5NSmDvb99O')"><span class="play">&#9654;</span><span class="count">9 &#26781;&#29255;</span></div>
+<div class="body"><h3>2425 UT</h3><div class="meta">9 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpYCnid5cXoBP5NSmDvb99O" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqhMIM5wVBPBXXUMzaGlcoD')"><span class="play">&#9654;</span><span class="count">4 &#26781;&#29255;</span></div>
+<div class="body"><h3>2425 CA</h3><div class="meta">4 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqhMIM5wVBPBXXUMzaGlcoD" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqO-uHgOycEUtgDpVv9LYov')"><span class="play">&#9654;</span><span class="count">9 &#26781;&#29255;</span></div>
+<div class="body"><h3>2324 EOY</h3><div class="meta">9 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqO-uHgOycEUtgDpVv9LYov" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQpQtVNm-a5VyNg-mmXWnHMn')"><span class="play">&#9654;</span><span class="count">20 &#26781;&#29255;</span></div>
+<div class="body"><h3>2324 T1</h3><div class="meta">20 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpQtVNm-a5VyNg-mmXWnHMn" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqTag-t4CumdFnd5rUWX1FG')"><span class="play">&#9654;</span><span class="count">7 &#26781;&#29255;</span></div>
+<div class="body"><h3>2324 T1 S4 M2</h3><div class="meta">7 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqTag-t4CumdFnd5rUWX1FG" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQomi5E0Hu8uFsTy0RxhO2JN')"><span class="play">&#9654;</span><span class="count">8 &#26781;&#29255;</span></div>
+<div class="body"><h3>2324 UT</h3><div class="meta">8 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQomi5E0Hu8uFsTy0RxhO2JN" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQpYB-u4240L3qN7TpITJo1d')"><span class="play">&#9654;</span><span class="count">6 &#26781;&#29255;</span></div>
+<div class="body"><h3>2324 CA</h3><div class="meta">6 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpYB-u4240L3qN7TpITJo1d" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQpeCZEsYSImg_PPJ_ZX89df')"><span class="play">&#9654;</span><span class="count">8 &#26781;&#29255;</span></div>
+<div class="body"><h3>2223 EOY</h3><div class="meta">8 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpeCZEsYSImg_PPJ_ZX89df" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQom9idJ1XrxGJiCogDhe1ws')"><span class="play">&#9654;</span><span class="count">10 &#26781;&#29255;</span></div>
+<div class="body"><h3>2223 T1</h3><div class="meta">10 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQom9idJ1XrxGJiCogDhe1ws" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQoKt7YLEGs1x89R_21HjqRe')"><span class="play">&#9654;</span><span class="count">7 &#26781;&#29255;</span></div>
+<div class="body"><h3>2223 UT</h3><div class="meta">7 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQoKt7YLEGs1x89R_21HjqRe" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQohdYr3aqpPwjH7QoSntFyP')"><span class="play">&#9654;</span><span class="count">1 &#26781;&#29255;</span></div>
+<div class="body"><h3>M2 S5 Mock Paper</h3><div class="meta">1 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQohdYr3aqpPwjH7QoSntFyP" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQprWlXQEPi_v7_MahSR53QF')"><span class="play">&#9654;</span><span class="count">15 &#26781;&#29255;</span></div>
+<div class="body"><h3>M2 S4 Mock Paper 1</h3><div class="meta">15 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQprWlXQEPi_v7_MahSR53QF" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQoqKn0R9-M89zZCI9-Apg-1')"><span class="play">&#9654;</span><span class="count">16 &#26781;&#29255;</span></div>
+<div class="body"><h3>2021 F4 T2</h3><div class="meta">16 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQoqKn0R9-M89zZCI9-Apg-1" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqGP98pn108RyGRNaV_rLKl')"><span class="play">&#9654;</span><span class="count">16 &#26781;&#29255;</span></div>
+<div class="body"><h3>2021 F5 T2</h3><div class="meta">16 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqGP98pn108RyGRNaV_rLKl" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqNad2O8juSPUFqzi144VVY')"><span class="play">&#9654;</span><span class="count">17 &#26781;&#29255;</span></div>
+<div class="body"><h3>2021 F3 T2</h3><div class="meta">17 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqNad2O8juSPUFqzi144VVY" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQpvGOs4GNEl_TBkENRQbmso')"><span class="play">&#9654;</span><span class="count">46 &#26781;&#29255;</span></div>
+<div class="body"><h3>1920 F5 T2</h3><div class="meta">46 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpvGOs4GNEl_TBkENRQbmso" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQozMVzvQjQTDXs3N5dSnVuZ')"><span class="play">&#9654;</span><span class="count">49 &#26781;&#29255;</span></div>
+<div class="body"><h3>1920 F3 T2</h3><div class="meta">49 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQozMVzvQjQTDXs3N5dSnVuZ" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrv6KvdZs1xU9ote4Nex1dC')"><span class="play">&#9654;</span><span class="count">5 &#26781;&#29255;</span></div>
+<div class="body"><h3>1819 F3 T2</h3><div class="meta">5 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrv6KvdZs1xU9ote4Nex1dC" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQoi84DCW9W2h4SrcpqGblrO')"><span class="play">&#9654;</span><span class="count">1 &#26781;&#29255;</span></div>
+<div class="body"><h3>1617 F3 T2</h3><div class="meta">1 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQoi84DCW9W2h4SrcpqGblrO" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQoADsMRcd9RC0hdJ8MZb-jE')"><span class="play">&#9654;</span><span class="count">5 &#26781;&#29255;</span></div>
+<div class="body"><h3>20220608 5B Math</h3><div class="meta">5 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQoADsMRcd9RC0hdJ8MZb-jE" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQra3aMDQcoOFtSnQ8J1obfo')"><span class="play">&#9654;</span><span class="count">13 &#26781;&#29255;</span></div>
+<div class="body"><h3>20220607 F4 A Math</h3><div class="meta">13 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQra3aMDQcoOFtSnQ8J1obfo" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrwLGqgiZ7meLoCkK4L9cRc')"><span class="play">&#9654;</span><span class="count">4 &#26781;&#29255;</span></div>
+<div class="body"><h3>20220606 F5 B Math</h3><div class="meta">4 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrwLGqgiZ7meLoCkK4L9cRc" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+</div>
+<div class="group-title">DSE操練（3）</div><div class="grid">
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrOdn5hDNc7Gj6X8Kvudgw4')"><span class="play">&#9654;</span><span class="count">13 &#26781;&#29255;</span></div>
+<div class="body"><h3>A1A2 Math HKDSE Drilling</h3><div class="meta">13 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrOdn5hDNc7Gj6X8Kvudgw4" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQqToRkE5VGAQ_sZCod6rk1L')"><span class="play">&#9654;</span><span class="count">4 &#26781;&#29255;</span></div>
+<div class="body"><h3>HKDSE Maths Core Skills Last Minute</h3><div class="meta">4 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqToRkE5VGAQ_sZCod6rk1L" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+<div class="card">
+<div class="thumb" onclick="playPlaylist('PLkCoJSMccAQrY7NEoUZy9Y66xRCvXnvPA')"><span class="play">&#9654;</span><span class="count">3 &#26781;&#29255;</span></div>
+<div class="body"><h3>TSA</h3><div class="meta">3 &#26781;&#24433;&#29255;</div><a href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrY7NEoUZy9Y66xRCvXnvPA" target="_blank" rel="noopener">&#21992; YouTube &#38283;&#21855; &rarr;</a></div>
+</div>
+</div>
+<div class="sec-title" id="archive">&#128193; &#36942;&#24448;&#35430;&#21367;&#21450;&#35506;&#22530;&#37636;&#24433;</div>
+<div class="sec-sub">&#40670;&#25802;&#27161;&#38988;&#21363;&#21487;&#26825;&#30475;</div>
+<div class="arch-list">
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQoyrzGO6zeoejoILxFhWN2A" target="_blank" rel="noopener"><span class="arch-title">2122 F2 T3 EOY</span><span class="arch-count">2 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpUbYiabrBWnv6e7QZsGN7F" target="_blank" rel="noopener"><span class="arch-title">2122 F5 EOY T3</span><span class="arch-count">2 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQo5rV0Tvw352WxBR4luMZfZ" target="_blank" rel="noopener"><span class="arch-title">2223 F4 CA</span><span class="arch-count">3 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQr6XkWhYAC5rfGtnNz8PwPe" target="_blank" rel="noopener"><span class="arch-title">2122 F2 UT</span><span class="arch-count">2 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpea0ve3k1H5gLDAVI89163" target="_blank" rel="noopener"><span class="arch-title">2122 F4 EOY</span><span class="arch-count">2 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpwKpQR9Fx4w8AD4XSKM1gh" target="_blank" rel="noopener"><span class="arch-title">2021 F2 T3</span><span class="arch-count">1 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQoeosOthtX47RR6hoQj8xCG" target="_blank" rel="noopener"><span class="arch-title">2021 F1 T3</span><span class="arch-count">1 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQoCVHiZlIRgPhizzfKpZz69" target="_blank" rel="noopener"><span class="arch-title">2122 F4 CA1</span><span class="arch-count">1 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpEadEL0dOWP0WUSyxskSOy" target="_blank" rel="noopener"><span class="arch-title">2122 F4 T1</span><span class="arch-count">16 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqXAk_v9NbhYUKKFL8IrnBt" target="_blank" rel="noopener"><span class="arch-title">2122 F6 UT</span><span class="arch-count">20 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpSDI5qYuw6OTJ9hZMsb3r4" target="_blank" rel="noopener"><span class="arch-title">2122 F4 UT</span><span class="arch-count">20 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQq4GWMiwPLcltxqkome_PZi" target="_blank" rel="noopener"><span class="arch-title">2122 F5 UT</span><span class="arch-count">21 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQoG8_6r5Ab05bBV-f1RHdlV" target="_blank" rel="noopener"><span class="arch-title">2122 F6 T1 CA1</span><span class="arch-count">12 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQq3xUbAzfERfxe7muB_73gv" target="_blank" rel="noopener"><span class="arch-title">2021 F3 T3</span><span class="arch-count">5 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQptWnk7UO-8tF_7Ns9N58MT" target="_blank" rel="noopener"><span class="arch-title">2021 F4 T3</span><span class="arch-count">64 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqLu89YyDX2K_xQZQ3rXpwm" target="_blank" rel="noopener"><span class="arch-title">2021 F5 T3</span><span class="arch-count">24 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQp9nQ7PdX7oNLvpjK6A2t-9" target="_blank" rel="noopener"><span class="arch-title">1920 F3 T3</span><span class="arch-count">27 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqmphnZSjY9t6XAnE3G2rqs" target="_blank" rel="noopener"><span class="arch-title">1920 F5 T3</span><span class="arch-count">25 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrQgdPvFOwdWHFJMdL8ZQw0" target="_blank" rel="noopener"><span class="arch-title">1920 F4 T3</span><span class="arch-count">25 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrdz3KrM0t3scifF9Yr1fS1" target="_blank" rel="noopener"><span class="arch-title">2021 F5 CA 03</span><span class="arch-count">16 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQodSG8_80H8dkA_w01fb9Uk" target="_blank" rel="noopener"><span class="arch-title">2021 F3 CA 03</span><span class="arch-count">4 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqswgj1SCrtJIFacxSsZhxc" target="_blank" rel="noopener"><span class="arch-title">2021 F4 T1</span><span class="arch-count">16 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQqhihQJ654yk1l2Pc504ZnX" target="_blank" rel="noopener"><span class="arch-title">2021 F3 T1</span><span class="arch-count">19 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQovMzZ-2jEzkJypmHzLbzP5" target="_blank" rel="noopener"><span class="arch-title">2021 F6 T1</span><span class="arch-count">14 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpISMyuC3npcmDOBZhLtIpf" target="_blank" rel="noopener"><span class="arch-title">1920 F6 T1</span><span class="arch-count">45 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrmsPQnSuELW2lW3SAzXxe1" target="_blank" rel="noopener"><span class="arch-title">2021 F5 T1</span><span class="arch-count">15 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQq8peIL8MrGpVQqWgO0Ert6" target="_blank" rel="noopener"><span class="arch-title">1920F5T1</span><span class="arch-count">44 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQphEhYCiNR4ugFOF92tT12A" target="_blank" rel="noopener"><span class="arch-title">1819F6T1</span><span class="arch-count">44 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQoFT4zSA8_w747XJMjF0-XP" target="_blank" rel="noopener"><span class="arch-title">1920F4T1</span><span class="arch-count">45 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrWZBxOghDo9eOgLIHYDkAo" target="_blank" rel="noopener"><span class="arch-title">1819 F1 T3</span><span class="arch-count">47 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQraO6_dQuWWOHjGhputsFlo" target="_blank" rel="noopener"><span class="arch-title">1819 F2 T3</span><span class="arch-count">51 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQoti7zXAoG1dh2wYoW16AH_" target="_blank" rel="noopener"><span class="arch-title">1819 F3 T3</span><span class="arch-count">52 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQosxvjT8HLPFXYnjyfcjrwe" target="_blank" rel="noopener"><span class="arch-title">1819F5T1</span><span class="arch-count">44 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrGg-l9Fam_HVOl3ke3R_JH" target="_blank" rel="noopener"><span class="arch-title">1920 F3 T1</span><span class="arch-count">48 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQorNLq53769K2oGVGPgBtkE" target="_blank" rel="noopener"><span class="arch-title">1819 F4 T3</span><span class="arch-count">64 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQr8thKMHyVs7Po6x3jSGDWa" target="_blank" rel="noopener"><span class="arch-title">1819 F5 T3</span><span class="arch-count">64 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrITVnjKC0XRBYtS6zz_l0N" target="_blank" rel="noopener"><span class="arch-title">1819 F4 T1</span><span class="arch-count">44 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpNv39e0xcrs5Bhzx7Liqkk" target="_blank" rel="noopener"><span class="arch-title">1819 F3 T1</span><span class="arch-count">47 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrPN0aCLp1OLEZ1UY6GLdkX" target="_blank" rel="noopener"><span class="arch-title">1920 F2 T1</span><span class="arch-count">46 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQo9kybM2KC6TmyC5LlADzGg" target="_blank" rel="noopener"><span class="arch-title">1819 F2 T1</span><span class="arch-count">47 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrqdCC6UM2hpACknAyETmS4" target="_blank" rel="noopener"><span class="arch-title">1718 F3 T2</span><span class="arch-count">6 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQofujUZuGBGuwmwijGoqCE8" target="_blank" rel="noopener"><span class="arch-title">Week 07 F3</span><span class="arch-count">6 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrqGRUA8cugUSlMTEbkgR2h" target="_blank" rel="noopener"><span class="arch-title">Week 08 F3</span><span class="arch-count">2 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQo--4aeay2qlL9JMOkzW5e-" target="_blank" rel="noopener"><span class="arch-title">Week 09 F3</span><span class="arch-count">15 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQryDAF1tq7F1kJ4OUARnpSl" target="_blank" rel="noopener"><span class="arch-title">Week 08 F4</span><span class="arch-count">8 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQrDHWjGpcvx6J9ceFlMFhIo" target="_blank" rel="noopener"><span class="arch-title">Week 07 F4</span><span class="arch-count">10 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpgtYE--lb5CXWn33Xxcj5G" target="_blank" rel="noopener"><span class="arch-title">Week 07 F5</span><span class="arch-count">5 &#26781;</span></a>
+<a class="arch-item" href="https://www.youtube.com/playlist?list=PLkCoJSMccAQpkwArnpNjUpBD1_teG1QWL" target="_blank" rel="noopener"><span class="arch-title">Week 08 F5</span><span class="arch-count">6 &#26781;</span></a>
+</div>
+</main>
+<footer>&#25945;&#23416;&#36039;&#28304;&#20849;&#20139; &#183; &#27489;&#36814;&#32769;&#24107;&#21516;&#23416;&#29983;&#20351;&#29992;</footer>
+<div class="player-modal" id="modal" onclick="if(event.target===this)closePlayer()">
+<div class="player-wrap">
+<button class="close-btn" onclick="closePlayer()">&#10005;</button>
+<iframe id="player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+</div>
+<script>
+function playPlaylist(pid){
+document.getElementById('player').src='https://www.youtube.com/embed/videoseries?list='+pid+'&autoplay=1';
+document.getElementById('modal').classList.add('open');
+document.body.style.overflow='hidden';
+}
+function closePlayer(){
+document.getElementById('player').src='';
+document.getElementById('modal').classList.remove('open');
+document.body.style.overflow='';
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePlayer();});
+</script>
+</body>
+</html>

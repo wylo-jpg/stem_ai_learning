@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>AI 教學資源</title>
+<style>
+:root{--blue:#2563eb;--purple:#7c3aed;--ink:#1f2937;--muted:#6b7280;--bg:#f3f4f6;--card:#fff}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--ink);line-height:1.7}
+header{background:linear-gradient(135deg,#1e3a8a,#7c3aed);color:#fff;padding:28px 24px;text-align:center}
+header h1{margin:0 0 8px;font-size:26px}
+header p{margin:0;opacity:.9;font-size:14px}
+nav{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 16px;display:flex;gap:4px;overflow-x:auto;position:sticky;top:0;z-index:10}
+nav a{padding:14px 18px;text-decoration:none;color:var(--muted);font-weight:600;font-size:14px;white-space:nowrap;border-bottom:3px solid transparent}
+nav a.active{color:var(--blue);border-bottom-color:var(--blue)}
+main{max-width:1000px;margin:0 auto;padding:24px 16px 60px}
+.sec-title{font-size:22px;font-weight:800;margin:32px 0 6px}
+.sec-title:first-of-type{margin-top:8px}
+.sec-sub{color:var(--muted);font-size:13px;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.gcard{background:var(--card);border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08);text-decoration:none;color:var(--ink);display:block}
+.gcard:hover{box-shadow:0 4px 12px rgba(124,58,237,.15)}
+.gcard .emoji{font-size:36px}
+.gcard h3{margin:10px 0 6px;font-size:16px}
+.gcard p{margin:0;font-size:13px;color:var(--muted)}
+.trend{background:var(--card);border-radius:12px;padding:20px 24px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.trend h3{margin:0 0 8px;font-size:16px}
+.trend p{margin:0;font-size:14px;color:#374151}
+.trend .src{font-size:12px;color:var(--muted);margin-top:8px}
+.trend .src a{color:var(--purple);font-weight:600;text-decoration:none}
+.comp{background:var(--card);border-radius:12px;padding:20px 24px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.08);border-left:4px solid var(--purple)}
+.comp h3{margin:0 0 6px;font-size:16px}
+.comp p{margin:0 0 8px;font-size:14px;color:#374151}
+.comp .meta{font-size:12px;color:var(--muted)}
+.comp a{color:var(--purple);font-size:13px;font-weight:600;text-decoration:none}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:30px}
+@media(max-width:640px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><h1>🤖 AI 教學資源</h1><p>AI 小遊戲 · 最新趨勢 · 比賽活動</p></header>
+<nav>
+<a href="index.html">🏠 首頁</a>
+<a href="maths.html">📐 數學</a>
+<a href="videos.html">🎬 影片</a>
+<a href="games.html">🎮 遊戲</a>
+<a href="stem.html">🔬 STEM</a>
+<a href="ai.html" class="active">🤖 AI</a>
+<a href="news.html">📰 資訊</a>
+</nav>
+<main>
+
+<div class="sec-title">🎮 AI 小遊戲（20個）</div>
+<div class="sec-sub">邊玩邊學 AI 概念 · 全部離線玩到 · 手機iPad適用</div>
+<div class="grid">
+<a class="gcard" href="game-neural-net.html"><div class="emoji">🧠</div><h3>神經網絡實驗室</h3><p>調權重睇 AI 點學識分類</p></a>
+<a class="gcard" href="game-prompt-master.html"><div class="emoji">✍️</div><h3>Prompt 大師</h3><p>5 個任務考你寫 prompt</p></a>
+<a class="gcard" href="game-ai-or-not.html"><div class="emoji">🕵️</div><h3>AI 定人類？</h3><p>睇穿生成式 AI 嘅破綻</p></a>
+<a class="gcard" href="game-train-pet.html"><div class="emoji">🐶</div><h3>訓練 AI 寵物</h3><p>體驗強化學習</p></a>
+<a class="gcard" href="game-ethics-choice.html"><div class="emoji">⚖️</div><h3>AI 倫理抉擇</h3><p>6 個兩難情景深度解說</p></a>
+<a class="gcard" href="game-decision-tree.html"><div class="emoji">🌳</div><h3>決策樹大師</h3><p>親手砌決策樹分類</p></a>
+<a class="gcard" href="game-clustering.html"><div class="emoji">🎯</div><h3>AI 分群高手</h3><p>同 K-means 較量分群</p></a>
+<a class="gcard" href="game-overfitting.html"><div class="emoji">🪤</div><h3>過擬合陷阱</h3><p>調複雜度睇訓練vs測試</p></a>
+<a class="gcard" href="game-chatbot-trainer.html"><div class="emoji">🤖</div><h3>聊天機器人訓練師</h3><p>教隻bot認問題類型</p></a>
+<a class="gcard" href="game-recommender.html"><div class="emoji">🎬</div><h3>推薦系統大作戰</h3><p>估協同過濾會推咩</p></a>
+<a class="gcard" href="game-face-detect.html"><div class="emoji">📷</div><h3>人臉檢測模擬</h3><p>限時篤出所有人臉</p></a>
+<a class="gcard" href="game-ai-art.html"><div class="emoji">🎨</div><h3>AI畫風配對</h3><p>估邊幅係 AI 生成</p></a>
+<a class="gcard" href="game-speech-sim.html"><div class="emoji">🎙️</div><h3>語音識別大作戰</h3><p>篤出 AI 聽錯嘅字</p></a>
+<a class="gcard" href="game-ai-bias.html"><div class="emoji">🔍</div><h3>AI偏見偵探</h3><p>找出算法偏見來源</p></a>
+<a class="gcard" href="game-genetic.html"><div class="emoji">🧬</div><h3>遺傳算法實驗室</h3><p>睇生物點樣演化進步</p></a>
+<a class="gcard" href="game-vision-puzzle.html"><div class="emoji">🧩</div><h3>電腦視覺拼圖</h3><p>拼圖＋睇 AI 點樣睇錯</p></a>
+<a class="gcard" href="game-nlp-words.html"><div class="emoji">✨</div><h3>自然語言魔法</h3><p>斷詞＋詞性標註</p></a>
+<a class="gcard" href="game-ai-memory.html"><div class="emoji">🧠</div><h3>AI記憶配對</h3><p>記憶會衰退嘅翻牌遊戲</p></a>
+<a class="gcard" href="game-pathfinding.html"><div class="emoji">🗺️</div><h3>AI尋路大師</h3><p>睇 A* 算法點搵最短路</p></a>
+<a class="gcard" href="game-turing-test.html"><div class="emoji">🕵️</div><h3>圖靈測試</h3><p>估對手係人定 AI</p></a>
+</div>
+
+<div class="sec-title">📈 AI 最新趨勢</div>
+<div class="sec-sub">更新日期：14-10-2026</div>
+
+<div class="trend">
+<h3>🧠 生成式 AI 走入課室</h3>
+<p>教育局推動《中小學人工智能素養學習架構》，引導學生「學好 AI」、「善用 AI」、「負責任地用 AI」。學校陸續將 AI 素養納入課程，教師培訓亦同步展開。</p>
+<div class="src">來源：<a href="https://www.edb.gov.hk/tc/edu-system/primary-secondary/applicable-to-primary-secondary/it-in-edu/index.html" target="_blank" rel="noopener">教育局資訊科技教育</a></div>
+</div>
+
+<div class="trend">
+<h3>🏛️ 政府「AI for All」計劃</h3>
+<p>創新科技及工業局 2026 年 7 月推出全民 AI 計劃，提供 AI 大師班、實戰學習同行業配對，目標提升全港 AI 素養，學生同青年係重點對象。</p>
+<div class="src">來源：<a href="https://opengovasia.com/hong-kong-industry-linked-training-programme-boosts-ai-readiness/" target="_blank" rel="noopener">OpenGov Asia</a></div>
+</div>
+
+<div class="trend">
+<h3>🎓 資優教育學苑 AI 課程</h3>
+<p>香港資優教育學苑開辦 AI 相關資優課程，包括 AI 機械臂、生成式 AI 及網絡安全培訓（城大合辦），對象為中一至中五資優學員。</p>
+<div class="src">來源：<a href="https://hkage.edu.hk" target="_blank" rel="noopener">香港資優教育學苑</a></div>
+</div>
+
+<div class="sec-title">🏆 AI 比賽及活動</div>
+<div class="sec-sub">適合中學生參加</div>
+
+<div class="comp">
+<h3>AI 航天科技比賽 2026</h3>
+<p>主題「AI × 火星探索研究」，鼓勵全港中小學生運用 AI 與航天知識創作。由香港兒童基金會主辦，現已接受報名。</p>
+<div class="meta">對象：全港中小學生</div>
+<p><a href="https://www.theminelab.org" target="_blank" rel="noopener">比賽網站 →</a></p>
+</div>
+
+<div class="comp">
+<h3>第三屆全港十八區 AI 咒術師繪圖比賽</h3>
+<p>用 AI 繪圖工具創作，中學組免費參加，需提交完整 Prompt。發揮創意同 Prompt 技巧嘅好機會。</p>
+<div class="meta">報名及交作品截止：20-11-2026 ｜ 賽果公布：27-11-2026</div>
+<p><a href="https://www.hkassociationofculture.com/post/%E7%AC%AC%E4%B8%89%E5%B1%86%E5%85%A8%E6%B8%AF%E5%8D%81%E5%85%AB%E5%8D%80ai%E5%92%92%E8%A1%93%E5%B8%AB%E7%B9%AA%E5%9C%96%E6%AF%94%E8%B3%BD" target="_blank" rel="noopener">詳情 →</a></p>
+</div>
+
+<div class="comp">
+<h3>Samsung Solve for Tomorrow 2026</h3>
+<p>以 AI／科技解決社會問題，中學組 2-5 人一隊。初賽只需交概念提案，入圍有專家工作坊指導。</p>
+<div class="meta">報名截止：16-10-2026</div>
+<p><a href="https://www.samsung.com/hk/offer/solvefortomorrow/" target="_blank" rel="noopener">詳情及報名 →</a></p>
+</div>
+
+</main>
+<footer>教學資源共享 · 歡迎老師同學生使用</footer>
+</body>
+</html>

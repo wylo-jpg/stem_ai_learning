@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>AI畫風配對</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#1c1917;color:#e7e5e4;touch-action:manipulation;line-height:1.6}
+header{background:#292524;padding:12px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:5}
+header a{color:#fbbf24;text-decoration:none;font-size:16px;min-height:44px;display:flex;align-items:center}
+header h1{margin:0;font-size:18px;flex:1}
+#hud{display:flex;gap:8px;padding:10px 12px}
+.hud-box{background:#292524;border-radius:10px;padding:8px 14px;font-size:15px;flex:1;text-align:center}
+.hud-box b{color:#fbbf24;font-size:18px}
+#prompt{text-align:center;font-size:16px;font-weight:700;padding:6px 12px;color:#fde68a}
+#grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:6px 12px;max-width:640px;margin:0 auto}
+.art{border-radius:12px;overflow:hidden;border:4px solid transparent;cursor:pointer;background:#000;min-height:44px}
+.art svg{width:100%;height:auto;display:block;pointer-events:none}
+.art .cap{text-align:center;font-size:12px;color:#a8a29e;padding:4px;background:#292524;pointer-events:none}
+.art.correct{border-color:#22c55e}
+.art.wrong{border-color:#ef4444}
+.art.locked{cursor:default}
+#explain{margin:12px;max-width:640px;margin-left:auto;margin-right:auto;background:#292524;border-radius:12px;padding:16px 18px;display:none;font-size:15px}
+#explain.show{display:block}
+#explain b{color:#fbbf24}
+button.big{display:block;width:calc(100% - 24px);max-width:640px;margin:12px auto;min-height:52px;background:#d97706;color:#fff;border:0;border-radius:12px;font-size:18px;font-weight:700;cursor:pointer}
+button.big:active{background:#b45309}
+.overlay{position:fixed;inset:0;background:rgba(12,10,9,.94);display:flex;align-items:center;justify-content:center;z-index:20;padding:20px}
+.overlay.hidden{display:none}
+.panel{background:#292524;border-radius:16px;padding:24px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto}
+.panel h2{margin:0 0 10px;font-size:20px}
+.panel p{font-size:15px;color:#d6d3d1;margin:8px 0}
+.concept{background:#451a03;border-radius:10px;padding:12px 14px;margin:12px 0;font-size:14px}
+.concept b{color:#fbbf24}
+footer{text-align:center;color:#78716c;font-size:12px;padding:16px}
+</style>
+</head>
+<body>
+<header><a href="ai.html">← 返回</a><h1>🎨 AI畫風配對</h1></header>
+<div id="hud">
+<div class="hud-box">第 <b id="h-round">1</b>/5 回合</div>
+<div class="hud-box">分數 <b id="h-score">0</b></div>
+<div class="hud-box">連擊 <b id="h-streak">0</b>🔥</div>
+</div>
+<div id="prompt">邊一幅最似係 <b>AI 生成</b> 嘅畫？篤佢！</div>
+<div id="grid"></div>
+<div id="explain"></div>
+<button class="big" id="nextbtn" style="display:none" onclick="nextRound()">下一幅 →</button>
+
+<div class="overlay" id="intro">
+<div class="panel">
+<h2>🎨 AI畫風配對</h2>
+<p><b>玩法：</b>每回合有 4 幅唔同風格嘅畫（印象派、立體派、水彩、AI風），<b>估邊一幅係 AI 生成</b>！AI 畫有啲破綻：過度平滑、對稱得太完美、細節融化、手指出奇嘅多…估中 +20 分，連續估中仲有獎勵。</p>
+<div class="concept"><b>💡 AI概念 — 生成式 AI：</b>AI 畫圖工具（如擴散模型）係由幾百萬幅畫學返嚟嘅。佢哋好叻模仿風格，但有時會整出唔合理嘅細節——例如 6 隻手指、融化咗嘅背景、左右完全對稱。學識睇穿呢啲破綻，就係理解 AI 點樣「諗嘢」嘅第一步。</div>
+<button class="big" onclick="startGame()">開始估畫</button>
+</div>
+</div>
+
+<div class="overlay hidden" id="end">
+<div class="panel">
+<h2>🏁 完成！</h2>
+<p id="end-text"></p>
+<div class="concept"><b>💡 諗一諗：</b>AI 畫圖愈嚟愈似人手，破綻愈嚟愈少。如果有一日完全分唔出，你覺得對藝術家係威脅定係新工具？點解？</div>
+<button class="big" onclick="location.reload()">再玩一次</button>
+<a href="ai.html" style="display:block;text-align:center;margin-top:10px;color:#fbbf24;min-height:44px;line-height:44px">返回 AI 資源頁</a>
+</div>
+</div>
+
+<footer>單檔離線遊戲 · 教學資源共享</footer>
+
+<script>
+function mulberry(seed){let s=seed>>>0;return function(){s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+const pal=[["#f59e0b","#ef4444","#3b82f6","#22c55e"],["#8b5cf6","#ec4899","#14b8a6","#f97316"],["#eab308","#06b6d4","#6366f1","#f43f5e"]];
+
+function impressionist(r){
+  let s=`<rect width="300" height="300" fill="#bfdbfe"/>`;
+  s+=`<circle cx="230" cy="60" r="30" fill="#fde047"/>`;
+  s+=`<rect y="200" width="300" height="100" fill="#86efac"/>`;
+  for(let i=0;i<90;i++){const x=r()*300,y=200+r()*95,c=["#4ade80","#22c55e","#a3e635","#facc15"][Math.floor(r()*4)];s+=`<ellipse cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" rx="${(4+r()*7).toFixed(0)}" ry="${(3+r()*5).toFixed(0)}" fill="${c}" opacity=".8"/>`;}
+  for(let i=0;i<40;i++){const x=r()*300,y=r()*190,c=["#93c5fd","#60a5fa","#fde68a"][Math.floor(r()*3)];s+=`<ellipse cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" rx="${(4+r()*8).toFixed(0)}" ry="${(3+r()*5).toFixed(0)}" fill="${c}" opacity=".7"/>`;}
+  s+=`<rect x="60" y="120" width="14" height="90" fill="#78350f"/>`;
+  for(let i=0;i<50;i++){const x=67+(r()-0.5)*90,y=110+(r()-0.5)*60,c=["#166534","#15803d","#65a30d"][Math.floor(r()*3)];s+=`<ellipse cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" rx="${(5+r()*8).toFixed(0)}" ry="${(4+r()*6).toFixed(0)}" fill="${c}" opacity=".85"/>`;}
+  return s;
+}
+function cubist(r){
+  const P=pal[Math.floor(r()*3)];let s=`<rect width="300" height="300" fill="#1c1917"/>`;
+  for(let i=0;i<16;i++){const x=r()*260,y=r()*260,w=30+r()*70,h=30+r()*70;const pts=`${x},${y} ${x+w},${y+r()*40} ${x+r()*w},${y+h} ${x+w*0.3},${y+h}`;s+=`<polygon points="${pts}" fill="${P[Math.floor(r()*4)]}" opacity=".9" stroke="#000" stroke-width="2"/>`;}
+  s+=`<polygon points="120,90 180,90 150,160" fill="#fde68a" stroke="#000" stroke-width="2"/><circle cx="135" cy="115" r="6" fill="#000"/><circle cx="165" cy="115" r="6" fill="#000"/>`;
+  return s;
+}
+function watercolor(r){
+  let s=`<rect width="300" height="300" fill="#fafaf9"/>`;
+  const C=["#f9a8d4","#93c5fd","#a5b4fc","#6ee7b7","#fcd34d"];
+  for(let i=0;i<14;i++){const x=40+r()*220,y=40+r()*220,rad=30+r()*60;s+=`<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${rad.toFixed(0)}" fill="${C[Math.floor(r()*5)]}" opacity=".28"/>`;}
+  s+=`<path d="M40,220 Q150,160 260,210" stroke="#0ea5e9" stroke-width="10" fill="none" opacity=".4" stroke-linecap="round"/>`;
+  s+=`<circle cx="220" cy="100" r="26" fill="#fda4af" opacity=".5"/><circle cx="235" cy="95" r="20" fill="#fecdd3" opacity=".5"/>`;
+  return s;
+}
+function aistyle(r,artifact){
+  let s=`<defs><radialGradient id="g${artifact}" cx="50%" cy="40%"><stop offset="0%" stop-color="#c4b5fd"/><stop offset="60%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#1e1b4b"/></radialGradient></defs>`;
+  s+=`<rect width="300" height="300" fill="url(#g${artifact})"/>`;
+  // overly smooth portrait silhouette, perfectly symmetric
+  s+=`<ellipse cx="150" cy="130" rx="55" ry="65" fill="#e9d5ff" opacity=".95"/>`;
+  s+=`<ellipse cx="128" cy="120" rx="9" ry="12" fill="#4c1d95"/><ellipse cx="172" cy="120" rx="9" ry="12" fill="#4c1d95"/>`;
+  s+=`<ellipse cx="150" cy="130" rx="55" ry="65" fill="none" stroke="#a78bfa" stroke-width="2" opacity=".6"/>`;
+  // artifact
+  if(artifact===0){ // six fingers
+    s+=`<g transform="translate(150,240)"><rect x="-25" y="-20" width="50" height="34" rx="12" fill="#e9d5ff"/>`;
+    for(let i=0;i<6;i++){s+=`<rect x="${-27+i*10}" y="-44" width="9" height="28" rx="4.5" fill="#e9d5ff"/>`;}
+    s+=`<text x="0" y="52" text-anchor="middle" font-size="13" fill="#fde68a">👆 數下有幾隻手指？</text></g>`;
+    return {svg:s,note:"<b>破綻：6 隻手指！</b>AI 唔真正理解人體結構，成日整多隻手指或者手指扭曲。數手指係最快睇穿 AI 圖嘅方法之一。"};
+  }else if(artifact===1){ // melting
+    s+=`<g><ellipse cx="150" cy="130" rx="55" ry="65" fill="#e9d5ff"/><path d="M120,185 q5,25 0,40 M140,188 q-5,28 3,45 M165,186 q6,24 -2,42" stroke="#c4b5fd" stroke-width="10" fill="none" stroke-linecap="round"/><text x="150" y="275" text-anchor="middle" font-size="13" fill="#fde68a">👆 塊面好似融緊…</text></g>`;
+    return {svg:s,note:"<b>破綻：細節融化！</b>AI 生成嘅邊緣有時會糊埋一舊，物件之間嘅分界唔清晰，好似融緊咁。"};
+  }else{ // perfect symmetry + extra eye
+    s+=`<circle cx="150" cy="118" rx="7" ry="9" fill="#4c1d95"/><text x="150" y="275" text-anchor="middle" font-size="13" fill="#fde68a">👆 完美對稱 + 第三隻眼？</text>`;
+    return {svg:s,note:"<b>破綻：過度對稱 + 怪異特徵！</b>AI 好鍾意整到左右完全對稱，但真實世界好少咁完美；仲成日唔覺意加多隻眼、耳仔唔對稱。"};
+  }
+}
+
+const STYLES=[
+ {name:"印象派",make:r=>impressionist(r)},
+ {name:"立體派",make:r=>cubist(r)},
+ {name:"水彩風",make:r=>watercolor(r)}
+];
+let round=0,score=0,streak=0,locked=false;
+
+function startGame(){
+  document.getElementById('intro').classList.add('hidden');
+  round=0;score=0;streak=0;nextRound();
+}
+function nextRound(){
+  if(round>=5){endGame();return;}
+  locked=false;
+  document.getElementById('nextbtn').style.display='none';
+  document.getElementById('explain').classList.remove('show');
+  document.getElementById('h-round').textContent=round+1;
+  const r=mulberry(Date.now()%100000+round*7919);
+  const aiPos=Math.floor(r()*4);
+  const artifact=round%3;
+  const order=[0,1,2,3].sort(()=>r()-0.5);
+  const grid=document.getElementById('grid');grid.innerHTML='';
+  const aiArt=aistyle(mulberry(99+round*131),artifact);
+  order.forEach((slot,i)=>{
+    const div=document.createElement('div');div.className='art';div.dataset.slot=i;
+    let svg,cap;
+    if(i===aiPos){svg=aiArt.svg;cap='?';}
+    else{const st=STYLES[(i+aiPos)%3];svg=`<svg viewBox="0 0 300 300">${st.make(r)}</svg>`;cap='?';}
+    if(i===aiPos)div.innerHTML=`<svg viewBox="0 0 300 300">${svg}</svg><div class="cap">畫作 ${i+1}</div>`;
+    else div.innerHTML=svg+`<div class="cap">畫作 ${i+1}</div>`;
+    div.onclick=()=>pick(div,i===aiPos,aiArt.note);
+    grid.appendChild(div);
+  });
+  // store correct pos
+  grid.dataset.ai=aiPos;
+}
+function pick(el,correct,note){
+  if(locked)return;locked=true;
+  const cards=document.querySelectorAll('.art');
+  cards.forEach(c=>c.classList.add('locked'));
+  const ex=document.getElementById('explain');
+  if(correct){
+    el.classList.add('correct');
+    const pts=20+streak*5;score+=pts;streak++;
+    ex.innerHTML=`✅ <b>估中！+${pts} 分</b><br>${note}`;
+  }else{
+    el.classList.add('wrong');
+    cards[+document.getElementById('grid').dataset.ai].classList.add('correct');
+    streak=0;
+    ex.innerHTML=`❌ <b>估錯咗！</b>正確答案係綠框嗰幅。<br>${note}`;
+  }
+  document.getElementById('h-score').textContent=score;
+  document.getElementById('h-streak').textContent=streak;
+  ex.classList.add('show');
+  document.getElementById('nextbtn').style.display='block';
+  round++;
+}
+function endGame(){
+  const stars=score>=110?'⭐⭐⭐':score>=80?'⭐⭐':'⭐';
+  document.getElementById('end-text').innerHTML=`總分：<b style="color:#fbbf24;font-size:22px">${score}</b> / 150<br>評級：${stars}<br>你已經學識睇穿 AI 生成圖嘅常見破綻！`;
+  document.getElementById('end').classList.remove('hidden');
+}
+</script>
+</body>
+</html>

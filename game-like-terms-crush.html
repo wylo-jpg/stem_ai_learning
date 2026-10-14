@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>同類項消消樂 · Like Terms Crush</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{margin:0;font-family:"PingFang HK","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  background:linear-gradient(160deg,#a18cd1 0%,#fbc2eb 100%);min-height:100vh;color:#343a40;}
+#app{max-width:520px;margin:0 auto;padding:10px 12px calc(72px + env(safe-area-inset-bottom,0px));}
+header{text-align:center;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.25);}
+header h1{margin:2px 0 1px;font-size:20px;letter-spacing:1px;}
+header p{margin:0 0 3px;font-size:12px;opacity:.92;}
+#lvlName{text-align:center;color:#fff;font-weight:800;font-size:13px;text-shadow:0 1px 3px rgba(0,0,0,.3);margin:1px 0 3px;}
+#hud{display:flex;gap:8px;margin:3px 0;}
+.hud-card{background:rgba(255,255,255,.93);border-radius:14px;padding:5px 8px;flex:1;box-shadow:0 2px 6px rgba(0,0,0,.12);min-width:0;}
+.hud-card .lbl{font-size:10px;color:#868e96;}
+.hud-card .val{font-size:16px;font-weight:800;white-space:nowrap;}
+#progress{height:8px;background:#e9ecef;border-radius:4px;margin-top:5px;overflow:hidden;}
+#progressFill{height:100%;width:0;background:linear-gradient(90deg,#51cf66,#94d82d);border-radius:4px;transition:width .4s;}
+#legend{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:3px 0 5px;min-height:22px;}
+#missions{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:2px 0 5px;min-height:28px;}
+.mission{font-size:13px;font-weight:800;background:#fff9db;border:2px solid #fcc419;color:#664d03;padding:3px 10px;border-radius:20px;display:flex;align-items:center;gap:6px;}
+.mission.done{background:#d3f9d8;border-color:#40c057;color:#2b8a3e;}
+.mission .dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+#introMissions{background:#fff9db;border:2px dashed #fcc419;border-radius:12px;padding:10px 14px;margin:10px 0;font-size:17px;line-height:1.9;}
+#introGoal{font-size:18px;}
+.chip{font-size:11px;background:rgba(255,255,255,.88);padding:2px 8px;border-radius:20px;display:flex;align-items:center;gap:6px;font-weight:700;}
+.dot{width:10px;height:10px;border-radius:50%;flex:none;}
+#boardWrap{position:relative;margin:0 auto;
+  width:min(96vw,470px);
+  width:min(96vw,470px,max(300px,calc(100vh - 290px)));
+  width:min(96vw,470px,max(300px,calc(100dvh - 290px)));}
+#board{position:relative;width:100%;aspect-ratio:1/1;background:rgba(255,255,255,.32);
+  border-radius:16px;box-shadow:inset 0 2px 10px rgba(0,0,0,.18);touch-action:none;overflow:hidden;}
+.tile{position:absolute;left:0;top:0;width:12.5%;height:12.5%;transition:transform .26s ease;cursor:pointer;}
+.tile-in{width:calc(100% - 7px);height:calc(100% - 7px);margin:3.5px;border-radius:24%;
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:clamp(14px,4.4vw,22px);
+  box-shadow:0 3px 0 rgba(0,0,0,.18), inset 0 2px 0 rgba(255,255,255,.4);user-select:none;-webkit-user-select:none;}
+.tile.sel .tile-in{outline:3px solid #fff;outline-offset:-1px;transform:scale(1.12);filter:brightness(1.12);}
+.tile.pop{pointer-events:none;}
+.tile.pop .tile-in{animation:pop .3s forwards;}
+@keyframes pop{35%{transform:scale(1.3) rotate(10deg);}100%{transform:scale(0) rotate(-20deg);opacity:0;}}
+#fx{position:absolute;inset:0;pointer-events:none;z-index:5;}
+.float{position:absolute;transform:translate(-50%,-50%);text-align:center;animation:floatUp 1.5s ease-out forwards;pointer-events:none;}
+.float .eq{background:rgba(33,37,41,.9);color:#fff;font-size:14px;font-weight:700;padding:6px 12px;border-radius:12px;white-space:nowrap;}
+.float .pts{color:#ffe066;font-weight:900;font-size:19px;text-shadow:0 2px 4px rgba(0,0,0,.55);}
+@keyframes floatUp{0%{opacity:0;margin-top:12px;}15%{opacity:1;}100%{opacity:0;margin-top:-52px;}}
+#banner{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%) scale(.6);font-size:30px;font-weight:900;
+  color:#fff;text-shadow:0 3px 0 #e8590c,0 6px 12px rgba(0,0,0,.35);opacity:0;pointer-events:none;z-index:6;white-space:nowrap;}
+#banner.show{animation:bannerIn 1.4s ease forwards;}
+@keyframes bannerIn{0%{opacity:0;transform:translate(-50%,-50%) scale(.5);}20%{opacity:1;transform:translate(-50%,-50%) scale(1.15);}
+  40%{transform:translate(-50%,-50%) scale(1);}80%{opacity:1;}100%{opacity:0;transform:translate(-50%,-62%) scale(1);}}
+#controls{display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap;}
+button{font-family:inherit;}
+.btn{background:#fff;border:none;border-radius:12px;padding:9px 16px;font-size:15px;font-weight:700;color:#495057;
+  box-shadow:0 3px 0 rgba(0,0,0,.15);cursor:pointer;}
+.btn:active{transform:translateY(2px);box-shadow:none;}
+.btn.primary{background:linear-gradient(135deg,#ff8787,#f06595);color:#fff;font-size:16px;padding:11px 22px;}
+.btn:disabled{opacity:.55;cursor:default;}
+.card.section{max-height:none;overflow:visible;animation:none;margin:12px auto;}
+.card.section h2{font-size:24px;}
+.btn.big{font-size:22px;padding:18px 40px;min-height:78px;width:100%;max-width:440px;}
+.card{background:#fff;border-radius:20px;max-width:440px;width:100%;padding:22px;max-height:88vh;overflow:auto;
+  box-shadow:0 10px 30px rgba(0,0,0,.3);animation:cardIn .25s ease;}
+@keyframes cardIn{from{transform:scale(.92);opacity:0;}to{transform:scale(1);opacity:1;}}
+.card h2{margin:0 0 12px;font-size:26px;}
+.card p{font-size:18px;line-height:1.8;margin:10px 0;}
+.example{background:#f1f3f5;border-radius:12px;padding:12px 16px;margin:10px 0;font-size:18px;line-height:2;}
+.term-demo{display:inline-block;padding:4px 14px;border-radius:9px;color:#fff;font-weight:800;margin:2px;font-size:18px;box-shadow:0 2px 0 rgba(0,0,0,.15);}
+.stars{font-size:36px;text-align:center;letter-spacing:8px;margin:8px 0;color:#fcc419;text-shadow:0 2px 0 #e8a100;}
+.opt{display:block;width:100%;text-align:left;margin:8px 0;font-size:18px;}
+.opt.correct{background:#b2f2bb;}
+.opt.wrong{background:#ffc9c9;}
+.explain{background:#fff3bf;border-radius:10px;padding:12px 14px;margin-top:10px;font-size:16px;line-height:1.75;display:none;}
+.lvl-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;}
+.lvl-btn{padding:14px 8px;font-size:14px;line-height:1.5;}
+.center{text-align:center;}
+.row{display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap;}
+.kbd-hint{font-size:12px;color:#868e96;text-align:center;margin-top:8px;}
+#howto{background:rgba(255,255,255,.94);border-radius:14px;padding:10px 14px;margin:10px auto 0;max-width:460px;
+  font-size:14.5px;line-height:1.85;color:#495057;box-shadow:0 2px 6px rgba(0,0,0,.12);}
+#howto .howto-title{font-weight:900;font-size:16px;color:#343a40;}
+#howto .mini{background:#f1f3f5;border-radius:10px;padding:8px 12px;margin:8px 0;line-height:2;}
+#howto .term-demo{font-size:14px;padding:3px 10px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>🍬 同類項消消樂</h1>
+    <p>Like Terms Crush · 多項式嘅同類項合併遊戲</p>
+  </header>
+
+  <div id="homeView">
+    <div id="howto">
+      <div class="howto-title">🍬 玩法說明</div>
+      <p style="margin:8px 0;">將<b>同類項</b>（like terms）排成 3 粒或以上，就可以將佢哋<b>合併</b>消去得分！消去嗰陣會顯示合併過程，啱啱好溫習點樣化簡多項式。</p>
+      <div class="mini">✅ <b>同類項</b>：字母同次方一樣<br>
+        <span class="term-demo" style="background:#f06595">3x</span><span class="term-demo" style="background:#f06595">5x</span><span class="term-demo" style="background:#f06595">x</span><br>
+        → 可以合併：3x + 5x + x = 9x</div>
+      <div class="mini">❌ <b>唔係同類項</b>，消唔埋一齊：<br>
+        <span class="term-demo" style="background:#f06595">3x</span> vs <span class="term-demo" style="background:#9775fa">3x²</span>（次方唔同）<br>
+        <span class="term-demo" style="background:#f06595">3x</span> vs <span class="term-demo" style="background:#339af0">3y</span>（字母唔同）</div>
+      <div class="mini">🍬 <b>常數項</b>都係同類項：<span class="term-demo" style="background:#868e96">7</span><span class="term-demo" style="background:#868e96">2</span> → 7 + 2 = 9</div>
+      <div class="mini">🪤 <b>扮同類項陷阱</b>：<br>
+        <span class="term-demo" style="background:#f06595">3a²</span> vs <span class="term-demo" style="background:#339af0">3b²</span>（次方一樣但字母唔同 → 唔係！）<br>
+        <span class="term-demo" style="background:#0ca678">5m²n</span> vs <span class="term-demo" style="background:#fd7e14">5mn²</span>（次方調轉 → 唔係！）</div>
+      <div>🔤 <b>新變元登場</b>：後面關卡會逐關加上 a、b 等新變元，規則一樣 —— 字母＋次方要<b>完全相同</b>先係同類項！<br>
+      🕵️ 第 1 關有顏色提示；第 2–5 關係<b>專家模式</b>：冇顏色提示，靠你對眼逐粒分！</div>
+      <div>🖱️ <b>玩法</b>：撳一粒再撳隔籬一粒（或者直接拖曳）嚟交換位置。<br>
+      💥 <b>4 連消</b>：橫掃整行 / 直行　🌈 <b>5 連消</b>：全場同類項大爆發！</div>
+    </div>
+    <div class="card section">
+      <h2>🏠 選擇關卡</h2>
+      <div class="lvl-grid" id="lvlGrid"></div>
+    </div>
+  </div>
+
+  <div id="quizView" style="display:none;">
+    <div class="card section">
+      <h2>📝 熱身小測驗</h2>
+      <div class="row"><button class="btn primary big" id="quizNext" style="display:none;">繼續 →</button></div>
+      <p id="quizQ" style="font-weight:800;font-size:17px;"></p>
+      <div id="quizOpts"></div>
+      <div class="explain" id="quizExplain"></div>
+      <div class="row"><button class="btn" id="quizBack">← 返回</button></div>
+    </div>
+  </div>
+
+  <div id="introView" style="display:none;">
+    <div class="card section">
+      <h2 id="introTitle"></h2>
+      <div class="row"><button class="btn primary big" id="introStart">開始挑戰！</button></div>
+      <p id="introTip" style="background:#f1f3f5;border-radius:12px;padding:12px 16px;font-size:18px;"></p>
+      <div id="introMissions"></div>
+      <p id="introGoal" class="center"></p>
+      <p id="introBonus" class="center" style="display:none;color:#d6336c;font-weight:800;"></p>
+      <div class="row"><button class="btn" id="introBack">← 返回選關</button></div>
+    </div>
+  </div>
+
+  <div id="gameView" style="display:none;">
+    <div id="lvlName"></div>
+    <div id="hud">
+      <div class="hud-card"><div class="lbl">🎯 目標分數</div><div class="val" id="targetVal">0</div><div id="progress"><div id="progressFill"></div></div></div>
+      <div class="hud-card"><div class="lbl">⭐ 得分</div><div class="val" id="scoreVal">0</div></div>
+      <div class="hud-card"><div class="lbl">👣 剩餘步數</div><div class="val" id="movesVal">0</div></div>
+    </div>
+    <div id="legend"></div>
+    <div id="missions"></div>
+    <div id="boardWrap">
+      <div id="board"></div>
+      <div id="fx"></div>
+      <div id="banner"></div>
+    </div>
+    <div id="controls">
+      <button class="btn" id="homeBtn">🏠 選關</button>
+      <button class="btn" id="quizBtn">📝 小測驗</button>
+      <button class="btn" id="muteBtn">🔊</button>
+    </div>
+    <div class="kbd-hint">撳一粒，再撳隔籬一粒（或直接拖曳）嚟交換 · 將 3 粒或以上同類項排埋一齊！</div>
+  </div>
+
+  <div id="doneView" style="display:none;">
+    <div class="card section">
+      <h2 id="doneTitle" class="center">🎉 過關！</h2>
+      <div class="row"><button class="btn primary big" id="doneNext">下一關 →</button></div>
+      <div class="stars" id="doneStars">★★★</div>
+      <p id="doneScore" class="center"></p>
+      <div class="row">
+        <button class="btn" id="doneRetry">重玩</button>
+        <button class="btn" id="doneHome">🏠 選關</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="overView" style="display:none;">
+    <div class="card section">
+      <h2 class="center">😅 差少少！</h2>
+      <div class="row"><button class="btn primary big" id="overRetry">再試一次</button></div>
+      <p id="overScore" class="center"></p>
+      <p class="center" style="color:#868e96;">記住：睇清楚字母同次方，計劃好先至交換，可以儲到更多連擊！</p>
+      <div class="row">
+        <button class="btn" id="overHelp">睇多次教學</button>
+        <button class="btn" id="overHome">🏠 選關</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ================= 純遊戲邏輯（唔依賴 DOM，可測試） ================= */
+var ROWS = 8, COLS = 8;
+var VAR_INFO = {
+  '':   {label:'',    name:'常數項', css:['#ced4da','#868e96'], text:'#495057'},
+  'x':  {label:'x',   name:'x 項',  css:['#ff8fa3','#f06595'],  text:'#ffffff'},
+  'y':  {label:'y',   name:'y 項',  css:['#74c0fc','#339af0'],  text:'#ffffff'},
+  'x2': {label:'x²',  name:'x² 項', css:['#b197fc','#9775fa'],  text:'#ffffff'},
+  'y2': {label:'y²',  name:'y² 項', css:['#63e6be','#0ca678'],  text:'#ffffff'},
+  'xy': {label:'xy',  name:'xy 項', css:['#ffc078','#fd7e14'],  text:'#ffffff'},
+  'xy2':{label:'xy²', name:'xy² 項',css:['#a9e34b','#5c940d'],  text:'#ffffff'},
+  'x2y':{label:'x²y', name:'x²y 項',css:['#91a7ff','#3b5bdb'],  text:'#ffffff'},
+  'a':  {label:'a',   name:'a 項',  css:['#ff8fa3','#f06595'],  text:'#ffffff'},
+  'b':  {label:'b',   name:'b 項',  css:['#74c0fc','#339af0'],  text:'#ffffff'},
+  'a2': {label:'a²',  name:'a² 項', css:['#b197fc','#9775fa'],  text:'#ffffff'},
+  'b2': {label:'b²',  name:'b² 項', css:['#63e6be','#0ca678'],  text:'#ffffff'},
+  'ab': {label:'ab',  name:'ab 項', css:['#ffc078','#fd7e14'],  text:'#ffffff'},
+  'm':  {label:'m',   name:'m 項',  css:['#ff8fa3','#f06595'],  text:'#ffffff'},
+  'n':  {label:'n',   name:'n 項',  css:['#74c0fc','#339af0'],  text:'#ffffff'},
+  'mn': {label:'mn',  name:'mn 項', css:['#b197fc','#9775fa'],  text:'#ffffff'},
+  'm2n':{label:'m²n', name:'m²n 項',css:['#63e6be','#0ca678'],  text:'#ffffff'},
+  'mn2':{label:'mn²', name:'mn² 項',css:['#ffc078','#fd7e14'],  text:'#ffffff'},
+  'c':  {label:'c',   name:'c 項',  css:['#ff8fa3','#f06595'],  text:'#ffffff'},
+  'c2': {label:'c²',  name:'c² 項', css:['#74c0fc','#339af0'],  text:'#ffffff'},
+  'mc': {label:'mc',  name:'mc 項', css:['#b197fc','#9775fa'],  text:'#ffffff'},
+  'nc': {label:'nc',  name:'nc 項', css:['#63e6be','#0ca678'],  text:'#ffffff'},
+  'm2c':{label:'m²c', name:'m²c 項',css:['#ffc078','#fd7e14'],  text:'#ffffff'},
+  'n2c':{label:'n²c', name:'n²c 項',css:['#a9e34b','#5c940d'],  text:'#ffffff'},
+  'n3c':{label:'n³c', name:'n³c 項',css:['#91a7ff','#3b5bdb'],  text:'#ffffff'}
+};
+var LEVELS = [
+  {name:'第 1 關 · 同類項大師試煉', vars:['x','y','x2','y2','xy','xy2','x2y',''], target:4800, moves:24, colors:true,
+   tip:'一嚟就係大師級內容！xy²、x²y 登場——唔同顏色幫你分邊啲係同類項，但次方陷阱依然要睇清楚！',
+   missions:[{v:'xy',need:3},{v:'xy2',need:3},{v:'x2y',need:3}]},
+  {name:'第 2 關 · 專家之眼', vars:['x',''], target:1200, moves:15, colors:false,
+   tip:'返璞歸真：淨係得 x 項同常數項，但冇顏色提示！靠你對眼認住每粒係咩項。',
+   missions:[{v:'x',need:5},{v:'',need:3}]},
+  {name:'第 3 關 · 新變元登場', vars:['x','y','a','b',''], target:2200, moves:18, colors:false,
+   tip:'y、a、b 登場！新字母、新挑戰——冇顏色，全靠睇清楚每個字母嚟認項。',
+   missions:[{v:'y',need:4},{v:'a',need:4},{v:'b',need:3}]},
+  {name:'第 4 關 · a² b² 陷阱', vars:['x','y','a','b','a2','b2','ab',''], target:3600, moves:22, colors:false,
+   tip:'小心！a² 同 b² 次方一樣但字母唔同，唔係同類項；ab 係兩個字母，更加唔可以撈埋！',
+   missions:[{v:'a2',need:4},{v:'b2',need:4},{v:'ab',need:3}]},
+  {name:'第 5 關 · 終極混合戰', vars:['x','y','a','b','a2','b2','ab','m2n','mn2',''], target:5000, moves:26, colors:false,
+   tip:'m²n 同 mn² 終極陷阱：次方調轉就唔係同類項！十種項、零提示，靠真功夫過關！',
+   missions:[{v:'m2n',need:3},{v:'mn2',need:3},{v:'ab',need:3}]}
+];
+var QUIZ = [
+  {q:'邊一個係 4x 嘅同類項？', opts:['4y','4x²','7x'], ans:2,
+   explain:'7x 同 4x 嘅字母同次方都一樣，所以係同類項，可以合併。'},
+  {q:'邊一個唔係 3ab 嘅同類項？', opts:['5ab','3a²b','−2ab'], ans:1,
+   explain:'3a²b 入面 a 嘅次方係 2，同 3ab 唔同，所以唔係同類項。'},
+  {q:'化簡：2x + 5x = ?', opts:['7x','7x²','10x'], ans:0,
+   explain:'同類項合併：係數相加（2 + 5 = 7），x 唔變，所以係 7x。'},
+  {q:'4y² 嘅同類項係邊個？', opts:['4y','y²','4xy'], ans:1,
+   explain:'y² 同 4y² 字母同次方都一樣，係同類項。'},
+  {q:'化簡：9m − 4m = ?', opts:['5m','5','5m²'], ans:0,
+   explain:'係數相減：9 − 4 = 5，m 唔變，所以係 5m。'},
+  {q:'以下邊一組全部都係同類項？', opts:['2x、3y、4x','5、8、x','x²、3x²、7x²'], ans:2,
+   explain:'5 同 8 雖然係同類項（常數項），但 x 唔係；得 x² 嗰組三個字母同次方完全一樣。'},
+  {q:'邊一個係 2xy² 嘅同類項？', opts:['5x²y','5xy²','2xy'], ans:1,
+   explain:'xy² 嘅變元部分係 x¹y²：x 同 y 嘅次方都要啱晒。5x²y 嘅 x 係 2 次，2xy 嘅 y 係 1 次，全部唔啱。'},
+  {q:'化簡：3x²y + 4x²y = ?', opts:['7x²y','7xy','12x²y'], ans:0,
+   explain:'同類項：係數相加 (3+4)=7，x²y 保持不變。唔係乘法，所以唔係 12x²y。'},
+  {q:'邊一個唔係 5y² 嘅同類項？', opts:['−2y²','5y²','5y'], ans:2,
+   explain:'5y 嘅 y 係 1 次，y² 係 2 次，次方唔同就唔係同類項。'},
+  {q:'邊一個係 5m²n 嘅同類項？', opts:['5mn²','−2m²n','5m²'], ans:1,
+   explain:'−2m²n 嘅變元部分同樣係 m²n，係同類項；5mn² 嘅次方調轉咗，5m² 爭咗個 n。'},
+  {q:'3a² 同 3b² 係咪同類項？', opts:['係，可以合併','唔係，唔可以合併'], ans:1,
+   explain:'次方一樣但字母唔同（a vs b），唔係同類項，唔可以合併。'},
+  {q:'化簡：4mn² + 6mn² = ?', opts:['10mn²','10m²n²','24mn²'], ans:0,
+   explain:'同類項合併：係數相加 (4 + 6) = 10，mn² 唔變。唔係乘法，所以唔係 24mn²。'},
+  {q:'邊一個唔係 2n³c 嘅同類項？', opts:['7n³c','2nc³','−n³c'], ans:1,
+   explain:'2nc³ 係 n¹c³，次方同 n³c 唔同，唔係同類項。'}
+];
+
+var _tid = 1;
+function nextId(){ return _tid++; }
+function randInt(n, rnd){ rnd = rnd || Math.random; return Math.floor(rnd() * n); }
+function randomVarKey(vars, rnd){ return vars[randInt(vars.length, rnd)]; }
+function newTile(v, rnd){ return {v:v, c:1 + randInt(9, rnd), id:nextId()}; }
+function adjacent(a, b){ return Math.abs(a.r - b.r) + Math.abs(a.c - b.c) === 1; }
+function termText(t){
+  if(t.v === '') return String(t.c);
+  var l = VAR_INFO[t.v].label;
+  return t.c === 1 ? l : (t.c + l);
+}
+/* 產生一個開局冇即時三連、又有可行步數嘅版面
+   （逐格揀唔會即時三連嘅項，撞死胡同就成版重嚟） */
+function generateFreshBoard(level, rnd){
+  rnd = rnd || Math.random;
+  var b = [], r, c, i;
+  for(var attempt = 0; attempt < 200; attempt++){
+    b = [];
+    var ok = true;
+    for(r = 0; r < ROWS && ok; r++){
+      b.push([]);
+      for(c = 0; c < COLS && ok; c++){
+        var forbid = {};
+        if(c >= 2 && b[r][c-1].v === b[r][c-2].v) forbid[b[r][c-1].v] = true;
+        if(r >= 2 && b[r-1][c].v === b[r-2][c].v) forbid[b[r-1][c].v] = true;
+        var choices = [];
+        for(i = 0; i < level.vars.length; i++) if(!forbid[level.vars[i]]) choices.push(level.vars[i]);
+        if(!choices.length){ ok = false; break; }
+        b[r].push(newTile(choices[randInt(choices.length, rnd)], rnd));
+      }
+    }
+    if(ok && !findMatches(b).length && hasPossibleMove(b)) return b;
+  }
+  return b;
+}
+function createBoard(level, rnd){ return generateFreshBoard(level, rnd); }
+/* 搵出所有橫 / 直三連（或以上）同類項 */
+function findMatches(b){
+  var ms = [], r, c, l, i;
+  for(r = 0; r < ROWS; r++){
+    c = 0;
+    while(c < COLS){
+      var t = b[r][c];
+      if(!t){ c++; continue; }
+      l = 1;
+      while(c + l < COLS && b[r][c+l] && b[r][c+l].v === t.v) l++;
+      if(l >= 3){
+        var cells = [];
+        for(i = 0; i < l; i++) cells.push({r:r, c:c+i});
+        ms.push({cells:cells, dir:'h', v:t.v});
+      }
+      c += l;
+    }
+  }
+  for(c = 0; c < COLS; c++){
+    r = 0;
+    while(r < ROWS){
+      var t2 = b[r][c];
+      if(!t2){ r++; continue; }
+      l = 1;
+      while(r + l < ROWS && b[r+l][c] && b[r+l][c].v === t2.v) l++;
+      if(l >= 3){
+        var cells2 = [];
+        for(i = 0; i < l; i++) cells2.push({r:r+i, c:c});
+        ms.push({cells:cells2, dir:'v', v:t2.v});
+      }
+      r += l;
+    }
+  }
+  return ms;
+}
+/* 將有重疊格嘅 match 合併（處理 T / L 形） */
+function mergeMatches(matches){
+  var n = matches.length, parent = [], i;
+  for(i = 0; i < n; i++) parent.push(i);
+  function find(x){ return parent[x] === x ? x : (parent[x] = find(parent[x])); }
+  function key(r, c){ return r * COLS + c; }
+  var owner = {};
+  matches.forEach(function(m, idx){
+    m.cells.forEach(function(cell){
+      var k = key(cell.r, cell.c);
+      if(owner[k] !== undefined){ parent[find(idx)] = find(owner[k]); }
+      else owner[k] = idx;
+    });
+  });
+  var groups = {};
+  matches.forEach(function(m, idx){
+    var root = find(idx);
+    if(!groups[root]) groups[root] = {cellMap:{}, v:m.v, dirs:{}};
+    var g = groups[root];
+    g.dirs[m.dir] = true;
+    m.cells.forEach(function(cell){ g.cellMap[key(cell.r, cell.c)] = {r:cell.r, c:cell.c}; });
+  });
+  return Object.keys(groups).map(function(k){
+    var g = groups[k];
+    var cells = Object.keys(g.cellMap).map(function(k2){ return g.cellMap[k2]; });
+    return {cells:cells, v:g.v, dirs:Object.keys(g.dirs)};
+  });
+}
+/* 決定要消邊啲格：normal / row / col / cross / group
+   infos[].matchTiles 只計觸發消除嘅同類項（用嚟出合併算式，數學上一定啱）；
+   clearTiles 計晒所有被消嘅格（用嚟計分）。唯獨 group 消除全場都係同類項，
+   所以算式可以用晒所有被消嘅項。 */
+function planClear(b, matches){
+  var groups = mergeMatches(matches);
+  var clearMap = {}, infos = [], r, c, i;
+  groups.forEach(function(g){
+    var kind = 'normal', extra = [];
+    if(g.cells.length >= 5){
+      kind = 'group';
+      for(r = 0; r < ROWS; r++) for(c = 0; c < COLS; c++){
+        var t = b[r][c];
+        if(t && t.v === g.v) extra.push({r:r, c:c});
+      }
+    } else if(g.cells.length === 4){
+      if(g.dirs.length === 1){
+        var horiz = g.dirs[0] === 'h';
+        kind = horiz ? 'row' : 'col';
+        var line = horiz ? g.cells[0].r : g.cells[0].c;
+        var lim = horiz ? COLS : ROWS;
+        for(i = 0; i < lim; i++) extra.push(horiz ? {r:line, c:i} : {r:i, c:line});
+      } else {
+        kind = 'cross';
+        var cr = g.cells[0].r, cc = g.cells[0].c;
+        for(i = 0; i < COLS; i++) extra.push({r:cr, c:i});
+        for(i = 0; i < ROWS; i++) extra.push({r:i, c:cc});
+      }
+    }
+    var seen = {}, matchTiles = [], clearTiles = [];
+    function addCell(cell, isMatch){
+      var row = b[cell.r];
+      var t2 = row && row[cell.c];
+      if(!t2) return;
+      var k = cell.r * COLS + cell.c;
+      if(!seen[k]){
+        seen[k] = true;
+        clearMap[k] = {r:cell.r, c:cell.c};
+        clearTiles.push(t2);
+        if(isMatch) matchTiles.push(t2);
+      } else if(isMatch && matchTiles.indexOf(t2) < 0){
+        matchTiles.push(t2);
+      }
+    }
+    g.cells.forEach(function(cell){ addCell(cell, true); });
+    extra.forEach(function(cell){ addCell(cell, false); });
+    function sum(ts){ return ts.reduce(function(s, x){ return s + x.c; }, 0); }
+    infos.push({v:g.v, kind:kind, cells:g.cells,
+      matchTiles:matchTiles, matchSum:sum(matchTiles),
+      clearTiles:clearTiles, clearSum:sum(clearTiles)});
+  });
+  var clearCells = Object.keys(clearMap).map(function(k){ return clearMap[k]; });
+  return {clear:clearCells, infos:infos};
+}
+/* 合併算式文字，例如 "3x + 5x + 2x = 10x" */
+function equationText(v, tiles){
+  var vi = VAR_INFO[v];
+  var sum = tiles.reduce(function(s, t){ return s + t.c; }, 0);
+  if(tiles.length <= 6){
+    return tiles.map(termText).join(' + ') + ' = ' + termText({v:v, c:sum});
+  }
+  return '合併 ' + tiles.length + ' 個' + vi.name + ' = ' + termText({v:v, c:sum});
+}
+/* 重力：壓實每一直行，頂部補新粒 */
+/* 喺 (r,c) 放 v 會唔會即時三連？（只檢查已經放好嘅鄰居；
+   上方未放嘅格唔使理——佢哋放置嗰陣會反過嚟檢查呢格） */
+function createsMatchAt(b, r, c, v){
+  function isV(rr, cc){
+    return rr >= 0 && rr < ROWS && cc >= 0 && cc < COLS && b[rr][cc] && b[rr][cc].v === v;
+  }
+  if(isV(r, c-1) && isV(r, c-2)) return true; /* 左二 */
+  if(isV(r, c-1) && isV(r, c+1)) return true; /* 左右夾 */
+  if(isV(r, c+1) && isV(r, c+2)) return true; /* 右二 */
+  if(isV(r+1, c) && isV(r+2, c)) return true; /* 下二 */
+  return false;
+}
+function collapse(b, rnd, vars){
+  rnd = rnd || Math.random;
+  var spawned = [], r, c, w;
+  /* 第一階段：成版先做重力壓縮 */
+  for(c = 0; c < COLS; c++){
+    w = ROWS - 1;
+    for(r = ROWS - 1; r >= 0; r--){
+      if(b[r][c]){
+        if(w !== r){ b[w][c] = b[r][c]; b[r][c] = null; }
+        w--;
+      }
+    }
+  }
+  /* 第二階段：由下而上、由左至右補充新項，避開即時三連（防止無限連鎖） */
+  for(c = 0; c < COLS; c++){
+    for(r = ROWS - 1; r >= 0; r--){
+      if(b[r][c]) continue;
+      var v = randomVarKey(vars, rnd), guard = 0;
+      while(guard++ < 60 && createsMatchAt(b, r, c, v)) v = randomVarKey(vars, rnd);
+      var t = newTile(v, rnd);
+      b[r][c] = t;
+      spawned.push({tile:t, r:r, c:c});
+    }
+  }
+  return spawned;
+}
+/* 仲有冇可行嘅一步？ */
+function hasPossibleMove(b){
+  var r, c, d;
+  var dirs = [[0,1],[1,0]];
+  for(r = 0; r < ROWS; r++) for(c = 0; c < COLS; c++){
+    for(d = 0; d < 2; d++){
+      var r2 = r + dirs[d][0], c2 = c + dirs[d][1];
+      if(r2 >= ROWS || c2 >= COLS) continue;
+      var tmp = b[r][c]; b[r][c] = b[r2][c2]; b[r2][c2] = tmp;
+      var m = findMatches(b);
+      var tmp2 = b[r][c]; b[r][c] = b[r2][c2]; b[r2][c2] = tmp2;
+      if(m.length) return true;
+    }
+  }
+  return false;
+}
+/* 重新派過：成版冇可行組合嗰陣，全部清走再派過（保證開局冇即時三連＋有路行） */
+function redealBoard(){
+  var L = level();
+  state.busy = true;
+  clearSel();
+  tileEls.forEach(function(el){ el.classList.add('pop'); });
+  setLegendNotice('🔀 成版都冇可行組合！重新派過…');
+  sfx('swap');
+  setTimeout(function(){
+    tileEls.forEach(function(el){ el.remove(); });
+    tileEls.clear();
+    state.board = generateFreshBoard(L, Math.random);
+    var all = [];
+    for(var r = 0; r < ROWS; r++) for(var c = 0; c < COLS; c++) all.push({tile:state.board[r][c], r:r, c:c});
+    renderAll(all);
+    buildLegend();
+    state.busy = false;
+  }, 380);
+}
+/* 圖例區臨時提示（唔係浮動 banner，唔會遮住版面） */
+function setLegendNotice(msg){
+  var lg = document.getElementById('legend');
+  lg.innerHTML = '';
+  var chip = document.createElement('span');
+  chip.className = 'chip';
+  chip.textContent = msg;
+  lg.appendChild(chip);
+}
+
+/* ================= 音效 ================= */
+var store = {
+  get:function(k){ try{ return window.localStorage.getItem(k); }catch(e){ return null; } },
+  set:function(k, v){ try{ window.localStorage.setItem(k, v); }catch(e){} }
+};
+var muted = store.get('ltc_mute') === '1';
+var AC = null;
+function ac(){
+  if(!AC){ try{ AC = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){} }
+  if(AC && AC.state === 'suspended'){ try{ AC.resume(); }catch(e){} }
+  return AC;
+}
+function tone(f, d, type, v, when){
+  if(muted) return;
+  var ctx = ac(); if(!ctx) return;
+  try{
+    var o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type || 'sine'; o.frequency.value = f;
+    var t0 = ctx.currentTime + (when || 0);
+    g.gain.setValueAtTime(v || 0.12, t0);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + d);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(t0); o.stop(t0 + d + 0.02);
+  }catch(e){}
+}
+function sfx(n, chain){
+  chain = chain || 1;
+  if(n === 'pop') tone(380 + chain * 90, 0.12, 'triangle', 0.12);
+  else if(n === 'super'){ tone(300, 0.15, 'sawtooth', 0.07); tone(620, 0.22, 'triangle', 0.1, 0.08); }
+  else if(n === 'swap') tone(230, 0.07, 'sine', 0.07);
+  else if(n === 'deny') tone(150, 0.16, 'sine', 0.08);
+  else if(n === 'select') tone(700, 0.06, 'sine', 0.05);
+  else if(n === 'win') [523,659,784,1047].forEach(function(f, i){ tone(f, 0.18, 'triangle', 0.11, i * 0.12); });
+  else if(n === 'lose') [400,330,260].forEach(function(f, i){ tone(f, 0.2, 'sine', 0.09, i * 0.16); });
+}
+
+/* ================= 狀態 ================= */
+var state = {levelIndex:0, board:null, score:0, moves:0, busy:false, quizDone:{}, missions:[]};
+var tileEls = null; /* id -> element */
+var sel = null, dragStart = null, pendingBonus = 0, quizCallback = null, quizQ = null, quizBonusPending = 0, quizBackView = 'homeView';
+var boardEl, fxEl, bannerEl, bannerT = null;
+function level(){ return LEVELS[state.levelIndex]; }
+function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+
+/* ================= 渲染 ================= */
+function makeEl(t){
+  var L = level();
+  var el = document.createElement('div');
+  el.className = 'tile';
+  var inner = document.createElement('div');
+  inner.className = 'tile-in';
+  inner.textContent = termText(t);
+  var info = VAR_INFO[t.v];
+  if(L.colors){
+    inner.style.background = 'linear-gradient(135deg,' + info.css[0] + ',' + info.css[1] + ')';
+    inner.style.color = info.text;
+  } else {
+    inner.style.background = '#ffffff';
+    inner.style.color = '#343a40';
+    inner.style.border = '3px solid #dee2e6';
+  }
+  el.appendChild(inner);
+  return el;
+}
+function renderPositions(){
+  for(var r = 0; r < ROWS; r++) for(var c = 0; c < COLS; c++){
+    var t = state.board[r][c];
+    if(!t) continue;
+    var el = tileEls.get(t.id);
+    if(!el) continue;
+    el.dataset.r = r; el.dataset.c = c;
+    el.style.transform = 'translate(' + (c * 100) + '%,' + (r * 100) + '%)';
+  }
+}
+function renderAll(spawned){
+  spawned = spawned || [];
+  var spawnIds = {};
+  spawned.forEach(function(s){ spawnIds[s.tile.id] = s; });
+  for(var r = 0; r < ROWS; r++) for(var c = 0; c < COLS; c++){
+    var t = state.board[r][c];
+    if(!t) continue;
+    var el = tileEls.get(t.id);
+    if(!el){
+      el = makeEl(t);
+      tileEls.set(t.id, el);
+      boardEl.appendChild(el);
+      if(spawnIds[t.id]){
+        el.style.transition = 'none';
+        el.style.transform = 'translate(' + (c * 100) + '%,-150%)';
+        el.dataset.r = r; el.dataset.c = c;
+        void el.offsetWidth;
+        el.style.transition = '';
+      }
+    }
+    el.dataset.r = r; el.dataset.c = c;
+    el.style.transform = 'translate(' + (c * 100) + '%,' + (r * 100) + '%)';
+  }
+}
+function showFloat(info, pts, eqTiles){
+  var n = info.cells.length, sr = 0, sc = 0, i;
+  for(i = 0; i < n; i++){ sr += info.cells[i].r; sc += info.cells[i].c; }
+  var x = (sc / n + 0.5) / COLS * 100, y = (sr / n + 0.5) / ROWS * 100;
+  var d = document.createElement('div');
+  d.className = 'float';
+  d.style.left = x + '%'; d.style.top = y + '%';
+  var eq = document.createElement('div'); eq.className = 'eq'; eq.textContent = equationText(info.v, eqTiles);
+  var p = document.createElement('div'); p.className = 'pts'; p.textContent = '+' + pts;
+  d.appendChild(eq); d.appendChild(p);
+  fxEl.appendChild(d);
+  d.addEventListener('animationend', function(){ d.remove(); });
+}
+function showBanner(txt){
+  bannerEl.textContent = txt;
+  bannerEl.classList.remove('show');
+  void bannerEl.offsetWidth;
+  bannerEl.classList.add('show');
+  clearTimeout(bannerT);
+  bannerT = setTimeout(function(){ bannerEl.classList.remove('show'); }, 1500);
+}
+function updateHUD(){
+  var L = level();
+  document.getElementById('scoreVal').textContent = state.score;
+  document.getElementById('targetVal').textContent = L.target;
+  document.getElementById('movesVal').textContent = state.moves;
+  document.getElementById('progressFill').style.width = Math.min(100, state.score / L.target * 100) + '%';
+}
+function buildLegend(){
+  var L = level(), lg = document.getElementById('legend');
+  lg.innerHTML = '';
+  if(L.colors){
+    L.vars.forEach(function(v){
+      var info = VAR_INFO[v];
+      var chip = document.createElement('span'); chip.className = 'chip';
+      var dot = document.createElement('span'); dot.className = 'dot';
+      dot.style.background = 'linear-gradient(135deg,' + info.css[0] + ',' + info.css[1] + ')';
+      chip.appendChild(dot);
+      chip.appendChild(document.createTextNode(info.name + (v === '' ? '' : '  (' + info.label + ')')));
+      lg.appendChild(chip);
+    });
+  } else {
+    var chip2 = document.createElement('span'); chip2.className = 'chip';
+    chip2.textContent = '🕵️ 專家模式：冇顏色提示，睇清楚每粒係咩項！';
+    lg.appendChild(chip2);
+  }
+}
+
+function buildMissions(){
+  var box = document.getElementById('missions');
+  box.innerHTML = '';
+  state.missions.forEach(function(){ box.appendChild(document.createElement('span')); });
+  refreshMissions();
+}
+function refreshMissions(){
+  var box = document.getElementById('missions');
+  var L = level();
+  state.missions.forEach(function(m, i){
+    var el = box.children[i];
+    if(!el) return;
+    var info = VAR_INFO[m.v];
+    el.className = 'mission' + (m.done >= m.need ? ' done' : '');
+    el.innerHTML = '';
+    var dot = document.createElement('span'); dot.className = 'dot';
+    dot.style.background = L.colors
+      ? 'linear-gradient(135deg,' + info.css[0] + ',' + info.css[1] + ')'
+      : '#dee2e6';
+    el.appendChild(dot);
+    el.appendChild(document.createTextNode('合併' + info.name + ' ' + Math.min(m.done, m.need) + '/' + m.need + (m.done >= m.need ? ' ✓' : '')));
+  });
+}
+
+/* ================= 操作 ================= */
+function clearSel(){
+  if(sel){
+    var t = state.board[sel.r] && state.board[sel.r][sel.c];
+    if(t){ var el = tileEls.get(t.id); if(el) el.classList.remove('sel'); }
+  }
+  sel = null;
+}
+function select(r, c){
+  clearSel();
+  sel = {r:r, c:c};
+  var t = state.board[r][c];
+  var el = t && tileEls.get(t.id);
+  if(el) el.classList.add('sel');
+  sfx('select');
+}
+function onDown(e){
+  if(state.busy) return;
+  var tile = e.target.closest ? e.target.closest('.tile') : null;
+  if(!tile){ clearSel(); return; }
+  var r = +tile.dataset.r, c = +tile.dataset.c;
+  if(sel && !(sel.r === r && sel.c === c) && adjacent(sel, {r:r, c:c})){
+    var a = sel;
+    clearSel(); dragStart = null;
+    trySwap(a, {r:r, c:c});
+    return;
+  }
+  select(r, c);
+  dragStart = {r:r, c:c};
+}
+function onMove(e){
+  if(!dragStart || state.busy) return;
+  var el = document.elementFromPoint(e.clientX, e.clientY);
+  var tile = el && el.closest ? el.closest('.tile') : null;
+  if(!tile) return;
+  var r = +tile.dataset.r, c = +tile.dataset.c;
+  if(r === dragStart.r && c === dragStart.c) return;
+  if(adjacent(dragStart, {r:r, c:c})){
+    var a = dragStart;
+    dragStart = null; clearSel();
+    trySwap(a, {r:r, c:c});
+  }
+}
+function onUp(){ dragStart = null; }
+function swapCells(a, b){
+  var t = state.board[a.r][a.c];
+  state.board[a.r][a.c] = state.board[b.r][b.c];
+  state.board[b.r][b.c] = t;
+}
+
+/* ================= 主流程 ================= */
+function trySwap(a, b){
+  if(state.busy) return;
+  state.busy = true;
+  clearSel();
+  swapCells(a, b);
+  renderPositions();
+  sfx('swap');
+  sleep(250).then(function(){
+    var m = findMatches(state.board);
+    if(!m.length){
+      swapCells(a, b);
+      renderPositions();
+      sfx('deny');
+      return sleep(250).then(function(){ state.busy = false; });
+    }
+    state.moves--;
+    updateHUD();
+    var chain = 1;
+    function cascade(){
+      var mm = findMatches(state.board);
+      if(!mm.length){
+        state.busy = false;
+        endCheck();
+        return;
+      }
+      resolveMatches(mm, chain).then(function(){
+        if(goalReached(state.score, state.missions, level().target)){
+          /* 一達標即刻過關：唔再跌新珠仔、唔再連鎖 */
+          state.busy = false;
+          sfx('win');
+          levelComplete();
+          return 'passed';
+        }
+        var spawned = collapse(state.board, Math.random, level().vars);
+        renderAll(spawned);
+        return sleep(320);
+      }).then(function(done){
+        if(done === 'passed') return;
+        chain++;
+        cascade();
+      });
+    }
+    cascade();
+  });
+}
+function resolveMatches(matches, chain){
+  var plan = planClear(state.board, matches);
+  var gained = 0;
+  plan.infos.forEach(function(info){
+    /* group 消除全場都係同類項，算式用晒所有被消嘅項；
+       row/col/cross 消除就只顯示觸發嗰組同類項嘅合併 */
+    var eqTiles = info.kind === 'group' ? info.clearTiles : info.matchTiles;
+    var pts = info.clearSum * 10 * chain + (info.kind !== 'normal' ? 400 * chain : 0);
+    gained += pts;
+    showFloat(info, pts, eqTiles);
+    sfx(info.kind === 'normal' ? 'pop' : 'super', chain);
+  });
+  state.score += gained;
+  updateMissionState(state.missions, plan.infos);
+  refreshMissions();
+  updateHUD();
+  plan.clear.forEach(function(cell){
+    var t = state.board[cell.r][cell.c];
+    if(t){
+      var el = tileEls.get(t.id);
+      if(el) el.classList.add('pop');
+    }
+  });
+  return sleep(300).then(function(){
+    plan.clear.forEach(function(cell){
+      var t = state.board[cell.r][cell.c];
+      if(t){
+        var el = tileEls.get(t.id);
+        if(el) el.remove();
+        tileEls.delete(t.id);
+      }
+      state.board[cell.r][cell.c] = null;
+    });
+  });
+}
+function endCheck(){
+  if(state.moves > 0){
+    if(!hasPossibleMove(state.board)) redealBoard();
+    return;
+  }
+  if(goalReached(state.score, state.missions, level().target)){ sfx('win'); levelComplete(); }
+  else { sfx('lose'); gameOver(); }
+}
+
+/* ================= 過關任務 ================= */
+/* 純函數：方便單元測試 */
+function createMissionState(level){
+  return (level.missions || []).map(function(m){ return {v:m.v, need:m.need, done:0}; });
+}
+function updateMissionState(ms, infos){
+  infos.forEach(function(info){
+    ms.forEach(function(m){ if(m.v === info.v) m.done++; });
+  });
+}
+function missionsComplete(ms){ return ms.every(function(m){ return m.done >= m.need; }); }
+/* 達標即過關（唔使等步數用晒）：夠分＋任務做完 */
+function goalReached(score, missions, target){
+  return score >= target && missionsComplete(missions);
+}
+
+/* ================= 關卡 / 流程 ================= */
+function starsFor(score, target){
+  if(score >= target * 1.8) return 3;
+  if(score >= target * 1.4) return 2;
+  return 1;
+}
+function getStars(){
+  var s;
+  try{ s = JSON.parse(store.get('ltc_stars_v2') || '[0,0,0,0]'); }catch(e){ s = [0,0,0,0]; }
+  if(!Array.isArray(s)) s = [0,0,0,0];
+  while(s.length < LEVELS.length) s.push(0);
+  return s;
+}
+function setStars(s){ store.set('ltc_stars_v2', JSON.stringify(s)); }
+/* 單頁式：唔再用彈窗，直接切換版面 */
+var VIEWS = ['homeView','quizView','introView','gameView','doneView','overView'];
+function showView(id){
+  VIEWS.forEach(function(v){ document.getElementById(v).style.display = (v === id) ? '' : 'none'; });
+  try{ window.scrollTo(0, 0); }catch(e){}
+}
+
+function startLevel(i, bonus){
+  state.levelIndex = i;
+  state.score = bonus || 0;
+  state.moves = level().moves;
+  state.busy = false;
+  state.board = createBoard(level());
+  state.missions = createMissionState(level());
+  buildMissions();
+  tileEls.forEach(function(el){ el.remove(); });
+  tileEls.clear();
+  fxEl.innerHTML = '';
+  clearSel();
+  document.getElementById('lvlName').textContent = level().name;
+  buildLegend();
+  updateHUD();
+  var all = [];
+  for(var r = 0; r < ROWS; r++) for(var c = 0; c < COLS; c++) all.push({tile:state.board[r][c], r:r, c:c});
+  renderAll(all);
+}
+function openLevelIntro(i, bonus){
+  state.levelIndex = i;
+  pendingBonus = bonus || 0;
+  var L = level();
+  document.getElementById('introTitle').textContent = L.name;
+  document.getElementById('introTip').textContent = L.tip;
+  document.getElementById('introGoal').innerHTML = '目標：<b>' + L.target + '</b> 分 · 限 <b>' + L.moves + '</b> 步';
+  var mHtml = '🎯 <b>過關任務</b>：限步數內完成所有任務＋達到目標分數先過關！<br>' +
+    (L.missions || []).map(function(m){ return '• 合併 ' + VAR_INFO[m.v].name + ' ×' + m.need; }).join('<br>');
+  document.getElementById('introMissions').innerHTML = mHtml;
+  var bEl = document.getElementById('introBonus');
+  if(pendingBonus > 0){ bEl.style.display = ''; bEl.innerHTML = '🎁 熱身小測驗獎勵：<b>+' + pendingBonus + '</b> 分'; }
+  else bEl.style.display = 'none';
+  showView('introView');
+}
+function askQuizThen(i, then){
+  if(i > 0 && !state.quizDone[i]){ state.quizDone[i] = true; openQuiz(then, 'homeView'); }
+  else then(0);
+}
+function levelComplete(){
+  var L = level();
+  var st = starsFor(state.score, L.target);
+  var stars = getStars();
+  stars[state.levelIndex] = Math.max(stars[state.levelIndex], st);
+  setStars(stars);
+  document.getElementById('doneStars').textContent = '★'.repeat(st) + '☆'.repeat(3 - st);
+  document.getElementById('doneScore').innerHTML = '得分 <b>' + state.score + '</b> / 目標 ' + L.target + '<br>✅ 過關任務全部完成！';
+  var title = document.getElementById('doneTitle'), nextBtn = document.getElementById('doneNext');
+  if(state.levelIndex < LEVELS.length - 1){
+    title.textContent = '🎉 過關！';
+    nextBtn.textContent = '下一關 →';
+    nextBtn.onclick = function(){
+      var ni = state.levelIndex + 1;
+      askQuizThen(ni, function(b){ openLevelIntro(ni, b); });
+    };
+  } else {
+    title.textContent = '🎓 你係同類項大師！';
+    nextBtn.textContent = '🏠 返去選關';
+    nextBtn.onclick = function(){ openLevelSelect(); };
+  }
+  showView('doneView');
+}
+function gameOver(){
+  var L = level();
+  var scoreLine = state.score >= L.target
+    ? '分數達標，但任務未完成…'
+    : '差 ' + (L.target - state.score) + ' 分咋！';
+  var undone = state.missions.filter(function(m){ return m.done < m.need; });
+  var missionLine = undone.length
+    ? '<br>未完成任務：' + undone.map(function(m){
+        return '合併' + VAR_INFO[m.v].name + '（' + Math.min(m.done, m.need) + '/' + m.need + '）';
+      }).join('、')
+    : '';
+  document.getElementById('overScore').innerHTML = '得分 <b>' + state.score + '</b> / 目標 ' + L.target + '<br>' + scoreLine + missionLine;
+  showView('overView');
+}
+function openLevelSelect(){
+  var stars = getStars();
+  var g = document.getElementById('lvlGrid');
+  g.innerHTML = '';
+  LEVELS.forEach(function(L, i){
+    var b = document.createElement('button');
+    b.className = 'btn lvl-btn';
+    var nm = document.createElement('div'); nm.style.fontWeight = '800'; nm.textContent = L.name;
+    var st = document.createElement('div'); st.style.cssText = 'font-size:20px;color:#fcc419;margin-top:4px;';
+    st.textContent = '★'.repeat(stars[i]) + '☆'.repeat(3 - stars[i]);
+    b.appendChild(nm); b.appendChild(st);
+    b.onclick = function(){
+      askQuizThen(i, function(bonus){ openLevelIntro(i, bonus); });
+    };
+    g.appendChild(b);
+  });
+  showView('homeView');
+}
+function openQuiz(cb, backView){
+  quizCallback = (typeof cb === 'function') ? cb : null;
+  quizBackView = backView || 'homeView';
+  quizBonusPending = 0;
+  quizQ = QUIZ[randInt(QUIZ.length)];
+  document.getElementById('quizQ').textContent = quizQ.q;
+  var box = document.getElementById('quizOpts');
+  box.innerHTML = '';
+  var exp = document.getElementById('quizExplain');
+  exp.style.display = 'none';
+  document.getElementById('quizNext').style.display = 'none';
+  quizQ.opts.forEach(function(opt, i){
+    var b = document.createElement('button');
+    b.className = 'btn opt';
+    b.textContent = opt;
+    b.onclick = function(){ answerQuiz(i, b); };
+    box.appendChild(b);
+  });
+  showView('quizView');
+}
+function answerQuiz(i, btn){
+  var opts = document.querySelectorAll('#quizOpts .opt');
+  for(var k = 0; k < opts.length; k++){
+    opts[k].disabled = true;
+    if(k === quizQ.ans) opts[k].classList.add('correct');
+  }
+  var exp = document.getElementById('quizExplain');
+  if(i === quizQ.ans){
+    sfx('win');
+    quizBonusPending = 200;
+    exp.innerHTML = '✅ 答啱！' + quizQ.explain + (quizCallback ? '<br><b>🎁 +200 熱身獎勵分！</b>' : '');
+  } else {
+    btn.classList.add('wrong');
+    sfx('lose');
+    quizBonusPending = 0;
+    exp.innerHTML = '❌ 答錯咗。' + quizQ.explain;
+  }
+  exp.style.display = 'block';
+  document.getElementById('quizNext').style.display = '';
+}
+
+/* ================= 初始化 ================= */
+function init(){
+  tileEls = new Map();
+  boardEl = document.getElementById('board');
+  fxEl = document.getElementById('fx');
+  bannerEl = document.getElementById('banner');
+  boardEl.addEventListener('pointerdown', onDown);
+  boardEl.addEventListener('pointermove', onMove);
+  boardEl.addEventListener('pointerup', onUp);
+  boardEl.addEventListener('pointercancel', onUp);
+  boardEl.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+  document.getElementById('homeBtn').onclick = function(){ if(!state.busy) openLevelSelect(); };
+  document.getElementById('quizBtn').onclick = function(){ if(!state.busy) openQuiz(null, 'gameView'); };
+  var muteBtn = document.getElementById('muteBtn');
+  function paintMute(){ muteBtn.textContent = muted ? '🔇' : '🔊'; }
+  muteBtn.onclick = function(){ muted = !muted; store.set('ltc_mute', muted ? '1' : '0'); paintMute(); };
+  paintMute();
+  document.getElementById('introStart').onclick = function(){ startLevel(state.levelIndex, pendingBonus); pendingBonus = 0; showView('gameView'); };
+  document.getElementById('introBack').onclick = function(){ openLevelSelect(); };
+  document.getElementById('quizNext').onclick = function(){
+    var cb = quizCallback, b = quizBonusPending;
+    quizCallback = null; quizBonusPending = 0;
+    if(cb) cb(b);
+    else showView(quizBackView);
+  };
+  document.getElementById('quizBack').onclick = function(){
+    quizCallback = null; quizBonusPending = 0;
+    showView(quizBackView);
+  };
+  document.getElementById('doneRetry').onclick = function(){ openLevelIntro(state.levelIndex, 0); };
+  document.getElementById('doneHome').onclick = function(){ openLevelSelect(); };
+  document.getElementById('overRetry').onclick = function(){ openLevelIntro(state.levelIndex, 0); };
+  document.getElementById('overHelp').onclick = function(){
+    openLevelSelect();
+    var h = document.getElementById('howto');
+    if(h && h.scrollIntoView){ try{ h.scrollIntoView(); }catch(e){} }
+  };
+  document.getElementById('overHome').onclick = function(){ openLevelSelect(); };
+  openLevelSelect();
+}
+if(typeof document !== 'undefined'){
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+}
+</script>
+</body>
+</html>

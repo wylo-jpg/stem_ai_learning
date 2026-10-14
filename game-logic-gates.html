@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>邏輯門實驗室</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+header{background:linear-gradient(135deg,#7c3aed,#a855f7);padding:14px;text-align:center}
+header h1{margin:0;font-size:22px}
+.hud{display:flex;justify-content:space-around;background:#1e293b;padding:10px;font-size:15px;font-weight:700}
+.hud span{color:#fbbf24}
+main{max-width:640px;margin:0 auto;padding:16px;width:100%}
+.task{background:#1e293b;border-radius:14px;padding:16px;margin-bottom:14px;font-size:16px;line-height:1.7}
+.task b{color:#fbbf24}
+.circuit{background:#0b1120;border-radius:16px;padding:18px;margin-bottom:14px}
+.wire-row{display:flex;align-items:center;gap:8px;margin:10px 0;font-size:15px;flex-wrap:wrap}
+.lbl{min-width:70px;color:#94a3b8;font-size:14px}
+.inbtn{min-width:56px;min-height:48px;font-size:20px;font-weight:800;border-radius:10px;border:2px solid #334155;background:#1e293b;color:#64748b;cursor:pointer;touch-action:manipulation}
+.inbtn.on{background:#14532d;border-color:#22c55e;color:#4ade80}
+.slot{min-width:110px;min-height:56px;font-size:17px;font-weight:800;border-radius:12px;border:3px dashed #475569;background:#1e293b;color:#94a3b8;cursor:pointer;touch-action:manipulation;padding:6px 10px}
+.slot.filled{border-style:solid;border-color:#a855f7;color:#e9d5ff}
+.arrow{font-size:22px;color:#475569}
+.outlamp{min-width:64px;min-height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;border:2px solid #334155;background:#1e293b}
+.outlamp.lit{background:#fef08a;border-color:#facc15;box-shadow:0 0 18px #facc15}
+.palette{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.gbtn{min-height:56px;font-size:16px;font-weight:800;border-radius:12px;border:2px solid #7c3aed;background:#2e1065;color:#e9d5ff;cursor:pointer;touch-action:manipulation}
+.gbtn small{display:block;font-size:11px;font-weight:400;color:#c4b5fd}
+.bigbtn{width:100%;min-height:60px;font-size:19px;font-weight:800;border:none;border-radius:14px;background:#22c55e;color:#052e16;cursor:pointer;touch-action:manipulation;margin-top:6px}
+.feedback{min-height:40px;font-size:16px;font-weight:700;text-align:center;margin-top:10px}
+.feedback.good{color:#4ade80}.feedback.bad{color:#f87171}
+.truthtable{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
+.truthtable th,.truthtable td{border:1px solid #334155;padding:8px;text-align:center}
+.truthtable th{background:#1e293b;color:#94a3b8}
+td.pass{color:#4ade80;font-weight:800}td.fail{color:#f87171;font-weight:800}
+.overlay{position:fixed;inset:0;background:rgba(2,6,23,.93);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.card{background:#1e293b;border-radius:20px;padding:28px 24px;max-width:540px;width:100%;max-height:90vh;overflow-y:auto}
+.card h2{margin:0 0 12px;font-size:24px;color:#c4b5fd}
+.card p,.card li{font-size:16px;line-height:1.7;color:#cbd5e1}
+.card ul{padding-left:20px}
+.concept{background:#0f172a;border-radius:12px;padding:14px;margin:14px 0;font-size:15px}
+.concept b{color:#4ade80}
+.gtable{width:100%;border-collapse:collapse;font-size:14px;margin:10px 0}
+.gtable th,.gtable td{border:1px solid #334155;padding:6px;text-align:center}
+.card button{width:100%;min-height:56px;font-size:18px;font-weight:700;background:#a855f7;color:#fff;border:none;border-radius:14px;margin-top:10px;cursor:pointer}
+</style>
+</head>
+<body>
+<header><h1>⚡ 邏輯門實驗室</h1></header>
+<div class="hud"><div>🏁 關卡 <span id="lv">1</span>/6</div><div>⭐ <span id="score">0</span> 分</div></div>
+<main>
+<div class="task" id="task"></div>
+<div class="circuit" id="circuit"></div>
+<div class="palette" id="palette"></div>
+<button class="bigbtn" id="testBtn">🔌 通電測試</button>
+<div class="feedback" id="fb"></div>
+<div id="ttWrap"></div>
+</main>
+<div class="overlay" id="intro"><div class="card">
+<h2>⚡ 邏輯門實驗室</h2>
+<p><b>玩法：</b>撳閘門掣（AND / OR / NOT / XOR），再撳電路上面嘅空位放入去。撳輸入掣可以開關 0／1，最後撳「通電測試」，四種輸入組合全部啱先過關！</p>
+<div class="concept">💡 <b>布林邏輯：</b>電腦入面所有運算都係由邏輯門砌出嚟：
+<table class="gtable"><tr><th>閘</th><th>規則</th></tr>
+<tr><td>AND</td><td>兩個都係 1 先出 1</td></tr>
+<tr><td>OR</td><td>有一個係 1 就出 1</td></tr>
+<tr><td>NOT</td><td>反轉（1→0，0→1）</td></tr>
+<tr><td>XOR</td><td>唔一樣先出 1</td></tr></table></div>
+<ul><li>撳空位可以循環轉閘</li><li>每關 +200 分，撳得愈少次分愈高</li></ul>
+<button onclick="startGame()">開始實驗 🧪</button>
+</div></div>
+<script>
+const GATES=['AND','OR','NOT','XOR'];
+const levels=[
+ {desc:'第 1 關：揀一個閘，令 <b>輸出 = A AND B</b>。試下唔同輸入！',slots:1,target:ins=>ins[0]&&ins[1]?1:0},
+ {desc:'第 2 關：揀一個閘，令 <b>輸出 = A OR B</b>。',slots:1,target:ins=>ins[0]||ins[1]?1:0},
+ {desc:'第 3 關：揀一個閘，令 <b>輸出 = NOT A</b>（唔理 B）。',slots:1,target:ins=>ins[0]?0:1},
+ {desc:'第 4 關：兩個閘串聯！<b>輸出 = NOT (A AND B)</b><br>第一個閘處理 A、B；第二個閘處理第一個閘嘅輸出。',slots:2,target:ins=>(!(ins[0]&&ins[1]))?1:0},
+ {desc:'第 5 關：<b>輸出 = (A OR B) AND (NOT A)</b><br>第一個閘：A OR B；第二個閘：將結果同 NOT A 做 AND。',slots:2,target:ins=>((ins[0]||ins[1])&&(!ins[0]))?1:0},
+ {desc:'第 6 關：終極挑戰！<b>輸出 = A XOR B</b><br>得一個閘，估下係邊個？',slots:1,target:ins=>(ins[0]!==ins[1])?1:0},
+];
+let lv=0,score=0,slotGates=[],inputs=[0,0],moves=0;
+function gateFn(g,a,b){if(g==='AND')return(a&&b)?1:0;if(g==='OR')return(a||b)?1:0;if(g==='NOT')return a?0:1;if(g==='XOR')return(a!==b)?1:0;return 0;}
+function render(){
+  document.getElementById('lv').textContent=lv+1;
+  document.getElementById('task').innerHTML=levels[lv].desc;
+  const c=document.getElementById('circuit');c.innerHTML='';
+  const mk=(label,id)=>{const r=document.createElement('div');r.className='wire-row';
+    r.innerHTML=`<span class="lbl">${label}</span>`;
+    const b=document.createElement('button');b.className='inbtn';b.id=id;b.textContent='0';
+    b.addEventListener('click',()=>{const k=id==='inA'?0:1;inputs[k]=inputs[k]?0:1;b.textContent=inputs[k];b.classList.toggle('on',!!inputs[k]);updateOut();});
+    r.appendChild(b);c.appendChild(r);};
+  mk('輸入 A','inA');mk('輸入 B','inB');
+  const n=levels[lv].slots;
+  for(let i=0;i<n;i++){
+    const r=document.createElement('div');r.className='wire-row';
+    r.innerHTML=`<span class="lbl">閘 ${i+1}</span>`;
+    const s=document.createElement('button');s.className='slot';s.id='slot'+i;s.textContent='撳我揀閘';
+    s.addEventListener('click',()=>{moves++;
+      let idx=GATES.indexOf(slotGates[i]);idx=(idx+1)%GATES.length;slotGates[i]=GATES[idx];
+      s.textContent=GATES[idx];s.classList.add('filled');updateOut();});
+    r.appendChild(s);c.appendChild(r);
+    if(i<n-1){const a=document.createElement('div');a.className='wire-row';a.innerHTML='<span class="lbl"></span><span class="arrow">⬇️</span><span style="font-size:13px;color:#64748b">上一閘嘅輸出流入下一閘</span>';c.appendChild(a);}
+  }
+  const ro=document.createElement('div');ro.className='wire-row';
+  ro.innerHTML='<span class="lbl">輸出</span><div class="outlamp" id="outLamp">0</div>';
+  c.appendChild(ro);
+  const p=document.getElementById('palette');p.innerHTML='';
+  GATES.forEach(g=>{const b=document.createElement('button');b.className='gbtn';
+    const hint={AND:'兩者皆1',OR:'其一為1',NOT:'反轉',XOR:'相異為1'}[g];
+    b.innerHTML=`${g}<small>${hint}</small>`;
+    b.addEventListener('click',()=>{
+      const empty=slotGates.findIndex(x=>!x);
+      const idx=empty>=0?empty:0;moves++;slotGates[idx]=g;
+      const s=document.getElementById('slot'+idx);s.textContent=g;s.classList.add('filled');updateOut();});
+    p.appendChild(b);});
+  document.getElementById('ttWrap').innerHTML='';
+  document.getElementById('fb').textContent='';document.getElementById('fb').className='feedback';
+  updateOut();
+}
+function evalClean(a,b){
+  const t=levels[lv].target;
+  // 用玩家擺嘅閘實際計算
+  if(slotGates.some(x=>!x))return null;
+  if(levels[lv].slots===1)return gateFn(slotGates[0],a,b);
+  // 兩閘關卡：第4關 NOT(A AND B)；第5關 (A OR B) AND (NOT A)
+  const first=gateFn(slotGates[0],a,b);
+  if(lv===3)return gateFn(slotGates[1],first,0);
+  if(lv===4)return gateFn(slotGates[1],first,a?0:1);
+  return null;
+}
+function updateOut(){
+  const v=evalClean(inputs[0],inputs[1]);
+  const lamp=document.getElementById('outLamp');
+  if(v===null){lamp.textContent='?';lamp.classList.remove('lit');}
+  else{lamp.textContent=v;lamp.classList.toggle('lit',v===1);}
+}
+document.getElementById('testBtn').addEventListener('click',()=>{
+  if(slotGates.some(x=>!x)){const fb=document.getElementById('fb');fb.textContent='⚠️ 仲有空位未擺閘！';fb.className='feedback bad';return;}
+  const combos=[[0,0],[0,1],[1,0],[1,1]];
+  let html='<table class="truthtable"><tr><th>A</th><th>B</th><th>你嘅輸出</th><th>目標</th><th></th></tr>';
+  let allOk=true;
+  combos.forEach(([a,b])=>{
+    const mine=evalClean(a,b),want=levels[lv].target([a,b]);
+    const ok=mine===want;if(!ok)allOk=false;
+    html+=`<tr><td>${a}</td><td>${b}</td><td>${mine}</td><td>${want}</td><td class="${ok?'pass':'fail'}">${ok?'✅':'❌'}</td></tr>`;
+  });
+  html+='</table>';
+  document.getElementById('ttWrap').innerHTML=html;
+  const fb=document.getElementById('fb');
+  if(allOk){
+    const pts=Math.max(100,300-moves*10);score+=pts;
+    document.getElementById('score').textContent=score;
+    fb.textContent=`🎉 過關！+${pts} 分`;fb.className='feedback good';
+    setTimeout(()=>{lv++;if(lv>=levels.length){fb.innerHTML='🏆 全部過晒！你係邏輯大師！總分 '+score;document.getElementById('testBtn').disabled=true;}else{slotGates=Array(levels[lv].slots).fill(null);moves=0;render();}},1600);
+  }else{fb.textContent='❌ 有啲組合唔啱，睇下真值表再試！';fb.className='feedback bad';}
+});
+function startGame(){document.getElementById('intro').style.display='none';slotGates=Array(levels[0].slots).fill(null);render();}
+</script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>STEM 教學資源</title>
+<style>
+:root{--blue:#2563eb;--teal:#0d9488;--ink:#1f2937;--muted:#6b7280;--bg:#f3f4f6;--card:#fff}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--ink);line-height:1.7}
+header{background:linear-gradient(135deg,#0f766e,#14b8a6);color:#fff;padding:28px 24px;text-align:center}
+header h1{margin:0 0 8px;font-size:26px}
+header p{margin:0;opacity:.9;font-size:14px}
+nav{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 16px;display:flex;gap:4px;overflow-x:auto;position:sticky;top:0;z-index:10}
+nav a{padding:14px 18px;text-decoration:none;color:var(--muted);font-weight:600;font-size:14px;white-space:nowrap;border-bottom:3px solid transparent}
+nav a.active{color:var(--blue);border-bottom-color:var(--blue)}
+main{max-width:1000px;margin:0 auto;padding:24px 16px 60px}
+.sec-title{font-size:22px;font-weight:800;margin:32px 0 6px}
+.sec-title:first-of-type{margin-top:8px}
+.sec-sub{color:var(--muted);font-size:13px;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.gcard{background:var(--card);border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08);text-decoration:none;color:var(--ink);display:block}
+.gcard:hover{box-shadow:0 4px 12px rgba(13,148,136,.15)}
+.gcard .emoji{font-size:36px}
+.gcard h3{margin:10px 0 6px;font-size:16px}
+.gcard p{margin:0;font-size:13px;color:var(--muted)}
+.trend{background:var(--card);border-radius:12px;padding:20px 24px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.trend h3{margin:0 0 8px;font-size:16px}
+.trend p{margin:0;font-size:14px;color:#374151}
+.trend .src{font-size:12px;color:var(--muted);margin-top:8px}
+.trend .src a{color:var(--teal);font-weight:600;text-decoration:none}
+.comp{background:var(--card);border-radius:12px;padding:20px 24px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.08);border-left:4px solid var(--teal)}
+.comp h3{margin:0 0 6px;font-size:16px}
+.comp p{margin:0 0 8px;font-size:14px;color:#374151}
+.comp .meta{font-size:12px;color:var(--muted)}
+.comp a{color:var(--teal);font-size:13px;font-weight:600;text-decoration:none}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:30px}
+@media(max-width:640px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><h1>🔬 STEM 教學資源</h1><p>STEM 小遊戲 · 最新趨勢 · 比賽活動</p></header>
+<nav>
+<a href="index.html">🏠 首頁</a>
+<a href="maths.html">📐 數學</a>
+<a href="videos.html">🎬 影片</a>
+<a href="games.html">🎮 遊戲</a>
+<a href="stem.html" class="active">🔬 STEM</a>
+<a href="ai.html">🤖 AI</a>
+<a href="news.html">📰 資訊</a>
+</nav>
+<main>
+
+<div class="sec-title">🎮 STEM 小遊戲（20個）</div>
+<div class="sec-sub">邊玩邊學物理、化學、工程 · 全部離線玩到 · 手機iPad適用</div>
+<div class="grid">
+<a class="gcard" href="game-bridge-builder.html"><div class="emoji">🌉</div><h3>建橋工程師</h3><p>有限預算建橋，貨車過橋考驗結構</p></a>
+<a class="gcard" href="game-circuit-puzzle.html"><div class="emoji">💡</div><h3>電路大作戰</h3><p>轉電線接通電路，令所有燈泡著</p></a>
+<a class="gcard" href="game-rocket-aim.html"><div class="emoji">🚀</div><h3>火箭瞄準</h3><p>調角度力度射中目標，有預測軌跡</p></a>
+<a class="gcard" href="game-element-match.html"><div class="emoji">⚗️</div><h3>元素配對王</h3><p>配對元素中文名同化學符號</p></a>
+<a class="gcard" href="game-tower-balance.html"><div class="emoji">🗼</div><h3>疊塔平衡</h3><p>用重心物理判斷疊積木</p></a>
+<a class="gcard" href="game-pendulum-lab.html"><div class="emoji">🕰️</div><h3>單擺實驗室</h3><p>調擺長睇週期變化，學單擺公式</p></a>
+<a class="gcard" href="game-parachute-drop.html"><div class="emoji">🪂</div><h3>降落傘挑戰</h3><p>調傘面積重量，安全降落目標區</p></a>
+<a class="gcard" href="game-lever-balance.html"><div class="emoji">⚖️</div><h3>槓桿平衡</h3><p>調支點位置令槓桿平衡，學力矩</p></a>
+<a class="gcard" href="game-wave-sim.html"><div class="emoji">🌊</div><h3>波動模擬器</h3><p>調頻率振幅睇波形變化</p></a>
+<a class="gcard" href="game-friction-racer.html"><div class="emoji">🏎️</div><h3>摩擦力賽車</h3><p>唔同路面睇剎車距離，學摩擦力</p></a>
+<a class="gcard" href="game-ph-mixer.html"><div class="emoji">🧪</div><h3>酸鹼混合師</h3><p>混合酸鹼調到目標pH值</p></a>
+<a class="gcard" href="game-cell-builder.html"><div class="emoji">🌱</div><h3>細胞結構拼圖</h3><p>將細胞器放到正確位置</p></a>
+<a class="gcard" href="game-food-chain.html"><div class="emoji">🔗</div><h3>食物鏈大挑戰</h3><p>排好食物鏈，答能量傳遞問題</p></a>
+<a class="gcard" href="game-periodic-quiz.html"><div class="emoji">⚛️</div><h3>元素表問答王</h3><p>60秒限時搶答元素知識</p></a>
+<a class="gcard" href="game-photosynthesis.html"><div class="emoji">☀️</div><h3>光合作用模擬</h3><p>調光照CO₂睇光合速率</p></a>
+<a class="gcard" href="game-binary.html"><div class="emoji">🔢</div><h3>二進制大冒險</h3><p>十進制轉二進制限時挑戰</p></a>
+<a class="gcard" href="game-logic-gates.html"><div class="emoji">⚡</div><h3>邏輯門實驗室</h3><p>砌邏輯門電路，學布林邏輯</p></a>
+<a class="gcard" href="game-fraction-pizza.html"><div class="emoji">🍕</div><h3>分數披薩店</h3><p>切出正確分數嘅披薩</p></a>
+<a class="gcard" href="game-geometry-angles.html"><div class="emoji">📐</div><h3>角度獵人</h3><p>估角度，愈準分愈高</p></a>
+<a class="gcard" href="game-code-sequence.html"><div class="emoji">🤖</div><h3>編程排序大挑戰</h3><p>排指令卡令機械人行到終點</p></a>
+</div>
+
+<div class="sec-title">📈 STEM 最新趨勢</div>
+<div class="sec-sub">更新日期：14-10-2026</div>
+
+<div class="trend">
+<h3>🤖 機械人教育普及化</h3>
+<p>LEGO SPIKE、micro:bit 等平台令機械人教育門檻大降，中小學紛紛引入。全港多項機械人比賽全年舉行，由任務賽到創意賽都有，學生唔使好貴嘅設備都玩到。</p>
+</div>
+
+<div class="trend">
+<h3>🚀 航天科技走入校園</h3>
+<p>AI 航天科技比賽等活動將航天主題帶入中小學，學生用 AI 結合航天知識做專題。國家航天發展亦帶動咗一批航天科普活動。</p>
+<div class="src">來源：<a href="https://www.theminelab.org" target="_blank" rel="noopener">AI 航天科技比賽</a></div>
+</div>
+
+<div class="trend">
+<h3>💻 跨學科創科學習</h3>
+<p>教育局推動 STEM 跨學科學習，強調動手做、解難能力。創客（Maker）文化、3D 打印、編程等元素融入唔同科目，唔再係電腦科專利。</p>
+<div class="src">來源：<a href="https://www.edb.gov.hk/tc/edu-system/primary-secondary/applicable-to-primary-secondary/it-in-edu/index.html" target="_blank" rel="noopener">教育局資訊科技教育</a></div>
+</div>
+
+<div class="sec-title">🏆 STEM 比賽及活動</div>
+<div class="sec-sub">適合中學生參加</div>
+
+<div class="comp">
+<h3>第三屆亞太區 STEM 機器人任務大賽</h3>
+<p>1-3 人一隊，可用任何品牌可編程積木。另設到校實戰工作坊，4 小時由零開始整機械人。</p>
+<div class="meta">截止報名：20-11-2026 ｜ 截止遞交：21-12-2026</div>
+<p><a href="https://www.hkassociationofculture.com/post/%E7%AC%AC%E4%B8%89%E5%B1%86%E4%BA%9E%E5%A4%AA%E5%8D%80stem%E6%A9%9F%E5%99%A8%E4%BA%BA%E4%BB%BB%E5%8B%99%E5%A4%A7%E8%B3%BD" target="_blank" rel="noopener">詳情及報名 →</a></p>
+</div>
+
+<div class="comp">
+<h3>AI 航天科技比賽 2026</h3>
+<p>主題「AI × 火星探索研究」，全港中小學生組隊參加，用 AI 同航天知識創作。</p>
+<div class="meta">現已接受報名</div>
+<p><a href="https://www.theminelab.org" target="_blank" rel="noopener">比賽網站 →</a></p>
+</div>
+
+<div class="comp">
+<h3>Samsung Solve for Tomorrow 2026</h3>
+<p>以科技解決社會問題，中學組 2-5 人一隊，初賽只需交概念提案。</p>
+<div class="meta">報名截止：16-10-2026</div>
+<p><a href="https://www.samsung.com/hk/offer/solvefortomorrow/" target="_blank" rel="noopener">詳情及報名 →</a></p>
+</div>
+
+<div class="comp">
+<h3>香港資優教育學苑 STEM 課程</h3>
+<p>天文學、環境科學、鑑證科學、創客工坊等多個 STEM 範疇資優課程，適合有興趣深入學嘅同學。</p>
+<div class="meta">對象：資優教育學苑學員</div>
+<p><a href="https://hkage.edu.hk" target="_blank" rel="noopener">學苑網站 →</a></p>
+</div>
+
+</main>
+<footer>教學資源共享 · 歡迎老師同學生使用</footer>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>遊戲天地</title>
+<style>
+:root{--blue:#2563eb;--ink:#1f2937;--muted:#6b7280;--bg:#f3f4f6;--card:#fff}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+header{background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;padding:28px 24px;text-align:center}
+header h1{margin:0 0 8px;font-size:26px}
+header p{margin:0;opacity:.9;font-size:14px}
+nav{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 16px;display:flex;gap:4px;overflow-x:auto;position:sticky;top:0;z-index:10}
+nav a{padding:14px 18px;text-decoration:none;color:var(--muted);font-weight:600;font-size:14px;white-space:nowrap;border-bottom:3px solid transparent}
+nav a.active{color:var(--blue);border-bottom-color:var(--blue)}
+main{max-width:1100px;margin:0 auto;padding:24px 16px 60px}
+.sec-title{font-size:22px;font-weight:800;margin:32px 0 14px}
+.sec-title:first-of-type{margin-top:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.card{background:var(--card);border-radius:12px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.08);text-decoration:none;color:var(--ink);transition:transform .15s;display:block}
+.card:hover{transform:translateY(-4px)}
+.card .icon{font-size:44px;text-align:center;padding:20px 10px 8px}
+.card .body{padding:12px 14px 16px;text-align:center}
+.card .body h3{margin:0 0 4px;font-size:14px}
+.card .body p{margin:0;font-size:11.5px;color:var(--muted)}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:30px}
+@media(max-width:640px){.grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header>
+<h1>🎮 遊戲天地</h1>
+<p>43 個遊戲 · 邊玩邊學 · 手機 iPad 都玩到</p>
+</header>
+<nav>
+<a href="index.html">🏠 首頁</a>
+<a href="maths.html">📐 數學</a>
+<a href="videos.html">🎬 影片</a>
+<a href="games.html" class="active">🎮 遊戲</a>
+<a href="stem.html">🔬 STEM</a>
+<a href="ai.html">🤖 AI</a>
+<a href="news.html">📰 資訊</a>
+</nav>
+<main>
+
+<div class="sec-title">📐 數學遊戲（3個）</div>
+<div class="grid">
+<a class="card" href="game-like-terms-crush.html"><div class="icon">🍬</div><div class="body"><h3>Like Terms Crush</h3><p>消同類項學代數</p></div></a>
+<a class="card" href="game-equation-racer.html"><div class="icon">🏎️</div><div class="body"><h3>一次方程賽車</h3><p>解方程加速</p></div></a>
+<a class="card" href="game-sanguo-rpg.html"><div class="icon">⚔️</div><div class="body"><h3>三國 RPG</h3><p>答數學題闖關</p></div></a>
+</div>
+
+<div class="sec-title">🔬 STEM 遊戲（20個）</div>
+<div class="grid">
+<a class="card" href="game-bridge-builder.html"><div class="icon">🌉</div><div class="body"><h3>建橋工程師</h3><p>結構工程</p></div></a>
+<a class="card" href="game-circuit-puzzle.html"><div class="icon">💡</div><div class="body"><h3>電路大作戰</h3><p>閉合迴路</p></div></a>
+<a class="card" href="game-rocket-aim.html"><div class="icon">🚀</div><div class="body"><h3>火箭瞄準</h3><p>拋物線</p></div></a>
+<a class="card" href="game-element-match.html"><div class="icon">⚗️</div><div class="body"><h3>元素配對王</h3><p>化學元素</p></div></a>
+<a class="card" href="game-tower-balance.html"><div class="icon">🗼</div><div class="body"><h3>疊塔平衡</h3><p>重心物理</p></div></a>
+<a class="card" href="game-pendulum-lab.html"><div class="icon">🕰️</div><div class="body"><h3>單擺實驗室</h3><p>單擺週期</p></div></a>
+<a class="card" href="game-parachute-drop.html"><div class="icon">🪂</div><div class="body"><h3>降落傘挑戰</h3><p>空氣阻力</p></div></a>
+<a class="card" href="game-lever-balance.html"><div class="icon">⚖️</div><div class="body"><h3>槓桿平衡</h3><p>力矩</p></div></a>
+<a class="card" href="game-wave-sim.html"><div class="icon">🌊</div><div class="body"><h3>波動模擬器</h3><p>波的性質</p></div></a>
+<a class="card" href="game-friction-racer.html"><div class="icon">🏎️</div><div class="body"><h3>摩擦力賽車</h3><p>摩擦力</p></div></a>
+<a class="card" href="game-ph-mixer.html"><div class="icon">🧪</div><div class="body"><h3>酸鹼混合師</h3><p>酸鹼中和</p></div></a>
+<a class="card" href="game-cell-builder.html"><div class="icon">🌱</div><div class="body"><h3>細胞結構拼圖</h3><p>細胞器</p></div></a>
+<a class="card" href="game-food-chain.html"><div class="icon">🔗</div><div class="body"><h3>食物鏈大挑戰</h3><p>生態系統</p></div></a>
+<a class="card" href="game-periodic-quiz.html"><div class="icon">⚛️</div><div class="body"><h3>元素表問答王</h3><p>限時搶答</p></div></a>
+<a class="card" href="game-photosynthesis.html"><div class="icon">☀️</div><div class="body"><h3>光合作用模擬</h3><p>限制因素</p></div></a>
+<a class="card" href="game-binary.html"><div class="icon">🔢</div><div class="body"><h3>二進制大冒險</h3><p>二進制</p></div></a>
+<a class="card" href="game-logic-gates.html"><div class="icon">⚡</div><div class="body"><h3>邏輯門實驗室</h3><p>布林邏輯</p></div></a>
+<a class="card" href="game-fraction-pizza.html"><div class="icon">🍕</div><div class="body"><h3>分數披薩店</h3><p>分數</p></div></a>
+<a class="card" href="game-geometry-angles.html"><div class="icon">📐</div><div class="body"><h3>角度獵人</h3><p>估角度</p></div></a>
+<a class="card" href="game-code-sequence.html"><div class="icon">🤖</div><div class="body"><h3>編程排序大挑戰</h3><p>運算思維</p></div></a>
+</div>
+
+<div class="sec-title">🤖 AI 遊戲（20個）</div>
+<div class="grid">
+<a class="card" href="game-neural-net.html"><div class="icon">🧠</div><div class="body"><h3>神經網絡實驗室</h3><p>權重與學習</p></div></a>
+<a class="card" href="game-prompt-master.html"><div class="icon">✍️</div><div class="body"><h3>Prompt 大師</h3><p>寫 prompt 技巧</p></div></a>
+<a class="card" href="game-ai-or-not.html"><div class="icon">🕵️</div><div class="body"><h3>AI 定人類？</h3><p>生成式 AI 破綻</p></div></a>
+<a class="card" href="game-train-pet.html"><div class="icon">🐶</div><div class="body"><h3>訓練 AI 寵物</h3><p>強化學習</p></div></a>
+<a class="card" href="game-ethics-choice.html"><div class="icon">⚖️</div><div class="body"><h3>AI 倫理抉擇</h3><p>兩難情景</p></div></a>
+<a class="card" href="game-decision-tree.html"><div class="icon">🌳</div><div class="body"><h3>決策樹大師</h3><p>親手砌樹分類</p></div></a>
+<a class="card" href="game-clustering.html"><div class="icon">🎯</div><div class="body"><h3>AI 分群高手</h3><p>K-means</p></div></a>
+<a class="card" href="game-overfitting.html"><div class="icon">🪤</div><div class="body"><h3>過擬合陷阱</h3><p>模型複雜度</p></div></a>
+<a class="card" href="game-chatbot-trainer.html"><div class="icon">🤖</div><div class="body"><h3>聊天機器人訓練師</h3><p>意圖識別</p></div></a>
+<a class="card" href="game-recommender.html"><div class="icon">🎬</div><div class="body"><h3>推薦系統大作戰</h3><p>協同過濾</p></div></a>
+<a class="card" href="game-face-detect.html"><div class="icon">📷</div><div class="body"><h3>人臉檢測模擬</h3><p>電腦視覺</p></div></a>
+<a class="card" href="game-ai-art.html"><div class="icon">🎨</div><div class="body"><h3>AI畫風配對</h3><p>生成式 AI</p></div></a>
+<a class="card" href="game-speech-sim.html"><div class="icon">🎙️</div><div class="body"><h3>語音識別大作戰</h3><p>語音轉文字</p></div></a>
+<a class="card" href="game-ai-bias.html"><div class="icon">🔍</div><div class="body"><h3>AI偏見偵探</h3><p>算法公平性</p></div></a>
+<a class="card" href="game-genetic.html"><div class="icon">🧬</div><div class="body"><h3>遺傳算法實驗室</h3><p>演化算法</p></div></a>
+<a class="card" href="game-vision-puzzle.html"><div class="icon">🧩</div><div class="body"><h3>電腦視覺拼圖</h3><p>圖像識別</p></div></a>
+<a class="card" href="game-nlp-words.html"><div class="icon">✨</div><div class="body"><h3>自然語言魔法</h3><p>斷詞標註</p></div></a>
+<a class="card" href="game-ai-memory.html"><div class="icon">🧠</div><div class="body"><h3>AI記憶配對</h3><p>注意力機制</p></div></a>
+<a class="card" href="game-pathfinding.html"><div class="icon">🗺️</div><div class="body"><h3>AI尋路大師</h3><p>A* 算法</p></div></a>
+<a class="card" href="game-turing-test.html"><div class="icon">🕵️</div><div class="body"><h3>圖靈測試</h3><p>分辨 AI 話術</p></div></a>
+</div>
+
+</main>
+<footer>教學資源共享 · 歡迎老師同學生使用</footer>
+</body>
+</html>

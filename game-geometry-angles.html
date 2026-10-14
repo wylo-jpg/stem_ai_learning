@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>角度獵人</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#0c1a2e;color:#e0f2fe;min-height:100vh}
+header{background:linear-gradient(135deg,#0c4a6e,#0284c7);padding:14px;text-align:center}
+header h1{margin:0;font-size:22px}
+.hud{display:flex;justify-content:space-around;background:#082f49;padding:10px;font-size:15px;font-weight:700}
+.hud span{color:#fbbf24}
+main{max-width:620px;margin:0 auto;padding:14px;width:100%;display:flex;flex-direction:column;align-items:center}
+#stage{width:min(92vw,420px);height:min(92vw,420px);background:#082f49;border-radius:18px;margin:6px 0;touch-action:none}
+.guessbox{background:#082f49;border-radius:14px;padding:14px;width:100%;text-align:center;margin-top:8px}
+.guessbox .glabel{font-size:14px;color:#7dd3fc}
+#guessVal{font-size:52px;font-weight:800;color:#fbbf24;line-height:1.1}
+#guessVal small{font-size:24px}
+input[type=range]{width:100%;height:56px;-webkit-appearance:none;background:transparent;touch-action:pan-x;margin:6px 0}
+input[type=range]::-webkit-slider-runnable-track{height:14px;background:#0c4a6e;border-radius:7px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:44px;height:44px;border-radius:50%;background:#fbbf24;margin-top:-15px;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+input[type=range]::-moz-range-track{height:14px;background:#0c4a6e;border-radius:7px}
+input[type=range]::-moz-range-thumb{width:44px;height:44px;border:none;border-radius:50%;background:#fbbf24}
+.stepbtns{display:flex;gap:10px;justify-content:center;margin-top:4px}
+.stepbtn{min-width:64px;min-height:52px;font-size:20px;font-weight:800;border-radius:12px;border:2px solid #0284c7;background:#0c4a6e;color:#e0f2fe;cursor:pointer;touch-action:manipulation}
+.btnrow{display:flex;gap:10px;width:100%;margin-top:10px}
+button.big{flex:1;min-height:58px;font-size:18px;font-weight:800;border:none;border-radius:14px;cursor:pointer;touch-action:manipulation}
+#shootBtn{background:#fbbf24;color:#451a03}
+#proBtn{background:#334155;color:#e2e8f0}
+.reveal{min-height:44px;font-size:17px;font-weight:700;text-align:center;margin-top:8px}
+.reveal.good{color:#4ade80}.reveal.ok{color:#fbbf24}.reveal.bad{color:#f87171}
+.overlay{position:fixed;inset:0;background:rgba(4,12,24,.94);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.card{background:#082f49;border-radius:20px;padding:28px 24px;max-width:540px;width:100%;max-height:90vh;overflow-y:auto}
+.card h2{margin:0 0 12px;font-size:24px;color:#7dd3fc}
+.card p,.card li{font-size:16px;line-height:1.7;color:#e0f2fe}
+.card ul{padding-left:20px}
+.concept{background:#0c1a2e;border-radius:12px;padding:14px;margin:14px 0;font-size:15px}
+.concept b{color:#4ade80}
+.card button{width:100%;min-height:56px;font-size:18px;font-weight:700;background:#0284c7;color:#fff;border:none;border-radius:14px;margin-top:10px;cursor:pointer}
+</style>
+</head>
+<body>
+<header><h1>📐 角度獵人</h1></header>
+<div class="hud"><div>🎯 第 <span id="round">1</span>/10 關</div><div>⭐ <span id="score">0</span> 分</div><div>🎖️ 最佳 <span id="best">—</span></div></div>
+<main>
+<svg id="stage" viewBox="0 0 400 400"></svg>
+<div class="guessbox">
+<div class="glabel">你估呢隻角有幾多度？</div>
+<div id="guessVal">90<small>°</small></div>
+<input type="range" id="slider" min="5" max="175" value="90" step="1"/>
+<div class="stepbtns">
+<button class="stepbtn" id="m10">−10</button><button class="stepbtn" id="m1">−1</button>
+<button class="stepbtn" id="p1">+1</button><button class="stepbtn" id="p10">+10</button>
+</div>
+</div>
+<div class="btnrow"><button class="big" id="proBtn">📏 量角器</button><button class="big" id="shootBtn">🏹 發射！</button></div>
+<div class="reveal" id="reveal"></div>
+</main>
+<div class="overlay" id="intro"><div class="card">
+<h2>📐 角度獵人</h2>
+<p><b>玩法：</b>睇住圖中嘅角，用滑桿＋微調掣估佢有幾多度，撳「發射」！估得愈準分愈高。撳「量角器」可以睇提示，但會扣分。</p>
+<div class="concept">💡 <b>角度概念：</b>角由兩條由同一頂點射出嘅線組成，單位係「度（°）」。直角 = 90°，平角 = 180°。估角度嘅秘訣：先判斷係銳角（&lt;90°）、直角定鈍角（&gt;90°），再慢慢較準。</div>
+<ul><li>誤差 ≤5°：+100 分 🌟</li><li>誤差 ≤10°：+70 分</li><li>誤差 ≤20°：+40 分</li><li>用咗量角器：分數減半</li></ul>
+<button onclick="startGame()">開始狩獵 🏹</button>
+</div></div>
+<div class="overlay" id="gameover" style="display:none"><div class="card"><h2>🏁 狩獵結束！</h2><p id="finalScore" style="font-size:19px"></p><button onclick="location.reload()">再玩一次 🔁</button></div></div>
+<script>
+let actual=90,guess=90,round=1,score=0,usedPro=false,best=JSON.parse(localStorage.getItem('angleBest')||'null');
+const svg=document.getElementById('stage'),slider=document.getElementById('slider');
+if(best!==null)document.getElementById('best').textContent=best;
+function drawAngle(showAnswer){
+  svg.innerHTML='';
+  const cx=200,cy=300,len=190;
+  const rad=actual*Math.PI/180;
+  // 量角器（可選）
+  if(showAnswer){
+    const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+    for(let d=0;d<=180;d+=10){
+      const a=d*Math.PI/180,r1=150,r2=d%30===0?128:138;
+      const x1=cx+r1*Math.cos(Math.PI-a),y1=cy-r1*Math.sin(Math.PI-a);
+      const x2=cx+r2*Math.cos(Math.PI-a),y2=cy-r2*Math.sin(Math.PI-a);
+      const l=document.createElementNS('http://www.w3.org/2000/svg','line');
+      l.setAttribute('x1',x1);l.setAttribute('y1',y1);l.setAttribute('x2',x2);l.setAttribute('y2',y2);
+      l.setAttribute('stroke','#38bdf8');l.setAttribute('stroke-width',d%30===0?2:1);l.setAttribute('opacity','0.6');g.appendChild(l);
+      if(d%30===0){const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+        const tx=cx+112*Math.cos(Math.PI-a),ty=cy-112*Math.sin(Math.PI-a);
+        t.setAttribute('x',tx);t.setAttribute('y',ty);t.setAttribute('fill','#38bdf8');t.setAttribute('font-size','13');
+        t.setAttribute('text-anchor','middle');t.setAttribute('dominant-baseline','middle');t.textContent=d;g.appendChild(t);}
+    }
+    svg.appendChild(g);
+  }
+  // 底線（0° 參考）
+  const base=document.createElementNS('http://www.w3.org/2000/svg','line');
+  base.setAttribute('x1',cx-190);base.setAttribute('y1',cy);base.setAttribute('x2',cx+190);base.setAttribute('y2',cy);
+  base.setAttribute('stroke','#334155');base.setAttribute('stroke-width','2');base.setAttribute('stroke-dasharray','6,4');svg.appendChild(base);
+  // 角嘅兩條邊：固定水平向右＋旋轉邊
+  const ray1=document.createElementNS('http://www.w3.org/2000/svg','line');
+  ray1.setAttribute('x1',cx);ray1.setAttribute('y1',cy);ray1.setAttribute('x2',cx+len);ray1.setAttribute('y2',cy);
+  ray1.setAttribute('stroke','#fbbf24');ray1.setAttribute('stroke-width','7');ray1.setAttribute('stroke-linecap','round');svg.appendChild(ray1);
+  const ex=cx+len*Math.cos(-rad),ey=cy+len*Math.sin(-rad);
+  const ray2=document.createElementNS('http://www.w3.org/2000/svg','line');
+  ray2.setAttribute('x1',cx);ray2.setAttribute('y1',cy);ray2.setAttribute('x2',ex);ray2.setAttribute('y2',ey);
+  ray2.setAttribute('stroke','#f472b6');ray2.setAttribute('stroke-width','7');ray2.setAttribute('stroke-linecap','round');svg.appendChild(ray2);
+  // 頂點
+  const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  dot.setAttribute('cx',cx);dot.setAttribute('cy',cy);dot.setAttribute('r','9');dot.setAttribute('fill','#e0f2fe');svg.appendChild(dot);
+  // 角度弧
+  const arcR=52,a0=0,a1=-rad;
+  const sx=cx+arcR*Math.cos(a0),sy=cy+arcR*Math.sin(a0),exx=cx+arcR*Math.cos(a1),eyy=cy+arcR*Math.sin(a1);
+  const arc=document.createElementNS('http://www.w3.org/2000/svg','path');
+  arc.setAttribute('d',`M${sx},${sy} A${arcR},${arcR} 0 0 0 ${exx},${eyy}`);
+  arc.setAttribute('fill','none');arc.setAttribute('stroke','#4ade80');arc.setAttribute('stroke-width','4');svg.appendChild(arc);
+  if(showAnswer){
+    const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',cx+78);t.setAttribute('y',cy-24);t.setAttribute('fill','#4ade80');
+    t.setAttribute('font-size','22');t.setAttribute('font-weight','800');t.textContent=actual+'°';svg.appendChild(t);
+  }
+}
+function newRound(){
+  usedPro=false;
+  actual=5+Math.floor(Math.random()*171);
+  guess=90;slider.value=90;document.getElementById('guessVal').innerHTML='90<small>°</small>';
+  document.getElementById('round').textContent=round;
+  document.getElementById('reveal').textContent='';document.getElementById('reveal').className='reveal';
+  document.getElementById('shootBtn').disabled=false;
+  drawAngle(false);
+}
+slider.addEventListener('input',()=>{guess=+slider.value;document.getElementById('guessVal').innerHTML=guess+'<small>°</small>';});
+[['m10',-10],['m1',-1],['p1',1],['p10',10]].forEach(([id,d])=>{
+  document.getElementById(id).addEventListener('click',()=>{guess=Math.min(175,Math.max(5,guess+d));slider.value=guess;document.getElementById('guessVal').innerHTML=guess+'<small>°</small>';});
+});
+document.getElementById('proBtn').addEventListener('click',()=>{usedPro=true;drawAngle(true);});
+document.getElementById('shootBtn').addEventListener('click',function(){
+  this.disabled=true;
+  const err=Math.abs(guess-actual);
+  let pts=0,cls='',msg='';
+  if(err<=5){pts=100;cls='good';msg='🌟 神乎其技！誤差 '+err+'°';}
+  else if(err<=10){pts=70;cls='ok';msg='👍 好準！誤差 '+err+'°';}
+  else if(err<=20){pts=40;cls='ok';msg='🙂 唔錯，誤差 '+err+'°';}
+  else{pts=10;cls='bad';msg='💪 差 '+err+'°，繼續努力！';}
+  if(usedPro)pts=Math.floor(pts/2);
+  score+=pts;document.getElementById('score').textContent=score;
+  drawAngle(true);
+  const r=document.getElementById('reveal');r.textContent=`答案 ${actual}°｜${msg}｜+${pts} 分`;r.className='reveal '+cls;
+  setTimeout(()=>{round++;if(round>10)endGame();else newRound();},2200);
+});
+function endGame(){
+  if(best===null||score>best){best=score;localStorage.setItem('angleBest',score);document.getElementById('best').textContent=best;}
+  document.getElementById('gameover').style.display='flex';
+  let msg=`總分：<b style="color:#fbbf24">${score}</b> / 1000 分<br>`;
+  msg+=score>=800?'🏆 角度大師！':score>=500?'👍 好犀利！':score>=300?'🙂 唔錯，繼續練！':'💪 多啲用直角做參考！';
+  document.getElementById('finalScore').innerHTML=msg;
+}
+function startGame(){document.getElementById('intro').style.display='none';newRound();}
+</script>
+</body>
+</html>

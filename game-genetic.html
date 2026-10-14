@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>遺傳算法實驗室</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#052e16;color:#dcfce7;touch-action:manipulation;line-height:1.6}
+header{background:#14532d;padding:12px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:5}
+header a{color:#86efac;text-decoration:none;font-size:16px;min-height:44px;display:flex;align-items:center}
+header h1{margin:0;font-size:18px;flex:1}
+#hud{display:flex;gap:8px;padding:10px 12px;flex-wrap:wrap}
+.hud-box{background:#14532d;border-radius:10px;padding:8px 12px;font-size:14px;flex:1;min-width:100px;text-align:center}
+.hud-box b{color:#fbbf24;font-size:17px}
+#wrap{max-width:560px;margin:0 auto;padding:0 12px}
+canvas#cv{width:100%;height:auto;border-radius:12px;background:#0a2e1a;display:block;touch-action:none}
+canvas#chart{width:100%;height:90px;background:#14532d;border-radius:10px;margin-top:10px}
+#controls{background:#14532d;border-radius:12px;padding:14px 16px;margin-top:10px}
+#controls label{font-size:15px;font-weight:700;display:block;margin-bottom:6px}
+#controls label b{color:#fbbf24}
+input[type=range]{width:100%;min-height:44px;accent-color:#22c55e}
+#mutval{font-size:14px;color:#86efac}
+button.big{display:block;width:100%;min-height:54px;margin-top:10px;background:#16a34a;color:#fff;border:0;border-radius:12px;font-size:18px;font-weight:700;cursor:pointer}
+button.big:active{background:#15803d}
+button.big:disabled{background:#3f6212;opacity:.6}
+#msg{text-align:center;font-size:15px;min-height:28px;font-weight:700;color:#fbbf24;margin-top:8px}
+.legend{display:flex;gap:14px;justify-content:center;font-size:13px;color:#86efac;margin-top:6px;flex-wrap:wrap}
+.overlay{position:fixed;inset:0;background:rgba(5,46,22,.95);display:flex;align-items:center;justify-content:center;z-index:20;padding:20px}
+.overlay.hidden{display:none}
+.panel{background:#14532d;border-radius:16px;padding:24px;max-width:540px;width:100%;max-height:90vh;overflow-y:auto}
+.panel h2{margin:0 0 10px;font-size:20px}
+.panel p{font-size:15px;color:#dcfce7;margin:8px 0}
+.concept{background:#052e16;border-radius:10px;padding:12px 14px;margin:12px 0;font-size:14px}
+.concept b{color:#86efac}
+footer{text-align:center;color:#3f6212;font-size:12px;padding:16px}
+</style>
+</head>
+<body>
+<header><a href="ai.html">← 返回</a><h1>🧬 遺傳算法實驗室</h1></header>
+<div id="hud">
+<div class="hud-box">第 <b id="h-gen">0</b> 代</div>
+<div class="hud-box">最佳 <b id="h-best">0</b>%</div>
+<div class="hud-box">平均 <b id="h-avg">0</b>%</div>
+<div class="hud-box">目標 <b>95</b>%</div>
+</div>
+<div id="wrap">
+<canvas id="cv" width="480" height="440"></canvas>
+<div class="legend"><span>🟢 食物（目標）</span><span>🔺 生物（愈近食物愈適應）</span><span>⭐ 本代最強</span></div>
+<canvas id="chart" width="480" height="90"></canvas>
+<div id="controls">
+<label>🧪 變異率：<b id="mutlab">10%</b> <span id="mutval">— 基因隨機改變嘅幅度</span></label>
+<input type="range" id="mut" min="0" max="30" value="10" oninput="document.getElementById('mutlab').textContent=this.value+'%'">
+<button class="big" id="runbtn" onclick="runEvolution()">▶ 開始演化</button>
+<button class="big" id="stepbtn" onclick="oneGeneration()" style="background:#0d9488">👣 逐代演化（一代）</button>
+</div>
+<div id="msg"></div>
+</div>
+
+<div class="overlay" id="intro">
+<div class="panel">
+<h2>🧬 遺傳算法實驗室</h2>
+<p><b>玩法：</b>一班三角形生物要搵食（綠色圓圈）！每隻嘅基因決定佢游得有幾快、幾直。每一代：<b>最勁嘅先生仔女</b>（選擇）→ <b>仔女混合父母基因</b>（交配）→ <b>隨機變異</b>（突變）。你控制<b>變異率</b>，睇下幾多代可以演化到 95% 適應度！</p>
+<div class="concept"><b>💡 AI概念 — 演化算法：</b>遺傳算法模仿達爾文「物競天擇」。AI 用佢嚟解決好難直接計嘅問題：設計天線、排課表、訓練遊戲 AI 等。關鍵係平衡：<b>變異太細</b>會困喺局部最優（進步唔到）；<b>變異太大</b>會亂咁嚟（學唔到嘢）。試下唔同變異率，睇效果差幾遠！</div>
+<button class="big" onclick="startLab()">進入實驗室</button>
+</div>
+</div>
+
+<div class="overlay hidden" id="end">
+<div class="panel">
+<h2>🏆 演化成功！</h2>
+<p id="end-text"></p>
+<div class="concept"><b>💡 諗一諗：</b>你用咗咩變異率？試下用 0% 同 30% 再玩一次，比較下邊個快啲達標。現實嘅 AI 訓練都係咁——要不斷試參數先搵到最好嘅設定，呢個叫「調參」(tuning)。</div>
+<button class="big" onclick="location.reload()">再演化一次</button>
+<a href="ai.html" style="display:block;text-align:center;margin-top:10px;color:#86efac;min-height:44px;line-height:44px">返回 AI 資源頁</a>
+</div>
+</div>
+
+<footer>單檔離線遊戲 · 教學資源共享</footer>
+
+<script>
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const W=480,H=440,TX=W/2,TY=56,POP=26,STEPS=260,MAXGEN=25,TARGET=95;
+let pop=[],gen=0,bestHist=[],running=false,won=false;
+
+function rand(a,b){return a+Math.random()*(b-a);}
+function newCreature(){return {x:rand(60,W-60),y:H-30,speed:rand(0.6,2.2),wob:rand(-1.4,1.4),ph:rand(0,6.28),fit:0,steps:0};}
+function init(){pop=[];for(let i=0;i<POP;i++)pop.push(newCreature());gen=0;bestHist=[];won=false;updateHUD(0,0);drawChart();}
+
+function simulate(){
+  // reset positions
+  pop.forEach(c=>{c.x=rand(60,W-60);c.y=H-30;c.fit=0;c.steps=0;c.ph=rand(0,6.28);});
+  for(let s=0;s<STEPS;s++){
+    let allDone=true;
+    pop.forEach(c=>{
+      if(c.done)return;allDone=false;
+      c.steps++;
+      c.y-=c.speed;
+      c.x+=Math.sin(s*0.08+c.ph)*c.wob*1.6+rand(-0.5,0.5);
+      c.x=Math.max(14,Math.min(W-14,c.x));
+      const d=Math.hypot(c.x-TX,c.y-TY);
+      if(d<30){c.done=true;c.fit=100+Math.max(0,(STEPS-c.steps)/STEPS*20);}
+      else if(c.y<20||s===STEPS-1){c.done=true;const dd=Math.max(d,30);c.fit=Math.max(0,100-(dd-30)/4.2);}
+    });
+    if(allDone)break;
+  }
+  pop.forEach(c=>{if(!c.done){const d=Math.hypot(c.x-TX,c.y-TY);c.fit=Math.max(0,100-(Math.max(d,30)-30)/4.2);}});
+}
+
+function breed(){
+  const mut=document.getElementById('mut').value/100;
+  pop.sort((a,b)=>b.fit-a.fit);
+  const elite=pop.slice(0,8);
+  const next=[];
+  // keep top 2 unchanged (elitism)
+  next.push({...elite[0]});next.push({...elite[1]});
+  while(next.length<POP){
+    const p1=elite[Math.floor(Math.random()*8)],p2=elite[Math.floor(Math.random()*8)];
+    const child={
+      x:0,y:0,
+      speed:(p1.speed+p2.speed)/2+rand(-1,1)*mut*2.4,
+      wob:(p1.wob+p2.wob)/2+rand(-1,1)*mut*2.0,
+      ph:rand(0,6.28),fit:0,steps:0,done:false
+    };
+    child.speed=Math.max(0.4,Math.min(3.2,child.speed));
+    child.wob=Math.max(-2.2,Math.min(2.2,child.wob));
+    next.push(child);
+  }
+  pop=next;
+}
+
+function updateHUD(best,avg){
+  document.getElementById('h-gen').textContent=gen;
+  document.getElementById('h-best').textContent=best.toFixed(0);
+  document.getElementById('h-avg').textContent=avg.toFixed(0);
+}
+function drawScene(){
+  ctx.clearRect(0,0,W,H);
+  // target food
+  const g=ctx.createRadialGradient(TX,TY,4,TX,TY,30);
+  g.addColorStop(0,'#4ade80');g.addColorStop(1,'#14532d');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(TX,TY,28,0,7);ctx.fill();
+  ctx.fillStyle='#052e16';ctx.font='bold 15px sans-serif';ctx.textAlign='center';ctx.fillText('食物',TX,TY+5);
+  // start line
+  ctx.strokeStyle='#3f6212';ctx.setLineDash([8,6]);ctx.beginPath();ctx.moveTo(20,H-24);ctx.lineTo(W-20,H-24);ctx.stroke();ctx.setLineDash([]);
+  // creatures
+  const best=pop.reduce((a,b)=>b.fit>a.fit?b:a,pop[0]||{fit:0});
+  pop.forEach(c=>{
+    const t=c.fit>=99?'#fbbf24':c.fit>=70?'#4ade80':c.fit>=40?'#facc15':'#f87171';
+    ctx.save();ctx.translate(c.x,c.y);
+    const ang=Math.atan2(TY-c.y,TX-c.x)+Math.PI/2;
+    ctx.rotate(Math.sin(c.ph)*0.2);
+    ctx.fillStyle=t;ctx.beginPath();ctx.moveTo(0,-9);ctx.lineTo(7,7);ctx.lineTo(-7,7);ctx.closePath();ctx.fill();
+    ctx.restore();
+    if(c===best&&c.fit>0){ctx.fillStyle='#fbbf24';ctx.font='13px sans-serif';ctx.fillText('⭐',c.x,c.y-14);}
+  });
+}
+function drawChart(){
+  const ch=document.getElementById('chart'),c=ch.getContext('2d');
+  c.clearRect(0,0,480,90);
+  c.fillStyle='#86efac';c.font='12px sans-serif';c.fillText('歷代最佳適應度',8,16);
+  if(bestHist.length<1)return;
+  c.strokeStyle='#4ade80';c.lineWidth=2.5;c.beginPath();
+  bestHist.forEach((v,i)=>{
+    const x=14+i*(452/Math.max(bestHist.length-1,1)),y=82-(v/120)*64;
+    i?c.lineTo(x,y):c.moveTo(x,y);
+    c.fillStyle='#a7f3d0';c.beginPath();c.arc(x,y,3,0,7);c.fill();
+  });
+  c.stroke();
+  c.strokeStyle='#fbbf24';c.setLineDash([5,4]);c.beginPath();
+  const ty=82-(TARGET/120)*64;c.moveTo(10,ty);c.lineTo(470,ty);c.stroke();c.setLineDash([]);
+  c.fillStyle='#fbbf24';c.fillText('目標95%',420,ty-5);
+}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+async function oneGeneration(){
+  if(running||won)return;
+  running=true;
+  document.getElementById('runbtn').disabled=true;
+  document.getElementById('stepbtn').disabled=true;
+  simulate();
+  gen++;
+  const best=Math.max(...pop.map(c=>c.fit));
+  const avg=pop.reduce((a,c)=>a+c.fit,0)/pop.length;
+  bestHist.push(Math.min(best,120));
+  updateHUD(best,avg);drawScene();drawChart();
+  const mut=document.getElementById('mut').value;
+  document.getElementById('msg').textContent=`第 ${gen} 代完成！最佳 ${best.toFixed(1)}%（變異率 ${mut}%）`;
+  if(best>=TARGET&&!won){
+    won=true;
+    document.getElementById('end-text').innerHTML=`用咗 <b style="color:#fbbf24">${gen} 代</b>達到 ${best.toFixed(1)}% 適應度！<br>變異率：${mut}%<br>生物由亂游進化到識得直衝食物——呢個就係演化算法嘅威力。`;
+    await sleep(900);
+    document.getElementById('end').classList.remove('hidden');
+  }else if(gen>=MAXGEN&&!won){
+    document.getElementById('msg').textContent=`😅 ${MAXGEN} 代都未達標，試下調高變異率或者重新嚟過！`;
+  }else{
+    breed();
+  }
+  running=false;
+  document.getElementById('runbtn').disabled=false;
+  document.getElementById('stepbtn').disabled=false;
+  drawScene();
+}
+async function runEvolution(){
+  if(running||won)return;
+  while(!won&&gen<MAXGEN){
+    await oneGeneration();
+    await sleep(700);
+  }
+}
+function startLab(){
+  document.getElementById('intro').classList.add('hidden');
+  init();drawScene();
+  document.getElementById('msg').textContent='撳「開始演化」或逐代睇，試下唔同變異率嘅效果！';
+}
+// live preview creatures
+init();
+(function idle(){
+  if(gen===0&&!running){
+    pop.forEach(c=>{c.ph+=0.05;c.x+=Math.sin(c.ph)*0.6;});
+    drawScene();
+  }
+  requestAnimationFrame(idle);
+})();
+</script>
+</body>
+</html>

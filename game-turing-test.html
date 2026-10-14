@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>圖靈測試 | AI小遊戲</title>
+<style>
+:root{--ink:#1f2937;--muted:#6b7280;--bg:#f5f3ff;--card:#fff;--purple:#7c3aed;--green:#16a34a;--red:#dc2626;--amber:#d97706}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--ink);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+header{background:linear-gradient(135deg,#4c1d95,#7c3aed);color:#fff;padding:16px;text-align:center}
+header h1{margin:0;font-size:20px}
+nav{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 12px;display:flex;gap:2px;overflow-x:auto}
+nav a{padding:12px 14px;text-decoration:none;color:var(--muted);font-weight:600;font-size:13px;white-space:nowrap}
+.wrap{max-width:560px;margin:0 auto;padding:16px}
+.hud{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.pill{background:var(--card);border-radius:20px;padding:8px 14px;font-size:14px;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+#chat{background:var(--card);border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.08);padding:14px;height:300px;overflow-y:auto;margin-bottom:10px}
+.msg{max-width:85%;padding:10px 14px;border-radius:16px;margin-bottom:8px;font-size:15px;line-height:1.6;word-break:break-word}
+.msg.them{background:#f3f4f6;border-bottom-left-radius:4px}
+.msg.me{background:#ede9fe;border-bottom-right-radius:4px;margin-left:auto}
+.msg.sys{background:#fef3c7;text-align:center;max-width:100%;font-size:13px;font-weight:600;color:#92400e}
+.msg.tell{background:#dcfce7;max-width:100%;font-size:13px;color:#166534}
+.typing{color:var(--muted);font-size:13px;font-style:italic}
+#qlist{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.qbtn{min-height:52px;padding:12px 16px;font-size:15px;font-weight:600;border:2px solid #e9d5ff;border-radius:12px;background:#fff;color:var(--ink);cursor:pointer;text-align:left}
+.qbtn:active{background:#f5f3ff}
+.qbtn:disabled{opacity:.4}
+#guessRow{display:none;gap:8px;margin-top:4px}
+#guessRow.show{display:flex}
+.gbtn{flex:1;min-height:60px;font-size:17px;font-weight:800;border:none;border-radius:12px;cursor:pointer}
+.g-ai{background:#e0e7ff;color:#3730a3}
+.g-human{background:#dcfce7;color:#166534}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.overlay.hidden{display:none}
+.sheet{background:#fff;border-radius:16px;padding:24px;max-width:440px;width:100%;max-height:88vh;overflow-y:auto}
+.sheet h2{margin:0 0 12px;font-size:20px}
+.sheet p,.sheet li{font-size:15px;line-height:1.7}
+.sheet ul{padding-left:20px}
+.concept{background:#f5f3ff;border-left:4px solid var(--purple);border-radius:8px;padding:12px 14px;margin:14px 0;font-size:14px}
+.startbtn{width:100%;min-height:56px;font-size:18px;font-weight:800;border:none;border-radius:12px;background:var(--purple);color:#fff;cursor:pointer;margin-top:8px}
+</style>
+</head>
+<body>
+<header><h1>🕵️ 圖靈測試</h1></header>
+<nav>
+<a href="index.html">🏠 首頁</a><a href="maths.html">📐 數學</a><a href="videos.html">🎬 影片</a><a href="games.html">🎮 遊戲</a><a href="stem.html">🔬 STEM</a><a href="ai.html">🤖 AI</a><a href="news.html">📰 資訊</a>
+</nav>
+<div class="wrap">
+  <div class="hud">
+    <div class="pill">第 <span id="round">1</span>/5 輪</div>
+    <div class="pill">⭐ <span id="score">0</span> 分</div>
+    <div class="pill">已問 <span id="asked">0</span>/3</div>
+  </div>
+  <div id="chat"></div>
+  <div id="qlist"></div>
+  <div id="guessRow">
+    <button class="gbtn g-ai" id="guessAI">🤖 係AI</button>
+    <button class="gbtn g-human" id="guessHuman">🧑 係人類</button>
+  </div>
+</div>
+<div class="overlay" id="intro">
+  <div class="sheet">
+    <h2>🕵️ 圖靈測試</h2>
+    <p><b>玩法：</b>每輪你會同一個<b>神秘對手</b>傾偈——佢可能係AI，可能係真人！</p>
+    <ul>
+      <li>💬 每輪揀 <b>3 條問題</b>問對手</li>
+      <li>🔍 睇完回答，估佢係 <b>🤖 AI</b> 定 <b>🧑 人類</b></li>
+      <li>估中 +20 分，估錯會話你知破綻喺邊</li>
+      <li>共 5 輪</li>
+    </ul>
+    <div class="concept">💡 <b>AI概念：圖靈測試</b><br>1950年，電腦之父<b>圖靈</b>提出：如果一個AI同人傾偈，令人分唔出佢係AI定人，咁佢就算通過測試。而家嘅AI已經好難分辨——留意AI成日好有禮貌、結構工整（「首先…其次…總而言之」），人類就鍾意用口語、emoji，仲會打錯字！</div>
+    <button class="startbtn" id="startBtn">開始測試</button>
+  </div>
+</div>
+<div class="overlay hidden" id="endOverlay">
+  <div class="sheet" style="text-align:center">
+    <h2>🎉 測試完成！</h2>
+    <p id="endText" style="font-size:16px"></p>
+    <button class="startbtn" id="againBtn">再挑戰</button>
+  </div>
+</div>
+<script>
+(function(){
+'use strict';
+var QA=[
+  {q:'你鍾意食咩？',
+   ai:'作為AI，我沒有味覺和飲食體驗。不過我可以根據營養學為你推薦美食。請問你偏好哪個菜系？',
+   human:'梗係車仔麵啦！深水埗嗰間，蘿蔔超入味，每次排隊都值得🤤',
+   tell:'破綻：AI答得太官方+即刻反問你；人類有具體回憶+emoji。'},
+  {q:'講個笑話嚟聽下',
+   ai:'好的。從前有兩位程式設計師見面，其中一位問：「你的程式有bug嗎？」另一位回答：「沒有，是特性。」這個笑話運用了雙關語。',
+   human:'有隻雞點解要過馬路？…因為佢想去對面囉😂唉我都知唔好笑',
+   tell:'破綻：AI會「解說」個笑話；人類自嘲+承認唔好笑。'},
+  {q:'1+1等於幾多？',
+   ai:'1+1=2。這是基於皮亞諾公理體系的基本算術事實，在十進制下成立。',
+   human:'2囉，呢啲駛問😅',
+   tell:'破綻：AI答得太學術太長；人類答得好求其。'},
+  {q:'你細個最難忘嘅事係咩？',
+   ai:'作為AI，我沒有童年經歷。但我可以分享人類常見的難忘童年回憶，例如第一次上學、家庭旅行等。',
+   human:'小學嗰陣唔小心成支墨水倒落書包，返到屋企畀阿媽鬧到飛起😭到而家都記得',
+   tell:'破綻：AI第一句就自爆冇童年；人類有具體尷尬回憶。'},
+  {q:'你覺得AI會取代人類嗎？',
+   ai:'這是一個涉及技術、倫理和社會層面的複雜問題。首先，AI在重複性工作上確實有優勢；其次，創意和情感工作仍需人類；總而言之，較可能的是協作而非取代。',
+   human:'取代唔到啦，AI連我阿媽啲廣東話都聽唔明🤣',
+   tell:'破綻：AI用「首先…其次…總而言之」三段式；人類一句搞掂。'},
+  {q:'背圓周率嚟聽下',
+   ai:'3.14159265358979323846264338327950288，我可以繼續背誦至任意位數。',
+   human:'3.14159…後面唔記得喇，讀書嗰陣淨係背到咁多😅',
+   tell:'破綻：AI背得超長；人類承認唔記得。'},
+  {q:'今晚食咩好？',
+   ai:'建議考慮營養均衡：一份蛋白質、一份碳水化合物和兩份蔬菜，並注意烹調方式以蒸煮為佳。',
+   human:'打邊爐啦！凍冰冰打邊爐最正🍲叫埋阿媽一齊',
+   tell:'破綻：AI變咗營養師；人類有場景+行動。'},
+  {q:'你有冇發過夢？',
+   ai:'AI不會做夢。夢是人類大腦在REM睡眠階段的神經活動現象。',
+   human:'有呀，成日發夢考試遲到，嚇醒先發現係夢，個心仲卜卜跳😵',
+   tell:'破綻：AI答得像教科書；人類描述身體感覺。'},
+  {q:'描述下你間房',
+   ai:'我沒有實體房間。作為AI，我運行在數據中心的伺服器上，沒有物理居住空間。',
+   human:'亂到呢…張床得一半位瞓，另一半畀衫堆滿咗，阿媽日日鬧🫠',
+   tell:'破綻：AI強調自己冇實體；人類有生活化細節。'},
+  {q:'你識唔識游水？',
+   ai:'我沒有身體，無法游泳。但我可以為你講解自由式、蛙式等泳式的標準動作要領。',
+   human:'識少少，僅限唔沉底嗰種🏊深水照樣驚',
+   tell:'破綻：AI答完即刻想教你嘢；人類誠實承認廢。'}
+];
+var rounds=0,score=0,asked=0,persona='ai',usedQ=[],currentQA=null;
+function $(id){return document.getElementById(id);}
+function shuffled(a){var r=a.slice();for(var i=r.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=r[i];r[i]=r[j];r[j]=t;}return r;}
+function addMsg(txt,cls){
+  var d=document.createElement('div');d.className='msg '+cls;d.textContent=txt;
+  $('chat').appendChild(d);$('chat').scrollTop=$('chat').scrollHeight;
+  return d;
+}
+function newRound(){
+  rounds++;asked=0;usedQ=[];
+  $('round').textContent=rounds;$('asked').textContent='0';
+  $('guessRow').classList.remove('show');
+  var bag=['ai','ai','human','human'];
+  persona=bag[Math.floor(Math.random()*bag.length)];
+  $('chat').innerHTML='';
+  addMsg('第 '+rounds+' 輪：神秘對手已上線。揀3條問題問佢！','sys');
+  renderQ();
+}
+function renderQ(){
+  var ql=$('qlist');ql.innerHTML='';
+  var pool=shuffled(QA).filter(function(q){return usedQ.indexOf(q.q)<0;}).slice(0,6);
+  pool.forEach(function(q){
+    var b=document.createElement('button');b.className='qbtn';b.textContent='💬 '+q.q;
+    b.addEventListener('click',function(){askQ(q,b);});
+    ql.appendChild(b);
+  });
+}
+function askQ(q,btn){
+  if(asked>=3)return;
+  btn.disabled=true;usedQ.push(q.q);asked++;
+  $('asked').textContent=asked;
+  addMsg(q.q,'me');
+  var tp=document.createElement('div');tp.className='msg them typing';tp.textContent='對方輸入緊…';
+  $('chat').appendChild(tp);$('chat').scrollTop=$('chat').scrollHeight;
+  currentQA=q;
+  setTimeout(function(){
+    tp.classList.remove('typing');
+    tp.textContent=(persona==='ai'?q.ai:q.human);
+    $('chat').scrollTop=$('chat').scrollHeight;
+    if(asked>=3){
+      addMsg('問完3條啦！估下對手係AI定人類？','sys');
+      $('guessRow').classList.add('show');
+    }
+  },900+Math.random()*900);
+}
+function guess(g){
+  $('guessRow').classList.remove('show');
+  var correct=(g===persona);
+  if(correct){score+=20;$('score').textContent=score;}
+  addMsg(correct?'✅ 估中！+20分':'❌ 估錯…','sys');
+  addMsg('🔍 真相：對手係 '+(persona==='ai'?'🤖 AI':'🧑 人類')+'。'+currentQA.tell,'tell');
+  setTimeout(function(){
+    if(rounds<5){newRound();}
+    else{
+      var rank=score>=80?'🏆 神探！你完全睇穿AI嘅真面目！':score>=60?'👍 好犀利！大部分都估中。':score>=40?'🙂 一半半，AI真係愈嚟愈似人。':'💪 唔緊要，而家嘅AI真係好難分辨，多玩幾次啦！';
+      $('endText').innerHTML='總分 <b>'+score+'</b> / 100<br>'+rank+'<br><br>記住圖靈測試嘅精神：重點唔係捉AI，而係理解AI點樣模仿人類。';
+      $('endOverlay').classList.remove('hidden');
+    }
+  },2600);
+}
+$('guessAI').addEventListener('click',function(){guess('ai');});
+$('guessHuman').addEventListener('click',function(){guess('human');});
+$('againBtn').addEventListener('click',function(){
+  rounds=0;score=0;$('score').textContent='0';
+  $('endOverlay').classList.add('hidden');newRound();
+});
+$('startBtn').addEventListener('click',function(){$('intro').classList.add('hidden');newRound();});
+})();
+</script>
+</body>
+</html>

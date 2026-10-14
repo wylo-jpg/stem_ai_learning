@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>AI 分群高手 | AI 小遊戲</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei","PingFang HK",sans-serif;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);color:#eee;min-height:100vh}
+.wrap{max-width:680px;margin:0 auto;padding:16px 14px 60px}
+.topnav{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.topnav a{color:#a5b4fc;text-decoration:none;font-size:14px;background:rgba(255,255,255,.08);padding:8px 14px;border-radius:20px}
+header{text-align:center;padding:10px 0 4px}
+header h1{margin:6px 0;font-size:26px}
+header p{margin:0;color:#a5b4fc;font-size:14px}
+.intro{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:14px 16px;margin:14px 0;font-size:14px;line-height:1.7}
+.intro b{color:#fbbf24}
+.hud{display:flex;gap:10px;margin:12px 0}
+.hud .box{flex:1;background:rgba(0,0,0,.35);border-radius:12px;padding:10px;text-align:center}
+.hud .v{font-size:22px;font-weight:800;color:#fbbf24}
+.hud .l{font-size:12px;color:#a5b4fc}
+.palette{display:flex;gap:10px;margin:12px 0}
+.cbtn{flex:1;border:3px solid transparent;border-radius:14px;padding:14px 8px;font-size:16px;font-weight:800;cursor:pointer;color:#fff;min-height:56px}
+.cbtn.sel{border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.25)}
+#c0{background:#ef4444}#c1{background:#3b82f6}#c2{background:#22c55e}
+#cvwrap{background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:10px;margin:12px 0}
+#cv{display:block;width:100%;border-radius:10px;touch-action:none}
+.tip{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.4);border-radius:12px;padding:12px 14px;font-size:14px;margin:10px 0;line-height:1.6;min-height:48px}
+.rowbtns{display:flex;gap:10px;margin:12px 0}
+.bigbtn{flex:1;border:none;border-radius:12px;padding:15px 8px;font-size:16px;font-weight:800;cursor:pointer;min-height:56px;color:#fff}
+#aiBtn{background:linear-gradient(135deg,#8b5cf6,#6366f1)}
+#resetBtn{background:rgba(255,255,255,.12)}
+#nextBtn{background:linear-gradient(135deg,#f59e0b,#ef4444);display:none}
+.result{display:none;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:16px;margin:12px 0;font-size:14px;line-height:1.8}
+.result .big{font-size:34px;font-weight:800;color:#fbbf24}
+.final{text-align:center;display:none;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:24px 18px;margin:12px 0}
+.final .big{font-size:56px}
+.final h2{color:#fbbf24;margin:8px 0}
+.final p{color:#cbd5e1;line-height:1.8;font-size:14px}
+footer{text-align:center;color:#7d8ea3;font-size:12px;margin-top:24px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="topnav"><a href="ai.html">← AI 專區</a><a href="games.html">← 遊戲區</a><a href="index.html">🏠 首頁</a></div>
+<header><h1>🎯 AI 分群高手</h1><p>憑直覺分群，再同 K-means 算法較量</p></header>
+<div class="intro">
+<b>🎮 玩法：</b>畫面有 <b>36 個點</b>。① 先撳下面揀一隻顏色，② 再逐粒撳啲點上色，將你覺得「一堆」嘅點染成同一色（分 3 群）。分完撳 <b>🤖 AI 分群</b>，睇下 K-means 同你有幾大分歧！<br>
+<b>💡 AI 概念：</b>分群（Clustering）係「非監督學習」——冇人話俾 AI 聽答案，佢自己憑「距離近就係一伙」嚟分。K-means 會不斷將每點撥去最近嘅中心，再更新中心，直到穩定為止。
+</div>
+<div class="hud">
+<div class="box"><div class="v" id="rnd">第 1/3 輪</div><div class="l">回合</div></div>
+<div class="box"><div class="v" id="done">0/36</div><div class="l">已上色</div></div>
+<div class="box"><div class="v" id="scr">0 分</div><div class="l">總分</div></div>
+</div>
+<div class="palette">
+<button class="cbtn sel" id="c0">🔴 紅群</button>
+<button class="cbtn" id="c1">🔵 藍群</button>
+<button class="cbtn" id="c2">🟢 綠群</button>
+</div>
+<div id="cvwrap"><canvas id="cv"></canvas></div>
+<div class="tip" id="tip">👆 揀顏色，再撳啲點上色。36 粒全部上晒色先可以叫 AI 出嚟較量！</div>
+<div class="rowbtns">
+<button class="bigbtn" id="aiBtn">🤖 AI 分群</button>
+<button class="bigbtn" id="resetBtn">↺ 重嚟</button>
+</div>
+<div class="result" id="res"></div>
+<div class="rowbtns"><button class="bigbtn" id="nextBtn">下一輪 →</button></div>
+<div class="final" id="finalCard">
+<div class="big" id="fE">🏆</div>
+<h2 id="fT"></h2>
+<p id="fD"></p>
+<button class="bigbtn" style="width:100%;background:linear-gradient(135deg,#8b5cf6,#6366f1)" onclick="location.reload()">↺ 再挑戰</button>
+</div>
+<footer>教學資源共享 · 邊玩邊學 AI</footer>
+</div>
+<script>
+var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+var COLORS=['#ef4444','#3b82f6','#22c55e'];
+var W=300,H=255,pts=[],cur=0,round=1,totalScore=0,aiDone=false;
+function sizeCanvas(){
+  var dpr=Math.min(window.devicePixelRatio||1,2);
+  W=cv.clientWidth;H=Math.round(W*0.85);
+  cv.width=W*dpr;cv.height=H*dpr;cv.style.height=H+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+function gauss(){var u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function newRound(){
+  sizeCanvas();
+  var cx=[0.25+Math.random()*0.1,0.68+Math.random()*0.1,0.45+Math.random()*0.1];
+  var cy=[0.30+Math.random()*0.1,0.28+Math.random()*0.12,0.68+Math.random()*0.08];
+  pts=[];
+  for(var k=0;k<3;k++)for(var i=0;i<12;i++){
+    pts.push({x:(cx[k]+gauss()*0.09)*W,y:(cy[k]+gauss()*0.085)*H,c:-1});
+  }
+  aiDone=false;
+  document.getElementById('rnd').textContent='第 '+round+'/3 輪';
+  document.getElementById('res').style.display='none';
+  document.getElementById('nextBtn').style.display='none';
+  document.getElementById('aiBtn').disabled=false;
+  tip('👆 揀顏色，再撳啲點上色。36 粒全部上晒色先可以叫 AI 出嚟較量！');
+  draw(null);updateDone();
+}
+function draw(aiCenters){
+  ctx.clearRect(0,0,W,H);
+  for(var i=0;i<pts.length;i++){var p=pts[i];
+    ctx.beginPath();ctx.arc(p.x,p.y,12,0,7);
+    ctx.fillStyle=p.c<0?'rgba(255,255,255,.25)':COLORS[p.c];
+    ctx.fill();
+    if(p.c>=0){ctx.lineWidth=2;ctx.strokeStyle='rgba(255,255,255,.7)';ctx.stroke();}
+  }
+  if(aiCenters)for(var j=0;j<aiCenters.length;j++){var c=aiCenters[j];
+    ctx.beginPath();ctx.arc(c.x,c.y,18,0,7);
+    ctx.lineWidth=4;ctx.strokeStyle=COLORS[j];ctx.stroke();
+    ctx.beginPath();ctx.arc(c.x,c.y,5,0,7);ctx.fillStyle=COLORS[j];ctx.fill();
+  }
+}
+function updateDone(){
+  var n=0;for(var i=0;i<pts.length;i++)if(pts[i].c>=0)n++;
+  document.getElementById('done').textContent=n+'/36';
+}
+function pickColor(i){
+  cur=i;
+  for(var j=0;j<3;j++)document.getElementById('c'+j).classList.toggle('sel',j===i);
+}
+document.getElementById('c0').onclick=function(){pickColor(0);};
+document.getElementById('c1').onclick=function(){pickColor(1);};
+document.getElementById('c2').onclick=function(){pickColor(2);};
+cv.addEventListener('pointerdown',function(e){
+  if(aiDone)return;
+  var r=cv.getBoundingClientRect();
+  var x=e.clientX-r.left,y=e.clientY-r.top;
+  var best=null,bd=1e9;
+  for(var i=0;i<pts.length;i++){var p=pts[i];var d=(p.x-x)*(p.x-x)+(p.y-y)*(p.y-y);if(d<bd){bd=d;best=p;}}
+  if(best&&bd<24*24){best.c=(best.c===cur?-1:cur);draw(null);updateDone();}
+});
+function kmeans(){
+  var K=3,centers=[],used={},guard=0;
+  while(centers.length<K&&guard<200){guard++;var i=Math.floor(Math.random()*pts.length);if(!used[i]){used[i]=1;centers.push({x:pts[i].x,y:pts[i].y});}}
+  var assign=[],it,i,j;
+  for(it=0;it<30;it++){
+    for(i=0;i<pts.length;i++){var bi=0,bd=1e18;
+      for(j=0;j<K;j++){var d=(pts[i].x-centers[j].x)*(pts[i].x-centers[j].x)+(pts[i].y-centers[j].y)*(pts[i].y-centers[j].y);if(d<bd){bd=d;bi=j;}}
+      assign[i]=bi;}
+    var nc=[],nn=[];
+    for(j=0;j<K;j++){nc.push({x:0,y:0});nn.push(0);}
+    for(i=0;i<pts.length;i++){nc[assign[i]].x+=pts[i].x;nc[assign[i]].y+=pts[i].y;nn[assign[i]]++;}
+    for(j=0;j<K;j++)if(nn[j])centers[j]={x:nc[j].x/nn[j],y:nc[j].y/nn[j]};
+  }
+  return {assign:assign,centers:centers};
+}
+function agreement(pa,aa){
+  var perms=[[0,1,2],[0,2,1],[1,0,2],[1,2,0],[2,0,1],[2,1,0]];
+  var best=0,pi,i;
+  for(pi=0;pi<perms.length;pi++){var s=0,pm=perms[pi];
+    for(i=0;i<pa.length;i++)if(pa[i]>=0&&pm[aa[i]]===pa[i])s++;
+    if(s>best)best=s;}
+  return best/pa.length;
+}
+function tip(m){document.getElementById('tip').innerHTML=m;}
+document.getElementById('aiBtn').onclick=function(){
+  var i,uncolored=false;
+  for(i=0;i<pts.length;i++)if(pts[i].c<0)uncolored=true;
+  if(uncolored){tip('⚠️ 仲有啲點未上色！36 粒全部上晒色先較量得。');return;}
+  aiDone=true;
+  var km=kmeans();
+  var pa=[];for(i=0;i<pts.length;i++)pa.push(pts[i].c);
+  var ag=agreement(pa,km.assign);
+  var sc=Math.round(ag*100);
+  totalScore+=sc;
+  document.getElementById('scr').textContent=totalScore+' 分';
+  draw(km.centers);
+  var em=sc>=90?'🏆':(sc>=70?'🎉':(sc>=50?'👍':'💪'));
+  var r=document.getElementById('res');
+  r.style.display='block';
+  r.innerHTML='<span class="big">'+em+' '+sc+'%</span><br>你同 K-means 嘅分群有 <b style="color:#fbbf24">'+sc+'%</b> 一致！'
+    +'<br>⭕ 圈圈係 AI 搵到嘅群中心。'
+    +(sc<70?'<br>💡 貼士：K-means 只睇「距離」——將每粒點撥去最近嘅中心。下次試下憑「邊啲點痴埋一堆」嚟分，會更接近 AI 嘅諗法！':'<br>💡 好勁！你嘅直覺同 K-means 算法諗法好接近，呢個就係非監督學習嘅威力。');
+  document.getElementById('aiBtn').disabled=true;
+  if(round<3){document.getElementById('nextBtn').style.display='block';}
+  else setTimeout(function(){
+    document.getElementById('finalCard').style.display='block';
+    var avg=Math.round(totalScore/3);
+    document.getElementById('fE').textContent=avg>=80?'🏆':'🎮';
+    document.getElementById('fT').textContent='三輪完成！平均 '+avg+'% 一致';
+    document.getElementById('fD').innerHTML='K-means 嘅智慧就係咁簡單：<b>近嘅就係一伙</b>。<br>現實中 AI 用同一招嚟做客戶分群、圖像分割、文件分類——全部都唔使人預先教答案！';
+    document.getElementById('finalCard').scrollIntoView();
+  },600);
+};
+document.getElementById('resetBtn').onclick=function(){newRound();};
+document.getElementById('nextBtn').onclick=function(){round++;newRound();};
+window.addEventListener('resize',function(){sizeCanvas();draw(null);});
+newRound();
+</script>
+</body>
+</html>

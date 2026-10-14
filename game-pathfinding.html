@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>AI尋路大師 | AI小遊戲</title>
+<style>
+:root{--ink:#1f2937;--muted:#6b7280;--bg:#f0fdfa;--card:#fff;--teal:#0d9488;--blue:#2563eb;--green:#16a34a;--amber:#d97706}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--ink);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+header{background:linear-gradient(135deg,#0f766e,#14b8a6);color:#fff;padding:16px;text-align:center}
+header h1{margin:0;font-size:20px}
+nav{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 12px;display:flex;gap:2px;overflow-x:auto}
+nav a{padding:12px 14px;text-decoration:none;color:var(--muted);font-weight:600;font-size:13px;white-space:nowrap}
+.wrap{max-width:560px;margin:0 auto;padding:16px}
+.hud{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.pill{background:var(--card);border-radius:20px;padding:8px 14px;font-size:14px;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:8px}
+.legend span{display:flex;align-items:center;gap:4px}
+.dot{width:14px;height:14px;border-radius:4px;display:inline-block}
+#grid{display:grid;gap:3px;width:100%;max-width:440px;margin:0 auto;background:#ccfbf1;padding:6px;border-radius:12px}
+.cell{aspect-ratio:1;border:none;border-radius:5px;background:#fff;cursor:pointer;min-height:30px;font-size:16px;padding:0}
+.cell.wall{background:#134e4a;cursor:not-allowed}
+.cell.start{background:var(--blue);color:#fff}
+.cell.goal{background:var(--amber);color:#fff}
+.cell.mypath{background:#bfdbfe}
+.cell.aiopen{background:#a5f3fc}
+.cell.aiclosed{background:#99f6e4}
+.cell.aipath{background:var(--green);color:#fff}
+.btnrow{display:flex;gap:8px;margin-top:12px}
+.bigbtn{flex:1;min-height:54px;font-size:16px;font-weight:800;border:none;border-radius:12px;cursor:pointer}
+.b-undo{background:#fef3c7;color:#92400e}
+.b-ai{background:var(--teal);color:#fff}
+.b-new{background:#e0e7ff;color:#3730a3}
+.stat{background:var(--card);border-radius:12px;padding:14px 18px;margin-top:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);font-size:15px;display:none}
+.stat.show{display:block}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.overlay.hidden{display:none}
+.sheet{background:#fff;border-radius:16px;padding:24px;max-width:440px;width:100%;max-height:88vh;overflow-y:auto}
+.sheet h2{margin:0 0 12px;font-size:20px}
+.sheet p,.sheet li{font-size:15px;line-height:1.7}
+.sheet ul{padding-left:20px}
+.concept{background:#f0fdfa;border-left:4px solid var(--teal);border-radius:8px;padding:12px 14px;margin:14px 0;font-size:14px}
+.startbtn{width:100%;min-height:56px;font-size:18px;font-weight:800;border:none;border-radius:12px;background:var(--teal);color:#fff;cursor:pointer;margin-top:8px}
+</style>
+</head>
+<body>
+<header><h1>🗺️ AI尋路大師</h1></header>
+<nav>
+<a href="index.html">🏠 首頁</a><a href="maths.html">📐 數學</a><a href="videos.html">🎬 影片</a><a href="games.html">🎮 遊戲</a><a href="stem.html">🔬 STEM</a><a href="ai.html">🤖 AI</a><a href="news.html">📰 資訊</a>
+</nav>
+<div class="wrap">
+  <div class="hud">
+    <div class="pill">迷宮 <span id="mz">1</span>/3</div>
+    <div class="pill">⭐ <span id="score">0</span></div>
+    <div class="pill" id="modePill">👆 輪到你行</div>
+  </div>
+  <div class="legend">
+    <span><i class="dot" style="background:#2563eb"></i>起點</span>
+    <span><i class="dot" style="background:#d97706"></i>終點</span>
+    <span><i class="dot" style="background:#134e4a"></i>牆</span>
+    <span><i class="dot" style="background:#a5f3fc"></i>AI考慮緊</span>
+    <span><i class="dot" style="background:#16a34a"></i>AI路線</span>
+  </div>
+  <div id="grid"></div>
+  <div class="btnrow">
+    <button class="bigbtn b-undo" id="undoBtn">↩️ 悔棋</button>
+    <button class="bigbtn b-ai" id="aiBtn">🤖 睇AI行</button>
+    <button class="bigbtn b-new" id="newBtn">🎲 新迷宮</button>
+  </div>
+  <div class="stat" id="stat"></div>
+</div>
+<div class="overlay" id="intro">
+  <div class="sheet">
+    <h2>🗺️ AI尋路大師</h2>
+    <p><b>玩法：</b></p>
+    <ul>
+      <li>👆 先<b>自己</b>由藍色起點撳到橙色終點（每次只可以行上、下、左、右一格，唔可以穿牆）</li>
+      <li>🤖 到咗之後撳「睇AI行」，睇 <b>A* 算法</b> 點樣搵最短路</li>
+      <li>淺藍 = AI考慮緊嘅格，綠色 = AI搵到嘅最短路</li>
+      <li>比較下：你行咗幾多步？AI探索咗幾多格？</li>
+      <li>共3個迷宮</li>
+    </ul>
+    <div class="concept">💡 <b>AI概念：A* 搜尋算法</b><br>AI搵路唔係亂撞。A*算法每步都計分數：<b>已行距離 + 估計剩餘距離</b>（直線距離）。佢永遠先試分數最低嘅格，所以好快就搵到最短路。Google地圖、高德導航背後都係用類似原理！</div>
+    <button class="startbtn" id="startBtn">開始尋路</button>
+  </div>
+</div>
+<div class="overlay hidden" id="endOverlay">
+  <div class="sheet" style="text-align:center">
+    <h2>🎉 完成！</h2>
+    <p id="endText" style="font-size:16px"></p>
+    <button class="startbtn" id="againBtn">再玩一次</button>
+  </div>
+</div>
+<script>
+(function(){
+'use strict';
+var COLS=10,ROWS=8;
+var mz=1,score=0,grid=[],path=[],aiDone=false,playerSteps=0,animating=false;
+function $(id){return document.getElementById(id);}
+function idx(x,y){return y*COLS+x;}
+function inB(x,y){return x>=0&&x<COLS&&y>=0&&y<ROWS;}
+function bfs(){
+  var seen={},q=[[0,0]],prev={};
+  seen[idx(0,0)]=1;
+  while(q.length){
+    var c=q.shift(),x=c[0],y=c[1];
+    if(x===COLS-1&&y===ROWS-1){
+      var p=[],k=idx(x,y);
+      while(k!==undefined){p.unshift(k);k=prev[k];}
+      return p;
+    }
+    [[1,0],[-1,0],[0,1],[0,-1]].forEach(function(d){
+      var nx=x+d[0],ny=y+d[1],k=idx(nx,ny);
+      if(inB(nx,ny)&&!seen[k]&&!grid[k]){seen[k]=1;prev[k]=idx(x,y);q.push([nx,ny]);}
+    });
+  }
+  return null;
+}
+function genMaze(){
+  do{
+    grid=new Array(COLS*ROWS).fill(false);
+    for(var i=0;i<COLS*ROWS;i++){
+      if(i===0||i===COLS*ROWS-1)continue;
+      if(Math.random()<0.24)grid[i]=true;
+    }
+  }while(!bfs());
+}
+function draw(){
+  var g=$('grid');g.innerHTML='';
+  g.style.gridTemplateColumns='repeat('+COLS+',1fr)';
+  for(var y=0;y<ROWS;y++)for(var x=0;x<COLS;x++){
+    (function(x,y){
+      var i=idx(x,y),c=document.createElement('button');
+      c.className='cell';c.dataset.i=i;
+      if(i===0){c.classList.add('start');c.textContent='S';}
+      else if(i===COLS*ROWS-1){c.classList.add('goal');c.textContent='G';}
+      else if(grid[i])c.classList.add('wall');
+      if(path.indexOf(i)>=0&&i!==0)c.classList.add('mypath');
+      c.addEventListener('click',function(){tap(i);});
+      g.appendChild(c);
+    })(x,y);
+  }
+}
+function head(){return path.length?path[path.length-1]:0;}
+function tap(i){
+  if(aiDone||animating||grid[i])return;
+  var h=head(),hx=h%COLS,hy=Math.floor(h/COLS),ix=i%COLS,iy=Math.floor(i/COLS);
+  if(Math.abs(hx-ix)+Math.abs(hy-iy)!==1)return;
+  if(path.indexOf(i)>=0)return;
+  path.push(i);playerSteps=path.length;
+  draw();
+  if(i===COLS*ROWS-1){
+    $('modePill').textContent='✅ 到咗！撳「睇AI行」';
+  }
+}
+$('undoBtn').addEventListener('click',function(){
+  if(aiDone||animating||!path.length)return;
+  path.pop();playerSteps=path.length;draw();
+});
+function heuristic(i){
+  var x=i%COLS,y=Math.floor(i/COLS);
+  return Math.abs(x-(COLS-1))+Math.abs(y-(ROWS-1));
+}
+function astar(){
+  var open=[[heuristic(0),0]],came={},gs={},closed={},order=[];
+  gs[0]=0;
+  function popBest(){
+    var bi=0;
+    for(var i=1;i<open.length;i++)if(open[i][0]<open[bi][0])bi=i;
+    return open.splice(bi,1)[0];
+  }
+  while(open.length){
+    var cur=popBest(),i=cur[1];
+    if(closed[i])continue;
+    closed[i]=1;order.push(i);
+    if(i===COLS*ROWS-1){
+      var p=[],k=i;
+      while(k!==undefined){p.unshift(k);k=came[k];}
+      return {order:order,path:p,explored:Object.keys(closed).length};
+    }
+    var x=i%COLS,y=Math.floor(i/COLS);
+    [[1,0],[-1,0],[0,1],[0,-1]].forEach(function(d){
+      var nx=x+d[0],ny=y+d[1];
+      if(!inB(nx,ny))return;
+      var k=idx(nx,ny);
+      if(grid[k]||closed[k])return;
+      var ng=gs[i]+1;
+      if(gs[k]===undefined||ng<gs[k]){gs[k]=ng;came[k]=i;open.push([ng+heuristic(k),k]);}
+    });
+  }
+  return null;
+}
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
+$('aiBtn').addEventListener('click',function(){
+  if(aiDone||animating)return;
+  if(head()!==COLS*ROWS-1){alert('你仲未行到終點！先自己試下啦。');return;}
+  animating=true;
+  var res=astar(),g=$('grid');
+  var seq=res.order.filter(function(i){return res.path.indexOf(i)<0;});
+  var chain=Promise.resolve();
+  seq.forEach(function(i){
+    chain=chain.then(function(){
+      var c=g.children[i];
+      if(c&&!c.classList.contains('start')&&!c.classList.contains('goal'))c.classList.add('aiopen');
+      return sleep(28);
+    });
+  });
+  chain.then(function(){
+    res.path.forEach(function(i){
+      var c=g.children[i];
+      if(c){c.classList.remove('aiopen','mypath');c.classList.add('aipath');}
+    });
+    var aiLen=res.path.length-1;
+    var pts=Math.max(50,400-Math.abs(playerSteps-aiLen)*10-res.explored);
+    score+=pts;$('score').textContent=score;
+    var st=$('stat');st.classList.add('show');
+    st.innerHTML='📊 <b>結果</b><br>你行咗 <b>'+playerSteps+'</b> 步到終點<br>AI 搵到最短路係 <b>'+aiLen+'</b> 步，探索咗 <b>'+res.explored+'</b> 格<br>本迷宮得分：<b>'+pts+'</b> 分'+(playerSteps===aiLen?'<br>🏆 你搵到最短路，同AI一樣咁勁！':'');
+    aiDone=true;animating=false;
+    $('modePill').textContent='🤖 AI行完';
+  });
+});
+$('newBtn').addEventListener('click',function(){
+  if(animating)return;
+  if(mz>=3){
+    var rank=score>=900?'🏆 尋路大師！你嘅直覺好過AI嘅計算！':score>=500?'👍 好勁！你已經識得好似AI咁思考。':'💪 繼續加油，試下行少啲冤枉路！';
+    $('endText').innerHTML='總分 <b>'+score+'</b> 分<br>'+rank;
+    $('endOverlay').classList.remove('hidden');
+    return;
+  }
+  mz++;$('mz').textContent=mz;
+  startMaze();
+});
+function startMaze(){
+  genMaze();path=[];aiDone=false;playerSteps=0;
+  $('stat').classList.remove('show');
+  $('modePill').textContent='👆 輪到你行';
+  draw();
+}
+$('againBtn').addEventListener('click',function(){
+  mz=1;score=0;$('score').textContent='0';$('mz').textContent='1';
+  $('endOverlay').classList.add('hidden');startMaze();
+});
+$('startBtn').addEventListener('click',function(){$('intro').classList.add('hidden');startMaze();});
+genMaze();
+})();
+</script>
+</body>
+</html>
