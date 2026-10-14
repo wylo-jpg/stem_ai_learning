@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>數學打鴨</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Courier New",monospace;background:#0a0a0a;color:#fff;min-height:100vh;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.crt{position:fixed;inset:0;pointer-events:none;z-index:99;background:repeating-linear-gradient(0deg,rgba(0,0,0,.12) 0 1px,transparent 1px 3px);opacity:.5}
+header{background:#1a1a2e;padding:12px;text-align:center;border-bottom:4px solid #f59e0b}
+header h1{margin:0;font-size:20px;letter-spacing:2px;color:#f59e0b;text-shadow:2px 2px 0 #92400e}
+.back{display:block;text-align:center;background:#222;color:#f59e0b;text-decoration:none;padding:12px;font-size:15px;font-weight:700}
+.wrap{max-width:520px;margin:0 auto;padding:12px}
+.hud{display:flex;justify-content:space-between;background:#1a1a2e;border:3px solid #f59e0b;padding:10px 12px;font-size:14px;font-weight:700;margin-bottom:10px;flex-wrap:wrap;gap:6px}
+.hud span{color:#ffd23f}
+#qbar{background:#92400e;border:3px solid #f59e0b;text-align:center;font-size:22px;font-weight:700;padding:10px;margin-bottom:10px;letter-spacing:1px}
+#cvwrap{border:4px solid #f59e0b;background:#000;cursor:crosshair}
+canvas{display:block;width:100%;height:auto;image-rendering:pixelated;cursor:crosshair}
+.msg{min-height:30px;text-align:center;font-size:16px;font-weight:700;margin-top:8px;color:#4ade80}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px;overflow-y:auto}
+.card{background:#1a1a2e;border:4px solid #f59e0b;padding:24px 20px;max-width:480px;width:100%;text-align:center}
+.card h2{margin:0 0 12px;font-size:22px;color:#f59e0b;text-shadow:2px 2px 0 #92400e}
+.card p{font-size:15px;line-height:1.8;text-align:left}
+.bigbtn{width:100%;min-height:60px;font-size:20px;font-weight:700;font-family:inherit;background:#f59e0b;color:#000;border:3px solid #fff;margin-top:14px;cursor:pointer}
+.bigbtn:active{transform:scale(.96)}
+</style>
+</head>
+<body>
+<div class="crt"></div>
+<header><h1>🔫 數學打鴨</h1></header>
+<a class="back" href="games.html">← 返回遊戲列表</a>
+<div class="wrap">
+<div class="hud"><div>⭐ <span id="score">0</span></div><div>🔫 <span id="bullets">20</span></div><div>⏱️ <span id="time">60</span>s</div></div>
+<div id="qbar">6 × 7 = ?</div>
+<div id="cvwrap"><canvas id="cv" width="480" height="520"></canvas></div>
+<div class="msg" id="msg">撳中寫住正確答案嘅鴨！</div>
+</div>
+<div class="overlay" id="intro"><div class="card">
+<h2>🔫 數學打鴨</h2>
+<p>🕹️ 玩法：上面有條乘數題（例：6×7=?），啲鴨飛過會孭住數字——<b>射中答案啱嗰隻</b>！<br>
+⚠️ 限時 60 秒、20 發子彈。射錯扣 50 分兼嘥一發子彈。子彈射晒或時間完就完場！<br>
+💡 數學概念：乘法表，練到滾瓜爛熟！</p>
+<button class="bigbtn" onclick="startGame()">▶ 開始遊戲</button>
+</div></div>
+<div class="overlay" id="over" style="display:none"><div class="card">
+<h2 id="overTitle">🏁 TIME UP</h2>
+<p id="overText" style="text-align:center;font-size:18px"></p>
+<button class="bigbtn" onclick="startGame()">🔁 再玩一次</button>
+</div></div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+var W=480,H=520;
+var ducks=[],score=0,bullets=20,timeLeft=60,running=false,q={ans:0};
+var shots=[];
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function newQuestion(){
+  var a=rnd(2,9),b=rnd(2,9);
+  q={txt:a+' × '+b+' = ?',ans:a*b};
+  document.getElementById('qbar').textContent=q.txt;
+}
+function spawnDuck(){
+  var dir=Math.random()<0.5?1:-1;
+  var opts=new Set([q.ans]);
+  while(opts.size<3){var d=q.ans+rnd(-12,12);if(d!==q.ans&&d>0)opts.add(d);}
+  var arr=Array.from(opts);
+  var v=arr[rnd(0,2)];
+  ducks.push({x:dir>0?-50:W+50,y:rnd(60,H-160),vx:dir*rnd(2,4),v:v,flap:Math.random()*6,hit:false});
+}
+function draw(){
+  ctx.fillStyle='#7dd3fc';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#fef9c3';ctx.fillRect(60,40,50,50); // sun
+  ctx.fillStyle='#fff';
+  for(var i=0;i<4;i++){var cx2=(i*160+t()*20)%(W+100)-50;ctx.fillRect(cx2,80+i*10,70,16);}
+  ctx.fillStyle='#166534';ctx.fillRect(0,H-70,W,70); // grass
+  ctx.fillStyle='#14532d';
+  for(var g=0;g<20;g++){ctx.fillRect((g*37)%W,H-70+rnd(0,50),4,14);}
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  for(var d of ducks){
+    var fl=Math.sin(d.flap)*6;
+    ctx.fillStyle='#f59e0b';
+    ctx.fillRect(d.x-22,d.y-12,44,24); // body
+    ctx.fillRect(d.x+16,d.y-20,14,12); // head
+    ctx.fillStyle='#000';ctx.fillRect(d.x+22,d.y-17,4,4); // eye
+    ctx.fillStyle='#e94560';
+    ctx.fillRect(d.x-30,d.y-10+fl,16,8); // wing
+    ctx.fillStyle='#fff';ctx.font='bold 16px "Courier New",monospace';
+    ctx.fillRect(d.x-18,d.y+16,36,24);
+    ctx.fillStyle='#000';ctx.fillText(d.v,d.x,d.y+29);
+  }
+  // shots flash
+  for(var s of shots){
+    ctx.strokeStyle='#fff';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(s.x-12,s.y);ctx.lineTo(s.x+12,s.y);
+    ctx.moveTo(s.x,s.y-12);ctx.lineTo(s.x,s.y+12);ctx.stroke();
+  }
+}
+function t(){return performance.now()/1000;}
+function endGame(reason){
+  running=false;
+  document.getElementById('overTitle').textContent=reason==='bullets'?'🔫 子彈用晒！':'⏱️ 時間到！';
+  var best=0;try{best=parseInt(localStorage.getItem('duckBest')||'0');}catch(e){}
+  var nb='';
+  if(score>best){try{localStorage.setItem('duckBest',score);}catch(e){}nb=' 🏅新紀錄！';}
+  document.getElementById('overText').innerHTML='總分：'+score+nb+'<br>最佳：'+Math.max(score,best);
+  document.getElementById('over').style.display='flex';
+}
+cv.addEventListener('pointerdown',function(e){
+  if(!running)return;
+  var r=cv.getBoundingClientRect();
+  var x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;
+  if(bullets<=0)return;
+  bullets--;document.getElementById('bullets').textContent=bullets;
+  shots.push({x:x,y:y,life:0.2});
+  var hitDuck=null;
+  for(var d of ducks){
+    if(x>d.x-30&&x<d.x+34&&y>d.y-26&&y<d.y+44){hitDuck=d;break;}
+  }
+  if(hitDuck){
+    if(hitDuck.v===q.ans){
+      score+=100;document.getElementById('score').textContent=score;
+      document.getElementById('msg').textContent='✅ 射中！+100';
+    }else{
+      score=Math.max(0,score-50);document.getElementById('score').textContent=score;
+      document.getElementById('msg').textContent='❌ 射錯！'+hitDuck.v+' 唔係答案，-50';
+    }
+    ducks.splice(ducks.indexOf(hitDuck),1);
+    spawnDuck();
+  }else{
+    document.getElementById('msg').textContent='💨 射唔中！';
+  }
+  if(bullets<=0)endGame('bullets');
+});
+var lastSpawn=0,lastTick=0;
+function loop(){
+  if(running){
+    var now=t();
+    if(now-lastSpawn>1.1&&ducks.length<6){spawnDuck();lastSpawn=now;}
+    for(var d of ducks){d.x+=d.vx;d.flap+=0.3;
+      if(d.x<-70||d.x>W+70){ducks.splice(ducks.indexOf(d),1);spawnDuck();break;}}
+    for(var i=shots.length-1;i>=0;i--){shots[i].life-=0.03;if(shots[i].life<=0)shots.splice(i,1);}
+    if(now-lastTick>=1){lastTick=now;timeLeft--;
+      document.getElementById('time').textContent=timeLeft;
+      if(timeLeft<=0){endGame('time');}}
+    draw();
+  }
+  requestAnimationFrame(loop);
+}
+window.startGame=function(){
+  document.getElementById('intro').style.display='none';
+  document.getElementById('over').style.display='none';
+  score=0;bullets=20;timeLeft=60;ducks=[];shots=[];running=true;
+  document.getElementById('score').textContent='0';
+  document.getElementById('bullets').textContent='20';
+  document.getElementById('time').textContent='60';
+  document.getElementById('msg').textContent='撳中寫住正確答案嘅鴨！';
+  newQuestion();lastSpawn=t();lastTick=t();
+};
+draw();loop();
+})();
+</script>
+</body>
+</html>

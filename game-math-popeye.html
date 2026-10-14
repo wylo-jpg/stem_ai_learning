@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>數學大力水手</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#001133;color:#fff;font-family:"Courier New","Microsoft JhengHei",monospace;min-height:100vh;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+header{background:#002266;border-bottom:4px solid #00ccff;padding:10px;text-align:center}
+header h1{margin:0;font-size:22px;color:#00ccff;text-shadow:2px 2px 0 #002244;letter-spacing:2px}
+.hud{display:flex;justify-content:space-around;background:#111;border-bottom:4px solid #333;padding:8px;font-size:14px;font-weight:bold}
+.hud span{color:#ffff00}
+.wrap{max-width:480px;margin:0 auto;padding:10px}
+#cvwrap{position:relative;border:4px solid #00ccff;background:#000}
+canvas{width:100%;display:block;image-rendering:pixelated;touch-action:none}
+#scan{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)}
+#msg{min-height:30px;text-align:center;font-size:15px;font-weight:bold;color:#ffff00;padding:4px}
+#dpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:280px;margin:10px auto}
+.dbtn{min-height:60px;font-size:28px;background:#002266;color:#00ccff;border:4px solid #00ccff;cursor:pointer;font-family:inherit;font-weight:bold}
+.dbtn:active{background:#00ccff;color:#000}
+.dbtn.up{grid-column:2}.dbtn.left{grid-column:1;grid-row:2}.dbtn.right{grid-column:3;grid-row:2}.dbtn.down{grid-column:2;grid-row:3}
+.tip{text-align:center;color:#888;font-size:13px;font-family:"Microsoft JhengHei",sans-serif}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;z-index:60;padding:20px}
+.card{background:#111;border:4px solid #00ccff;padding:24px;max-width:440px;width:100%;text-align:center}
+.card h2{color:#00ccff;margin:0 0 12px;font-size:24px;text-shadow:2px 2px 0 #002244}
+.card p{font-size:15px;line-height:1.8;font-family:"Microsoft JhengHei",sans-serif}
+.concept{background:#001a33;border:2px solid #00ccff;padding:10px;margin:12px 0;font-size:14px;text-align:left;font-family:"Microsoft JhengHei",sans-serif}
+.concept b{color:#ffff00}
+.bigbtn{width:100%;min-height:60px;font-size:20px;font-weight:bold;background:#00ccff;color:#000;border:4px solid #fff;cursor:pointer;font-family:inherit;margin-top:10px}
+.bigbtn:active{transform:scale(.97)}
+#qmodal .q{font-size:30px;font-weight:bold;color:#ffff00;margin:8px 0;letter-spacing:1px}
+.qbtn{display:block;width:100%;min-height:60px;font-size:24px;font-weight:bold;background:#002266;color:#fff;border:4px solid #00ccff;margin:8px 0;cursor:pointer;font-family:inherit}
+.qbtn:active{background:#00ccff;color:#000}
+</style>
+</head>
+<body>
+<header><h1>💪 數學大力水手</h1></header>
+<div class="hud">
+<div>分數 <span id="score">0</span></div>
+<div>💖 <span id="hearts">0/8</span></div>
+<div>❤️ <span id="lives">3</span></div>
+<div>LV <span id="level">1</span></div>
+</div>
+<div class="wrap">
+<div id="cvwrap"><canvas id="cv" width="240" height="270"></canvas><div id="scan"></div></div>
+<div id="msg">行去愛心答問題，避開布魯圖！</div>
+<div id="dpad">
+<button class="dbtn up" data-dx="0" data-dy="-1">▲</button>
+<button class="dbtn left" data-dx="-1" data-dy="0">◀</button>
+<button class="dbtn right" data-dx="1" data-dy="0">▶</button>
+<button class="dbtn down" data-dx="0" data-dy="1">▼</button>
+</div>
+<div class="tip">👆 撳方向掣移動 · 滑動畫面都得</div>
+</div>
+<div class="overlay" id="intro"><div class="card">
+<h2>💪 數學大力水手</h2>
+<p><b>玩法：</b>大力水手要收集 8 個愛心補充能量！用方向掣（或滑動）行去愛心，每個愛心有條算式，<b>答啱先拎到</b>。小心布魯圖，撞到佢扣一條命！你有 3 條命。</p>
+<div class="concept">💡 <b>數學概念 — 心算：</b>要快而準咁計加減乘除！例如見到 8 + 5，即刻諗：8 加 2 係 10，再加 3 係 13。分拆數字會快啲！</div>
+<button class="bigbtn" id="startBtn">▶ 開始遊戲</button>
+</div></div>
+<div class="overlay" id="qmodal" style="display:none"><div class="card">
+<h2>💖 愛心問題</h2>
+<div class="q" id="qq">?</div>
+<div id="qopts"></div>
+</div></div>
+<div class="overlay" id="over" style="display:none"><div class="card">
+<h2 id="overTitle">💀 GAME OVER</h2>
+<p id="finalScore" style="font-size:18px"></p>
+<button class="bigbtn" id="againBtn">🔁 再玩一次</button>
+</div></div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+var W=240,H=270,COLS=7,ROWS=8,CELL=30,OX=15,OY=15;
+var player={x:3,y:7},hearts=[],enemies=[];
+var score=0,lives=3,level=1,got=0,running=false,paused=false;
+var enemyT=0,lockT=0;
+var msgEl=document.getElementById('msg');
+var AC=null;
+function beep(f,d){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();var o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=f;g.gain.value=0.07;o.connect(g);g.connect(AC.destination);o.start();g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+d);o.stop(AC.currentTime+d);}catch(e){}}
+function flash(t,c){msgEl.textContent=t;msgEl.style.color=c||'#ffff00';}
+function hud(){document.getElementById('score').textContent=score;document.getElementById('hearts').textContent=got+'/8';document.getElementById('lives').textContent='❤️'.repeat(Math.max(0,lives))||'—';document.getElementById('level').textContent=level;}
+function rnd(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+function freeCell(){var x,y,t=0;do{x=rnd(0,COLS-1);y=rnd(0,ROWS-1);t++;}while(t<60&&(occupied(x,y)||(x===player.x&&y===player.y)));return {x:x,y:y};}
+function occupied(x,y){
+  for(var i=0;i<hearts.length;i++)if(hearts[i].x===x&&hearts[i].y===y)return true;
+  for(var j=0;j<enemies.length;j++)if(enemies[j].x===x&&enemies[j].y===y)return true;
+  return false;
+}
+function mkQ(){
+  var lv=level,op,a,b,ans,expr;
+  if(lv===1){op=Math.random()<0.5?'+':'-';}
+  else if(lv===2){op=['+','-','×'][rnd(0,2)];}
+  else{op=['+','-','×'][rnd(0,2)];}
+  if(op==='+'){a=rnd(4,39);b=rnd(4,39);ans=a+b;expr=a+' + '+b;}
+  else if(op==='-'){a=rnd(8,50);b=rnd(2,a-1);ans=a-b;expr=a+' − '+b;}
+  else{a=rnd(2,9);b=rnd(2,9);ans=a*b;expr=a+' × '+b;}
+  var set={},opts=[ans];
+  while(opts.length<3){var d=ans+rnd(-8,8);if(d!==ans&&d>=0&&!set[d]){set[d]=1;opts.push(d);}}
+  for(var i=opts.length-1;i>0;i--){var j=rnd(0,i),t=opts[i];opts[i]=opts[j];opts[j]=t;}
+  return {expr:expr,ans:ans,opts:opts};
+}
+function spawnHeart(){
+  var c=freeCell(),q=mkQ();
+  hearts.push({x:c.x,y:c.y,expr:q.expr,ans:q.ans,opts:q.opts});
+}
+function spawnEnemy(){
+  var c=freeCell();
+  enemies.push({x:c.x,y:c.y});
+}
+function setup(){
+  player={x:3,y:7};hearts=[];enemies=[];got=0;
+  for(var i=0;i<3;i++)spawnHeart();
+  var ne=level>=3?3:2;
+  for(var j=0;j<ne;j++)spawnEnemy();
+  hud();
+}
+function move(dx,dy){
+  if(!running||paused||lockT>0)return;
+  var nx=player.x+dx,ny=player.y+dy;
+  if(nx<0||nx>=COLS||ny<0||ny>=ROWS)return;
+  player.x=nx;player.y=ny;beep(440,0.05);
+  // heart?
+  for(var i=0;i<hearts.length;i++){
+    if(hearts[i].x===nx&&hearts[i].y===ny){askHeart(i);return;}
+  }
+  checkEnemy();
+}
+function checkEnemy(){
+  for(var i=0;i<enemies.length;i++){
+    if(enemies[i].x===player.x&&enemies[i].y===player.y){hitEnemy();return;}
+  }
+}
+function hitEnemy(){
+  lives--;beep(150,0.4);flash('💥 撞到布魯圖！-1❤️','#ff5555');
+  lockT=1.2;
+  player={x:3,y:7};enemies=[];
+  var ne=level>=3?3:2;for(var j=0;j<ne;j++)spawnEnemy();
+  hud();
+  if(lives<=0)gameOver();
+}
+function askHeart(i){
+  paused=true;
+  var h=hearts[i];
+  document.getElementById('qq').textContent=h.expr+' = ?';
+  var box=document.getElementById('qopts');box.innerHTML='';
+  h.opts.forEach(function(o){
+    var b=document.createElement('button');b.className='qbtn';b.textContent=o;
+    b.addEventListener('click',function(){
+      if(o===h.ans){
+        score+=100;got++;beep(1200,0.12);flash('✅ 答啱！+100','#00ff00');
+        hearts.splice(i,1);spawnHeart();
+        if(got>=8){levelUp();document.getElementById('qmodal').style.display='none';paused=false;return;}
+      }else{
+        score=Math.max(0,score-50);beep(200,0.2);flash('❌ 唔係 '+o+'！愛心飛走咗 -50','#ff5555');
+        hearts.splice(i,1);spawnHeart();
+      }
+      document.getElementById('qmodal').style.display='none';
+      paused=false;hud();
+    });
+    box.appendChild(b);
+  });
+  document.getElementById('qmodal').style.display='flex';
+}
+function levelUp(){
+  level++;beep(1500,0.25);flash('🎉 過關！LV'+level+' 布魯圖更快！','#ffff00');
+  setup();
+}
+function update(dt){
+  if(lockT>0)lockT-=dt;
+  enemyT-=dt;
+  if(enemyT<=0){
+    enemyT=Math.max(0.45,0.85-level*0.08);
+    for(var i=0;i<enemies.length;i++){
+      var e=enemies[i],dirs=[[1,0],[-1,0],[0,1],[0,-1]],d=dirs[rnd(0,3)];
+      var nx=e.x+d[0],ny=e.y+d[1];
+      if(nx>=0&&nx<COLS&&ny>=0&&ny<ROWS){e.x=nx;e.y=ny;}
+    }
+    checkEnemy();
+  }
+}
+function draw(){
+  ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+  // sea grid
+  for(var gy=0;gy<ROWS;gy++)for(var gx=0;gx<COLS;gx++){
+    ctx.fillStyle=(gx+gy)%2?'#001133':'#001a44';
+    ctx.fillRect(OX+gx*CELL,OY+gy*CELL,CELL,CELL);
+  }
+  ctx.strokeStyle='#00ccff';ctx.lineWidth=2;ctx.strokeRect(OX,OY,COLS*CELL,ROWS*CELL);
+  function cell(cx,cy){return [OX+cx*CELL,OY+cy*CELL];}
+  // hearts
+  for(var i=0;i<hearts.length;i++){
+    var h=hearts[i],p=cell(h.x,h.y),cxp=p[0]+CELL/2,cyp=p[1]+CELL/2;
+    ctx.fillStyle='#ff3366';
+    ctx.fillRect(cxp-8,cyp-6,7,7);ctx.fillRect(cxp+1,cyp-6,7,7);
+    ctx.fillRect(cxp-8,cyp-2,16,4);
+    ctx.fillRect(cxp-5,cyp+2,10,5);ctx.fillRect(cxp-2,cyp+7,4,3);
+    ctx.fillStyle='#fff';ctx.fillRect(cxp-5,cyp-4,3,3);
+  }
+  // enemies (Bluto)
+  for(var j=0;j<enemies.length;j++){
+    var e=enemies[j],q=cell(e.x,e.y),ex=q[0]+CELL/2,ey=q[1]+CELL/2;
+    ctx.fillStyle='#222';
+    ctx.fillRect(ex-9,ey-10,18,20);
+    ctx.fillStyle='#ffcc99';ctx.fillRect(ex-7,ey-16,14,8);
+    ctx.fillStyle='#000';ctx.fillRect(ex-5,ey-14,3,3);ctx.fillRect(ex+2,ey-14,3,3);
+    ctx.fillStyle='#ff0000';ctx.fillRect(ex-9,ey+8,18,4);
+  }
+  // player (Popeye)
+  var pp=cell(player.x,player.y),px=pp[0]+CELL/2,py=pp[1]+CELL/2;
+  if(!(lockT>0&&Math.floor(performance.now()/150)%2===0)){
+    ctx.fillStyle='#0033aa';ctx.fillRect(px-8,py-4,16,14);
+    ctx.fillStyle='#ffcc99';ctx.fillRect(px-6,py-14,12,10);
+    ctx.fillStyle='#000';ctx.fillRect(px-8,py-16,16,4);
+    ctx.fillStyle='#ffcc99';ctx.fillRect(px-10,py,6,6);ctx.fillRect(px+4,py,6,6);
+    ctx.fillStyle='#fff';ctx.fillRect(px-4,py-12,3,3);ctx.fillRect(px+1,py-12,3,3);
+  }
+}
+function loop(t){
+  if(!running)return;
+  var dt=Math.min(0.05,(t-lastT)/1000||0.016);lastT=t;
+  if(!paused)update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+// dpad
+Array.prototype.forEach.call(document.querySelectorAll('.dbtn'),function(b){
+  b.addEventListener('pointerdown',function(e){e.preventDefault();move(parseInt(b.dataset.dx),parseInt(b.dataset.dy));});
+});
+// swipe
+var sx0=0,sy0=0;
+cv.addEventListener('pointerdown',function(e){sx0=e.clientX;sy0=e.clientY;});
+cv.addEventListener('pointerup',function(e){
+  var dx=e.clientX-sx0,dy=e.clientY-sy0;
+  if(Math.hypot(dx,dy)<24)return;
+  if(Math.abs(dx)>Math.abs(dy))move(dx>0?1:-1,0);else move(0,dy>0?1:-1);
+});
+function resetGame(){
+  score=0;lives=3;level=1;lockT=0;paused=false;
+  document.getElementById('over').style.display='none';
+  document.getElementById('qmodal').style.display='none';
+  setup();flash('行去愛心答問題，避開布魯圖！');
+  running=true;lastT=performance.now();requestAnimationFrame(loop);
+}
+function gameOver(){
+  running=false;
+  var best=0;try{best=parseInt(localStorage.getItem('popeyeBest')||'0');}catch(e){}
+  var nb='';if(score>best){try{localStorage.setItem('popeyeBest',score);}catch(e){}nb=' 🏅新紀錄！';}
+  document.getElementById('overTitle').textContent='💀 GAME OVER';
+  document.getElementById('finalScore').innerHTML='總分：<b style="color:#ffff00">'+score+'</b>'+nb+'<br>歷史最佳：'+Math.max(best,score);
+  document.getElementById('over').style.display='flex';
+  beep(150,0.5);
+}
+document.getElementById('startBtn').addEventListener('click',function(){document.getElementById('intro').style.display='none';resetGame();});
+document.getElementById('againBtn').addEventListener('click',resetGame);
+draw();
+})();
+</script>
+</body>
+</html>

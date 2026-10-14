@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>數學打磚塊</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Courier New",monospace;background:#0a0a0a;color:#fff;min-height:100vh;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.crt{position:fixed;inset:0;pointer-events:none;z-index:99;background:repeating-linear-gradient(0deg,rgba(0,0,0,.12) 0 1px,transparent 1px 3px);opacity:.5}
+header{background:#1a1a2e;padding:12px;text-align:center;border-bottom:4px solid #e94560}
+header h1{margin:0;font-size:20px;letter-spacing:2px;color:#ffd23f;text-shadow:2px 2px 0 #e94560}
+.back{display:block;text-align:center;background:#222;color:#ffd23f;text-decoration:none;padding:12px;font-size:15px;font-weight:700}
+.wrap{max-width:520px;margin:0 auto;padding:12px}
+.hud{display:flex;justify-content:space-between;background:#1a1a2e;border:3px solid #e94560;padding:10px 12px;font-size:15px;font-weight:700;margin-bottom:10px}
+.hud span{color:#ffd23f}
+#cvwrap{position:relative;border:4px solid #e94560;background:#000}
+canvas{display:block;width:100%;height:auto;image-rendering:pixelated}
+.ctrl{display:flex;gap:10px;margin-top:12px}
+.ctrl button{flex:1;min-height:56px;font-size:22px;font-weight:700;font-family:inherit;background:#e94560;color:#fff;border:3px solid #fff;border-radius:0;cursor:pointer}
+.ctrl button:active{transform:scale(.95);background:#c62f4b}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px;overflow-y:auto}
+.card{background:#1a1a2e;border:4px solid #ffd23f;padding:24px 20px;max-width:480px;width:100%;text-align:center}
+.card h2{margin:0 0 12px;font-size:22px;color:#ffd23f;text-shadow:2px 2px 0 #e94560}
+.card p{font-size:15px;line-height:1.8;text-align:left}
+.card .q{font-size:30px;font-weight:700;color:#fff;margin:16px 0;letter-spacing:2px}
+.ansbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.ansbtns button{min-height:64px;font-size:22px;font-weight:700;font-family:inherit;background:#0f3460;color:#fff;border:3px solid #ffd23f;cursor:pointer}
+.ansbtns button:active{transform:scale(.95);background:#e94560}
+.bigbtn{width:100%;min-height:60px;font-size:20px;font-weight:700;font-family:inherit;background:#e94560;color:#fff;border:3px solid #fff;margin-top:14px;cursor:pointer}
+.bigbtn:active{transform:scale(.96)}
+.msg{min-height:30px;text-align:center;font-size:16px;font-weight:700;margin-top:8px;color:#4ade80}
+</style>
+</head>
+<body>
+<div class="crt"></div>
+<header><h1>🧱 數學打磚塊</h1></header>
+<a class="back" href="games.html">← 返回遊戲列表</a>
+<div class="wrap">
+<div class="hud"><div>⭐ <span id="score">0</span></div><div>❤️ <span id="lives">3</span></div><div>🧱 <span id="left">0</span></div></div>
+<div id="cvwrap"><canvas id="cv" width="480" height="600"></canvas></div>
+<div class="ctrl"><button id="btnL">◀</button><button id="btnR">▶</button></div>
+<div class="msg" id="msg"></div>
+</div>
+<div class="overlay" id="intro"><div class="card">
+<h2>🧱 數學打磚塊</h2>
+<p>🕹️ 玩法：用波打磚！每塊磚都有條算式，波掂到磚會停低問你條數——答啱先消到磚，答錯磚唔郁！<br>
+⬅️➡️ 用掣或拖手指移擋板，唔好畀波跌落去（3 條命）。<br>
+💡 數學概念：四則運算（加減乘除），打機順便練心算！</p>
+<button class="bigbtn" onclick="startGame()">▶ 開始遊戲</button>
+</div></div>
+<div class="overlay" id="quiz" style="display:none"><div class="card">
+<h2>🧮 答題消磚！</h2>
+<div class="q" id="qText">7 + 5 = ?</div>
+<div class="ansbtns" id="ansBtns"></div>
+</div></div>
+<div class="overlay" id="over" style="display:none"><div class="card">
+<h2 id="overTitle">🏁 GAME OVER</h2>
+<p id="overText" style="text-align:center;font-size:18px"></p>
+<button class="bigbtn" onclick="startGame()">🔁 再玩一次</button>
+</div></div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+var W=480,H=600;
+var paddle={x:W/2-50,w:100,h:14,y:H-40};
+var ball={x:W/2,y:H-80,vx:3.2,vy:-3.6,r:8};
+var bricks=[],score=0,lives=3,running=false,paused=false,level=1;
+var curBrick=null,dir=0;
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function mkExpr(){
+  var op=rnd(0,3),a,b,ans,txt;
+  if(op===0){a=rnd(2,19);b=rnd(2,19);ans=a+b;txt=a+"+"+b;}
+  else if(op===1){a=rnd(5,25);b=rnd(2,a-1);ans=a-b;txt=a+"-"+b;}
+  else if(op===2){a=rnd(2,9);b=rnd(2,9);ans=a*b;txt=a+"×"+b;}
+  else{b=rnd(2,9);ans=rnd(2,9);a=b*ans;txt=a+"÷"+b;}
+  return {txt:txt,ans:ans};
+}
+function buildLevel(){
+  bricks=[];
+  var cols=5,rows=3+Math.min(level,3),bw=(W-40)/cols,bh=44;
+  for(var r=0;r<rows;r++)for(var c=0;c<cols;c++){
+    var e=mkExpr();
+    bricks.push({x:20+c*bw,y:70+r*(bh+8),w:bw-8,h:bh,expr:e.txt,ans:e.ans,alive:true,
+      color:['#e94560','#0f3460','#f5a623','#2ec4b6','#9b5de5'][r%5]});
+  }
+  ball.x=W/2;ball.y=H-80;ball.vx=3.2+level*0.3;ball.vy=-(3.6+level*0.3);
+  paddle.x=W/2-50;
+  document.getElementById('left').textContent=bricks.length;
+}
+function draw(){
+  ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+  // pixel stars
+  ctx.fillStyle='#333';
+  for(var i=0;i<30;i++){var sx=(i*97)%W,sy=(i*53)%(H-100);ctx.fillRect(sx,sy,3,3);}
+  // bricks
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  for(var b of bricks){
+    if(!b.alive)continue;
+    ctx.fillStyle=b.color;ctx.fillRect(b.x,b.y,b.w,b.h);
+    ctx.fillStyle='rgba(255,255,255,.25)';ctx.fillRect(b.x,b.y,b.w,8);
+    ctx.fillStyle='#fff';ctx.font='bold 15px "Courier New",monospace';
+    ctx.fillText(b.expr,b.x+b.w/2,b.y+b.h/2+1);
+  }
+  // paddle
+  ctx.fillStyle='#ffd23f';ctx.fillRect(paddle.x,paddle.y,paddle.w,paddle.h);
+  ctx.fillStyle='#e94560';ctx.fillRect(paddle.x,paddle.y,paddle.w,4);
+  // ball
+  ctx.fillStyle='#fff';ctx.fillRect(ball.x-ball.r,ball.y-ball.r,ball.r*2,ball.r*2);
+  ctx.fillStyle='#e94560';ctx.fillRect(ball.x-3,ball.y-3,6,6);
+}
+function askBrick(b){
+  paused=true;curBrick=b;
+  document.getElementById('qText').textContent=b.expr+" = ?";
+  var box=document.getElementById('ansBtns');box.innerHTML='';
+  var opts=new Set([b.ans]);
+  while(opts.size<4){var d=b.ans+rnd(-8,8);if(d!==b.ans&&d>0)opts.add(d);}
+  var arr=Array.from(opts).sort(()=>Math.random()-0.5);
+  arr.forEach(function(v){
+    var btn=document.createElement('button');
+    btn.textContent=v;
+    btn.onclick=function(){answer(v);};
+    box.appendChild(btn);
+  });
+  document.getElementById('quiz').style.display='flex';
+}
+function answer(v){
+  document.getElementById('quiz').style.display='none';
+  if(v===curBrick.ans){
+    curBrick.alive=false;
+    score+=50;
+    document.getElementById('score').textContent=score;
+    var left=bricks.filter(b=>b.alive).length;
+    document.getElementById('left').textContent=left;
+    document.getElementById('msg').textContent='✅ 消磚！+50';
+    if(left===0){level++;document.getElementById('msg').textContent='🎉 過關！下一關…';buildLevel();}
+  }else{
+    // 答錯：將波彈離磚塊，避免即刻再觸發問答
+    ball.y=curBrick.y-ball.r-3;ball.vy=-Math.abs(ball.vy);
+    document.getElementById('msg').textContent='❌ 答錯，磚仲喺度！';
+  }
+  curBrick=null;paused=false;
+}
+function gameOver(win){
+  running=false;
+  document.getElementById('overTitle').textContent=win?'🏆 全部過關！':'💀 GAME OVER';
+  var best=0;try{best=parseInt(localStorage.getItem('breakoutBest')||'0');}catch(e){}
+  var nb='';
+  if(score>best){try{localStorage.setItem('breakoutBest',score);}catch(e){}nb=' 🏅新紀錄！';}
+  document.getElementById('overText').innerHTML='總分：'+score+nb+'<br>最佳：'+Math.max(score,best);
+  document.getElementById('over').style.display='flex';
+}
+function update(){
+  if(!running||paused)return;
+  paddle.x+=dir*7;
+  if(paddle.x<0)paddle.x=0;if(paddle.x>W-paddle.w)paddle.x=W-paddle.w;
+  ball.x+=ball.vx;ball.y+=ball.vy;
+  if(ball.x<ball.r||ball.x>W-ball.r)ball.vx*=-1;
+  if(ball.y<ball.r)ball.vy*=-1;
+  // paddle
+  if(ball.y+ball.r>=paddle.y&&ball.y+ball.r<=paddle.y+paddle.h+10&&ball.vy>0&&
+     ball.x>paddle.x-5&&ball.x<paddle.x+paddle.w+5){
+    ball.vy*=-1;
+    var rel=(ball.x-(paddle.x+paddle.w/2))/(paddle.w/2);
+    ball.vx=rel*4.5;
+    ball.y=paddle.y-ball.r-1;
+  }
+  // bricks
+  for(var b of bricks){
+    if(!b.alive)continue;
+    if(ball.x+ball.r>b.x&&ball.x-ball.r<b.x+b.w&&ball.y+ball.r>b.y&&ball.y-ball.r<b.y+b.h){
+      ball.vy*=-1;
+      askBrick(b);
+      break;
+    }
+  }
+  // fall
+  if(ball.y>H+20){
+    lives--;
+    document.getElementById('lives').textContent=lives;
+    if(lives<=0){gameOver(false);return;}
+    ball.x=W/2;ball.y=H-80;ball.vy=-Math.abs(ball.vy);
+    document.getElementById('msg').textContent='💔 跌咗波！仲有 '+lives+' 條命';
+  }
+  if(level>5){gameOver(true);}
+}
+function loop(){update();draw();requestAnimationFrame(loop);}
+// controls
+function setDir(d){dir=d;}
+document.getElementById('btnL').addEventListener('pointerdown',()=>setDir(-1));
+document.getElementById('btnL').addEventListener('pointerup',()=>setDir(0));
+document.getElementById('btnL').addEventListener('pointerleave',()=>setDir(0));
+document.getElementById('btnR').addEventListener('pointerdown',()=>setDir(1));
+document.getElementById('btnR').addEventListener('pointerup',()=>setDir(0));
+document.getElementById('btnR').addEventListener('pointerleave',()=>setDir(0));
+// drag paddle
+var dragging=false;
+cv.addEventListener('pointerdown',function(e){dragging=true;moveP(e);});
+window.addEventListener('pointermove',function(e){if(dragging)moveP(e);});
+window.addEventListener('pointerup',function(){dragging=false;});
+function moveP(e){
+  var r=cv.getBoundingClientRect();
+  var x=(e.clientX-r.left)/r.width*W;
+  paddle.x=x-paddle.w/2;
+  if(paddle.x<0)paddle.x=0;if(paddle.x>W-paddle.w)paddle.x=W-paddle.w;
+}
+window.startGame=function(){
+  document.getElementById('intro').style.display='none';
+  document.getElementById('over').style.display='none';
+  document.getElementById('quiz').style.display='none';
+  score=0;lives=3;level=1;paused=false;
+  document.getElementById('score').textContent='0';
+  document.getElementById('lives').textContent='3';
+  document.getElementById('msg').textContent='';
+  buildLevel();running=true;
+};
+loop();
+})();
+</script>
+</body>
+</html>

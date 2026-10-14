@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>數學掘金者</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Courier New",Courier,"Microsoft JhengHei",monospace;background:#1a0f05;color:#ffe9c9;min-height:100vh;touch-action:manipulation}
+.scan{position:fixed;inset:0;pointer-events:none;z-index:60;background:repeating-linear-gradient(0deg,rgba(0,0,0,.10) 0 2px,transparent 2px 4px)}
+header{background:#3a2410;border-bottom:4px solid #fbbf24;padding:12px;text-align:center}
+header h1{margin:0;font-size:22px;letter-spacing:2px;color:#ffe14d;text-shadow:2px 2px 0 #7c2d12}
+.hud{display:flex;justify-content:space-around;background:#3a2410;padding:10px;font-size:15px;font-weight:700;border-bottom:4px solid #fbbf24}
+.hud b{color:#ffe14d}
+.back{display:block;text-align:center;background:#2a1a0c;color:#d9a05b;text-decoration:none;padding:12px;font-size:15px;font-weight:700}
+.wrap{max-width:460px;margin:0 auto;padding:12px 12px 40px}
+#cv{width:100%;height:auto;display:block;background:#1a0f05;border:4px solid #fbbf24;image-rendering:pixelated;touch-action:none}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px auto;max-width:340px}
+.pbtn{min-height:60px;font-size:24px;font-weight:800;font-family:inherit;background:#3a2410;color:#fff;border:4px solid #fbbf24;border-radius:0;cursor:pointer}
+.pbtn:active{background:#fbbf24;transform:scale(.96)}
+#msg{min-height:30px;text-align:center;font-size:15px;font-weight:700;margin-top:8px;color:#7CFC98}
+.tip{text-align:center;font-size:13px;color:#d9a05b;margin-top:4px}
+.overlay{position:fixed;inset:0;background:rgba(20,12,4,.96);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.card{background:#3a2410;border:4px solid #fbbf24;padding:26px 22px;max-width:480px;width:100%;max-height:92vh;overflow-y:auto}
+.card h2{margin:0 0 10px;color:#ffe14d;font-size:22px;letter-spacing:2px}
+.card p,.card li{font-size:15px;line-height:1.7}
+.card ul{padding-left:20px}
+.concept{background:#1a0f05;border:2px solid #fbbf24;padding:12px;margin:12px 0;font-size:14px}
+.concept b{color:#7CFC98}
+.card button{width:100%;min-height:58px;font-size:18px;font-weight:800;font-family:inherit;background:#e33;color:#fff;border:4px solid #fff;margin-top:10px;cursor:pointer;letter-spacing:2px}
+.qopts{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px}
+.qopts button{min-height:56px;font-size:20px;font-weight:800;font-family:inherit;background:#2a1a0c;color:#fff;border:4px solid #fbbf24;cursor:pointer}
+.blink{animation:bl 1s steps(2) infinite}
+@keyframes bl{50%{opacity:.2}}
+</style>
+</head>
+<body>
+<div class="scan"></div>
+<header><h1>🏃 數學掘金者</h1></header>
+<a class="back" href="games.html">← 返回遊戲列表</a>
+<div class="wrap">
+<div class="hud"><div>❤ <b id="lives">3</b></div><div>🪙 <b id="coins">0</b>/5</div><div>⭐ <b id="score">0</b></div></div>
+<canvas id="cv" width="400" height="320"></canvas>
+<div class="pad">
+<div></div><button class="pbtn" id="up">▲</button><div></div>
+<button class="pbtn" id="lf">◀</button><button class="pbtn" id="dn">▼</button><button class="pbtn" id="rt">▶</button>
+</div>
+<div class="tip">撳隔籬嘅泥土可以掘窿 · 行到金幣度答題拎金</div>
+<div id="msg"></div>
+</div>
+<div class="overlay" id="intro"><div class="card">
+<h2>🏃 數學掘金者</h2>
+<p><b>玩法：</b>用方向掣行，撳隔籬嘅泥土掘窿開路。行到金幣上面會彈出算式，答啱先拎到金幣！避開紅色守衛，拎齊 5 個金幣後去綠色出口。</p>
+<div class="concept">💡 <b>數學概念：</b>整數運算。掘金前先心算，唔好畀守衛捉到！</div>
+<button onclick="startGame()">▶ START</button>
+<p class="blink" style="text-align:center;color:#d9a05b">★ 8-BIT 挑戰 ★</p>
+</div></div>
+<div class="overlay" id="qmod" style="display:none"><div class="card">
+<h2>🪙 金幣算式</h2>
+<p id="qq" style="font-size:24px;font-weight:800;color:#ffe14d;text-align:center"></p>
+<div class="qopts" id="qo"></div>
+</div></div>
+<div class="overlay" id="over" style="display:none"><div class="card">
+<h2 id="overT">🏁 完成！</h2>
+<p id="overS" style="font-size:17px"></p>
+<button onclick="resetGame()">🔁 再玩一次</button>
+</div></div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+var AC=null;
+function beep(f,d){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();var o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=f;g.gain.value=0.07;g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d);}catch(e){}}
+var CS=40,COLS=10,ROWS=8;
+var MAP=[
+"....E.....",
+"GGGGGGGGGG",
+"G..G..G..G",
+"G.CG.CG.CG",
+"GGGGGGGGGG",
+"G..G..G..G",
+"G.CG.CGP.G",
+"GGGGGGGGGG"];
+var grid,px,py,lives,score,coinsGot,moveCD,over,paused,exitOpen,enemies;
+function ri(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+function build(){
+  grid=[];enemies=[];
+  for(var r=0;r<ROWS;r++){grid.push([]);
+    for(var c=0;c<COLS;c++){
+      var ch=MAP[r][c];
+      grid[r].push({t:ch==='G'?'g':(ch==='.'||ch==='E'||ch==='P')?'e':(ch==='C'?'c':'e')});
+      if(ch==='P'){px=c;py=r;}
+      if(ch==='C'){/* coin */}
+    }
+  }
+  grid[0][4].exit=true;
+  lives=3;score=0;coinsGot=0;moveCD=0;over=false;paused=false;exitOpen=false;
+  enemies=[{r:2,c:1},{r:2,c:8},{r:5,c:8}];
+  document.getElementById('lives').textContent='3';
+  document.getElementById('score').textContent='0';
+  document.getElementById('coins').textContent='0';
+  document.getElementById('msg').textContent='';
+}
+function mkQ(){
+  var a=ri(3,20),b=ri(3,20),op=Math.random()<0.5?'+':'−';
+  return {t:a+' '+op+' '+b,ans:op==='+'?a+b:a-b};
+}
+function draw(){
+  ctx.clearRect(0,0,COLS*CS,ROWS*CS);
+  for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){
+    var x=c*CS,y=r*CS,t=grid[r][c].t;
+    if(t==='g'){ctx.fillStyle='#7c4a1e';ctx.fillRect(x,y,CS,CS);
+      ctx.fillStyle='#5d3712';ctx.fillRect(x+6,y+8,5,5);ctx.fillRect(x+24,y+20,5,5);ctx.fillRect(x+12,y+28,5,5);
+      ctx.fillStyle='#a06a2e';ctx.fillRect(x,y,CS,3);}
+    else{ctx.fillStyle='#1a0f05';ctx.fillRect(x,y,CS,CS);}
+    if(t==='c'){ctx.fillStyle='#fbbf24';ctx.fillRect(x+12,y+10,16,20);
+      ctx.fillStyle='#fde68a';ctx.fillRect(x+14,y+12,5,8);
+      ctx.fillStyle='#92400e';ctx.font='bold 13px monospace';ctx.textAlign='center';ctx.fillText('$',x+CS/2,y+26);}
+    if(grid[r][c].exit){ctx.fillStyle=exitOpen?'#16a34a':'#14532d';ctx.fillRect(x+6,y+6,CS-12,CS-12);
+      ctx.fillStyle='#fff';ctx.font='bold 16px monospace';ctx.textAlign='center';ctx.fillText(exitOpen?'🚪':'🔒',x+CS/2,y+27);}
+  }
+  enemies.forEach(function(e){
+    var x=e.c*CS,y=e.r*CS;
+    ctx.fillStyle='#dc2626';ctx.fillRect(x+8,y+8,CS-16,CS-16);
+    ctx.fillStyle='#fff';ctx.fillRect(x+13,y+14,6,8);ctx.fillRect(x+CS-19,y+14,6,8);
+    ctx.fillStyle='#000';ctx.fillRect(x+15,y+17,3,4);ctx.fillRect(x+CS-17,y+17,3,4);
+  });
+  var x=px*CS,y=py*CS;
+  ctx.fillStyle='#3b82f6';ctx.fillRect(x+8,y+8,CS-16,CS-16);
+  ctx.fillStyle='#fc9';ctx.fillRect(x+12,y+4,16,10);
+  ctx.fillStyle='#000';ctx.fillRect(x+15,y+6,4,4);ctx.fillRect(x+CS-19,y+6,4,4);
+}
+function canGo(r,c){return r>=0&&c>=0&&r<ROWS&&c<COLS&&grid[r][c].t!=='g';}
+function move(dr,dc){
+  if(paused||over||moveCD>performance.now())return;
+  moveCD=performance.now()+180;
+  var nr=py+dr,nc=px+dc;
+  if(canGo(nr,nc)){py=nr;px=nc;beep(440,0.05);afterMove();}
+  draw();
+}
+function afterMove(){
+  if(grid[py][px].t==='c'){askCoin();}
+  if(grid[py][px].exit){if(exitOpen)win();else document.getElementById('msg').textContent='🔒 出口未開！拎齊 5 個金幣先！';}
+  enemies.forEach(function(e){if(e.r===py&&e.c===px)hit();});
+}
+function askCoin(){
+  paused=true;
+  var q=mkQ();
+  document.getElementById('qq').textContent=q.t+' = ?';
+  var opts=[q.ans],g=0;
+  while(opts.length<3&&g++<40){var v=q.ans+ri(-6,6);if(v!==q.ans&&opts.indexOf(v)<0)opts.push(v);}
+  opts.sort(function(){return Math.random()-0.5;});
+  var qo=document.getElementById('qo');qo.innerHTML='';
+  opts.forEach(function(v){
+    var btn=document.createElement('button');btn.textContent=v;
+    btn.addEventListener('click',function(){
+      if(v===q.ans){beep(880,0.1);score+=100;coinsGot++;grid[py][px].t='e';
+        document.getElementById('score').textContent=score;
+        document.getElementById('coins').textContent=coinsGot;
+        document.getElementById('msg').textContent='🪙 金幣到手！+100';
+        if(coinsGot>=5){exitOpen=true;document.getElementById('msg').textContent='🟢 出口開咗！快啲去綠色門！';}
+      }else{beep(160,0.2);score=Math.max(0,score-20);
+        document.getElementById('score').textContent=score;
+        document.getElementById('msg').textContent='❌ 答錯！正確：'+q.ans+'（扣20分）';}
+      document.getElementById('qmod').style.display='none';
+      paused=false;draw();
+    });
+    qo.appendChild(btn);
+  });
+  document.getElementById('qmod').style.display='flex';
+}
+cv.addEventListener('pointerdown',function(e){
+  if(paused||over)return;
+  var r=cv.getBoundingClientRect();
+  var c=Math.floor((e.clientX-r.left)/(r.width/COLS)),rr=Math.floor((e.clientY-r.top)/(r.height/ROWS));
+  if(Math.abs(c-px)+Math.abs(rr-py)===1&&grid[rr][c].t==='g'){
+    grid[rr][c].t='e';beep(220,0.08);
+    document.getElementById('msg').textContent='⛏️ 掘開咗！';
+    draw();
+  }
+});
+function hit(){
+  beep(160,0.25);lives--;
+  document.getElementById('lives').textContent=lives;
+  document.getElementById('msg').textContent='💥 俾守衛捉到！';
+  build_keep();
+  if(lives<=0)lose();
+}
+function build_keep(){
+  for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){
+    var ch=MAP[r][c];
+    if(ch==='P'){px=c;py=r;}
+  }
+  enemies=[{r:2,c:1},{r:2,c:8},{r:5,c:8}];
+  draw();
+}
+setInterval(function(){
+  if(paused||over||document.getElementById('intro').style.display!=='none')return;
+  enemies.forEach(function(e){
+    var dirs=[[1,0],[-1,0],[0,1],[0,-1]].filter(function(d){
+      var r=e.r+d[0],c=e.c+d[1];return canGo(r,c);
+    });
+    if(dirs.length){var d=dirs[ri(0,dirs.length-1)];e.r+=d[0];e.c+=d[1];}
+    if(e.r===py&&e.c===px)hit();
+  });
+  draw();
+},850);
+function win(){
+  over=true;
+  var total=score+lives*150+300;
+  var best=0;try{best=parseInt(localStorage.getItem('lodeBest')||'0');}catch(e){}
+  var nb='';if(total>best){try{localStorage.setItem('lodeBest',total);}catch(e){}nb=' 🏅 新紀錄！';}
+  document.getElementById('overT').textContent='🏆 掘金成功！';
+  document.getElementById('overS').innerHTML='總分：<b style="color:#ffe14d">'+total+'</b>'+nb;
+  document.getElementById('over').style.display='flex';
+  beep(660,0.1);setTimeout(function(){beep(880,0.15);},130);
+}
+function lose(){
+  over=true;
+  document.getElementById('overT').textContent='💥 掘金者陣亡…';
+  document.getElementById('overS').innerHTML='拎到 '+coinsGot+' 個金幣，得分 '+score+'。再接再厲！';
+  document.getElementById('over').style.display='flex';
+}
+function resetGame(){
+  document.getElementById('over').style.display='none';
+  document.getElementById('qmod').style.display='none';
+  build();draw();
+}
+function startGame(){document.getElementById('intro').style.display='none';build();draw();}
+document.getElementById('up').addEventListener('pointerdown',function(){move(-1,0);});
+document.getElementById('dn').addEventListener('pointerdown',function(){move(1,0);});
+document.getElementById('lf').addEventListener('pointerdown',function(){move(0,-1);});
+document.getElementById('rt').addEventListener('pointerdown',function(){move(0,1);});
+window.startGame=startGame;window.resetGame=resetGame;
+draw();
+})();
+</script>
+</body>
+</html>

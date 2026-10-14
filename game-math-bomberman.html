@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>數學炸彈人</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Courier New",Courier,"Microsoft JhengHei",monospace;background:#101010;color:#fff;min-height:100vh;touch-action:manipulation}
+.scan{position:fixed;inset:0;pointer-events:none;z-index:60;background:repeating-linear-gradient(0deg,rgba(0,0,0,.10) 0 2px,transparent 2px 4px)}
+header{background:#1e3a1e;border-bottom:4px solid #4ade80;padding:12px;text-align:center}
+header h1{margin:0;font-size:22px;letter-spacing:2px;color:#ffe14d;text-shadow:2px 2px 0 #7c2d12}
+.hud{display:flex;justify-content:space-around;background:#1e3a1e;padding:10px;font-size:15px;font-weight:700;border-bottom:4px solid #4ade80}
+.hud b{color:#ffe14d}
+.back{display:block;text-align:center;background:#14301a;color:#9fd0a0;text-decoration:none;padding:12px;font-size:15px;font-weight:700}
+.wrap{max-width:460px;margin:0 auto;padding:12px 12px 40px}
+#cv{width:100%;height:auto;display:block;background:#101010;border:4px solid #4ade80;image-rendering:pixelated;touch-action:none}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0;max-width:340px;margin-left:auto;margin-right:auto}
+.pbtn{min-height:60px;font-size:24px;font-weight:800;font-family:inherit;background:#1e3a1e;color:#fff;border:4px solid #4ade80;border-radius:0;cursor:pointer}
+.pbtn:active{background:#4ade80;transform:scale(.96)}
+.bombrow{display:flex;gap:8px;max-width:340px;margin:0 auto}
+#bombBtn{flex:1;min-height:64px;font-size:20px;font-weight:800;font-family:inherit;background:#7c2d12;color:#fff;border:4px solid #f87171;cursor:pointer}
+#bombBtn:active{transform:scale(.97)}
+#msg{min-height:30px;text-align:center;font-size:15px;font-weight:700;margin-top:8px;color:#7CFC98}
+.overlay{position:fixed;inset:0;background:rgba(5,12,5,.96);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.card{background:#1e3a1e;border:4px solid #4ade80;padding:26px 22px;max-width:480px;width:100%;max-height:92vh;overflow-y:auto}
+.card h2{margin:0 0 10px;color:#ffe14d;font-size:22px;letter-spacing:2px}
+.card p,.card li{font-size:15px;line-height:1.7}
+.card ul{padding-left:20px}
+.concept{background:#101010;border:2px solid #4ade80;padding:12px;margin:12px 0;font-size:14px}
+.concept b{color:#7CFC98}
+.card button{width:100%;min-height:58px;font-size:18px;font-weight:800;font-family:inherit;background:#e33;color:#fff;border:4px solid #fff;margin-top:10px;cursor:pointer;letter-spacing:2px}
+.qopts{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px}
+.qopts button{min-height:56px;font-size:20px;font-weight:800;font-family:inherit;background:#14301a;color:#fff;border:4px solid #4ade80;cursor:pointer}
+.blink{animation:bl 1s steps(2) infinite}
+@keyframes bl{50%{opacity:.2}}
+</style>
+</head>
+<body>
+<div class="scan"></div>
+<header><h1>💣 數學炸彈人</h1></header>
+<a class="back" href="games.html">← 返回遊戲列表</a>
+<div class="wrap">
+<div class="hud"><div>❤ <b id="lives">3</b></div><div>🧱 <b id="walls">0</b></div><div>⭐ <b id="score">0</b></div></div>
+<canvas id="cv" width="360" height="360"></canvas>
+<div class="pad">
+<div></div><button class="pbtn" id="up">▲</button><div></div>
+<button class="pbtn" id="lf">◀</button><button class="pbtn" id="dn">▼</button><button class="pbtn" id="rt">▶</button>
+</div>
+<div class="bombrow"><button id="bombBtn">💣 放炸彈</button></div>
+<div id="msg"></div>
+</div>
+<div class="overlay" id="intro"><div class="card">
+<h2>💣 數學炸彈人</h2>
+<p><b>玩法：</b>用方向掣行迷宮，撳💣放炸彈。炸彈會炸開有算式嘅牆 —— 答啱先炸得開！避開紅色怪獸，去到綠色出口就過關。</p>
+<div class="concept">💡 <b>數學概念：</b>四則運算。炸牆前先心算，答啱 ＋50 分！</div>
+<button onclick="startGame()">▶ START</button>
+<p class="blink" style="text-align:center;color:#9fd0a0">★ 8-BIT 挑戰 ★</p>
+</div></div>
+<div class="overlay" id="qmod" style="display:none"><div class="card">
+<h2>🧱 炸牆算式</h2>
+<p id="qq" style="font-size:24px;font-weight:800;color:#ffe14d;text-align:center"></p>
+<div class="qopts" id="qo"></div>
+</div></div>
+<div class="overlay" id="over" style="display:none"><div class="card">
+<h2 id="overT">🏁 完成！</h2>
+<p id="overS" style="font-size:17px"></p>
+<button onclick="resetGame()">🔁 再玩一次</button>
+</div></div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+var AC=null;
+function beep(f,d){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();var o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=f;g.gain.value=0.07;g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d);}catch(e){}}
+var N=9,CS=40,W=360;
+var grid,px,py,lives,score,wallsLeft,bomb,explT,enemies,moveCD,paused,over,queue;
+function ri(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+function mkExpr(){
+  var a=ri(2,15),b=ri(2,15),op=Math.random()<0.5?'+':'−';
+  return {t:a+' '+op+' '+b,ans:op==='+'?a+b:a-b};
+}
+function build(){
+  grid=[];
+  for(var r=0;r<N;r++){grid.push([]);for(var c=0;c<N;c++){
+    if(r===0||c===0||r===N-1||c===N-1||(r%2===0&&c%2===0))grid[r].push(1);
+    else grid[r].push(0);
+  }}
+  grid[1][7]=2; // exit
+  var placed=0,guard=0;
+  while(placed<16&&guard++<300){
+    var r=ri(1,N-2),c=ri(1,N-2);
+    if(grid[r][c]===0&&!((r===1&&c===1)||(r===1&&c===2)||(r===2&&c===1)||(r===1&&c===7))){
+      grid[r][c]=3;placed++;
+    }
+  }
+  wallsLeft=placed;
+  px=1;py=1;lives=3;score=0;bomb=null;explT=0;paused=false;over=false;queue=[];
+  enemies=[{r:5,c:5,t:0},{r:3,c:7,t:0}];
+  moveCD=0;
+  document.getElementById('lives').textContent='3';
+  document.getElementById('score').textContent='0';
+  document.getElementById('walls').textContent=wallsLeft;
+  document.getElementById('msg').textContent='';
+}
+function draw(){
+  ctx.clearRect(0,0,W,W);
+  for(var r=0;r<N;r++)for(var c=0;c<N;c++){
+    var x=c*CS,y=r*CS;
+    if(grid[r][c]===1){ctx.fillStyle='#3a3a3a';ctx.fillRect(x,y,CS,CS);ctx.fillStyle='#555';ctx.fillRect(x+4,y+4,CS-8,4);}
+    else if(grid[r][c]===2){ctx.fillStyle='#166534';ctx.fillRect(x,y,CS,CS);ctx.fillStyle='#4ade80';ctx.font='bold 22px monospace';ctx.textAlign='center';ctx.fillText('🚪',x+CS/2,y+CS/2+8);}
+    else if(grid[r][c]===3){ctx.fillStyle='#92400e';ctx.fillRect(x,y,CS,CS);ctx.fillStyle='#b45309';ctx.fillRect(x+4,y+4,CS-8,CS-8);ctx.fillStyle='#fff';ctx.font='bold 11px monospace';ctx.textAlign='center';var e=grid[r][c+'e'];if(e)ctx.fillText(e.t,x+CS/2,y+CS/2+4);}
+    else{ctx.fillStyle='#101010';ctx.fillRect(x,y,CS,CS);}
+  }
+  enemies.forEach(function(e){
+    var x=e.c*CS,y=e.r*CS;
+    ctx.fillStyle='#dc2626';ctx.fillRect(x+8,y+8,CS-16,CS-16);
+    ctx.fillStyle='#fff';ctx.fillRect(x+13,y+14,6,8);ctx.fillRect(x+CS-19,y+14,6,8);
+    ctx.fillStyle='#000';ctx.fillRect(x+15,y+17,3,4);ctx.fillRect(x+CS-17,y+17,3,4);
+  });
+  var x=px*CS,y=py*CS;
+  ctx.fillStyle='#facc15';ctx.fillRect(x+8,y+8,CS-16,CS-16);
+  ctx.fillStyle='#000';ctx.fillRect(x+13,y+14,6,8);ctx.fillRect(x+CS-19,y+14,6,8);
+  if(bomb){
+    var bx=bomb.c*CS,by=bomb.r*CS;
+    var bl=Math.floor(performance.now()/200)%2===0;
+    ctx.fillStyle=bl?'#000':'#333';ctx.beginPath();ctx.arc(bx+CS/2,by+CS/2,12,0,7);ctx.fill();
+    ctx.fillStyle='#fbbf24';ctx.fillRect(bx+CS/2-1,by+4,3,8);
+    ctx.fillStyle='#f87171';ctx.font='bold 12px monospace';ctx.textAlign='center';
+    ctx.fillText(Math.ceil((2000-(performance.now()-bomb.t0))/1000),bx+CS/2,by+CS/2+4);
+  }
+  if(explT>performance.now()){
+    ctx.fillStyle='rgba(251,146,60,.85)';
+    bomb.cells.forEach(function(cl){ctx.fillRect(cl[1]*CS+4,cl[0]*CS+4,CS-8,CS-8);});
+  }
+}
+function canGo(r,c){return r>=0&&c>=0&&r<N&&c<N&&(grid[r][c]===0||grid[r][c]===2);}
+function move(dr,dc){
+  if(paused||over||moveCD>performance.now())return;
+  moveCD=performance.now()+180;
+  var nr=py+dr,nc=px+dc;
+  if(canGo(nr,nc)){py=nr;px=nc;beep(440,0.05);checkTile();}
+  draw();
+}
+function checkTile(){
+  if(grid[py][px]===2){win();return;}
+  enemies.forEach(function(e){if(e.r===py&&e.c===px)hit();});
+}
+function hit(){
+  beep(160,0.25);lives--;
+  document.getElementById('lives').textContent=lives;
+  document.getElementById('msg').textContent='💥 撞到怪獸！';
+  px=1;py=1;
+  if(lives<=0){lose();}
+}
+function placeBomb(){
+  if(paused||over||bomb)return;
+  bomb={r:py,c:px,t0:performance.now(),cells:[[py,px]]};
+  var dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+  dirs.forEach(function(d){
+    for(var k=1;k<=2;k++){
+      var r=py+d[0]*k,c=px+d[1]*k;
+      if(r<0||c<0||r>=N||c>=N||grid[r][c]===1)break;
+      bomb.cells.push([r,c]);
+      if(grid[r][c]===3)break;
+    }
+  });
+  beep(330,0.08);
+  setTimeout(explode,2000);
+  draw();
+}
+function explode(){
+  if(!bomb)return;
+  var b=bomb;bomb=null;
+  explT=performance.now()+450;
+  beep(110,0.3);
+  var hitP=false,hitW=[];
+  b.cells.forEach(function(cl){
+    var r=cl[0],c=cl[1];
+    if(r===py&&c===px)hitP=true;
+    if(grid[r][c]===3)hitW.push([r,c]);
+  });
+  draw();
+  setTimeout(function(){
+    if(hitP&&!over){hit();}
+    hitW.forEach(function(cl){queue.push(cl);});
+    nextQ();
+    draw();
+  },480);
+}
+function nextQ(){
+  if(queue.length===0||over){paused=false;return;}
+  paused=true;
+  var cl=queue.shift(),r=cl[0],c=cl[1];
+  var key=c+'e';
+  if(!grid[r][key])grid[r][key]=mkExpr();
+  var e=grid[r][key];
+  document.getElementById('qq').textContent=e.t+' = ?';
+  var opts=[e.ans],g=0;
+  while(opts.length<3&&g++<40){var v=e.ans+ri(-5,5);if(v!==e.ans&&opts.indexOf(v)<0)opts.push(v);}
+  opts.sort(function(){return Math.random()-0.5;});
+  var qo=document.getElementById('qo');qo.innerHTML='';
+  opts.forEach(function(v){
+    var btn=document.createElement('button');btn.textContent=v;
+    btn.addEventListener('click',function(){
+      if(v===e.ans){beep(880,0.1);score+=50;wallsLeft--;grid[r][c]=0;delete grid[r][key];
+        document.getElementById('score').textContent=score;
+        document.getElementById('walls').textContent=wallsLeft;
+        document.getElementById('msg').textContent='🧱 炸開咗！+50';
+      }else{beep(160,0.2);document.getElementById('msg').textContent='❌ 答錯，牆炸唔開！正確：'+e.ans;}
+      document.getElementById('qmod').style.display='none';
+      nextQ();draw();
+    });
+    qo.appendChild(btn);
+  });
+  document.getElementById('qmod').style.display='flex';
+}
+setInterval(function(){
+  if(paused||over||document.getElementById('intro').style.display!=='none')return;
+  enemies.forEach(function(e){
+    var dirs=[[1,0],[-1,0],[0,1],[0,-1]].filter(function(d){
+      var r=e.r+d[0],c=e.c+d[1];return canGo(r,c);
+    });
+    if(dirs.length){var d=dirs[ri(0,dirs.length-1)];e.r+=d[0];e.c+=d[1];}
+    if(e.r===py&&e.c===px)hit();
+  });
+  draw();
+},700);
+function win(){
+  over=true;
+  var total=score+lives*100+200;
+  var best=0;try{best=parseInt(localStorage.getItem('bombBest')||'0');}catch(e){}
+  var nb='';if(total>best){try{localStorage.setItem('bombBest',total);}catch(e){}nb=' 🏅 新紀錄！';}
+  document.getElementById('overT').textContent='🏆 逃出成功！';
+  document.getElementById('overS').innerHTML='總分：<b style="color:#ffe14d">'+total+'</b>'+nb;
+  document.getElementById('over').style.display='flex';
+  beep(660,0.1);setTimeout(function(){beep(880,0.15);},130);
+}
+function lose(){
+  over=true;
+  document.getElementById('overT').textContent='💥 炸彈人陣亡…';
+  document.getElementById('overS').innerHTML='得分 '+score+'。再接再厲！';
+  document.getElementById('over').style.display='flex';
+}
+function resetGame(){
+  document.getElementById('over').style.display='none';
+  document.getElementById('qmod').style.display='none';
+  build();draw();
+}
+function startGame(){document.getElementById('intro').style.display='none';build();draw();}
+document.getElementById('up').addEventListener('pointerdown',function(){move(-1,0);});
+document.getElementById('dn').addEventListener('pointerdown',function(){move(1,0);});
+document.getElementById('lf').addEventListener('pointerdown',function(){move(0,-1);});
+document.getElementById('rt').addEventListener('pointerdown',function(){move(0,1);});
+document.getElementById('bombBtn').addEventListener('click',placeBomb);
+window.startGame=startGame;window.resetGame=resetGame;
+draw();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>數學青蛙過河</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Courier New",monospace;background:#0a0a0a;color:#fff;min-height:100vh;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.crt{position:fixed;inset:0;pointer-events:none;z-index:99;background:repeating-linear-gradient(0deg,rgba(0,0,0,.12) 0 1px,transparent 1px 3px);opacity:.5}
+header{background:#1a1a2e;padding:12px;text-align:center;border-bottom:4px solid #22d3ee}
+header h1{margin:0;font-size:20px;letter-spacing:2px;color:#22d3ee;text-shadow:2px 2px 0 #0e7490}
+.back{display:block;text-align:center;background:#222;color:#22d3ee;text-decoration:none;padding:12px;font-size:15px;font-weight:700}
+.wrap{max-width:520px;margin:0 auto;padding:12px}
+.hud{display:flex;justify-content:space-between;background:#1a1a2e;border:3px solid #22d3ee;padding:10px 12px;font-size:15px;font-weight:700;margin-bottom:10px}
+.hud span{color:#ffd23f}
+#qbar{background:#0e7490;border:3px solid #22d3ee;text-align:center;font-size:24px;font-weight:700;padding:12px;margin-bottom:10px;letter-spacing:2px}
+#cvwrap{border:4px solid #22d3ee;background:#000}
+canvas{display:block;width:100%;height:auto;image-rendering:pixelated;cursor:pointer}
+.msg{min-height:30px;text-align:center;font-size:16px;font-weight:700;margin-top:8px;color:#4ade80}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px;overflow-y:auto}
+.card{background:#1a1a2e;border:4px solid #22d3ee;padding:24px 20px;max-width:480px;width:100%;text-align:center}
+.card h2{margin:0 0 12px;font-size:22px;color:#22d3ee;text-shadow:2px 2px 0 #0e7490}
+.card p{font-size:15px;line-height:1.8;text-align:left}
+.bigbtn{width:100%;min-height:60px;font-size:20px;font-weight:700;font-family:inherit;background:#22d3ee;color:#000;border:3px solid #fff;margin-top:14px;cursor:pointer}
+.bigbtn:active{transform:scale(.96)}
+</style>
+</head>
+<body>
+<div class="crt"></div>
+<header><h1>🐸 數學青蛙過河</h1></header>
+<a class="back" href="games.html">← 返回遊戲列表</a>
+<div class="wrap">
+<div class="hud"><div>⭐ <span id="score">0</span></div><div>❤️ <span id="lives">3</span></div><div>🌊 第 <span id="round">1</span>/5 關</div></div>
+<div id="qbar">15 − 7 = ?</div>
+<div id="cvwrap"><canvas id="cv" width="480" height="560"></canvas></div>
+<div class="msg" id="msg">撳正確答案嘅荷葉跳過去！</div>
+</div>
+<div class="overlay" id="intro"><div class="card">
+<h2>🐸 數學青蛙過河</h2>
+<p>🕹️ 玩法：青蛙要過河！上面題目係減法（例：15−7=?），每行有 4 塊荷葉寫住唔同答案——<b>撳啱答案嗰塊</b>青蛙先跳得過去！<br>
+⚠️ 撳錯會跌落水扣一命（3 條命）。跳晒 5 行就過一關，共 5 關！<br>
+💡 數學概念：減法、心算，愈跳愈快！</p>
+<button class="bigbtn" onclick="startGame()">▶ 開始遊戲</button>
+</div></div>
+<div class="overlay" id="over" style="display:none"><div class="card">
+<h2 id="overTitle">🏁 GAME OVER</h2>
+<p id="overText" style="text-align:center;font-size:18px"></p>
+<button class="bigbtn" onclick="startGame()">🔁 再玩一次</button>
+</div></div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+var W=480,H=560,ROWS=5;
+var frog={row:-1,col:1},pads=[],q={txt:'',ans:0};
+var score=0,lives=3,round=1,running=false,t=0;
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function newQuestion(){
+  var a=rnd(6,25),b=rnd(2,a-1);
+  q={txt:a+' − '+b+' = ?',ans:a-b};
+  document.getElementById('qbar').textContent=q.txt;
+}
+function newRowPads(){
+  pads=[];
+  for(var r=0;r<ROWS;r++){
+    var opts=new Set([q.ans]);
+    while(opts.size<4){var d=q.ans+rnd(-6,6);if(d!==q.ans&&d>=0)opts.add(d);}
+    var arr=Array.from(opts).sort(()=>Math.random()-0.5);
+    pads.push(arr.map(function(v,i){return {v:v,x:40+i*110,baseX:40+i*110,ph:Math.random()*6.28};}));
+  }
+}
+function newRound(){
+  frog={row:-1,col:1};newQuestion();newRowPads();
+  document.getElementById('round').textContent=round;
+  document.getElementById('msg').textContent='撳正確答案嘅荷葉跳過去！';
+}
+function rowY(r){return H-90-r*95;}
+function frogPos(){
+  if(frog.row<0)return {x:W/2,y:H-35};
+  var p=pads[frog.row][frog.col];
+  return {x:p.x+45,y:rowY(frog.row)+22};
+}
+function draw(){
+  ctx.fillStyle='#0a2540';ctx.fillRect(0,0,W,H);
+  // water waves
+  ctx.fillStyle='#0e3a5c';
+  for(var i=0;i<8;i++){var wy=60+i*62+Math.sin(t*2+i)*4;ctx.fillRect(0,wy,W,3);}
+  // bank top
+  ctx.fillStyle='#166534';ctx.fillRect(0,0,W,50);
+  ctx.fillStyle='#4ade80';ctx.font='bold 16px "Courier New",monospace';ctx.textAlign='center';
+  ctx.fillText('🏁 終點',W/2,32);
+  // bank bottom
+  ctx.fillStyle='#166534';ctx.fillRect(0,H-60,W,60);
+  // pads
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  for(var r=0;r<ROWS;r++){
+    for(var c=0;c<4;c++){
+      var p=pads[r][c];
+      p.x=p.baseX+Math.sin(t*1.5+p.ph)*12;
+      var y=rowY(r);
+      ctx.fillStyle='#22c55e';
+      ctx.beginPath();ctx.ellipse(p.x+45,y+22,46,26,0,0,7);ctx.fill();
+      ctx.fillStyle='#16a34a';
+      ctx.beginPath();ctx.ellipse(p.x+35,y+16,18,10,0,0,7);ctx.fill();
+      ctx.fillStyle='#fff';ctx.font='bold 20px "Courier New",monospace';
+      ctx.fillText(p.v,p.x+45,y+23);
+    }
+  }
+  // frog
+  var f=frogPos();
+  ctx.fillStyle='#4ade80';
+  ctx.fillRect(f.x-16,f.y-14,32,28);
+  ctx.fillStyle='#22c55e';ctx.fillRect(f.x-16,f.y-14,32,8);
+  ctx.fillStyle='#000';ctx.fillRect(f.x-10,f.y-8,6,6);ctx.fillRect(f.x+4,f.y-8,6,6);
+  ctx.fillStyle='#4ade80';ctx.fillRect(f.x-20,f.y+2,8,12);ctx.fillRect(f.x+12,f.y+2,8,12);
+}
+cv.addEventListener('pointerdown',function(e){
+  if(!running)return;
+  var r=cv.getBoundingClientRect();
+  var x=(e.clientX-r.left)/r.width*W, y=(e.clientY-r.top)/r.height*H;
+  var nr=frog.row+1;
+  if(nr>=ROWS)return;
+  for(var c=0;c<4;c++){
+    var p=pads[nr][c],py=rowY(nr);
+    if(x>p.x&&x<p.x+90&&y>py-4&&y<py+48){
+      if(p.v===q.ans){
+        frog.row=nr;frog.col=c;score+=50;
+        document.getElementById('score').textContent=score;
+        document.getElementById('msg').textContent='✅ 跳啱！+50';
+        if(nr===ROWS-1){
+          score+=100;document.getElementById('score').textContent=score;
+          if(round>=5){gameOver(true);return;}
+          round++;newRound();
+          document.getElementById('msg').textContent='🎉 過河！+100 bonus，第 '+round+' 關！';
+        }
+      }else{
+        lives--;document.getElementById('lives').textContent=lives;
+        document.getElementById('msg').textContent='💦 跌落水！'+p.v+' 唔係答案（仲有 '+lives+' 命）';
+        if(lives<=0){gameOver(false);return;}
+      }
+      break;
+    }
+  }
+});
+function gameOver(win){
+  running=false;
+  document.getElementById('overTitle').textContent=win?'🏆 全部過關！':'💀 GAME OVER';
+  var best=0;try{best=parseInt(localStorage.getItem('frogBest')||'0');}catch(e){}
+  var nb='';
+  if(score>best){try{localStorage.setItem('frogBest',score);}catch(e){}nb=' 🏅新紀錄！';}
+  document.getElementById('overText').innerHTML='總分：'+score+nb+'<br>最佳：'+Math.max(score,best);
+  document.getElementById('over').style.display='flex';
+}
+function loop(){t+=0.03;if(running)draw();requestAnimationFrame(loop);}
+window.startGame=function(){
+  document.getElementById('intro').style.display='none';
+  document.getElementById('over').style.display='none';
+  score=0;lives=3;round=1;running=true;
+  document.getElementById('score').textContent='0';
+  document.getElementById('lives').textContent='3';
+  newRound();
+};
+draw();loop();
+})();
+</script>
+</body>
+</html>

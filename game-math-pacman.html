@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>數學小精靈</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#05050f;color:#fff;font-family:"Courier New",monospace;min-height:100vh;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+header{background:#000;border-bottom:4px solid #fbd000;padding:10px;text-align:center}
+header h1{margin:0;font-size:20px;letter-spacing:2px;color:#fbd000;text-shadow:2px 2px 0 #7c4a00}
+header p{margin:4px 0 0;font-size:12px;color:#9be8ff}
+.back{display:block;text-align:center;background:#1a1a26;color:#fbd000;text-decoration:none;padding:10px;font-size:14px;font-weight:bold;border-bottom:2px solid #000}
+.wrap{max-width:520px;margin:0 auto;padding:10px}
+.hud{display:flex;justify-content:space-between;background:#000;border:4px solid #5a5a6e;padding:8px 12px;font-size:14px;font-weight:bold;margin-bottom:8px}
+.hud .score{color:#fbd000}.hud .target{color:#4ade80}
+canvas{width:100%;display:block;background:#05050f;image-rendering:pixelated;border:4px solid #2121de}
+.ctrls{display:grid;grid-template-columns:repeat(3,72px);grid-template-rows:repeat(2,64px);gap:8px;justify-content:center;margin-top:12px}
+.btn{min-width:72px;min-height:64px;font-size:26px;font-weight:bold;border:4px solid #000;border-radius:10px;background:#3a3a4a;color:#fbd000;cursor:pointer;font-family:inherit;touch-action:none}
+.btn:active{background:#2121de;transform:scale(.95)}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.card{background:#05050f;border:4px solid #fbd000;padding:20px;max-width:440px;width:100%;text-align:center}
+.card h2{color:#fbd000;margin:0 0 10px;font-size:20px}
+.card p{font-size:14px;line-height:1.7;color:#ddd}
+.concept{background:#000;border:2px dashed #fbd000;padding:10px;margin:12px 0;font-size:13px;color:#fbd000;text-align:left}
+.bigbtn{width:100%;min-height:60px;font-size:20px;font-weight:bold;font-family:inherit;background:#fbd000;color:#000;border:4px solid #7c4a00;margin-top:10px;cursor:pointer;letter-spacing:2px}
+.bigbtn:active{transform:scale(.97)}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<header><h1>👾 數學小精靈</h1><p>MATH MAN · 8-BIT</p></header>
+<a class="back" href="games.html">← 返回遊戲列表</a>
+<div class="wrap">
+<div class="hud"><div>❤️ <span id="lives">3</span></div><div>⭐ <span class="score" id="score">0</span></div><div>🎯 <span class="target" id="target"></span></div></div>
+<canvas id="cv" width="480" height="352"></canvas>
+<div class="ctrls">
+<span></span><button class="btn" id="btnU">▲</button><span></span>
+<button class="btn" id="btnL">◀</button><button class="btn" id="btnD">▼</button><button class="btn" id="btnR">▶</button>
+</div>
+</div>
+
+<div class="overlay" id="intro"><div class="card">
+<h2>👾 數學小精靈</h2>
+<p><b>玩法：</b>用方向掣（或掃畫面）控制小精靈行迷宮。食晒所有<b style="color:#4ade80">符合目標</b>嘅數字豆就過關！食錯豆扣分，掂到鬼扣一條命！</p>
+<div class="concept">💡 <b>數學概念：</b>因數與倍數 —— 倍數係嗰個數乘 1、2、3…得出嚟；因數係整除嗰個數嘅數。</div>
+<button class="bigbtn" id="startBtn">▶ START</button>
+</div></div>
+
+<div class="overlay hide" id="endOverlay"><div class="card">
+<h2 id="endTitle"></h2>
+<p id="endText"></p>
+<button class="bigbtn" id="againBtn">↻ 再玩一次</button>
+</div></div>
+
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+ctx.imageSmoothingEnabled=false;
+var TW=32,COLS=15,ROWS=11;
+var MAZE=[
+"###############",
+"#.............#",
+"#.###.#####.#.#",
+"#.#...#...#...#",
+"#.#.###.#.###.#",
+"#.....#.#.....#",
+"#####.#.#.#####",
+"#.....#.#.....#",
+"#.#####.#####.#",
+"#.............#",
+"###############"];
+var LEVELS=[
+  {t:'食：3 的倍數',ok:function(n){return n%3===0;}},
+  {t:'食：12 的因數',ok:function(n){return 12%n===0;}},
+  {t:'食：5 的倍數',ok:function(n){return n%5===0;}},
+  {t:'食：20 的因數',ok:function(n){return 20%n===0;}},
+  {t:'食：7 的倍數',ok:function(n){return n%7===0;}}
+];
+var player,ghosts,pellets,level,score,lives,over,started,dir,nextDir,flash;
+
+function beep(f,d){try{
+  var ac=beep.ac||(beep.ac=new (window.AudioContext||window.webkitAudioContext)());
+  var o=ac.createOscillator(),g=ac.createGain();
+  o.type='square';o.frequency.value=f;g.gain.value=0.05;
+  o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d);
+}catch(e){}}
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function isWall(c,r){return c<0||r<0||c>=COLS||r>=ROWS||MAZE[r][c]==='#';}
+
+function buildLevel(){
+  var L=LEVELS[level%LEVELS.length];
+  document.getElementById('target').textContent=L.t;
+  // 收集可行走格
+  var cells=[];
+  for(var r=1;r<ROWS-1;r++)for(var c=1;c<COLS-1;c++)
+    if(MAZE[r][c]==='.')cells.push({c:c,r:r});
+  shuffle(cells);
+  pellets=[];
+  var nums=[],used={};
+  // 正確豆 8 粒
+  var count=0,guard=0;
+  while(count<8&&guard<500){guard++;
+    var n=rnd(2,36);
+    if(used[n])continue;
+    if(L.ok(n)){used[n]=1;nums.push({n:n,ok:true});count++;}
+  }
+  count=0;guard=0;
+  while(count<6&&guard<500){guard++;
+    var m=rnd(2,36);
+    if(used[m])continue;
+    if(!L.ok(m)){used[m]=1;nums.push({n:m,ok:false});count++;}
+  }
+  shuffle(nums);
+  for(var i=0;i<nums.length&&i<cells.length;i++)
+    pellets.push({c:cells[i].c,r:cells[i].r,n:nums[i].n,ok:nums[i].ok});
+  player={c:7,r:9,px:7,py:9,dir:{x:0,y:0},mouth:0};
+  dir={x:0,y:0};nextDir={x:0,y:0};
+  ghosts=[];
+  var ng=Math.min(2+Math.floor(level/2),4);
+  var gcols=['#e52521','#ffb8ff','#00e8ff','#ffb847'];
+  for(var g=0;g<ng;g++)
+    ghosts.push({c:7,r:5,px:7,py:5,dir:{x:1,y:0},col:gcols[g%4],t:g*0.7});
+  flash=0;
+}
+function newGame(){
+  level=0;score=0;lives=3;over=false;
+  document.getElementById('score').textContent='0';
+  document.getElementById('lives').textContent='3';
+  document.getElementById('endOverlay').classList.add('hide');
+  buildLevel();
+}
+function atCenter(e){return Math.abs(e.px-e.c)<0.05&&Math.abs(e.py-e.r)<0.05;}
+function canGo(c,r,x,y){return !isWall(c+x,r+y);}
+function step(e,spd,dt,chase){
+  e.px+=e.dir.x*spd*dt;e.py+=e.dir.y*spd*dt;
+  // 到格中心時決定方向
+  if((e.dir.x!==0&&((e.dir.x>0&&e.px>=e.c+1)||(e.dir.x<0&&e.px<=e.c-1)))||
+     (e.dir.y!==0&&((e.dir.y>0&&e.py>=e.r+1)||(e.dir.y<0&&e.py<=e.r-1)))||
+     (e.dir.x===0&&e.dir.y===0)){
+    if(e.dir.x!==0)e.c+=e.dir.x;
+    if(e.dir.y!==0)e.r+=e.dir.y;
+    e.px=e.c;e.py=e.r;
+    var opts=[];
+    var ds=[{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}];
+    for(var i=0;i<4;i++){
+      var d=ds[i];
+      // 唔好即刻調頭（除非死路）
+      if(d.x===-e.dir.x&&d.y===-e.dir.y)continue;
+      if(canGo(e.c,e.r,d.x,d.y))opts.push(d);
+    }
+    if(opts.length===0){ // 死路調頭
+      e.dir={x:-e.dir.x,y:-e.dir.y};
+      if(e.dir.x===0&&e.dir.y===0)e.dir={x:1,y:0};
+      return;
+    }
+    if(chase){
+      // 追玩家：揀最接近玩家嘅方向
+      var best=opts[0],bd=1e9;
+      for(var j=0;j<opts.length;j++){
+        var nc=e.c+opts[j].x,nr=e.r+opts[j].y;
+        var dd=Math.abs(nc-player.c)+Math.abs(nr-player.r);
+        if(dd<bd){bd=dd;best=opts[j];}
+      }
+      // 偶爾隨機，等玩家有生路
+      e.dir=Math.random()<0.75?best:opts[rnd(0,opts.length-1)];
+    }else{
+      e.dir=opts[rnd(0,opts.length-1)];
+    }
+  }
+}
+function update(dt){
+  // 玩家轉向
+  if((nextDir.x!==0||nextDir.y!==0)&&atCenter(player)){
+    if(canGo(player.c,player.r,nextDir.x,nextDir.y)){
+      player.dir={x:nextDir.x,y:nextDir.y};dir={x:nextDir.x,y:nextDir.y};
+    }
+  }
+  if(player.dir.x!==0||player.dir.y!==0){
+    if(atCenter(player)&&!canGo(player.c,player.r,player.dir.x,player.dir.y)){
+      player.dir={x:0,y:0};
+    }else step(player,4.2,dt,false);
+  }
+  player.mouth+=dt*10;
+  // 食豆
+  for(var i=pellets.length-1;i>=0;i--){var p=pellets[i];
+    if(p.c===player.c&&p.r===player.r){
+      pellets.splice(i,1);
+      var L=LEVELS[level%LEVELS.length];
+      if(L.ok(p.n)){score+=10;beep(880,0.07);}
+      else{score=Math.max(0,score-10);flash=8;beep(160,0.15);}
+      document.getElementById('score').textContent=score;
+    }}
+  // 過關？
+  var left=pellets.filter(function(p){return LEVELS[level%LEVELS.length].ok(p.n);}).length;
+  if(left===0){
+    level++;score+=100;
+    document.getElementById('score').textContent=score;
+    beep(523,0.1);setTimeout(function(){beep(784,0.15);},110);
+    buildLevel();
+    return;
+  }
+  // 鬼
+  for(var g=0;g<ghosts.length;g++){var gh=ghosts[g];
+    gh.t+=dt;
+    step(gh,2.6+level*0.25,dt,gh.t>2);
+    var dx=Math.abs(gh.px-player.px),dy=Math.abs(gh.py-player.py);
+    if(dx<0.6&&dy<0.6){
+      lives--;document.getElementById('lives').textContent=lives;
+      beep(140,0.35);flash=12;
+      if(lives<=0){gameOver();}
+      else buildLevel();
+      return;
+    }
+  }
+  if(flash>0)flash--;
+}
+function gameOver(){
+  over=true;beep(120,0.5);
+  document.getElementById('endTitle').textContent='💀 GAME OVER';
+  document.getElementById('endText').innerHTML='總分 <b style="color:#fbd000">'+score+'</b><br>去到第 '+(level+1)+' 關';
+  document.getElementById('endOverlay').classList.remove('hide');
+}
+function draw(){
+  ctx.fillStyle='#05050f';ctx.fillRect(0,0,cv.width,cv.height);
+  if(flash>0&&flash%4<2){ctx.fillStyle='rgba(229,37,33,.25)';ctx.fillRect(0,0,cv.width,cv.height);}
+  // 牆
+  ctx.fillStyle='#2121de';
+  for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++)
+    if(MAZE[r][c]==='#')ctx.fillRect(c*TW,r*TW,TW,TW);
+  ctx.fillStyle='#3a3aff';
+  for(var r2=0;r2<ROWS;r2++)for(var c2=0;c2<COLS;c2++)
+    if(MAZE[r2][c2]==='#')ctx.fillRect(c2*TW+3,r2*TW+3,TW-6,TW-6);
+  // 豆
+  pellets.forEach(function(p){
+    var x=p.c*TW,y=p.r*TW;
+    ctx.fillStyle=p.ok?'#fbd000':'#ff9d9d';
+    ctx.fillRect(x+4,y+4,TW-8,TW-8);
+    ctx.fillStyle='#000';ctx.font='bold 13px monospace';ctx.textAlign='center';
+    ctx.fillText(p.n,x+TW/2,y+21);
+  });
+  // 鬼
+  ghosts.forEach(function(g){
+    var x=g.px*TW,y=g.py*TW;
+    ctx.fillStyle=g.col;
+    ctx.fillRect(x+4,y+2,TW-8,TW-10);
+    ctx.beginPath();ctx.arc(x+TW/2,y+12,12,Math.PI,0);ctx.fill();
+    ctx.fillStyle='#fff';ctx.fillRect(x+8,y+10,6,8);ctx.fillRect(x+18,y+10,6,8);
+    ctx.fillStyle='#000';ctx.fillRect(x+10,y+13,3,4);ctx.fillRect(x+20,y+13,3,4);
+  });
+  // 玩家
+  var px=player.px*TW+TW/2,py=player.py*TW+TW/2;
+  var m=Math.abs(Math.sin(player.mouth))*0.5;
+  ctx.fillStyle='#fbd000';
+  ctx.beginPath();
+  ctx.moveTo(px,py);
+  ctx.arc(px,py,13,m*0.9,Math.PI*2-m*0.9);
+  ctx.fill();
+  ctx.fillStyle='#000';ctx.fillRect(px-2,py-9,4,4);
+}
+var last=0;
+function loop(t){
+  var dt=Math.min(50,t-last)/1000;last=t;
+  if(started&&!over)update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+function setDir(x,y){nextDir={x:x,y:y};}
+[['btnU',0,-1],['btnD',0,1],['btnL',-1,0],['btnR',1,0]].forEach(function(b){
+  document.getElementById(b[0]).addEventListener('pointerdown',function(e){e.preventDefault();setDir(b[1],b[2]);});
+});
+// 掃動
+var sx=0,sy=0;
+cv.addEventListener('touchstart',function(e){var t=e.changedTouches[0];sx=t.clientX;sy=t.clientY;},{passive:true});
+cv.addEventListener('touchend',function(e){
+  var t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
+  if(Math.abs(dx)<18&&Math.abs(dy)<18)return;
+  if(Math.abs(dx)>Math.abs(dy))setDir(dx>0?1:-1,0);else setDir(0,dy>0?1:-1);
+},{passive:true});
+document.addEventListener('keydown',function(e){
+  if(e.key==='ArrowUp')setDir(0,-1);
+  if(e.key==='ArrowDown')setDir(0,1);
+  if(e.key==='ArrowLeft')setDir(-1,0);
+  if(e.key==='ArrowRight')setDir(1,0);
+});
+document.getElementById('startBtn').addEventListener('click',function(){
+  document.getElementById('intro').classList.add('hide');started=true;beep(660,0.1);
+});
+document.getElementById('againBtn').addEventListener('click',function(){newGame();});
+newGame();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

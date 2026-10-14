@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>數學金剛</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#0a0a12;color:#fff;font-family:"Courier New",monospace;min-height:100vh;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+header{background:#000;border-bottom:4px solid #e52521;padding:10px;text-align:center}
+header h1{margin:0;font-size:20px;letter-spacing:2px;color:#fbd000;text-shadow:2px 2px 0 #e52521}
+header p{margin:4px 0 0;font-size:12px;color:#9be8ff}
+.back{display:block;text-align:center;background:#1a1a26;color:#fbd000;text-decoration:none;padding:10px;font-size:14px;font-weight:bold;border-bottom:2px solid #000}
+.wrap{max-width:560px;margin:0 auto;padding:10px}
+.hud{display:flex;justify-content:space-between;background:#000;border:4px solid #5a5a6e;padding:8px 12px;font-size:13px;font-weight:bold;margin-bottom:8px}
+.hud .score{color:#fbd000}.hud .qq{color:#4ade80}
+canvas{width:100%;display:block;background:#101018;image-rendering:pixelated;border:4px solid #000}
+.ctrls{display:flex;justify-content:space-between;margin-top:10px;gap:8px}
+.dpad{display:flex;gap:8px}
+.btn{min-width:60px;min-height:60px;font-size:24px;font-weight:bold;border:4px solid #000;border-radius:10px;background:#3a3a4a;color:#fff;cursor:pointer;font-family:inherit;touch-action:none}
+.btn:active{background:#e52521;transform:scale(.95)}
+#jumpBtn{background:#2448d8;min-width:88px}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.card{background:#0a0a12;border:4px solid #fbd000;padding:20px;max-width:460px;width:100%;text-align:center}
+.card h2{color:#fbd000;margin:0 0 10px;font-size:20px}
+.card p{font-size:14px;line-height:1.7;color:#ddd}
+.concept{background:#000;border:2px dashed #fbd000;padding:10px;margin:12px 0;font-size:13px;color:#fbd000;text-align:left}
+.bigbtn{width:100%;min-height:60px;font-size:20px;font-weight:bold;font-family:inherit;background:#e52521;color:#fff;border:4px solid #7c0d0b;margin-top:10px;cursor:pointer;letter-spacing:2px}
+.bigbtn:active{transform:scale(.97)}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<header><h1>🦍 數學金剛</h1><p>DONKEY MATH · 8-BIT</p></header>
+<a class="back" href="games.html">← 返回遊戲列表</a>
+<div class="wrap">
+<div class="hud"><div>❤️ <span id="lives">3</span></div><div>⭐ <span class="score" id="score">0</span></div><div class="qq" id="qq"></div></div>
+<canvas id="cv" width="480" height="320"></canvas>
+<div class="ctrls">
+<div class="dpad">
+<button class="btn" id="btnL">◀</button>
+<button class="btn" id="btnR">▶</button>
+<button class="btn" id="btnU">▲</button>
+<button class="btn" id="btnD">▼</button>
+</div>
+<button class="btn" id="jumpBtn">⤒<br><span style="font-size:12px">JUMP</span></button>
+</div>
+</div>
+
+<div class="overlay" id="intro"><div class="card">
+<h2>🦍 數學金剛</h2>
+<p><b>玩法：</b>解開代數題，執起<b style="color:#fbd000">正確答案</b>嘅金幣（掂到錯答案扣分），避開滾落嚟嘅<b style="color:#e52521">錯答案木桶</b>，爬上頂救公主！◀ ▶ 行，▲ ▼ 爬梯，JUMP 跳過木桶。</p>
+<div class="concept">💡 <b>數學概念：</b>解一元一次方程 —— 將未知數 x 孤立出嚟！例如 2x+6=18，先減 6，再除 2。</div>
+<button class="bigbtn" id="startBtn">▶ START</button>
+</div></div>
+
+<div class="overlay hide" id="endOverlay"><div class="card">
+<h2 id="endTitle"></h2>
+<p id="endText"></p>
+<button class="bigbtn" id="againBtn">↻ 再玩一次</button>
+</div></div>
+
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+ctx.imageSmoothingEnabled=false;
+var W=480,H=320;
+var PLATS=[{x0:0,x1:480,y:280},{x0:60,x1:480,y:215},{x0:0,x1:420,y:150},{x0:60,x1:480,y:85}];
+var LADDERS=[{x:400,top:215,bot:280},{x:100,top:150,bot:215},{x:380,top:85,bot:150}];
+var player,barrels,coins,q,ans,gotKey,score,lives,level,over,started,spawnT,msgT,msg;
+var input={l:false,r:false,u:false,d:false};
+
+function beep(f,d){try{
+  var ac=beep.ac||(beep.ac=new (window.AudioContext||window.webkitAudioContext)());
+  var o=ac.createOscillator(),g=ac.createGain();
+  o.type='square';o.frequency.value=f;g.gain.value=0.05;
+  o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d);
+}catch(e){}}
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+function genQ(){
+  var a=rnd(2,5),x=rnd(2,9),b=rnd(1,10);
+  var c=a*x+b;
+  var wrongs=[];
+  [x+1,x-1,x+2,x-2].forEach(function(w){if(w>0&&w!==x&&wrongs.indexOf(w)<0)wrongs.push(w);});
+  shuffle(wrongs);
+  return {txt:a+'x + '+b+' = '+c+'，x = ?',ans:x,wrongs:wrongs.slice(0,2)};
+}
+function buildLevel(){
+  q=genQ();ans=q.ans;gotKey=false;
+  document.getElementById('qq').textContent=q.txt;
+  player={x:30,y:280,vx:0,vy:0,ground:true,climb:false,face:1};
+  barrels=[];spawnT=0;
+  var vals=shuffle([ans].concat(q.wrongs));
+  var spots=[{x:250,y:150},{x:200,y:215},{x:300,y:85}];
+  coins=vals.map(function(v,i){return {x:spots[i].x,y:spots[i].y-12,v:v,got:false};});
+  msg='';msgT=0;
+}
+function newGame(){
+  score=0;lives=3;level=1;over=false;
+  document.getElementById('score').textContent='0';
+  document.getElementById('lives').textContent='3';
+  document.getElementById('endOverlay').classList.add('hide');
+  buildLevel();
+}
+function onLadder(){
+  for(var i=0;i<LADDERS.length;i++){var l=LADDERS[i];
+    if(Math.abs(player.x-l.x)<14&&player.y>=l.top-4&&player.y<=l.bot+8)return l;}
+  return null;
+}
+function spawnBarrel(){
+  // 揀一個錯答案
+  var w=q.wrongs[rnd(0,q.wrongs.length-1)];
+  barrels.push({seg:0,x:60,dir:1,v:1.5+level*0.2,val:w});
+}
+var SEGS=[{x0:60,x1:480,y:85},{x0:0,x1:420,y:150},{x0:60,x1:480,y:215},{x0:0,x1:480,y:280}];
+function update(dt){
+  var p=player;
+  // 輸入
+  var L=input.l,R=input.r,U=input.u,D=input.d;
+  var lad=onLadder();
+  if(p.climb){
+    p.vy=0;p.vx=0;
+    if(U)p.y-=2.2;if(D)p.y+=2.2;
+    // 離開梯
+    var done=false;
+    for(var i=0;i<LADDERS.length;i++){var l=LADDERS[i];
+      if(Math.abs(p.x-l.x)<14){
+        if(p.y<=l.top){p.y=l.top;p.climb=false;done=true;}
+        if(p.y>=l.bot){p.y=l.bot;p.climb=false;done=true;}
+      }}
+    if(!U&&!D&&!lad){p.climb=false;}
+  }else{
+    p.vx=(R?2.2:0)-(L?2.2:0);
+    if(p.vx!==0)p.face=p.vx>0?1:-1;
+    if(lad&&(U||D)){p.climb=true;p.vx=0;p.vy=0;}
+    else{
+      p.vy+=0.5;if(p.vy>10)p.vy=10;
+    }
+  }
+  p.x+=p.vx;
+  if(p.x<12)p.x=12;if(p.x>W-12)p.x=W-12;
+  if(!p.climb){
+    p.y+=p.vy;
+    p.ground=false;
+    for(var j=0;j<PLATS.length;j++){var pl=PLATS[j];
+      if(p.vy>=0&&p.x>=pl.x0-6&&p.x<=pl.x1+6){
+        if(p.y>=pl.y&&p.y-p.vy<=pl.y+8){p.y=pl.y;p.vy=0;p.ground=true;}
+      }}
+    if(p.y>H+20){ // 跌落
+      lives--;document.getElementById('lives').textContent=lives;beep(150,0.3);
+      if(lives<=0)return gameOver();
+      p.x=30;p.y=280;p.vx=0;p.vy=0;
+    }
+  }
+  // 木桶
+  spawnT-=dt;
+  if(spawnT<=0){spawnBarrel();spawnT=Math.max(1.1,2.6-level*0.25);}
+  for(var b=barrels.length-1;b>=0;b--){var br=barrels[b];
+    br.x+=br.dir*br.v;
+    var s=SEGS[br.seg];
+    if((br.dir>0&&br.x>s.x1)||(br.dir<0&&br.x<s.x0)){
+      if(br.seg<SEGS.length-1){br.seg++;var ns=SEGS[br.seg];
+        br.x=Math.max(ns.x0,Math.min(ns.x1,br.x));br.dir*=-1;}
+      else{barrels.splice(b,1);continue;}
+    }
+    // 撞玩家
+    var by=s.y-10;
+    if(Math.abs(br.x-p.x)<15&&Math.abs(by-(p.y-12))<18){
+      lives--;document.getElementById('lives').textContent=lives;
+      beep(140,0.35);
+      if(lives<=0)return gameOver();
+      p.x=30;p.y=280;p.vx=0;p.vy=0;p.climb=false;
+      barrels=[];
+      break;
+    }
+  }
+  // 金幣
+  for(var k=0;k<coins.length;k++){var cn=coins[k];
+    if(!cn.got&&Math.abs(cn.x-p.x)<16&&Math.abs(cn.y-(p.y-12))<20){
+      cn.got=true;
+      if(cn.v===ans){gotKey=true;score+=100;beep(880,0.12);msg='✅ 拎到正確答案！上頂救公主！';}
+      else{score=Math.max(0,score-20);beep(200,0.15);msg='❌ '+cn.v+' 唔係答案！';}
+      msgT=90;
+      document.getElementById('score').textContent=score;
+    }}
+  if(msgT>0)msgT--;
+  // 到頂
+  if(gotKey&&p.y<110&&p.x>400){
+    level++;score+=lives*150;
+    document.getElementById('score').textContent=score;
+    beep(523,0.1);setTimeout(function(){beep(784,0.2);},120);
+    buildLevel();
+  }
+}
+function gameOver(){
+  over=true;beep(120,0.5);
+  document.getElementById('endTitle').textContent='💀 GAME OVER';
+  document.getElementById('endText').innerHTML='總分 <b style="color:#fbd000">'+score+'</b><br>去到第 '+level+' 關';
+  document.getElementById('endOverlay').classList.remove('hide');
+}
+function draw(){
+  ctx.fillStyle='#101018';ctx.fillRect(0,0,W,H);
+  // 平台
+  PLATS.forEach(function(pl){
+    ctx.fillStyle='#c84c0c';ctx.fillRect(pl.x0,pl.y,pl.x1-pl.x0,10);
+    ctx.fillStyle='#7c2d0e';
+    for(var x=pl.x0+6;x<pl.x1;x+=18)ctx.fillRect(x,pl.y+3,4,4);
+  });
+  // 梯
+  ctx.fillStyle='#9be8ff';
+  LADDERS.forEach(function(l){
+    ctx.fillRect(l.x-8,l.top,3,l.bot-l.top);
+    ctx.fillRect(l.x+5,l.top,3,l.bot-l.top);
+    for(var y=l.top;y<l.bot;y+=10)ctx.fillRect(l.x-8,y,16,3);
+  });
+  // 公主
+  ctx.fillStyle='#ff9de2';ctx.fillRect(436,52,14,22);
+  ctx.fillStyle='#fbd000';ctx.fillRect(438,46,10,8);
+  ctx.fillStyle='#e52521';ctx.font='bold 10px monospace';ctx.textAlign='center';
+  ctx.fillText('HELP!',443,40);
+  // 金剛（左上）
+  ctx.fillStyle='#7c4a1e';ctx.fillRect(14,40,26,30);
+  ctx.fillStyle='#ffcf9e';ctx.fillRect(18,48,18,12);
+  ctx.fillStyle='#000';ctx.fillRect(22,52,4,4);ctx.fillRect(32,52,4,4);
+  // 金幣
+  coins.forEach(function(cn){
+    if(cn.got)return;
+    ctx.fillStyle='#fbd000';ctx.fillRect(cn.x-9,cn.y-9,18,18);
+    ctx.fillStyle='#7c4a00';ctx.fillRect(cn.x-9,cn.y-9,18,3);ctx.fillRect(cn.x-9,cn.y+6,18,3);
+    ctx.fillStyle='#000';ctx.font='bold 13px monospace';ctx.textAlign='center';
+    ctx.fillText(cn.v,cn.x,cn.y+5);
+  });
+  // 木桶
+  barrels.forEach(function(br){
+    var s=SEGS[br.seg],by=s.y-10;
+    ctx.fillStyle='#8a5a1e';ctx.beginPath();ctx.arc(br.x,by,11,0,7);ctx.fill();
+    ctx.fillStyle='#5e3a10';ctx.fillRect(br.x-11,by-2,22,4);
+    ctx.fillStyle='#fff';ctx.font='bold 12px monospace';ctx.textAlign='center';
+    ctx.fillText(br.val,br.x,by+4);
+  });
+  // 玩家
+  var px=player.x,py=player.y;
+  ctx.fillStyle='#e52521';ctx.fillRect(px-6,py-22,12,10);
+  ctx.fillStyle='#ffcf9e';ctx.fillRect(px-5,py-30,10,9);
+  ctx.fillStyle='#2448d8';ctx.fillRect(px-6,py-12,5,12);ctx.fillRect(px+1,py-12,5,12);
+  if(msgT>0){ctx.fillStyle='#fbd000';ctx.font='bold 13px monospace';ctx.textAlign='center';ctx.fillText(msg,W/2,20);}
+}
+var last=0;
+function loop(t){
+  var dt=Math.min(50,t-last)/1000;last=t;
+  if(started&&!over)update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+function bindHold(el,prop){
+  el.addEventListener('pointerdown',function(e){e.preventDefault();input[prop]=true;});
+  ['pointerup','pointerleave','pointercancel'].forEach(function(ev){
+    el.addEventListener(ev,function(){input[prop]=false;});
+  });
+}
+bindHold(document.getElementById('btnL'),'l');
+bindHold(document.getElementById('btnR'),'r');
+bindHold(document.getElementById('btnU'),'u');
+bindHold(document.getElementById('btnD'),'d');
+document.getElementById('jumpBtn').addEventListener('pointerdown',function(e){
+  e.preventDefault();
+  if(!over&&started&&!player.climb&&player.ground){player.vy=-9;player.ground=false;beep(440,0.1);}
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='ArrowLeft')input.l=true;if(e.key==='ArrowRight')input.r=true;
+  if(e.key==='ArrowUp')input.u=true;if(e.key==='ArrowDown')input.d=true;
+  if(e.key===' '&&!player.climb&&player.ground){player.vy=-9;player.ground=false;}
+});
+document.addEventListener('keyup',function(e){
+  if(e.key==='ArrowLeft')input.l=false;if(e.key==='ArrowRight')input.r=false;
+  if(e.key==='ArrowUp')input.u=false;if(e.key==='ArrowDown')input.d=false;
+});
+document.getElementById('startBtn').addEventListener('click',function(){
+  document.getElementById('intro').classList.add('hide');started=true;beep(660,0.1);
+});
+document.getElementById('againBtn').addEventListener('click',function(){newGame();});
+newGame();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

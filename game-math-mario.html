@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>數學Mario</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#101018;color:#fff;font-family:"Courier New",monospace;min-height:100vh;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+header{background:#000;border-bottom:4px solid #e52521;padding:10px;text-align:center}
+header h1{margin:0;font-size:20px;letter-spacing:2px;color:#fbd000;text-shadow:2px 2px 0 #e52521}
+header p{margin:4px 0 0;font-size:12px;color:#9be8ff}
+.back{display:block;text-align:center;background:#202028;color:#fbd000;text-decoration:none;padding:10px;font-size:14px;font-weight:bold;border-bottom:2px solid #000}
+.wrap{max-width:640px;margin:0 auto;padding:10px}
+.hud{display:flex;justify-content:space-between;background:#000;border:4px solid #5a5a6e;padding:8px 12px;font-size:15px;font-weight:bold;margin-bottom:8px}
+.hud .lives{color:#e52521}.hud .score{color:#fbd000}
+#stage{position:relative}
+canvas{width:100%;display:block;background:#5c94fc;image-rendering:pixelated;border:4px solid #000}
+.ctrls{display:flex;justify-content:space-between;margin-top:10px;gap:10px}
+.dpad{display:flex;gap:10px}
+.btn{min-width:64px;min-height:64px;font-size:26px;font-weight:bold;border:4px solid #000;border-radius:10px;background:#3a3a4a;color:#fff;cursor:pointer;font-family:inherit;touch-action:none}
+.btn:active{background:#e52521;transform:scale(.95)}
+#jumpBtn{background:#e52521;min-width:96px}
+#jumpBtn:active{background:#7c0d0b}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.card{background:#101018;border:4px solid #fbd000;padding:20px;max-width:480px;width:100%;text-align:center}
+.card h2{color:#fbd000;margin:0 0 10px;font-size:20px;letter-spacing:1px}
+.card p{font-size:14px;line-height:1.7;color:#ddd}
+.card .q{font-size:26px;color:#9be8ff;margin:12px 0;font-weight:bold}
+.abtn{display:block;width:100%;min-height:56px;margin:8px 0;font-size:20px;font-weight:bold;font-family:inherit;background:#3a3a4a;color:#fff;border:4px solid #5a5a6e;cursor:pointer}
+.abtn:active{background:#e52521}
+.concept{background:#000;border:2px dashed #fbd000;padding:10px;margin:12px 0;font-size:13px;color:#fbd000;text-align:left}
+.bigbtn{width:100%;min-height:60px;font-size:20px;font-weight:bold;font-family:inherit;background:#e52521;color:#fff;border:4px solid #7c0d0b;margin-top:10px;cursor:pointer;letter-spacing:2px}
+.bigbtn:active{transform:scale(.97)}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<header><h1>🍄 數學MARIO</h1><p>SUPER MATH BROS · 8-BIT</p></header>
+<a class="back" href="games.html">← 返回遊戲列表</a>
+<div class="wrap">
+<div class="hud"><div>❤️ <span class="lives" id="lives">3</span></div><div>⭐ <span class="score" id="score">0</span></div><div>🏁 <span id="lvl">1-1</span></div></div>
+<div id="stage"><canvas id="cv" width="480" height="270"></canvas></div>
+<div class="ctrls">
+<div class="dpad">
+<button class="btn" id="btnL">◀</button>
+<button class="btn" id="btnR">▶</button>
+</div>
+<button class="btn" id="jumpBtn">⤒ JUMP</button>
+</div>
+</div>
+
+<div class="overlay" id="intro"><div class="card">
+<h2>🍄 數學MARIO</h2>
+<p><b>玩法：</b>用 ◀ ▶ 行，JUMP 跳！頂 <b style="color:#fbd000">? 磚</b> 會彈出數學題，答啱先有金幣同繼續行，答錯扣一條命！去到終點旗就過關。</p>
+<div class="concept">💡 <b>數學概念：</b>四則運算（加減乘除）。紅白機年代嘅平台遊戲就係咁：行、跳、頂磚！</div>
+<button class="bigbtn" id="startBtn">▶ START</button>
+</div></div>
+
+<div class="overlay hide" id="qOverlay"><div class="card">
+<h2>❓ 數學題</h2>
+<div class="q" id="qText"></div>
+<div id="qOpts"></div>
+</div></div>
+
+<div class="overlay hide" id="endOverlay"><div class="card">
+<h2 id="endTitle">🏁 過關！</h2>
+<p id="endText"></p>
+<button class="bigbtn" id="againBtn">↻ 再玩一次</button>
+</div></div>
+
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+ctx.imageSmoothingEnabled=false;
+var W=480,H=270,GROUND=H-24;
+var GRAV=0.55,SPEED=2.3,JUMPV=-10;
+var player,blocks,flagX,levelW,score,lives,paused,over,coinT;
+var input={l:false,r:false};
+
+function beep(f,d){try{
+  var ac=beep.ac||(beep.ac=new (window.AudioContext||window.webkitAudioContext)());
+  var o=ac.createOscillator(),g=ac.createGain();
+  o.type='square';o.frequency.value=f;g.gain.value=0.06;
+  o.connect(g);g.connect(ac.destination);
+  o.start();o.stop(ac.currentTime+d);
+}catch(e){}}
+
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+function genQ(){
+  var t=rnd(0,3),a,b,ans,q;
+  if(t===0){a=rnd(11,49);b=rnd(11,49);ans=a+b;q=a+' + '+b+' = ?';}
+  else if(t===1){a=rnd(20,80);b=rnd(11,a-1);ans=a-b;q=a+' − '+b+' = ?';}
+  else if(t===2){a=rnd(3,12);b=rnd(3,12);ans=a*b;q=a+' × '+b+' = ?';}
+  else{b=rnd(2,9);ans=rnd(2,12);a=b*ans;q=a+' ÷ '+b+' = ?';}
+  var opts=[ans];
+  while(opts.length<4){var d=ans+rnd(-10,10);if(d!==ans&&d>0&&opts.indexOf(d)<0)opts.push(d);}
+  return {q:q,opts:shuffle(opts),ans:ans};
+}
+
+function buildLevel(){
+  levelW=1500;
+  player={x:30,y:GROUND-22,w:14,h:22,vx:0,vy:0,ground:false,face:1};
+  blocks=[
+    {x:220,y:GROUND-90,w:18,h:18,used:false,q:null},
+    {x:420,y:GROUND-90,w:18,h:18,used:false,q:null},
+    {x:640,y:GROUND-110,w:18,h:18,used:false,q:null},
+    {x:880,y:GROUND-90,w:18,h:18,used:false,q:null},
+    {x:1120,y:GROUND-110,w:18,h:18,used:false,q:null}
+  ];
+  flagX=1400;
+  coinT=0;
+}
+// 地面缺口（坑）
+var pits=[[520,600],[960,1040]];
+
+function inPit(x){for(var i=0;i<pits.length;i++){if(x>pits[i][0]&&x<pits[i][1])return true;}return false;}
+function groundAt(x){
+  if(inPit(x+7))return 1e9;
+  return GROUND;
+}
+function collide(){
+  var p=player;
+  p.ground=false;
+  // X
+  p.x+=p.vx;
+  for(var i=0;i<blocks.length;i++){var b=blocks[i];
+    if(p.x<b.x+b.w&&p.x+p.w>b.x&&p.y<b.y+b.h&&p.y+p.h>b.y){
+      if(p.vx>0)p.x=b.x-p.w;else if(p.vx<0)p.x=b.x+b.w;
+    }}
+  // Y
+  p.y+=p.vy;
+  var g=groundAt(p.x);
+  if(p.y+p.h>=g&&p.vy>=0){p.y=g-p.h;p.vy=0;p.ground=true;}
+  for(var j=0;j<blocks.length;j++){var bl=blocks[j];
+    if(p.x<bl.x+bl.w&&p.x+p.w>bl.x&&p.y<bl.y+bl.h&&p.y+p.h>bl.y){
+      if(p.vy<0){ // 頭頂磚
+        p.y=bl.y+bl.h;p.vy=0;
+        hitBlock(bl);
+      }else if(p.vy>0){p.y=bl.y-p.h;p.vy=0;p.ground=true;}
+    }}
+  if(p.x<0)p.x=0;
+  if(p.x>levelW-p.w)p.x=levelW-p.w;
+}
+var curBlock=null;
+function hitBlock(b){
+  if(b.used){beep(200,0.08);return;}
+  beep(660,0.1);
+  curBlock=b;
+  var q=genQ();
+  document.getElementById('qText').textContent=q.q;
+  var box=document.getElementById('qOpts');box.innerHTML='';
+  q.opts.forEach(function(o){
+    var btn=document.createElement('button');
+    btn.className='abtn';btn.textContent=o;
+    btn.addEventListener('click',function(){answerQ(o===q.ans,q.ans);});
+    box.appendChild(btn);
+  });
+  paused=true;
+  document.getElementById('qOverlay').classList.remove('hide');
+}
+function answerQ(ok,ans){
+  document.getElementById('qOverlay').classList.add('hide');
+  paused=false;
+  if(ok){
+    beep(880,0.12);setTimeout(function(){beep(1174,0.15);},110);
+    score+=100;curBlock.used=true;coinT=30;
+    document.getElementById('score').textContent=score;
+  }else{
+    beep(160,0.25);
+    lives--;document.getElementById('lives').textContent=lives;
+    if(lives<=0)gameOver(false);
+  }
+  curBlock=null;
+}
+function gameOver(win){
+  over=true;
+  var t=document.getElementById('endTitle'),x=document.getElementById('endText');
+  if(win){
+    score+=lives*200;
+    t.textContent='🏁 過關！';
+    x.innerHTML='衝線！總分 <b style="color:#fbd000">'+score+'</b><br>剩餘生命獎勵 +'+(lives*200);
+    beep(523,0.12);setTimeout(function(){beep(659,0.12);},130);setTimeout(function(){beep(784,0.25);},260);
+  }else{
+    t.textContent='💀 GAME OVER';
+    x.innerHTML='總分 <b style="color:#fbd000">'+score+'</b><br>再接再厲！';
+  }
+  document.getElementById('endOverlay').classList.remove('hide');
+}
+function reset(){
+  score=0;lives=3;over=false;paused=false;
+  document.getElementById('score').textContent='0';
+  document.getElementById('lives').textContent='3';
+  document.getElementById('endOverlay').classList.add('hide');
+  document.getElementById('qOverlay').classList.add('hide');
+  buildLevel();
+}
+
+// 繪畫
+function drawPlayer(x,y){
+  // 簡單 8-bit 人仔
+  ctx.fillStyle='#e52521';ctx.fillRect(x+3,y,8,4);      // 帽
+  ctx.fillStyle='#ffcf9e';ctx.fillRect(x+3,y+4,8,6);    // 面
+  ctx.fillStyle='#000';ctx.fillRect(x+9,y+5,2,2);       // 眼
+  ctx.fillStyle='#e52521';ctx.fillRect(x+2,y+10,10,6);  // 衫
+  ctx.fillStyle='#2448d8';ctx.fillRect(x+2,y+16,4,6);ctx.fillRect(x+8,y+16,4,6); // 腳
+}
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  var cam=Math.max(0,Math.min(levelW-W,player.x-W/2+40));
+  // 天空雲
+  ctx.fillStyle='#5c94fc';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#fff';
+  for(var ci=0;ci<5;ci++){var cx=((ci*330-cam*0.5)%(levelW+200)+(levelW+200))%(levelW+200)-100;
+    ctx.fillRect(cx,30,46,10);ctx.fillRect(cx+8,22,30,8);}
+  // 地面
+  ctx.fillStyle='#c84c0c';ctx.fillRect(0,GROUND,W,H-GROUND);
+  ctx.fillStyle='#5ac820';
+  for(var gx=0;gx<W;gx+=16){var wx=gx+cam;if(!inPit(wx))ctx.fillRect(gx,GROUND,16,4);}
+  // 坑
+  ctx.fillStyle='#000';
+  for(var pi=0;pi<pits.length;pi++){var px0=pits[pi][0]-cam,px1=pits[pi][1]-cam;
+    if(px1>0&&px0<W)ctx.fillRect(Math.max(0,px0),GROUND,Math.min(W,px1)-Math.max(0,px0),H-GROUND);}
+  // 磚
+  blocks.forEach(function(b){
+    var bx=b.x-cam;if(bx<-20||bx>W+20)return;
+    if(b.used){ctx.fillStyle='#9c5a24';ctx.fillRect(bx,b.y,b.w,b.h);
+      ctx.fillStyle='#6e3c14';ctx.fillRect(bx,b.y+b.h/2-1,b.w,2);}
+    else{ctx.fillStyle='#fbd000';ctx.fillRect(bx,b.y,b.w,b.h);
+      ctx.fillStyle='#000';ctx.fillRect(bx,b.y,b.w,2);ctx.fillRect(bx,b.y+b.h-2,b.w,2);
+      ctx.fillRect(bx,b.y,2,b.h);ctx.fillRect(bx+b.w-2,b.y,2,b.h);
+      ctx.fillStyle='#7c4a00';ctx.font='bold 12px monospace';ctx.textAlign='center';
+      ctx.fillText('?',bx+b.w/2,b.y+14);}
+  });
+  // 金幣彈出
+  if(coinT>0){coinT--;
+    ctx.fillStyle='#fbd000';ctx.fillRect(player.x-cam+2,player.y-24-(30-coinT),10,12);
+    ctx.fillStyle='#fff';ctx.fillRect(player.x-cam+4,player.y-22-(30-coinT),3,8);}
+  // 終點旗
+  var fx=flagX-cam;
+  ctx.fillStyle='#0a6c03';ctx.fillRect(fx,GROUND-90,4,90);
+  ctx.fillStyle='#e52521';
+  ctx.beginPath();ctx.moveTo(fx+4,GROUND-90);ctx.lineTo(fx+34,GROUND-78);ctx.lineTo(fx+4,GROUND-66);ctx.fill();
+  // 玩家
+  drawPlayer(player.x-cam,player.y);
+}
+function loop(){
+  if(!over&&!paused){
+    player.vx=(input.r?SPEED:0)-(input.l?SPEED:0);
+    if(player.vx!==0)player.face=player.vx>0?1:-1;
+    player.vy+=GRAV;if(player.vy>12)player.vy=12;
+    collide();
+    // 跌落坑
+    if(player.y>H+40){
+      lives--;document.getElementById('lives').textContent=lives;
+      beep(160,0.3);
+      if(lives<=0){gameOver(false);}
+      else{player.x=30;player.y=GROUND-22;player.vx=0;player.vy=0;}
+    }
+    // 到終點
+    if(player.x+player.w>=flagX&&!over)gameOver(true);
+  }
+  draw();
+  requestAnimationFrame(loop);
+}
+function bindHold(el,prop){
+  function on(e){e.preventDefault();input[prop]=true;}
+  function off(e){e.preventDefault();input[prop]=false;}
+  el.addEventListener('pointerdown',on);
+  el.addEventListener('pointerup',off);
+  el.addEventListener('pointerleave',off);
+  el.addEventListener('pointercancel',off);
+}
+bindHold(document.getElementById('btnL'),'l');
+bindHold(document.getElementById('btnR'),'r');
+var jb=document.getElementById('jumpBtn');
+jb.addEventListener('pointerdown',function(e){e.preventDefault();
+  if(!paused&&!over&&player.ground){player.vy=JUMPV;player.ground=false;beep(440,0.1);}});
+document.addEventListener('keydown',function(e){
+  if(e.key==='ArrowLeft')input.l=true;
+  if(e.key==='ArrowRight')input.r=true;
+  if((e.key===' '||e.key==='ArrowUp')&&!paused&&!over&&player.ground){player.vy=JUMPV;player.ground=false;beep(440,0.1);}
+});
+document.addEventListener('keyup',function(e){
+  if(e.key==='ArrowLeft')input.l=false;
+  if(e.key==='ArrowRight')input.r=false;
+});
+document.getElementById('startBtn').addEventListener('click',function(){
+  document.getElementById('intro').classList.add('hide');paused=false;beep(660,0.1);
+});
+document.getElementById('againBtn').addEventListener('click',function(){reset();});
+reset();
+paused=true;
+loop();
+})();
+</script>
+</body>
+</html>

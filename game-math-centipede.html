@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>數學蜈蚣</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#0a0a0a;color:#fff;font-family:"Courier New","Microsoft JhengHei",monospace;min-height:100vh;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+header{background:#1a1a2e;border-bottom:4px solid #00ff00;padding:10px;text-align:center}
+header h1{margin:0;font-size:22px;color:#00ff00;text-shadow:2px 2px 0 #003300;letter-spacing:2px}
+.hud{display:flex;justify-content:space-around;background:#111;border-bottom:4px solid #333;padding:8px;font-size:14px;font-weight:bold;flex-wrap:wrap;gap:4px}
+.hud span{color:#ffff00}
+.hud .tgt{color:#00ff00}
+.wrap{max-width:480px;margin:0 auto;padding:10px}
+#cvwrap{position:relative;border:4px solid #00ff00;background:#000}
+canvas{width:100%;display:block;image-rendering:pixelated;touch-action:none}
+#scan{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)}
+#msg{min-height:30px;text-align:center;font-size:16px;font-weight:bold;color:#ffff00;padding:4px}
+.ctrls{display:flex;gap:10px;margin-top:10px}
+.cbtn{flex:1;min-height:60px;font-size:26px;font-weight:bold;background:#222;color:#00ff00;border:4px solid #00ff00;cursor:pointer;font-family:inherit}
+.cbtn:active{background:#00ff00;color:#000}
+#fireBtn{flex:1.4;background:#330000;color:#ff3333;border-color:#ff3333;font-size:20px}
+#fireBtn:active{background:#ff3333;color:#000}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.card{background:#111;border:4px solid #00ff00;padding:24px;max-width:440px;width:100%;text-align:center}
+.card h2{color:#00ff00;margin:0 0 12px;font-size:24px;text-shadow:2px 2px 0 #003300}
+.card p{font-size:15px;line-height:1.8;font-family:"Microsoft JhengHei",sans-serif}
+.concept{background:#002200;border:2px solid #00ff00;padding:10px;margin:12px 0;font-size:14px;text-align:left;font-family:"Microsoft JhengHei",sans-serif}
+.concept b{color:#ffff00}
+.bigbtn{width:100%;min-height:60px;font-size:20px;font-weight:bold;background:#00ff00;color:#000;border:4px solid #fff;cursor:pointer;font-family:inherit;margin-top:10px}
+.bigbtn:active{transform:scale(.97)}
+.blink{animation:bl 1s steps(2) infinite}
+@keyframes bl{50%{opacity:.3}}
+</style>
+</head>
+<body>
+<header><h1>🐛 數學蜈蚣</h1></header>
+<div class="hud">
+<div>分數 <span id="score">0</span></div>
+<div class="tgt">🎯 <span id="target">3嘅倍數</span></div>
+<div>❤️ <span id="lives">3</span></div>
+<div>LV <span id="level">1</span></div>
+</div>
+<div class="wrap">
+<div id="cvwrap"><canvas id="cv" width="240" height="320"></canvas><div id="scan"></div></div>
+<div id="msg"></div>
+<div class="ctrls">
+<button class="cbtn" id="btnL">◀</button>
+<button class="cbtn" id="fireBtn">🔫 發射</button>
+<button class="cbtn" id="btnR">▶</button>
+</div>
+</div>
+<div class="overlay" id="intro"><div class="card">
+<h2>🐛 數學蜈蚣</h2>
+<p><b>玩法：</b>蜈蚣每節都有個數字！用 ◀ ▶ 移動炮台（或直接拖），撳「發射」射擊。<b>只可以射目標倍數嘅節</b>，射錯會扣分！蜈蚣跌到底線會扣一條命。</p>
+<div class="concept">💡 <b>數學概念 — 除法／倍數：</b>如果一個數除以 3 冇餘數，佢就係 3 嘅倍數。例如 12 ÷ 3 = 4，所以 12 係 3 嘅倍數，可以射！</div>
+<button class="bigbtn" id="startBtn">▶ 開始遊戲</button>
+</div></div>
+<div class="overlay" id="over" style="display:none"><div class="card">
+<h2>💀 GAME OVER</h2>
+<p id="finalScore" style="font-size:18px"></p>
+<button class="bigbtn" id="againBtn">🔁 再玩一次</button>
+</div></div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+var W=240,H=320;
+var shooterX=W/2,bullets=[],segs=[];
+var dir=1,speed=30,divisor=3,score=0,lives=3,level=1,remain=0;
+var lastFire=0,running=false,rafId=null,lastT=0;
+var msgEl=document.getElementById('msg'),msgT=null;
+var AC=null;
+function beep(f,d){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();var o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=f;g.gain.value=0.07;o.connect(g);g.connect(AC.destination);o.start();g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+d);o.stop(AC.currentTime+d);}catch(e){}}
+function flash(t,c){msgEl.textContent=t;msgEl.style.color=c||'#ffff00';if(msgT)clearTimeout(msgT);msgT=setTimeout(function(){msgEl.textContent='';},1200);}
+function hud(){document.getElementById('score').textContent=score;document.getElementById('lives').textContent='❤️'.repeat(Math.max(0,lives))||'—';document.getElementById('level').textContent=level;document.getElementById('target').textContent=divisor+'嘅倍數';}
+function buildLevel(){
+  var divs=[3,4,5,6,7,8];divisor=divs[(level-1)%divs.length];
+  speed=30+level*6;
+  segs=[];var n=Math.min(8+level,16);
+  var cols=8,sw=26,sh=20,x0=16,y0=34;
+  var mults=[];
+  for(var i=0;i<n;i++){
+    var isM=(i%2===0);
+    var v;
+    if(isM){v=divisor*(2+Math.floor(Math.random()*9));}
+    else{var k=2+Math.floor(Math.random()*9);v=divisor*k+(Math.random()<0.5?1:-1);if(v<=0)v=divisor*k+1;}
+    var c=i%cols,r=Math.floor(i/cols);
+    segs.push({x:x0+c*sw,y:y0+r*(sh+6),w:sw-4,h:sh,val:v});
+    if(v%divisor===0)mults.push(1);
+  }
+  if(mults.length<3){for(var j=0;j<3&&j<segs.length;j++){segs[j].val=divisor*(3+j);}}
+  remain=segs.filter(function(s){return s.val%divisor===0;}).length;
+  dir=1;bullets=[];shooterX=W/2;
+  hud();
+}
+function fire(){
+  var now=performance.now();
+  if(now-lastFire<250)return;lastFire=now;
+  bullets.push({x:shooterX,y:282});
+  beep(880,0.08);
+}
+function rectHit(b,s){return b.x>s.x-2&&b.x<s.x+s.w+2&&b.y>s.y-3&&b.y<s.y+s.h+3;}
+function update(dt){
+  // shooter handled by input
+  for(var i=bullets.length-1;i>=0;i--){
+    bullets[i].y-=220*dt;
+    if(bullets[i].y<0){bullets.splice(i,1);continue;}
+    for(var j=segs.length-1;j>=0;j--){
+      if(rectHit(bullets[i],segs[j])){
+        var s=segs[j];
+        if(s.val%divisor===0){
+          score+=100;beep(1200,0.1);flash('✅ +100',' #00ff00');
+          segs.splice(j,1);remain--;
+          if(remain<=0){level++;flash('🎉 過關！下一關 LV'+level,'#00ff00');buildLevel();return;}
+        }else{
+          score=Math.max(0,score-50);beep(200,0.2);flash('❌ '+s.val+' 唔係 '+divisor+' 嘅倍數！-50','#ff5555');
+        }
+        bullets.splice(i,1);break;
+      }
+    }
+  }
+  // move centipede row
+  var hitEdge=false;
+  for(var k=0;k<segs.length;k++){segs[k].x+=dir*speed*dt;if(segs[k].x<4||segs[k].x+segs[k].w>W-4)hitEdge=true;}
+  if(hitEdge){dir*=-1;for(var m=0;m<segs.length;m++)segs[m].y+=14;}
+  var maxY=0;for(var n2=0;n2<segs.length;n2++)maxY=Math.max(maxY,segs[n2].y+segs[n2].h);
+  if(maxY>268){
+    lives--;beep(150,0.4);flash('💥 蜈蚣攻陷底線！-1❤️','#ff5555');
+    if(lives<=0){gameOver();return;}
+    // reset row upward
+    var minY=34;for(var q=0;q<segs.length;q++){segs[q].y=minY+(q%2)*26;segs[q].x=16+(q%8)*26;}
+  }
+  hud();
+}
+function draw(){
+  ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+  // stars
+  ctx.fillStyle='#333';
+  for(var i=0;i<20;i++){ctx.fillRect((i*47)%W,(i*89)%H,2,2);}
+  // bottom line
+  ctx.fillStyle='#00ff00';ctx.fillRect(0,272,W,2);
+  // segments
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  for(var j=0;j<segs.length;j++){
+    var s=segs[j];
+    ctx.fillStyle='#00aa00';ctx.fillRect(s.x,s.y,s.w,s.h);
+    ctx.fillStyle='#003300';ctx.fillRect(s.x,s.y+s.h-4,s.w,4);
+    ctx.fillStyle='#ffff00';ctx.font='bold 9px monospace';
+    ctx.fillText(String(s.val),s.x+s.w/2,s.y+s.h/2);
+  }
+  // bullets
+  ctx.fillStyle='#ffff00';
+  for(var b=0;b<bullets.length;b++){ctx.fillRect(bullets[b].x-1,bullets[b].y-6,3,8);}
+  // shooter
+  var sx=shooterX;
+  ctx.fillStyle='#00ff00';
+  ctx.fillRect(sx-8,286,16,8);
+  ctx.fillRect(sx-3,278,6,10);
+  ctx.fillStyle='#ffffff';ctx.fillRect(sx-3,278,6,3);
+}
+function loop(t){
+  if(!running)return;
+  var dt=Math.min(0.05,(t-lastT)/1000||0.016);lastT=t;
+  if(moveL)shooterX=Math.max(10,shooterX-140*dt);
+  if(moveR)shooterX=Math.min(W-10,shooterX+140*dt);
+  update(dt);draw();
+  rafId=requestAnimationFrame(loop);
+}
+var moveL=false,moveR=false;
+function bindHold(el,set){
+  el.addEventListener('pointerdown',function(e){e.preventDefault();set(true);});
+  ['pointerup','pointercancel','pointerleave'].forEach(function(ev){el.addEventListener(ev,function(){set(false);});});
+}
+bindHold(document.getElementById('btnL'),function(v){moveL=v;});
+bindHold(document.getElementById('btnR'),function(v){moveR=v;});
+document.getElementById('fireBtn').addEventListener('pointerdown',function(e){e.preventDefault();fire();});
+// drag on canvas to move
+var dragging=false;
+cv.addEventListener('pointerdown',function(e){dragging=true;moveTo(e);});
+cv.addEventListener('pointermove',function(e){if(dragging)moveTo(e);});
+['pointerup','pointercancel','pointerleave'].forEach(function(ev){cv.addEventListener(ev,function(){dragging=false;});});
+function moveTo(e){var r=cv.getBoundingClientRect();var x=(e.clientX-r.left)/r.width*W;shooterX=Math.max(10,Math.min(W-10,x));}
+// keyboard
+document.addEventListener('keydown',function(e){
+  if(e.key==='ArrowLeft')moveL=true;if(e.key==='ArrowRight')moveR=true;
+  if(e.code==='Space'){e.preventDefault();fire();}
+});
+document.addEventListener('keyup',function(e){if(e.key==='ArrowLeft')moveL=false;if(e.key==='ArrowRight')moveR=false;});
+function resetGame(){score=0;lives=3;level=1;buildLevel();document.getElementById('over').style.display='none';running=true;lastT=performance.now();cancelAnimationFrame(rafId);rafId=requestAnimationFrame(loop);}
+function gameOver(){
+  running=false;cancelAnimationFrame(rafId);
+  var best=0;try{best=parseInt(localStorage.getItem('centipedeBest')||'0');}catch(e){}
+  var nb='';if(score>best){try{localStorage.setItem('centipedeBest',score);}catch(e){}nb=' 🏅新紀錄！';}
+  document.getElementById('finalScore').innerHTML='總分：<b style="color:#ffff00">'+score+'</b>'+nb+'<br>歷史最佳：'+Math.max(best,score);
+  document.getElementById('over').style.display='flex';
+  beep(150,0.5);
+}
+document.getElementById('startBtn').addEventListener('click',function(){document.getElementById('intro').style.display='none';resetGame();});
+document.getElementById('againBtn').addEventListener('click',resetGame);
+buildLevel();draw();
+})();
+</script>
+</body>
+</html>

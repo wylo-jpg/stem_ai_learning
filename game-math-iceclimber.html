@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>數學登山者</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Courier New",Courier,"Microsoft JhengHei",monospace;background:#0b1026;color:#e8f4ff;min-height:100vh;touch-action:manipulation}
+.scan{position:fixed;inset:0;pointer-events:none;z-index:60;background:repeating-linear-gradient(0deg,rgba(0,0,0,.10) 0 2px,transparent 2px 4px)}
+header{background:#101a3a;border-bottom:4px solid #3b5bff;padding:12px;text-align:center}
+header h1{margin:0;font-size:22px;letter-spacing:2px;color:#ffe14d;text-shadow:2px 2px 0 #b3541e}
+.hud{display:flex;justify-content:space-around;background:#101a3a;padding:10px;font-size:15px;font-weight:700;border-bottom:4px solid #3b5bff}
+.hud b{color:#ffe14d}
+.back{display:block;text-align:center;background:#1c2a5e;color:#9fd0ff;text-decoration:none;padding:12px;font-size:15px;font-weight:700}
+.wrap{max-width:480px;margin:0 auto;padding:12px 12px 40px}
+#cv{width:100%;height:auto;display:block;background:#0b1026;border:4px solid #3b5bff;image-rendering:pixelated}
+.qbox{background:#101a3a;border:4px solid #3b5bff;border-radius:0;padding:12px;margin:12px 0;text-align:center}
+.qbox .q{font-size:26px;font-weight:800;color:#ffe14d;letter-spacing:1px}
+.qbox .lv{font-size:14px;color:#9fd0ff}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt{min-height:60px;font-size:22px;font-weight:800;font-family:inherit;background:#1c2a5e;color:#fff;border:4px solid #3b5bff;border-radius:0;cursor:pointer}
+.opt:active{background:#3b5bff;transform:scale(.97)}
+#msg{min-height:30px;text-align:center;font-size:16px;font-weight:700;margin-top:8px;color:#7CFC98}
+.overlay{position:fixed;inset:0;background:rgba(5,8,20,.95);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.card{background:#101a3a;border:4px solid #3b5bff;padding:26px 22px;max-width:480px;width:100%;max-height:92vh;overflow-y:auto}
+.card h2{margin:0 0 10px;color:#ffe14d;font-size:22px;letter-spacing:2px}
+.card p,.card li{font-size:15px;line-height:1.7}
+.card ul{padding-left:20px}
+.concept{background:#0b1026;border:2px solid #3b5bff;padding:12px;margin:12px 0;font-size:14px}
+.concept b{color:#7CFC98}
+.card button{width:100%;min-height:58px;font-size:18px;font-weight:800;font-family:inherit;background:#e33;color:#fff;border:4px solid #fff;margin-top:10px;cursor:pointer;letter-spacing:2px}
+.blink{animation:bl 1s steps(2) infinite}
+@keyframes bl{50%{opacity:.2}}
+</style>
+</head>
+<body>
+<div class="scan"></div>
+<header><h1>🧊 數學登山者</h1></header>
+<a class="back" href="games.html">← 返回遊戲列表</a>
+<div class="wrap">
+<div class="hud"><div>❤ <b id="lives">3</b></div><div>🏔 <b id="floor">1</b>/10</div><div>⭐ <b id="score">0</b></div></div>
+<canvas id="cv" width="360" height="400"></canvas>
+<div class="qbox"><div class="lv" id="lv">第 1 層</div><div class="q" id="q">—</div></div>
+<div class="opts" id="opts"></div>
+<div id="msg"></div>
+</div>
+<div class="overlay" id="intro"><div class="card">
+<h2>🧊 數學登山者</h2>
+<p><b>玩法：</b>向上爬 10 層雪山！每層有一條算式，撳啱答案先上到去。撳錯會跌返落嚟扣一格命（3 格命）。</p>
+<div class="concept">💡 <b>數學概念：</b>整數四則運算（＋－×÷），包括負數。記住：負負得正，乘除先於加減！</div>
+<button onclick="startGame()">▶ START</button>
+<p class="blink" style="text-align:center;color:#9fd0ff">★ 8-BIT 挑戰 ★</p>
+</div></div>
+<div class="overlay" id="over" style="display:none"><div class="card">
+<h2 id="overT">🏁 完成！</h2>
+<p id="overS" style="font-size:17px"></p>
+<button onclick="resetGame()">🔁 再玩一次</button>
+</div></div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+var AC=null;
+function beep(f,d){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();var o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=f;g.gain.value=0.07;g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d);}catch(e){}}
+var level=1,score=0,lives=3,wrongs=0,ans=0,lock=false;
+function ri(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+function fmt(n){return n<0?'(−'+(-n)+')':''+n;}
+function fmtD(n){return (''+n).replace(/-/g,'−');}
+function newQ(){
+  var a,b,c,op,q;
+  if(level<=3){a=ri(2,19);b=ri(2,19);op=Math.random()<0.5?'+':'−';ans=op==='+'?a+b:a-b;q=fmtD(a)+' '+op+' '+fmtD(b);}
+  else if(level<=6){a=ri(2,9);b=ri(2,9);if(Math.random()<0.5){op='×';ans=a*b;q=a+' × '+b;}else{ans=a;a=ans*b;q=a+' ÷ '+b;}}
+  else{a=ri(-9,9);b=ri(-9,9);c=ri(2,9);var t=Math.random();
+    if(t<0.4){ans=a+b;q=fmtD(a)+' + '+fmtD(b);}
+    else if(t<0.7){ans=a*b+c;q=fmtD(a)+' × '+fmtD(b)+' + '+c;}
+    else{ans=a-b-c;q=fmtD(a)+' − '+fmtD(b)+' − '+c;}}
+  document.getElementById('q').textContent=q+' = ?';
+  document.getElementById('lv').textContent='第 '+level+' 層';
+  var opts=[ans],guard=0;
+  while(opts.length<4&&guard++<60){
+    var d=[1,-1,2,-2,10,-10][ri(0,5)];
+    var v=ans+d;
+    if(opts.indexOf(v)<0)opts.push(v);
+  }
+  for(var i=opts.length-1;i>0;i--){var j=ri(0,i),t2=opts[i];opts[i]=opts[j];opts[j]=t2;}
+  var box=document.getElementById('opts');box.innerHTML='';
+  opts.forEach(function(v){
+    var b=document.createElement('button');b.className='opt';b.textContent=fmtD(v);
+    b.addEventListener('click',function(){pick(v,b);});
+    box.appendChild(b);
+  });
+}
+function pick(v,btn){
+  if(lock)return;lock=true;
+  if(v===ans){
+    beep(880,0.12);score+=100;level++;
+    document.getElementById('score').textContent=score;
+    document.getElementById('msg').textContent='✅ 上升！';
+    if(level>10){win();return;}
+    document.getElementById('floor').textContent=level;
+    setTimeout(function(){newQ();draw();lock=false;},450);
+  }else{
+    beep(160,0.25);lives--;wrongs++;
+    document.getElementById('lives').textContent=lives;
+    document.getElementById('msg').textContent='❌ 跌咗！正確答案係 '+fmtD(ans);
+    btn.style.background='#a00';
+    if(lives<=0){setTimeout(lose,700);return;}
+    setTimeout(function(){newQ();draw();lock=false;},900);
+  }
+}
+function draw(){
+  var W=360,H=400;ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#0b1026';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#fff';
+  for(var s=0;s<40;s++){var sx=(s*97)%W,sy=(s*61)%(H/2);ctx.fillRect(sx,sy,2,2);}
+  var base=H-40,rowH=64;
+  for(var r=0;r<6;r++){
+    var y=base-r*rowH,shade=200-r*18;
+    ctx.fillStyle='rgb('+(120+r*8)+','+(170+r*8)+','+(220)+')';
+    ctx.fillRect(20,y,W-40,14);
+    ctx.fillStyle='#fff';
+    for(var px=24;px<W-24;px+=16)ctx.fillRect(px,y,3,3);
+  }
+  var pr=base-(level-1)*rowH;
+  var py=pr<base-4*rowH?base-4*rowH:pr;
+  var pxx=W/2;
+  ctx.fillStyle='#e33';ctx.fillRect(pxx-9,py-34,18,14);
+  ctx.fillStyle='#fc9';ctx.fillRect(pxx-7,py-46,14,12);
+  ctx.fillStyle='#222';ctx.fillRect(pxx-5,py-42,4,4);ctx.fillRect(pxx+1,py-42,4,4);
+  ctx.fillStyle='#963';ctx.fillRect(pxx-13,py-30,4,14);
+  ctx.fillStyle='#ffe14d';ctx.font='bold 13px monospace';ctx.textAlign='center';
+  ctx.fillText('LV.'+Math.min(level,10),pxx,py-52);
+  ctx.fillStyle='#ffe14d';ctx.font='bold 12px monospace';
+  ctx.fillText('▲ 登頂！',W/2,24);
+}
+function win(){
+  var bonus=lives*200,total=score+bonus;
+  var best=0;try{best=parseInt(localStorage.getItem('iceBest')||'0');}catch(e){}
+  var nb='';if(total>best){try{localStorage.setItem('iceBest',total);}catch(e){}nb=' 🏅 新紀錄！';}
+  document.getElementById('overT').textContent='🏆 登頂成功！';
+  document.getElementById('overS').innerHTML='分數：'+score+' ＋ 生命獎勵 '+bonus+' = <b style="color:#ffe14d">'+total+'</b>'+nb;
+  document.getElementById('over').style.display='flex';
+  beep(660,0.1);setTimeout(function(){beep(880,0.15);},120);
+}
+function lose(){
+  document.getElementById('overT').textContent='💥 跌落山崖…';
+  document.getElementById('overS').innerHTML='去到第 '+level+' 層，得分 '+score+'。再接再厲！';
+  document.getElementById('over').style.display='flex';
+}
+function resetGame(){
+  level=1;score=0;lives=3;wrongs=0;lock=false;
+  document.getElementById('lives').textContent='3';
+  document.getElementById('floor').textContent='1';
+  document.getElementById('score').textContent='0';
+  document.getElementById('msg').textContent='';
+  document.getElementById('over').style.display='none';
+  newQ();draw();
+}
+function startGame(){document.getElementById('intro').style.display='none';resetGame();}
+window.startGame=startGame;window.resetGame=resetGame;
+draw();
+})();
+</script>
+</body>
+</html>

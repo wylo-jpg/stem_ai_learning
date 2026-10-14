@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>數學俄羅斯</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#0b0b14;color:#fff;font-family:"Courier New",monospace;min-height:100vh;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+header{background:#000;border-bottom:4px solid #fbd000;padding:10px;text-align:center}
+header h1{margin:0;font-size:20px;letter-spacing:2px;color:#fbd000;text-shadow:2px 2px 0 #7c4a00}
+header p{margin:4px 0 0;font-size:12px;color:#9be8ff}
+.back{display:block;text-align:center;background:#1a1a26;color:#fbd000;text-decoration:none;padding:10px;font-size:14px;font-weight:bold;border-bottom:2px solid #000}
+.wrap{max-width:420px;margin:0 auto;padding:10px}
+.hud{display:flex;justify-content:space-between;background:#000;border:4px solid #5a5a6e;padding:8px 12px;font-size:15px;font-weight:bold;margin-bottom:8px}
+.hud .score{color:#fbd000}.hud .target{color:#4ade80}
+canvas{width:100%;display:block;background:#101018;image-rendering:pixelated;border:4px solid #000;margin:0 auto}
+.ctrls{display:flex;justify-content:center;gap:12px;margin-top:12px}
+.btn{min-width:72px;min-height:64px;font-size:28px;font-weight:bold;border:4px solid #000;border-radius:10px;background:#3a3a4a;color:#fff;cursor:pointer;font-family:inherit;touch-action:none}
+.btn:active{background:#fbd000;color:#000;transform:scale(.95)}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.card{background:#0b0b14;border:4px solid #fbd000;padding:20px;max-width:440px;width:100%;text-align:center}
+.card h2{color:#fbd000;margin:0 0 10px;font-size:20px}
+.card p{font-size:14px;line-height:1.7;color:#ddd}
+.concept{background:#000;border:2px dashed #fbd000;padding:10px;margin:12px 0;font-size:13px;color:#fbd000;text-align:left}
+.bigbtn{width:100%;min-height:60px;font-size:20px;font-weight:bold;font-family:inherit;background:#fbd000;color:#000;border:4px solid #7c4a00;margin-top:10px;cursor:pointer;letter-spacing:2px}
+.bigbtn:active{transform:scale(.97)}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<header><h1>🧱 數學俄羅斯</h1><p>MATH TRIS · 8-BIT</p></header>
+<a class="back" href="games.html">← 返回遊戲列表</a>
+<div class="wrap">
+<div class="hud"><div>⭐ <span class="score" id="score">0</span></div><div>🎯 目標和 <span class="target" id="target">20</span></div><div>🧱 <span id="rows">0</span>行</div></div>
+<canvas id="cv" width="200" height="480"></canvas>
+<div class="ctrls">
+<button class="btn" id="btnL">◀</button>
+<button class="btn" id="btnD">▼</button>
+<button class="btn" id="btnR">▶</button>
+<button class="btn" id="btnDrop" style="background:#e52521">⤓</button>
+</div>
+</div>
+
+<div class="overlay" id="intro"><div class="card">
+<h2>🧱 數學俄羅斯</h2>
+<p><b>玩法：</b>數字方塊跌落，◀ ▶ 移動，▼ 加速，⤓ 直接掉落。當一<b>行填滿</b>而且<b>總和等於目標</b>（如 20）就會消行得分！砌唔啱總和嘅行唔會消，疊到頂就 GAME OVER。</p>
+<div class="concept">💡 <b>數學概念：</b>加法組合 —— 5 個 1–9 嘅數字點樣加埋等於 20？例如 4+4+4+4+4、1+2+3+7+7！</div>
+<button class="bigbtn" id="startBtn">▶ START</button>
+</div></div>
+
+<div class="overlay hide" id="endOverlay"><div class="card">
+<h2 id="endTitle">💀 GAME OVER</h2>
+<p id="endText"></p>
+<button class="bigbtn" id="againBtn">↻ 再玩一次</button>
+</div></div>
+
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+ctx.imageSmoothingEnabled=false;
+var COLS=5,ROWS=12,CELL=40;
+var grid,cur,score,cleared,target,fallT,fallSpeed,over,started,flashRows;
+var COLORS=['#e52521','#fbd000','#4ade80','#9be8ff','#c084fc','#fb923c','#f472b6','#22d3ee','#a3e635'];
+
+function beep(f,d){try{
+  var ac=beep.ac||(beep.ac=new (window.AudioContext||window.webkitAudioContext)());
+  var o=ac.createOscillator(),g=ac.createGain();
+  o.type='square';o.frequency.value=f;g.gain.value=0.05;
+  o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d);
+}catch(e){}}
+
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function newGame(){
+  grid=[];for(var r=0;r<ROWS;r++){grid.push([0,0,0,0,0]);}
+  score=0;cleared=0;target=20;fallSpeed=0.9;over=false;fallT=0;flashRows=[];
+  document.getElementById('score').textContent='0';
+  document.getElementById('rows').textContent='0';
+  document.getElementById('target').textContent=target;
+  document.getElementById('endOverlay').classList.add('hide');
+  spawn();
+}
+function spawn(){
+  cur={c:2,val:rnd(1,9),y:-1};
+  // 檢查頂部已滿
+  for(var c=0;c<COLS;c++){if(grid[0][c]!==0){gameOver();return;}}
+}
+function collide(c,y){
+  var r=Math.floor(y);
+  if(c<0||c>=COLS)return true;
+  if(r>=ROWS)return true;
+  if(r<0)return false;
+  return grid[r][c]!==0;
+}
+function lock(){
+  var r=Math.round(cur.y);
+  if(r<0)r=0;
+  grid[r][cur.c]=cur.val;
+  beep(330,0.06);
+  checkRows();
+  spawn();
+}
+function checkRows(){
+  var full=[];
+  for(var r=0;r<ROWS;r++){
+    var sum=0,ok=true;
+    for(var c=0;c<COLS;c++){if(grid[r][c]===0){ok=false;break;}sum+=grid[r][c];}
+    if(ok&&sum===target)full.push(r);
+  }
+  if(full.length>0){
+    var pts=200*full.length*(full.length>1?2:1);
+    score+=pts;cleared+=full.length;
+    document.getElementById('score').textContent=score;
+    document.getElementById('rows').textContent=cleared;
+    flashRows=full.slice();
+    setTimeout(function(){
+      // 由下而上刪除
+      full.sort(function(a,b){return b-a;});
+      full.forEach(function(r){
+        grid.splice(r,1);
+        grid.unshift([0,0,0,0,0]);
+      });
+      flashRows=[];
+    },280);
+    beep(660,0.1);setTimeout(function(){beep(880,0.15);},100);
+    if(cleared>0&&cleared%4===0)fallSpeed+=0.15;
+  }
+}
+function gameOver(){
+  over=true;
+  beep(160,0.4);
+  document.getElementById('endText').innerHTML='消咗 <b style="color:#fbd000">'+cleared+'</b> 行<br>總分 <b style="color:#fbd000">'+score+'</b>';
+  document.getElementById('endOverlay').classList.remove('hide');
+}
+function move(d){
+  if(over||!started)return;
+  if(!collide(cur.c+d,cur.y))cur.c+=d;
+}
+function hardDrop(){
+  if(over||!started)return;
+  while(!collide(cur.c,cur.y+1))cur.y+=1;
+  cur.y=Math.floor(cur.y);
+  lock();
+}
+function drawCell(c,r,val,flash){
+  var x=c*CELL,y=r*CELL;
+  var col=flash?'#fff':COLORS[(val-1)%COLORS.length];
+  ctx.fillStyle='#000';ctx.fillRect(x,y,CELL,CELL);
+  ctx.fillStyle=col;ctx.fillRect(x+2,y+2,CELL-4,CELL-4);
+  ctx.fillStyle='rgba(255,255,255,.35)';ctx.fillRect(x+2,y+2,CELL-4,6);
+  ctx.fillStyle='#000';ctx.font='bold 22px monospace';ctx.textAlign='center';
+  ctx.fillText(val,x+CELL/2,y+28);
+  ctx.strokeStyle='#000';ctx.lineWidth=2;ctx.strokeRect(x+1,y+1,CELL-2,CELL-2);
+}
+function draw(){
+  ctx.fillStyle='#101018';ctx.fillRect(0,0,cv.width,cv.height);
+  for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){
+    if(grid[r][c]!==0)drawCell(c,r,grid[r][c],flashRows.indexOf(r)>=0);
+  }
+  if(cur&&!over){
+    var r=Math.floor(cur.y);
+    if(r>=0)drawCell(cur.c,r,cur.val,false);
+    // 影子
+    var gr=r;while(gr<ROWS-1&&grid[gr+1][cur.c]===0)gr++;
+    if(gr!==r&&gr>=0){ctx.strokeStyle='#fbd000';ctx.lineWidth=2;
+      ctx.strokeRect(cur.c*CELL+4,gr*CELL+4,CELL-8,CELL-8);}
+  }
+  // 頂線警告
+  ctx.fillStyle='#e52521';ctx.fillRect(0,0,cv.width,3);
+}
+var last=0;
+function loop(t){
+  if(started&&!over){
+    var dt=Math.min(50,t-last)/1000;last=t;
+    fallT+=dt*fallSpeed;
+    if(fallT>=1){fallT=0;
+      if(!collide(cur.c,cur.y+1))cur.y+=1;
+      else{cur.y=Math.floor(cur.y);lock();}
+    }
+  }else{last=t;}
+  draw();
+  requestAnimationFrame(loop);
+}
+function bindHold(el,fn){
+  var iv=null;
+  el.addEventListener('pointerdown',function(e){e.preventDefault();fn();iv=setInterval(fn,140);});
+  ['pointerup','pointerleave','pointercancel'].forEach(function(ev){
+    el.addEventListener(ev,function(){if(iv){clearInterval(iv);iv=null;}});
+  });
+}
+bindHold(document.getElementById('btnL'),function(){move(-1);});
+bindHold(document.getElementById('btnR'),function(){move(1);});
+bindHold(document.getElementById('btnD'),function(){if(!over&&started&&!collide(cur.c,cur.y+1))cur.y+=1;});
+document.getElementById('btnDrop').addEventListener('pointerdown',function(e){e.preventDefault();hardDrop();});
+document.addEventListener('keydown',function(e){
+  if(e.key==='ArrowLeft')move(-1);
+  if(e.key==='ArrowRight')move(1);
+  if(e.key==='ArrowDown'&&!collide(cur.c,cur.y+1))cur.y+=1;
+  if(e.key===' '){e.preventDefault();hardDrop();}
+});
+document.getElementById('startBtn').addEventListener('click',function(){
+  document.getElementById('intro').classList.add('hide');
+  started=true;newGame();beep(523,0.1);
+});
+document.getElementById('againBtn').addEventListener('click',function(){newGame();});
+newGame();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

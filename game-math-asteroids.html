@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>數學小行星</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#050510;color:#fff;font-family:"Courier New","Microsoft JhengHei",monospace;min-height:100vh;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+header{background:#0a0a2e;border-bottom:4px solid #ff00ff;padding:10px;text-align:center}
+header h1{margin:0;font-size:22px;color:#ff00ff;text-shadow:2px 2px 0 #440044;letter-spacing:2px}
+.hud{display:flex;justify-content:space-around;background:#111;border-bottom:4px solid #333;padding:8px;font-size:14px;font-weight:bold}
+.hud span{color:#ffff00}
+.wrap{max-width:480px;margin:0 auto;padding:10px}
+#cvwrap{position:relative;border:4px solid #ff00ff;background:#000}
+canvas{width:100%;display:block;image-rendering:pixelated;touch-action:none}
+#scan{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)}
+#msg{min-height:30px;text-align:center;font-size:16px;font-weight:bold;color:#ffff00;padding:4px}
+#ansbar{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.abtn{min-height:60px;font-size:22px;font-weight:bold;background:#1a1a2e;color:#fff;border:4px solid #ff00ff;cursor:pointer;font-family:inherit}
+.abtn:active{background:#ff00ff;color:#000}
+.abtn:disabled{opacity:.35}
+.ctrls{display:flex;gap:10px;margin-top:10px}
+.cbtn{flex:1;min-height:56px;font-size:24px;background:#222;color:#ff00ff;border:4px solid #ff00ff;cursor:pointer;font-family:inherit;font-weight:bold}
+.cbtn:active{background:#ff00ff;color:#000}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.card{background:#111;border:4px solid #ff00ff;padding:24px;max-width:440px;width:100%;text-align:center}
+.card h2{color:#ff00ff;margin:0 0 12px;font-size:24px;text-shadow:2px 2px 0 #440044}
+.card p{font-size:15px;line-height:1.8;font-family:"Microsoft JhengHei",sans-serif}
+.concept{background:#220022;border:2px solid #ff00ff;padding:10px;margin:12px 0;font-size:14px;text-align:left;font-family:"Microsoft JhengHei",sans-serif}
+.concept b{color:#ffff00}
+.bigbtn{width:100%;min-height:60px;font-size:20px;font-weight:bold;background:#ff00ff;color:#000;border:4px solid #fff;cursor:pointer;font-family:inherit;margin-top:10px}
+.bigbtn:active{transform:scale(.97)}
+</style>
+</head>
+<body>
+<header><h1>☄️ 數學小行星</h1></header>
+<div class="hud">
+<div>分數 <span id="score">0</span></div>
+<div>擊破 <span id="kills">0</span></div>
+<div>❤️ <span id="lives">3</span></div>
+<div>LV <span id="level">1</span></div>
+</div>
+<div class="wrap">
+<div id="cvwrap"><canvas id="cv" width="240" height="300"></canvas><div id="scan"></div></div>
+<div id="msg">撳隕石鎖定，再答問題！</div>
+<div id="ansbar">
+<button class="abtn" disabled>?</button><button class="abtn" disabled>?</button>
+<button class="abtn" disabled>?</button><button class="abtn" disabled>?</button>
+</div>
+<div class="ctrls">
+<button class="cbtn" id="btnL">◀</button>
+<button class="cbtn" id="btnR">▶</button>
+</div>
+</div>
+<div class="overlay" id="intro"><div class="card">
+<h2>☄️ 數學小行星</h2>
+<p><b>玩法：</b>隕石帶住算式衝向地球！<b>撳住粒隕石鎖定</b>，再喺下面四個答案撳啱嗰個，答啱隕石即爆！答錯唔扣命但會扣分，隕石跌到底線扣一條命。◀ ▶ 移動太空船（裝飾用）。</p>
+<div class="concept">💡 <b>數學概念 — 混合運算：</b>加減乘除混合一齊，要識得計。記住：先乘除、後加減！例如 7 + 8 × 2 = 7 + 16 = 23。</div>
+<button class="bigbtn" id="startBtn">▶ 開始遊戲</button>
+</div></div>
+<div class="overlay" id="over" style="display:none"><div class="card">
+<h2>💀 GAME OVER</h2>
+<p id="finalScore" style="font-size:18px"></p>
+<button class="bigbtn" id="againBtn">🔁 再玩一次</button>
+</div></div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+var W=240,H=300;
+var rocks=[],parts=[],shipX=W/2,sel=null;
+var score=0,lives=3,level=1,kills=0,running=false,rafId=null,lastT=0,spawnT=0;
+var msgEl=document.getElementById('msg');
+var abtns=Array.prototype.slice.call(document.querySelectorAll('.abtn'));
+var AC=null;
+function beep(f,d){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();var o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=f;g.gain.value=0.07;o.connect(g);g.connect(AC.destination);o.start();g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+d);o.stop(AC.currentTime+d);}catch(e){}}
+function flash(t,c){msgEl.textContent=t;msgEl.style.color=c||'#ffff00';}
+function hud(){document.getElementById('score').textContent=score;document.getElementById('kills').textContent=kills;document.getElementById('lives').textContent='❤️'.repeat(Math.max(0,lives))||'—';document.getElementById('level').textContent=level;}
+function rnd(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+function mkExpr(){
+  var ops=['+','-'];if(level>=2)ops.push('×');if(level>=3)ops.push('÷');
+  var op=ops[rnd(0,ops.length-1)],a,b,ans,expr;
+  if(op==='+'){a=rnd(5,49);b=rnd(5,49);ans=a+b;expr=a+'+'+b;}
+  else if(op==='-'){a=rnd(10,60);b=rnd(1,a-1);ans=a-b;expr=a+'-'+b;}
+  else if(op==='×'){a=rnd(2,9);b=rnd(2,9);ans=a*b;expr=a+'×'+b;}
+  else{b=rnd(2,9);ans=rnd(2,12);a=b*ans;expr=a+'÷'+b;}
+  var opts={},arr=[ans];
+  while(arr.length<4){var d=ans+rnd(-10,10);if(d!==ans&&d>=0&&opts[d]===undefined){opts[d]=1;arr.push(d);}}
+  for(var i=arr.length-1;i>0;i--){var j=rnd(0,i),t=arr[i];arr[i]=arr[j];arr[j]=t;}
+  return {expr:expr,ans:ans,opts:arr};
+}
+function spawn(){
+  var e=mkExpr();
+  rocks.push({x:rnd(25,W-25),y:-15,vx:(Math.random()-0.5)*14,vy:22+level*4,r:rnd(16,22),expr:e.expr,ans:e.ans,opts:e.opts,rot:0});
+}
+function selectRock(r){
+  sel=r;
+  for(var i=0;i<4;i++){abtns[i].disabled=false;abtns[i].textContent=r.opts[i];abtns[i].style.borderColor='#ff00ff';}
+  flash('🎯 鎖定：'+r.expr+' = ?','#00ffff');
+  beep(660,0.07);
+}
+function clearSel(){sel=null;for(var i=0;i<4;i++){abtns[i].disabled=true;abtns[i].textContent='?';}}
+abtns.forEach(function(b){
+  b.addEventListener('click',function(){
+    if(!sel||b.disabled)return;
+    var v=parseInt(b.textContent,10);
+    if(v===sel.ans){
+      score+=100;kills++;beep(1200,0.12);
+      explode(sel.x,sel.y);
+      rocks.splice(rocks.indexOf(sel),1);
+      flash('✅ BOOM！+100','#00ff00');
+      if(kills%5===0){level++;flash('🎉 升級 LV'+level+'！','#ffff00');beep(1500,0.2);}
+      clearSel();
+    }else{
+      score=Math.max(0,score-50);beep(200,0.2);
+      b.style.borderColor='#ff0000';b.disabled=true;
+      flash('❌ 唔係 '+v+'，再諗下！-50','#ff5555');
+    }
+    hud();
+  });
+});
+function explode(x,y){
+  for(var i=0;i<14;i++){parts.push({x:x,y:y,vx:(Math.random()-0.5)*90,vy:(Math.random()-0.5)*90,life:0.6});}
+}
+function update(dt){
+  spawnT-=dt;
+  if(spawnT<=0){spawn();spawnT=Math.max(0.5,1.3-level*0.12);}
+  if(moveL)shipX=Math.max(16,shipX-130*dt);
+  if(moveR)shipX=Math.min(W-16,shipX+130*dt);
+  for(var i=rocks.length-1;i>=0;i--){
+    var r=rocks[i];r.x+=r.vx*dt;r.y+=r.vy*dt;r.rot+=dt;
+    if(r.x<r.r)r.x=r.r;if(r.x>W-r.r)r.x=W-r.r;
+    if(r.y>H-14){
+      rocks.splice(i,1);lives--;beep(150,0.4);flash('💥 隕石撞地球！-1❤️','#ff5555');
+      if(sel===r)clearSel();
+      if(lives<=0){gameOver();return;}
+    }
+  }
+  for(var p=parts.length-1;p>=0;p--){var q=parts[p];q.x+=q.vx*dt;q.y+=q.vy*dt;q.life-=dt;if(q.life<=0)parts.splice(p,1);}
+  hud();
+}
+function draw(){
+  ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#222';for(var i=0;i<24;i++){ctx.fillRect((i*53)%W,(i*97)%H,2,2);}
+  ctx.fillStyle='#ff0000';ctx.fillRect(0,H-8,W,8);
+  ctx.fillStyle='#ff5555';ctx.font='bold 8px monospace';ctx.textAlign='center';
+  ctx.fillText('地 球 防 線',W/2,H-10);
+  for(var j=0;j<rocks.length;j++){
+    var r=rocks[j];
+    ctx.save();ctx.translate(r.x,r.y);ctx.rotate(r.rot);
+    ctx.fillStyle='#8a5a2b';
+    ctx.fillRect(-r.r,-r.r,r.r*2,r.r*2);
+    ctx.fillStyle='#5a3a1b';
+    ctx.fillRect(-r.r+4,-r.r+4,6,6);ctx.fillRect(r.r-10,r.r-12,6,6);ctx.fillRect(-r.r+6,r.r-10,5,5);
+    ctx.restore();
+    if(sel===r){ctx.strokeStyle='#00ffff';ctx.lineWidth=2;ctx.strokeRect(r.x-r.r-3,r.y-r.r-3,(r.r+3)*2,(r.r+3)*2);}
+    ctx.fillStyle='#fff';ctx.font='bold 10px monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+    var fs=r.expr.length>5?8:10;ctx.font='bold '+fs+'px monospace';
+    ctx.fillStyle='#000';ctx.fillRect(r.x-26,r.y-9,52,18);
+    ctx.fillStyle='#ffff00';ctx.fillText(r.expr,r.x,r.y+1);
+  }
+  for(var p2=0;p2<parts.length;p2++){var q2=parts[p2];ctx.fillStyle='#ffaa00';ctx.fillRect(q2.x-2,q2.y-2,4,4);}
+  // ship
+  ctx.fillStyle='#00ffff';
+  ctx.fillRect(shipX-10,H-26,20,8);
+  ctx.fillRect(shipX-4,H-34,8,10);
+  ctx.fillStyle='#ff00ff';ctx.fillRect(shipX-4,H-34,8,3);
+  ctx.textBaseline='alphabetic';
+}
+var moveL=false,moveR=false;
+function bindHold(el,set){el.addEventListener('pointerdown',function(e){e.preventDefault();set(true);});['pointerup','pointercancel','pointerleave'].forEach(function(ev){el.addEventListener(ev,function(){set(false);});});}
+bindHold(document.getElementById('btnL'),function(v){moveL=v;});
+bindHold(document.getElementById('btnR'),function(v){moveR=v;});
+cv.addEventListener('pointerdown',function(e){
+  var r=cv.getBoundingClientRect();
+  var x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;
+  for(var i=rocks.length-1;i>=0;i--){var rk=rocks[i];if(Math.hypot(x-rk.x,y-rk.y)<rk.r+6){selectRock(rk);return;}}
+});
+function loop(t){if(!running)return;var dt=Math.min(0.05,(t-lastT)/1000||0.016);lastT=t;update(dt);draw();rafId=requestAnimationFrame(loop);}
+function resetGame(){score=0;lives=3;level=1;kills=0;rocks=[];parts=[];sel=null;spawnT=0;clearSel();flash('撳隕石鎖定，再答問題！');document.getElementById('over').style.display='none';hud();running=true;lastT=performance.now();cancelAnimationFrame(rafId);rafId=requestAnimationFrame(loop);}
+function gameOver(){running=false;cancelAnimationFrame(rafId);var best=0;try{best=parseInt(localStorage.getItem('asteroidBest')||'0');}catch(e){}var nb='';if(score>best){try{localStorage.setItem('asteroidBest',score);}catch(e){}nb=' 🏅新紀錄！';}document.getElementById('finalScore').innerHTML='總分：<b style="color:#ffff00">'+score+'</b>（擊破 '+kills+' 粒）'+nb+'<br>歷史最佳：'+Math.max(best,score);document.getElementById('over').style.display='flex';beep(150,0.5);}
+document.getElementById('startBtn').addEventListener('click',function(){document.getElementById('intro').style.display='none';resetGame();});
+document.getElementById('againBtn').addEventListener('click',resetGame);
+draw();
+})();
+</script>
+</body>
+</html>

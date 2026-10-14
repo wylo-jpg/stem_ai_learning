@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>數學乒乓</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#001a00;color:#fff;font-family:"Courier New","Microsoft JhengHei",monospace;min-height:100vh;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+header{background:#003300;border-bottom:4px solid #00ff00;padding:10px;text-align:center}
+header h1{margin:0;font-size:22px;color:#7CFC00;text-shadow:2px 2px 0 #002200;letter-spacing:2px}
+.hud{display:flex;justify-content:space-around;background:#111;border-bottom:4px solid #333;padding:8px;font-size:14px;font-weight:bold;flex-wrap:wrap;gap:4px}
+.hud span{color:#ffff00}
+.hud .rule{color:#7CFC00}
+.wrap{max-width:480px;margin:0 auto;padding:10px}
+#cvwrap{position:relative;border:4px solid #7CFC00;background:#000}
+canvas{width:100%;display:block;image-rendering:pixelated;touch-action:none}
+#scan{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)}
+#msg{min-height:30px;text-align:center;font-size:15px;font-weight:bold;color:#ffff00;padding:4px}
+.tip{text-align:center;color:#888;font-size:13px;font-family:"Microsoft JhengHei",sans-serif}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.card{background:#111;border:4px solid #7CFC00;padding:24px;max-width:440px;width:100%;text-align:center}
+.card h2{color:#7CFC00;margin:0 0 12px;font-size:24px;text-shadow:2px 2px 0 #002200}
+.card p{font-size:15px;line-height:1.8;font-family:"Microsoft JhengHei",sans-serif}
+.concept{background:#002200;border:2px solid #7CFC00;padding:10px;margin:12px 0;font-size:14px;text-align:left;font-family:"Microsoft JhengHei",sans-serif}
+.concept b{color:#ffff00}
+.bigbtn{width:100%;min-height:60px;font-size:20px;font-weight:bold;background:#7CFC00;color:#000;border:4px solid #fff;cursor:pointer;font-family:inherit;margin-top:10px}
+.bigbtn:active{transform:scale(.97)}
+</style>
+</head>
+<body>
+<header><h1>🏓 數學乒乓</h1></header>
+<div class="hud">
+<div>分數 <span id="score">0</span></div>
+<div class="rule">🎯 <span id="rule">偶數</span></div>
+<div>❤️ <span id="lives">3</span></div>
+<div>波 <span id="balls">0/12</span></div>
+</div>
+<div class="wrap">
+<div id="cvwrap"><canvas id="cv" width="240" height="320"></canvas><div id="scan"></div></div>
+<div id="msg">拖塊板接波！</div>
+<div class="tip">👆 手指喺畫面拖動控制塊板</div>
+</div>
+<div class="overlay" id="intro"><div class="card">
+<h2>🏓 數學乒乓</h2>
+<p><b>玩法：</b>波波帶住數字跌落嚟！<b>拖動下面塊板，只接符合規則嘅波</b>（例如「偶數」就只接雙數）。接啱 +100，接錯扣一條命，走甩咗啱嘅波扣 50 分。每 12 個波換一條新規則！</p>
+<div class="concept">💡 <b>數學概念 — 比較大小／倍數：</b>要識得判斷數字特性：偶數（除以 2 冇餘數）、倍數（例如 5 嘅倍數：5、10、15…）、大細比較（＞50 即係大過 50）。</div>
+<button class="bigbtn" id="startBtn">▶ 開始遊戲</button>
+</div></div>
+<div class="overlay" id="over" style="display:none"><div class="card">
+<h2>💀 GAME OVER</h2>
+<p id="finalScore" style="font-size:18px"></p>
+<button class="bigbtn" id="againBtn">🔁 再玩一次</button>
+</div></div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+var W=240,H=320;
+var paddleX=W/2,balls=[];
+var score=0,lives=3,round=1,thrown=0,running=false,rafId=null,lastT=0,spawnT=0;
+var msgEl=document.getElementById('msg');
+var RULES=[
+ {name:'偶數',test:function(v){return v%2===0;}},
+ {name:'奇數',test:function(v){return v%2===1;}},
+ {name:'大過 50',test:function(v){return v>50;}},
+ {name:'細過 30',test:function(v){return v<30;}},
+ {name:'5 嘅倍數',test:function(v){return v%5===0;}},
+ {name:'3 嘅倍數',test:function(v){return v%3===0;}}
+];
+var rule=RULES[0];
+var AC=null;
+function beep(f,d){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();var o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=f;g.gain.value=0.07;o.connect(g);g.connect(AC.destination);o.start();g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+d);o.stop(AC.currentTime+d);}catch(e){}}
+function flash(t,c){msgEl.textContent=t;msgEl.style.color=c||'#ffff00';}
+function hud(){document.getElementById('score').textContent=score;document.getElementById('lives').textContent='❤️'.repeat(Math.max(0,lives))||'—';document.getElementById('rule').textContent=rule.name;document.getElementById('balls').textContent=thrown+'/12';}
+function rnd(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+function spawnBall(){
+  var v=rnd(10,99),vy=55+round*7;
+  balls.push({x:rnd(20,W-20),y:-12,vy:vy,vx:(Math.random()-0.5)*20,val:v});
+  thrown++;
+}
+function update(dt){
+  spawnT-=dt;
+  if(spawnT<=0&&thrown<12){spawnBall();spawnT=Math.max(0.7,1.5-round*0.1);}
+  for(var i=balls.length-1;i>=0;i--){
+    var b=balls[i];b.x+=b.vx*dt;b.y+=b.vy*dt;
+    if(b.x<10){b.x=10;b.vx*=-1;}if(b.x>W-10){b.x=W-10;b.vx*=-1;}
+    // paddle at y=292, height 10, width 56
+    if(b.y>=284&&b.y<=300&&Math.abs(b.x-paddleX)<32){
+      var ok=rule.test(b.val);
+      if(ok){score+=100;beep(1200,0.1);flash('✅ 接啱 '+b.val+'！+100','#00ff00');}
+      else{lives--;beep(150,0.4);flash('❌ '+b.val+' 唔啱規則！-1❤️','#ff5555');if(lives<=0){gameOver();return;}}
+      balls.splice(i,1);hud();continue;
+    }
+    if(b.y>H+10){
+      var ok2=rule.test(b.val);
+      if(ok2){score=Math.max(0,score-50);beep(300,0.15);flash('😱 走甩咗 '+b.val+'！-50','#ffaa00');}
+      balls.splice(i,1);
+    }
+  }
+  if(thrown>=12&&balls.length===0){
+    round++;thrown=0;
+    rule=RULES[rnd(0,RULES.length-1)];
+    flash('🎉 新規則：'+rule.name+'！','#ffff00');beep(1500,0.2);
+  }
+  hud();
+}
+function draw(){
+  ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#0a2a0a';for(var i=0;i<=12;i++){ctx.fillRect(0,i*26,W,1);}
+  ctx.fillStyle='#7CFC00';ctx.fillRect(0,160,W,2);
+  // balls
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  for(var j=0;j<balls.length;j++){
+    var b=balls[j];
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(b.x,b.y,11,0,7);ctx.fill();
+    ctx.fillStyle='#ff00ff';ctx.beginPath();ctx.arc(b.x,b.y,11,0,7);ctx.stroke();
+    ctx.fillStyle='#000';ctx.font='bold 10px monospace';
+    ctx.fillText(String(b.val),b.x,b.y+1);
+  }
+  // paddle
+  ctx.fillStyle='#7CFC00';ctx.fillRect(paddleX-28,290,56,10);
+  ctx.fillStyle='#ffffff';ctx.fillRect(paddleX-28,290,56,3);
+  ctx.textBaseline='alphabetic';
+}
+function moveTo(clientX){var r=cv.getBoundingClientRect();var x=(clientX-r.left)/r.width*W;paddleX=Math.max(28,Math.min(W-28,x));}
+cv.addEventListener('pointerdown',function(e){e.preventDefault();moveTo(e.clientX);cv.setPointerCapture(e.pointerId);});
+cv.addEventListener('pointermove',function(e){if(e.buttons>0)moveTo(e.clientX);});
+function loop(t){if(!running)return;var dt=Math.min(0.05,(t-lastT)/1000||0.016);lastT=t;update(dt);draw();rafId=requestAnimationFrame(loop);}
+function resetGame(){score=0;lives=3;round=1;thrown=0;balls=[];rule=RULES[0];spawnT=0;flash('拖塊板接波！');document.getElementById('over').style.display='none';hud();running=true;lastT=performance.now();cancelAnimationFrame(rafId);rafId=requestAnimationFrame(loop);}
+function gameOver(){running=false;cancelAnimationFrame(rafId);var best=0;try{best=parseInt(localStorage.getItem('pongBest')||'0');}catch(e){}var nb='';if(score>best){try{localStorage.setItem('pongBest',score);}catch(e){}nb=' 🏅新紀錄！';}document.getElementById('finalScore').innerHTML='總分：<b style="color:#ffff00">'+score+'</b>'+nb+'<br>歷史最佳：'+Math.max(best,score);document.getElementById('over').style.display='flex';beep(150,0.5);}
+document.getElementById('startBtn').addEventListener('click',function(){document.getElementById('intro').style.display='none';resetGame();});
+document.getElementById('againBtn').addEventListener('click',resetGame);
+draw();
+})();
+</script>
+</body>
+</html>
