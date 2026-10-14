@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-<title>比較級挑戰</title>
+<title>比較級階梯</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#14532d;color:#dcfce7;min-height:100vh}
@@ -12,19 +12,27 @@ header h1{margin:0;font-size:22px}
 .hud{display:flex;justify-content:space-around;background:#052e16;padding:12px;font-size:16px;font-weight:700}
 .hud span{color:#fbbf24}
 main{max-width:600px;margin:0 auto;padding:16px}
-.qcard{background:#166534;border-radius:16px;padding:22px;margin:12px 0;min-height:120px}
-.qnum{font-size:14px;color:#86efac;margin-bottom:8px}
-.qtext{font-size:20px;line-height:1.7}
-.qtext .blank{display:inline-block;min-width:80px;border-bottom:3px dashed #fbbf24;text-align:center;color:#fbbf24;font-weight:800}
-.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
-.opts button{min-height:64px;font-size:19px;font-weight:800;border-radius:14px;border:2px solid #22c55e;background:#052e16;color:#dcfce7;cursor:pointer;touch-action:manipulation}
+.baseword{background:#166534;border-radius:16px;padding:20px;margin:12px 0;text-align:center}
+.baseword .lbl{font-size:14px;color:#86efac}
+.baseword .w{font-size:40px;font-weight:800;color:#fff;letter-spacing:1px}
+.ladder{display:flex;gap:12px;margin:14px 0}
+.step{flex:1;background:#052e16;border-radius:14px;padding:14px 10px;text-align:center;border:2px dashed #22c55e;min-height:96px;cursor:pointer;touch-action:manipulation}
+.step .t{font-size:14px;color:#86efac;margin-bottom:6px}
+.step .v{font-size:20px;font-weight:800;color:#fbbf24;min-height:28px}
+.step.filled{border-style:solid;background:#14532d}
+.step .tap{font-size:12px;color:#86efac}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+.opts button{min-height:62px;font-size:18px;font-weight:800;border-radius:14px;border:2px solid #22c55e;background:#052e16;color:#dcfce7;cursor:pointer;touch-action:manipulation;padding:8px}
 .opts button:active{transform:scale(.96)}
-.opts button.correct{background:#166534;border-color:#4ade80;color:#fff}
-.opts button.wrong{background:#7f1d1d;border-color:#f87171;color:#fff}
-.opts button:disabled{opacity:.9}
+.opts button.used{opacity:.25}
+.opts button:disabled{opacity:.85}
+.submitrow{margin-top:14px}
+.submitrow button{width:100%;min-height:58px;font-size:19px;font-weight:800;border:none;border-radius:14px;background:#22c55e;color:#052e16;cursor:pointer;touch-action:manipulation}
+.submitrow button:active{transform:scale(.98)}
+.submitrow button:disabled{opacity:.6}
 .feedback{min-height:44px;font-size:16px;font-weight:700;text-align:center;margin-top:10px}
 .feedback.good{color:#4ade80}.feedback.bad{color:#f87171}
-.explain{background:#14532d;border-left:4px solid #fbbf24;border-radius:8px;padding:10px 14px;margin-top:8px;font-size:15px;display:none}
+.explain{background:#052e16;border-left:4px solid #fbbf24;border-radius:8px;padding:10px 14px;margin-top:8px;font-size:15px;display:none}
 .overlay{position:fixed;inset:0;background:rgba(5,40,20,.96);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
 .card{background:#166534;border-radius:20px;padding:28px 24px;max-width:540px;width:100%;max-height:92vh;overflow-y:auto}
 .card h2{margin:0 0 12px;font-size:24px;color:#fbbf24}
@@ -36,26 +44,28 @@ main{max-width:600px;margin:0 auto;padding:16px}
 </style>
 </head>
 <body>
-<header><h1>📏 比較級挑戰</h1></header>
-<div class="hud"><div>第 <span id="qn">1</span>/10 題</div><div>⭐ <span id="score">0</span> 分</div><div>🔥 <span id="streak">0</span> 連擊</div></div>
+<header><h1>🪜 比較級階梯</h1></header>
+<div class="hud"><div>第 <span id="qn">1</span>/8 題</div><div>⭐ <span id="score">0</span> 分</div><div>🔥 <span id="streak">0</span> 連擊</div></div>
 <main>
-<div class="qcard">
-<div class="qnum" id="qnum"></div>
-<div class="qtext" id="qtext"></div>
+<div class="baseword"><div class="lbl">形容詞原形</div><div class="w" id="base">tall</div></div>
+<div class="ladder">
+<div class="step" id="slot0"><div class="t">比較級<br>comparative</div><div class="v" id="sv0"></div><div class="tap">撳我清除</div></div>
+<div class="step" id="slot1"><div class="t">最高級<br>superlative</div><div class="v" id="sv1"></div><div class="tap">撳我清除</div></div>
 </div>
 <div class="opts" id="opts"></div>
+<div class="submitrow"><button id="goBtn">確定答案 ✓</button></div>
 <div class="feedback" id="fb"></div>
 <div class="explain" id="explain"></div>
 </main>
 <div class="overlay" id="intro"><div class="card">
-<h2>📏 比較級挑戰</h2>
-<p><b>玩法：</b>睇住英文句子，揀正確嘅比較級或最高級形式。共 10 題，答啱 +100 分，連擊有加成！</p>
+<h2>🪜 比較級階梯</h2>
+<p><b>玩法：</b>上面會出一個形容詞原形（例如 <b>tall</b>）。撳下面嘅選項，將<b>比較級</b>（taller）同<b>最高級</b>（tallest）分別放入兩格，撳錯格可以撳返嚟清除，最後撳「確定答案」。<b>兩格都啱先有分</b>（+150）！共 8 題。</p>
 <div class="concept">💡 <b>文法概念 — 比較級規則：</b><br>
 • <b>短字（1-2 音節）：</b>加 -er / -est（tall → taller → tallest）<br>
 • <b>長字（3+ 音節）：</b>用 more / most（beautiful → more beautiful → most beautiful）<br>
-• <b>不規則：</b>good → better → best；bad → worse → worst；many → more → most<br>
+• <b>不規則：</b>good → better → best；bad → worse → worst<br>
 • <b>比較級 + than</b>；<b>最高級 + the</b>！</div>
-<button onclick="startGame()">開始挑戰！</button>
+<button onclick="startGame()">開始爬梯！</button>
 </div></div>
 <div class="overlay" id="gameover" style="display:none"><div class="card">
 <h2>🏁 完成！</h2>
@@ -63,90 +73,120 @@ main{max-width:600px;margin:0 auto;padding:16px}
 <button onclick="resetGame()">再玩一次 🔁</button>
 </div></div>
 <script>
-var QS=[
-{q:"She is <b>___</b> than her sister.",a:"taller",o:["taller","more tall","tallest","most tall"],e:"tall 係單音節，加 -er：taller。比較級後面用 than。"},
-{q:"This is the <b>___</b> book I have ever read.",a:"best",o:["best","better","good","most good"],e:"good 係不規則：good → better → best。最高級前面用 the。"},
-{q:"He runs <b>___</b> than me.",a:"faster",o:["faster","more fast","fastest","most fast"],e:"fast 單音節，加 -er：faster。"},
-{q:"She is the <b>___</b> student in class.",a:"most intelligent",o:["most intelligent","intelligentest","more intelligent","intelligent"],e:"intelligent 有 4 個音節，用 most：most intelligent。"},
-{q:"Today is <b>___</b> than yesterday.",a:"colder",o:["colder","more cold","coldest","most cold"],e:"cold 單音節，加 -er：colder。"},
-{q:"This problem is <b>___</b> than that one.",a:"more difficult",o:["more difficult","difficulter","most difficult","difficultest"],e:"difficult 3 音節，用 more：more difficult。"},
-{q:"He is the <b>___</b> boy I know.",a:"tallest",o:["tallest","taller","most tall","more tall"],e:"最高級用 -est：tallest，前面加 the。"},
-{q:"My house is <b>___</b> than yours.",a:"bigger",o:["bigger","more big","biggest","most big"],e:"big 要雙寫 g 再加 -er：bigger（短母音 + 單子音要雙寫）。"},
-{q:"She sings <b>___</b> than anyone else.",a:"more beautifully",o:["more beautifully","beautifullier","most beautifully","beautifully"],e:"副詞 beautifully 用 more：more beautifully。"},
-{q:"This is the <b>___</b> movie of the year.",a:"worst",o:["worst","worse","baddest","most bad"],e:"bad 係不規則：bad → worse → worst。"},
-{q:"He is <b>___</b> at English than me.",a:"better",o:["better","gooder","more good","best"],e:"good → better（比較級）。注意唔係 gooder！"},
-{q:"The exam was <b>___</b> than I expected.",a:"easier",o:["easier","more easy","easiest","most easy"],e:"easy 結尾係 y，變 i 再加 -er：easier。"},
-{q:"She is <b>___</b> careful than her brother.",a:"more",o:["more","most","-er","-est"],e:"句子已經有 careful，前面加 more 變比較級：more careful。"},
-{q:"He is the <b>___</b> person in the world.",a:"happiest",o:["happiest","happyer","most happy","more happy"],e:"happy 結尾 y 變 i 加 -est：happiest。"},
-{q:"This road is <b>___</b> than that one.",a:"narrower",o:["narrower","more narrow","narrowest","most narrow"],e:"narrow 兩音節，兩種都啱，但 narrower 較常用。"},
-{q:"I have <b>___</b> money than him.",a:"less",o:["less","fewer","least","fewest"],e:"money 不可數，用 less；可數名詞先用 fewer（fewer books）。"},
-{q:"There are <b>___</b> students today than yesterday.",a:"fewer",o:["fewer","less","fewest","least"],e:"students 可數，用 fewer。"},
-{q:"She is getting <b>___</b> and <b>___</b>.",a:"taller and taller",o:["taller and taller","more tall and more tall","tall and tall","tallest and tallest"],e:"「愈來愈…」用比較級 + and + 比較級：taller and taller。"},
-{q:"The <b>___</b> you study, the <b>___</b> you learn.",a:"more, more",o:["more, more","most, most","much, much","many, many"],e:"「愈…愈…」句型：The more…, the more…。"},
-{q:"He is <b>___</b> than any other student.",a:"smarter",o:["smarter","smartest","more smart","most smart"],e:"smart 單音節：smarter。注意 than any other = 比較級。"}
+var WS=[
+{b:"tall",c:"taller",s:"tallest",r:"單音節加 -er / -est。"},
+{b:"good",c:"better",s:"best",r:"不規則：good → better → best。"},
+{b:"bad",c:"worse",s:"worst",r:"不規則：bad → worse → worst。"},
+{b:"beautiful",c:"more beautiful",s:"most beautiful",r:"3+ 音節用 more / most。"},
+{b:"big",c:"bigger",s:"biggest",r:"短母音 + 單子音要雙寫：bigger。"},
+{b:"easy",c:"easier",s:"easiest",r:"結尾 y 變 i 再加 -er / -est。"},
+{b:"happy",c:"happier",s:"happiest",r:"結尾 y 變 i 再加 -er / -est。"},
+{b:"fast",c:"faster",s:"fastest",r:"單音節加 -er / -est。"},
+{b:"interesting",c:"more interesting",s:"most interesting",r:"3+ 音節用 more / most。"},
+{b:"cold",c:"colder",s:"coldest",r:"單音節加 -er / -est。"},
+{b:"difficult",c:"more difficult",s:"most difficult",r:"3 音節用 more / most。"},
+{b:"far",c:"farther",s:"farthest",r:"far → farther → farthest（講距離）。"}
 ];
-var qi=0,score=0,streak=0,order=[];
+var qi=0,score=0,streak=0,order=[],timer=null;
+var cur=null,slot=[null,null];
 function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
 function startGame(){document.getElementById('intro').style.display='none';resetGame();}
 function resetGame(){
+  clearTimeout(timer);
   document.getElementById('gameover').style.display='none';
   qi=0;score=0;streak=0;
-  order=shuffle(QS.slice());
+  order=shuffle(WS.slice()).slice(0,8);
   document.getElementById('score').textContent='0';
   document.getElementById('streak').textContent='0';
   showQ();
 }
 function showQ(){
-  var q=order[qi];
+  cur=order[qi];
+  slot=[null,null];usedIdx=[];
   document.getElementById('qn').textContent=(qi+1);
-  document.getElementById('qnum').textContent='第 '+(qi+1)+' 題';
-  document.getElementById('qtext').innerHTML=q.q;
+  document.getElementById('base').textContent=cur.b;
+  document.getElementById('sv0').textContent='';
+  document.getElementById('sv1').textContent='';
+  document.getElementById('slot0').className='step';
+  document.getElementById('slot1').className='step';
   document.getElementById('fb').textContent='';
   document.getElementById('fb').className='feedback';
   var ex=document.getElementById('explain');ex.style.display='none';ex.innerHTML='';
-  var opts=shuffle(q.o.slice());
+  document.getElementById('goBtn').disabled=false;
+  var pool=[];
+  WS.forEach(function(w){if(w!==cur){pool.push(w.c);pool.push(w.s);}});
+  pool=pool.filter(function(x){return x!==cur.c&&x!==cur.s;});
+  var distract=shuffle(pool).slice(0,4);
+  var opts=shuffle([cur.c,cur.s].concat(distract));
   var box=document.getElementById('opts');box.innerHTML='';
-  opts.forEach(function(o){
+  opts.forEach(function(o,i){
     var b=document.createElement('button');
-    b.textContent=o;
-    b.addEventListener('click',function(){answer(b,o,q);});
+    b.textContent=o;b.dataset.i=i;
+    b.addEventListener('click',function(){tapOpt(o,b);});
     box.appendChild(b);
   });
 }
-function answer(btn,choice,q){
-  var btns=document.getElementById('opts').children;
-  for(var i=0;i<btns.length;i++)btns[i].disabled=true;
+function refreshUsed(){
+  var bs=document.getElementById('opts').children;
+  for(var j=0;j<bs.length;j++){
+    var inSlot=(slot[0]===bs[j].textContent||slot[1]===bs[j].textContent);
+    if(inSlot)bs[j].classList.add('used');else bs[j].classList.remove('used');
+  }
+}
+function tapOpt(o,btn){
+  var k=slot[0]===null?0:(slot[1]===null?1:-1);
+  if(k<0||btn.classList.contains('used'))return;
+  slot[k]=o;
+  document.getElementById('sv'+k).textContent=o;
+  document.getElementById('slot'+k).className='step filled';
+  refreshUsed();
+}
+function clearSlot(k){
+  if(slot[k]===null)return;
+  slot[k]=null;
+  document.getElementById('sv'+k).textContent='';
+  document.getElementById('slot'+k).className='step';
+  refreshUsed();
+}
+document.getElementById('slot0').addEventListener('click',function(){clearSlot(0);});
+document.getElementById('slot1').addEventListener('click',function(){clearSlot(1);});
+document.getElementById('goBtn').addEventListener('click',function(){
   var fb=document.getElementById('fb');
   var ex=document.getElementById('explain');
-  if(choice===q.a){
-    btn.className='correct';
+  if(slot[0]===null||slot[1]===null){
+    fb.textContent='⚠️ 兩格都要填先可以確定！';
+    fb.className='feedback bad';
+    return;
+  }
+  document.getElementById('goBtn').disabled=true;
+  var bs=document.getElementById('opts').children;
+  for(var i=0;i<bs.length;i++)bs[i].disabled=true;
+  var okC=(slot[0]===cur.c),okS=(slot[1]===cur.s);
+  if(okC&&okS){
     streak++;
-    var pts=100+(streak-1)*20;
+    var pts=150+(streak-1)*30;
     score+=pts;
-    fb.textContent='✅ 啱！+'+pts+' 分';
+    fb.textContent='✅ 兩格全啱！+'+pts+' 分';
     fb.className='feedback good';
   }else{
-    btn.className='wrong';
     streak=0;
-    fb.textContent='❌ 答案係「'+q.a+'」';
+    var msg='❌ 唔啱！正確：比較級「'+cur.c+'」、最高級「'+cur.s+'」';
+    fb.textContent=msg;
     fb.className='feedback bad';
-    for(var j=0;j<btns.length;j++){
-      if(btns[j].textContent===q.a)btns[j].className='correct';
-    }
   }
   document.getElementById('score').textContent=score;
   document.getElementById('streak').textContent=streak;
-  ex.innerHTML='💡 '+q.e;
+  ex.innerHTML='💡 '+cur.b+' → '+cur.c+' → '+cur.s+'：'+cur.r;
   ex.style.display='block';
-  setTimeout(function(){
+  timer=setTimeout(function(){
     qi++;
-    if(qi>=10)endGame();else showQ();
-  },2200);
-}
+    if(qi>=8)endGame();else showQ();
+  },2600);
+});
 function endGame(){
   document.getElementById('gameover').style.display='flex';
   var msg='總分：<b style="color:#fbbf24">'+score+'</b> 分<br>';
-  msg+=score>=1000?'🌟 比較級大師！-er/-est 難唔到你！':score>=700?'👍 好叻，繼續努力！':'💪 記住：短字加 -er/-est，長字用 more/most！';
+  msg+=score>=1200?'🌟 爬梯王！-er/-est 零失手！':score>=800?'👍 好叻，繼續努力！':'💪 記住：短字加 -er/-est，長字用 more/most！';
   document.getElementById('finalScore').innerHTML=msg;
 }
 </script>

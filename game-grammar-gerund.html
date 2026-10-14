@@ -3,163 +3,172 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-<title>動名詞 vs 不定詞</title>
+<title>動詞分類大作戰</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#f0fdf4;color:#14532d;min-height:100vh}
-header{background:linear-gradient(135deg,#15803d,#22c55e);color:#fff;padding:16px;text-align:center}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+header{background:linear-gradient(135deg,#7c3aed,#a855f7);padding:14px;text-align:center}
 header h1{margin:0;font-size:22px}
-.hud{display:flex;justify-content:space-around;background:#14532d;color:#fff;padding:10px;font-size:15px;font-weight:700}
-.hud span{color:#fde047}
-main{max-width:600px;margin:0 auto;padding:16px}
-.qcard{background:#fff;border-radius:16px;padding:22px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.08);text-align:center}
-.qnum{font-size:14px;color:#16a34a;font-weight:700;margin-bottom:8px}
-.qtext{font-size:21px;font-weight:700;line-height:1.7}
-.qtext .blank{color:#dc2626;border-bottom:3px dashed #dc2626;padding:0 8px}
-.answers{display:flex;flex-direction:column;gap:12px}
-.abtn{min-height:60px;font-size:19px;font-weight:700;border:3px solid #16a34a;background:#fff;color:#14532d;border-radius:14px;cursor:pointer;touch-action:manipulation}
-.abtn:active{transform:scale(.98)}
-.abtn.correct{background:#16a34a;color:#fff}
-.abtn.wrong{background:#dc2626;color:#fff;border-color:#dc2626}
-.abtn:disabled{opacity:1;cursor:default}
-.feedback{min-height:60px;font-size:16px;font-weight:700;text-align:center;margin-top:10px;line-height:1.6}
-.feedback.good{color:#16a34a}.feedback.bad{color:#dc2626}
-.explain{font-size:14px;color:#475569;font-weight:400}
-.nextbtn{display:none;width:100%;min-height:56px;font-size:18px;font-weight:800;background:#16a34a;color:#fff;border:none;border-radius:14px;margin-top:8px;cursor:pointer;touch-action:manipulation}
-.overlay{position:fixed;inset:0;background:rgba(20,83,45,.96);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
-.card{background:#fff;border-radius:20px;padding:28px 24px;max-width:540px;width:100%;max-height:92vh;overflow-y:auto;color:#14532d}
-.card h2{margin:0 0 12px;font-size:24px}
+.back{display:block;text-align:center;color:#a78bfa;text-decoration:none;padding:10px;font-size:15px}
+.hud{display:flex;justify-content:space-around;background:#1e1b4b;padding:10px;font-size:15px;font-weight:700}
+.hud span{color:#fbbf24}
+main{max-width:600px;margin:0 auto;padding:14px}
+#tray{height:150px;display:flex;align-items:center;justify-content:center}
+.chip{background:#f8fafc;color:#0f172a;font-size:30px;font-weight:800;padding:18px 34px;border-radius:18px;box-shadow:0 6px 16px rgba(0,0,0,.4);cursor:grab;user-select:none;-webkit-user-select:none;touch-action:none;border:4px solid #a855f7}
+.chip.sel{border-color:#fbbf24;box-shadow:0 0 0 5px rgba(251,191,36,.45)}
+.chip.fall{animation:fall .65s ease-out}
+@keyframes fall{from{transform:translateY(-140px);opacity:0}to{transform:translateY(0);opacity:1}}
+.tip{font-size:14px;color:#94a3b8;text-align:center;margin:2px 0 8px}
+.boxes{display:flex;gap:12px;margin-top:4px}
+.box{flex:1;min-height:176px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px;border:3px dashed #475569;background:#1e293b;transition:transform .15s,background .15s}
+.box h2{margin:0 0 6px;font-size:20px}
+.box p{margin:0;font-size:14px;color:#94a3b8;text-align:center;line-height:1.6}
+#boxVing{border-color:#38bdf8}
+#boxTo{border-color:#fbbf24}
+.box.hover{transform:scale(1.04)}
+#boxVing.hover{border-style:solid;background:#0c4a6e}
+#boxTo.hover{border-style:solid;background:#713f12}
+#fb{min-height:42px;text-align:center;font-size:17px;font-weight:700;margin-top:10px}
+#fb.good{color:#4ade80}
+#fb.bad{color:#f87171}
+.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-9px)}75%{transform:translateX(9px)}}
+.overlay{position:fixed;inset:0;background:rgba(2,6,23,.95);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.card{background:#1e293b;border-radius:20px;padding:26px 22px;max-width:540px;width:100%;max-height:90vh;overflow-y:auto}
+.card h2{margin:0 0 12px;font-size:24px;color:#c4b5fd}
 .card p,.card li{font-size:16px;line-height:1.7}
 .card ul{padding-left:20px}
-.concept{background:#f0fdf4;border-radius:12px;padding:14px;margin:14px 0;font-size:15px;border:1px solid #bbf7d0}
-.concept b{color:#15803d}
-.card button{width:100%;min-height:58px;font-size:18px;font-weight:800;background:#16a34a;color:#fff;border:none;border-radius:14px;margin-top:12px;cursor:pointer;touch-action:manipulation}
-.stars{font-size:40px;text-align:center;margin:8px 0}
+.concept{background:#0f172a;border-radius:12px;padding:14px;margin:14px 0;font-size:15px;line-height:1.7}
+.concept b{color:#4ade80}
+.card button{width:100%;min-height:56px;font-size:18px;font-weight:700;background:#a855f7;color:#fff;border:none;border-radius:14px;margin-top:10px;cursor:pointer}
 </style>
 </head>
 <body>
-<header><h1>🏃 動名詞 vs 不定詞</h1></header>
-<div class="hud"><div>題目 <span id="qnum">1</span>/10</div><div>分數 <span id="score">0</span></div><div>最高 <span id="best">0</span></div></div>
+<header><h1>🎯 動詞分類大作戰</h1></header>
+<a class="back" href="games.html">← 返回遊戲列表</a>
+<div class="hud"><div>🎯 第 <span id="round">1</span>/10 題</div><div>⭐ <span id="score">0</span> 分</div><div>🔥 連擊 <span id="streak">0</span></div></div>
 <main>
-<div class="qcard">
-<div class="qnum" id="qhint">第 1 題</div>
-<div class="qtext" id="qtext"></div>
+<div id="tray"></div>
+<div class="tip">👆 拖個動詞入盒（或撳動詞再撳盒）</div>
+<div class="boxes">
+<div class="box" id="boxVing" data-type="ving"><h2>🟦 V-ing</h2><p>動名詞<br>例：enjoy <b>doing</b></p></div>
+<div class="box" id="boxTo" data-type="to"><h2>🟨 to + V</h2><p>不定詞<br>例：want <b>to do</b></p></div>
 </div>
-<div class="answers" id="answers"></div>
-<div class="feedback" id="fb"></div>
-<button class="nextbtn" id="nextBtn">下一題 →</button>
+<div id="fb"></div>
 </main>
 <div class="overlay" id="intro"><div class="card">
-<h2>🏃 動名詞 vs 不定詞</h2>
-<p><b>玩法：</b>睇住個句子，揀啱後面應該用 V-ing（動名詞）定係 to + V（不定詞）。共 10 題，答啱 +100 分。</p>
-<div class="concept">💡 <b>文法概念：</b><br>
-• 動名詞 (Gerund)：動詞 + ing，當名詞用。<br>
-例：enjoy <b>swimming</b>、finish <b>eating</b>、avoid <b>talking</b><br><br>
-• 不定詞 (Infinitive)：to + 動詞原形。<br>
-例：want <b>to go</b>、decide <b>to study</b>、hope <b>to win</b><br><br>
-記住常見配搭：enjoy、mind、finish、avoid、keep、suggest 後面跟 <b>V-ing</b>；want、decide、hope、plan、promise 後面跟 <b>to V</b>！</div>
-<button onclick="startGame()">開始挑戰！</button>
+<h2>🎯 動詞分類大作戰</h2>
+<p><b>玩法：</b>動詞會由上面跌落嚟，拖佢入正確嘅盒：<b>V-ing</b> 定係 <b>to + V</b>。拖唔到就撳一下個動詞，再撳個盒都得。10 個動詞，連擊有加分！</p>
+<div class="concept">💡 <b>文法概念：</b>有啲動詞後面一定要跟 <b>V-ing</b>（enjoy, mind, finish, avoid, practise…），有啲一定要跟 <b>to + V</b>（want, decide, hope, agree, plan…）。呢啲配搭要逐個記，冇得估！</div>
+<button onclick="startGame()">開始分類！</button>
 </div></div>
-<div class="overlay" id="gameover" style="display:none"><div class="card">
-<h2>🎉 完成！</h2>
-<div class="stars" id="stars"></div>
-<p id="finalScore" style="font-size:19px;text-align:center"></p>
-<button onclick="resetGame()">🔁 再玩一次</button>
+<div class="overlay" id="over" style="display:none"><div class="card">
+<h2>🏁 分類完成！</h2>
+<p id="finalScore" style="font-size:18px"></p>
+<button onclick="newGame()">🔁 再玩一次</button>
 </div></div>
 <script>
-(function(){
-"use strict";
-var BANK=[
-{q:"I enjoy ___ in the sea.",correct:"swimming",wrong:"to swim",tip:"enjoy 後面跟 V-ing（動名詞）"},
-{q:"She decided ___ abroad.",correct:"to study",wrong:"studying",tip:"decide 後面跟 to + V（不定詞）"},
-{q:"They finished ___ lunch.",correct:"eating",wrong:"to eat",tip:"finish 後面跟 V-ing"},
-{q:"He promised ___ me.",correct:"to help",wrong:"helping",tip:"promise 後面跟 to + V"},
-{q:"We avoided ___ about it.",correct:"talking",wrong:"to talk",tip:"avoid 後面跟 V-ing"},
-{q:"I hope ___ Japan one day.",correct:"to visit",wrong:"visiting",tip:"hope 後面跟 to + V"},
-{q:"She keeps ___ questions.",correct:"asking",wrong:"to ask",tip:"keep 後面跟 V-ing（表示「不斷」）"},
-{q:"They agreed ___ at noon.",correct:"to meet",wrong:"meeting",tip:"agree 後面跟 to + V"},
-{q:"He suggested ___ hiking.",correct:"going",wrong:"to go",tip:"suggest 後面跟 V-ing"},
-{q:"I want ___ the guitar.",correct:"to learn",wrong:"learning",tip:"want 後面跟 to + V"},
-{q:"She doesn't mind ___ long.",correct:"waiting",wrong:"to wait",tip:"mind 後面跟 V-ing"},
-{q:"We plan ___ together.",correct:"to travel",wrong:"travelling",tip:"plan 後面跟 to + V"},
-{q:"He imagined ___ the prize.",correct:"winning",wrong:"to win",tip:"imagine 後面跟 V-ing"},
-{q:"She expects ___ the exam.",correct:"to pass",wrong:"passing",tip:"expect 後面跟 to + V"},
-{q:"They practised ___ English.",correct:"speaking",wrong:"to speak",tip:"practise 後面跟 V-ing"}
-];
-var qs=[],idx=0,score=0,best=0,answered=false;
-try{best=parseInt(localStorage.getItem('gerundBest')||'0',10)||0;}catch(e){}
-document.getElementById('best').textContent=best;
-
+var VING=["enjoy","avoid","mind","finish","practise","keep","suggest","admit","miss","imagine","delay","deny"];
+var TO=["want","decide","hope","agree","plan","need","promise","expect","ask","offer","refuse","manage"];
+var order=[],idx=0,score=0,streak=0,best=0,selected=null,lock=false;
+try{best=parseInt(localStorage.getItem("gerundBest")||"0");}catch(e){}
 function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
-
-function startGame(){
-  document.getElementById('intro').style.display='none';
-  document.getElementById('gameover').style.display='none';
-  resetGame();
+function upd(){
+  document.getElementById("round").textContent=Math.min(idx+1,10);
+  document.getElementById("score").textContent=score;
+  document.getElementById("streak").textContent=streak;
 }
-function resetGame(){
-  qs=shuffle(BANK.slice()).slice(0,10);
-  idx=0;score=0;answered=false;
-  document.getElementById('score').textContent='0';
-  document.getElementById('gameover').style.display='none';
-  renderQ();
+function nextVerb(){
+  var tray=document.getElementById("tray");tray.innerHTML="";
+  if(idx>=order.length){endGame();return;}
+  var chip=document.createElement("div");
+  chip.className="chip fall";chip.textContent=order[idx].w;
+  tray.appendChild(chip);makeDraggable(chip);upd();
 }
-function renderQ(){
-  answered=false;
-  var item=qs[idx];
-  document.getElementById('qnum').textContent=(idx+1);
-  document.getElementById('qhint').textContent='第 '+(idx+1)+' 題';
-  var parts=item.q.split('___');
-  document.getElementById('qtext').innerHTML=parts[0]+'<span class="blank">____</span>'+parts[1];
-  var opts=shuffle([item.correct,item.wrong]);
-  var box=document.getElementById('answers');box.innerHTML='';
-  opts.forEach(function(o){
-    var b=document.createElement('button');
-    b.className='abtn';b.textContent=o;
-    b.addEventListener('click',function(){answer(b,o,item);});
-    box.appendChild(b);
+function makeDraggable(el){
+  el.style.touchAction="none";
+  var sx=0,sy=0,ox=0,oy=0,drag=false,moved=false;
+  el.addEventListener("pointerdown",function(e){
+    drag=true;moved=false;sx=e.clientX;sy=e.clientY;
+    var r=el.getBoundingClientRect();ox=r.left;oy=r.top;
+    try{el.setPointerCapture(e.pointerId);}catch(err){}
+    el.style.position="fixed";el.style.left=ox+"px";el.style.top=oy+"px";
+    el.style.width=r.width+"px";el.style.margin="0";el.style.zIndex="999";
+    e.preventDefault();
   });
-  document.getElementById('fb').textContent='';
-  document.getElementById('fb').className='feedback';
-  document.getElementById('nextBtn').style.display='none';
-}
-function answer(btn,choice,item){
-  if(answered)return;answered=true;
-  var btns=document.getElementById('answers').children;
-  for(var i=0;i<btns.length;i++){btns[i].disabled=true;}
-  var fb=document.getElementById('fb');
-  if(choice===item.correct){
-    btn.classList.add('correct');
-    score+=100;
-    document.getElementById('score').textContent=score;
-    fb.innerHTML='✅ 答啱！<div class="explain">'+item.tip+'</div>';
-    fb.className='feedback good';
-  }else{
-    btn.classList.add('wrong');
-    for(var j=0;j<btns.length;j++){if(btns[j].textContent===item.correct)btns[j].classList.add('correct');}
-    fb.innerHTML='❌ 唔啱，正確答案係 <b>'+item.correct+'</b><div class="explain">'+item.tip+'</div>';
-    fb.className='feedback bad';
+  el.addEventListener("pointermove",function(e){
+    if(!drag)return;
+    if(Math.abs(e.clientX-sx)+Math.abs(e.clientY-sy)>10)moved=true;
+    el.style.left=(ox+e.clientX-sx)+"px";el.style.top=(oy+e.clientY-sy)+"px";
+    var t=document.elementFromPoint(e.clientX,e.clientY);
+    var box=t&&t.closest?t.closest(".box"):null;
+    var boxes=document.querySelectorAll(".box");
+    for(var i=0;i<boxes.length;i++)boxes[i].classList.toggle("hover",boxes[i]===box);
+  });
+  function cleanup(){
+    drag=false;
+    el.style.position="";el.style.left="";el.style.top="";el.style.width="";el.style.margin="";el.style.zIndex="";
+    var boxes=document.querySelectorAll(".box");
+    for(var i=0;i<boxes.length;i++)boxes[i].classList.remove("hover");
   }
-  var nb=document.getElementById('nextBtn');
-  nb.textContent=(idx>=qs.length-1)?'睇成績 →':'下一題 →';
-  nb.style.display='block';
+  el.addEventListener("pointerup",function(e){
+    if(!drag)return;
+    var t=document.elementFromPoint(e.clientX,e.clientY);
+    var box=t&&t.closest?t.closest(".box"):null;
+    var wasTap=!moved;
+    cleanup();
+    if(box){drop(box);}
+    else if(wasTap){
+      if(selected===el){selected=null;el.classList.remove("sel");}
+      else{if(selected)selected.classList.remove("sel");selected=el;el.classList.add("sel");}
+    }
+  });
+  el.addEventListener("pointercancel",cleanup);
 }
-document.getElementById('nextBtn').addEventListener('click',function(){
-  idx++;
-  if(idx>=qs.length){endGame();}else{renderQ();}
-});
+var boxEls=document.querySelectorAll(".box");
+for(var bi=0;bi<boxEls.length;bi++){
+  (function(b){
+    b.addEventListener("pointerdown",function(e){
+      if(selected){drop(b);e.preventDefault();}
+    });
+  })(boxEls[bi]);
+}
+function drop(box){
+  if(lock)return;
+  var cur=order[idx];
+  var fb=document.getElementById("fb");
+  if(box.dataset.type===cur.t){
+    lock=true;
+    var pts=100+Math.min(streak,5)*20;score+=pts;streak++;
+    fb.textContent="✅ "+cur.w+" → "+(cur.t==="ving"?"V-ing":"to + V")+"（+"+pts+"）";
+    fb.className="good";selected=null;idx++;
+    setTimeout(function(){lock=false;nextVerb();},650);
+  }else{
+    streak=0;
+    fb.textContent="❌ "+cur.w+" 唔係呢類，再試下！";
+    fb.className="bad";
+    box.classList.add("shake");setTimeout(function(){box.classList.remove("shake");},450);
+    if(selected){selected.classList.remove("sel");selected=null;}
+  }
+  upd();
+}
 function endGame(){
-  var nb='';
-  if(score>best){best=score;try{localStorage.setItem('gerundBest',best);}catch(e){}nb=' 🏅 新紀錄！';}
-  document.getElementById('best').textContent=best;
-  var st=score>=900?'⭐⭐⭐':score>=600?'⭐⭐':'⭐';
-  document.getElementById('stars').textContent=st;
-  document.getElementById('finalScore').innerHTML='總分：<b>'+score+'</b> / 1000'+nb;
-  document.getElementById('gameover').style.display='flex';
+  var msg="總分：<b style='color:#fbbf24'>"+score+"</b> 分<br>";
+  if(score>best){best=score;try{localStorage.setItem("gerundBest",best);}catch(e){}msg+="🏅 新紀錄！<br>";}
+  else{msg+="歷史最佳："+best+" 分<br>";}
+  msg+=score>=900?"🌟 動詞大師！配搭全部啱晒！":score>=600?"👍 好勁，記多幾個就完美！":"💪 記住：enjoy/mind/finish 跟 V-ing；want/decide/hope 跟 to-V！";
+  document.getElementById("finalScore").innerHTML=msg;
+  document.getElementById("over").style.display="flex";
 }
-window.startGame=startGame;
-window.resetGame=resetGame;
-})();
+function newGame(){
+  var v=shuffle(VING.slice()).slice(0,5).map(function(w){return{w:w,t:"ving"};});
+  var t=shuffle(TO.slice()).slice(0,5).map(function(w){return{w:w,t:"to"};});
+  order=shuffle(v.concat(t));idx=0;score=0;streak=0;selected=null;lock=false;
+  document.getElementById("fb").textContent="";document.getElementById("fb").className="";
+  document.getElementById("over").style.display="none";
+  nextVerb();
+}
+function startGame(){document.getElementById("intro").style.display="none";newGame();}
 </script>
 </body>
 </html>

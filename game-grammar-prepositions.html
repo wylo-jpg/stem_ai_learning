@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-<title>介詞高手</title>
+<title>介詞快打</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#0c4a6e;color:#e0f2fe;min-height:100vh}
@@ -11,20 +11,18 @@ header{background:linear-gradient(135deg,#0369a1,#0284c7);padding:16px;text-alig
 header h1{margin:0;font-size:22px}
 .hud{display:flex;justify-content:space-around;background:#082f49;padding:12px;font-size:16px;font-weight:700}
 .hud span{color:#fbbf24}
-main{max-width:600px;margin:0 auto;padding:16px}
-.qcard{background:#075985;border-radius:16px;padding:22px;margin:12px 0;min-height:120px}
-.qnum{font-size:14px;color:#7dd3fc;margin-bottom:8px}
-.qtext{font-size:20px;line-height:1.7}
-.qtext .blank{display:inline-block;min-width:60px;border-bottom:3px dashed #fbbf24;text-align:center;color:#fbbf24;font-weight:800}
-.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
-.opts button{min-height:64px;font-size:20px;font-weight:800;border-radius:14px;border:2px solid #0284c7;background:#082f49;color:#e0f2fe;cursor:pointer;touch-action:manipulation}
-.opts button:active{transform:scale(.96)}
-.opts button.correct{background:#166534;border-color:#4ade80;color:#fff}
-.opts button.wrong{background:#7f1d1d;border-color:#f87171;color:#fff}
-.opts button:disabled{opacity:.9}
-.feedback{min-height:44px;font-size:16px;font-weight:700;text-align:center;margin-top:10px}
+.timerbar{height:12px;background:#082f49;border-radius:6px;margin:12px 16px 0;overflow:hidden}
+.timerbar .fill{height:100%;background:linear-gradient(90deg,#22c55e,#fbbf24,#ef4444);width:100%;transition:width .1s linear}
+main{max-width:600px;margin:0 auto;padding:8px 16px 16px}
+.qcard{background:#075985;border-radius:16px;padding:26px 20px;margin:12px 0;min-height:110px;text-align:center}
+.qtext{font-size:23px;line-height:1.7}
+.qtext .blank{display:inline-block;min-width:64px;border-bottom:4px dashed #fbbf24;text-align:center;color:#fbbf24;font-weight:800}
+.prepgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:6px}
+.prepgrid button{min-height:72px;font-size:24px;font-weight:800;border-radius:16px;border:3px solid #0284c7;background:#082f49;color:#e0f2fe;cursor:pointer;touch-action:manipulation}
+.prepgrid button:active{transform:scale(.93);background:#0284c7;color:#fff}
+.prepgrid button:disabled{opacity:.85}
+.feedback{min-height:40px;font-size:17px;font-weight:700;text-align:center;margin-top:10px}
 .feedback.good{color:#4ade80}.feedback.bad{color:#f87171}
-.explain{background:#0c4a6e;border-left:4px solid #fbbf24;border-radius:8px;padding:10px 14px;margin-top:8px;font-size:15px;display:none}
 .overlay{position:fixed;inset:0;background:rgba(8,30,60,.96);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
 .card{background:#075985;border-radius:20px;padding:28px 24px;max-width:540px;width:100%;max-height:92vh;overflow-y:auto}
 .card h2{margin:0 0 12px;font-size:24px;color:#fbbf24}
@@ -36,116 +34,120 @@ main{max-width:600px;margin:0 auto;padding:16px}
 </style>
 </head>
 <body>
-<header><h1>🧭 介詞高手</h1></header>
-<div class="hud"><div>第 <span id="qn">1</span>/10 題</div><div>⭐ <span id="score">0</span> 分</div><div>🔥 <span id="streak">0</span> 連擊</div></div>
+<header><h1>⚡ 介詞快打</h1></header>
+<div class="hud"><div>⏱ <span id="time">60.0</span>s</div><div>⭐ <span id="score">0</span> 分</div><div>✅ <span id="cnt">0</span> 題</div></div>
+<div class="timerbar"><div class="fill" id="tfill"></div></div>
 <main>
-<div class="qcard">
-<div class="qnum" id="qnum"></div>
-<div class="qtext" id="qtext"></div>
-</div>
-<div class="opts" id="opts"></div>
+<div class="qcard"><div class="qtext" id="qtext">準備…</div></div>
+<div class="prepgrid" id="grid"></div>
 <div class="feedback" id="fb"></div>
-<div class="explain" id="explain"></div>
 </main>
 <div class="overlay" id="intro"><div class="card">
-<h2>🧭 介詞高手</h2>
-<p><b>玩法：</b>睇住英文句子，揀正確嘅介詞填入空格。共 10 題，涵蓋時間、地點、常用配搭。答啱 +100 分，連擊有加成！</p>
+<h2>⚡ 介詞快打</h2>
+<p><b>玩法：</b>60 秒限時！句子一出，即刻撳下面 6 個介詞掣搶答。<b>撳得愈快分愈高</b>（最快 +150 分）！撳錯唔扣分但浪費時間，考你反應同介詞熟練度！</p>
 <div class="concept">💡 <b>文法概念 — 介詞口訣：</b><br>
-<b>時間：</b>at + 時刻（at 3pm）、on + 日子（on Monday）、in + 較長時間（in July / in 2026 / in the morning）<br>
+<b>時間：</b>at + 時刻（at 3pm）、on + 日子（on Monday）、in + 較長時間（in July）<br>
 <b>地點：</b>at + 點（at school）、on + 面（on the table）、in + 入面（in the room）<br>
-<b>常用配搭：</b>interested in、good at、afraid of、wait for、listen to — 呢啲要死記！</div>
-<button onclick="startGame()">開始挑戰！</button>
+<b>配搭：</b>good at、interested in、married to、thank…for</div>
+<button onclick="startGame()">開始快打！</button>
 </div></div>
 <div class="overlay" id="gameover" style="display:none"><div class="card">
-<h2>🏁 完成！</h2>
+<h2>🏁 時間到！</h2>
 <p id="finalScore" style="font-size:19px"></p>
-<button onclick="resetGame()">再玩一次 🔁</button>
+<button onclick="resetGame()">再打一次 🔁</button>
 </div></div>
 <script>
+var PREPS=["in","on","at","for","to","with"];
 var QS=[
-{q:"The meeting starts ___ 3 pm.",a:"at",o:["at","on","in","for"],e:"at + 具體時刻：at 3pm、at noon。"},
-{q:"My birthday is ___ July.",a:"in",o:["at","on","in","of"],e:"in + 月份／年份／季節：in July、in 2026。"},
-{q:"We have no class ___ Sunday.",a:"on",o:["at","on","in","to"],e:"on + 星期幾／具體日子：on Sunday、on 1st January。"},
-{q:"She is good ___ Maths.",a:"at",o:["at","in","on","for"],e:"固定配搭：be good at（擅長）。相反係 be bad at。"},
-{q:"He is waiting ___ the bus stop.",a:"at",o:["at","on","in","to"],e:"at + 具體地點（一個點）：at the bus stop、at school。"},
-{q:"The keys are ___ the table.",a:"on",o:["at","on","in","under"],e:"on + 表面：on the table、on the wall。"},
-{q:"She is interested ___ history.",a:"in",o:["at","on","in","for"],e:"固定配搭：be interested in（對…有興趣）。"},
-{q:"I was born ___ 2010.",a:"in",o:["at","on","in","of"],e:"in + 年份：in 2010。注意 on + 具體日期：on 5th May 2010。"},
-{q:"Don't be afraid ___ the dark.",a:"of",o:["at","of","for","with"],e:"固定配搭：be afraid of（驚）。"},
-{q:"He has been ill ___ Monday.",a:"since",o:["since","for","from","at"],e:"since + 起點時間（由…開始）；for + 一段時間（for three days）。"},
-{q:"She listened ___ music all night.",a:"to",o:["to","at","for","on"],e:"固定配搭：listen to（聽）。"},
-{q:"The cat is hiding ___ the bed.",a:"under",o:["on","in","under","at"],e:"under = 喺下面：under the bed。"},
-{q:"We arrived ___ Hong Kong yesterday.",a:"in",o:["at","in","to","on"],e:"arrive in + 大地方（城市／國家）；arrive at + 細地點（at the station）。注意 arrive 後面唔用 to！"},
-{q:"He is different ___ his brother.",a:"from",o:["from","to","with","than"],e:"固定配搭：be different from（同…唔同）。"},
-{q:"Thank you ___ your help.",a:"for",o:["for","of","to","with"],e:"固定配搭：thank you for（多謝…）。"},
-{q:"She is married ___ my cousin.",a:"to",o:["to","with","for","at"],e:"固定配搭：be married to（嫁／娶）。"},
-{q:"The book is ___ the shelf.",a:"on",o:["at","on","in","over"],e:"on + 表面：on the shelf。"},
-{q:"He walked ___ the room.",a:"into",o:["into","in","to","at"],e:"into = 行入去（有動作）；in = 已經喺入面（狀態）。"},
-{q:"We will meet ___ the morning.",a:"in",o:["at","on","in","for"],e:"in the morning / in the afternoon / in the evening。但 at night 例外！"},
-{q:"She apologized ___ being late.",a:"for",o:["for","of","to","about"],e:"固定配搭：apologize for（為…道歉）。"}
+{q:"The meeting starts <b>___</b> 3 pm.",a:"at",e:"at + 具體時刻。"},
+{q:"My birthday is <b>___</b> July.",a:"in",e:"in + 月份。"},
+{q:"We have no class <b>___</b> Sunday.",a:"on",e:"on + 星期幾。"},
+{q:"She is good <b>___</b> Maths.",a:"at",e:"be good at（擅長）。"},
+{q:"He is waiting <b>___</b> the bus stop.",a:"at",e:"at + 具體地點（一個點）。"},
+{q:"The keys are <b>___</b> the table.",a:"on",e:"on + 表面。"},
+{q:"She is interested <b>___</b> history.",a:"in",e:"be interested in。"},
+{q:"I was born <b>___</b> 2010.",a:"in",e:"in + 年份。"},
+{q:"She listened <b>___</b> music all night.",a:"to",e:"listen to。"},
+{q:"Thank you <b>___</b> your help.",a:"for",e:"thank you for。"},
+{q:"She is married <b>___</b> my cousin.",a:"to",e:"be married to。"},
+{q:"The book is <b>___</b> the shelf.",a:"on",e:"on + 表面。"},
+{q:"We will meet <b>___</b> the morning.",a:"in",e:"in the morning。"},
+{q:"He is playing <b>___</b> his friends.",a:"with",e:"with = 同…一齊。"},
+{q:"She is angry <b>___</b> me.",a:"with",e:"be angry with（對人生氣）。"},
+{q:"I agree <b>___</b> you.",a:"with",e:"agree with（同意…）。"},
+{q:"This gift is <b>___</b> you.",a:"for",e:"for = 畀（對象）。"},
+{q:"Give it <b>___</b> me.",a:"to",e:"give…to（畀）。"},
+{q:"He is <b>___</b> the room.",a:"in",e:"in + 入面。"},
+{q:"Sit <b>___</b> the chair.",a:"on",e:"on + 椅面。"}
 ];
-var qi=0,score=0,streak=0,order=[];
+var timeLeft=60,score=0,cnt=0,order=[],idx=0,qStart=0,clock=null,nextT=null,lock=false,cur=null;
 function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
 function startGame(){document.getElementById('intro').style.display='none';resetGame();}
 function resetGame(){
+  clearInterval(clock);clearTimeout(nextT);
   document.getElementById('gameover').style.display='none';
-  qi=0;score=0;streak=0;
+  timeLeft=60;score=0;cnt=0;idx=0;lock=false;
   order=shuffle(QS.slice());
   document.getElementById('score').textContent='0';
-  document.getElementById('streak').textContent='0';
+  document.getElementById('cnt').textContent='0';
+  buildGrid();
   showQ();
+  clock=setInterval(tick,100);
 }
-function showQ(){
-  var q=order[qi];
-  document.getElementById('qn').textContent=(qi+1);
-  document.getElementById('qnum').textContent='第 '+(qi+1)+' 題';
-  document.getElementById('qtext').innerHTML=q.q;
-  document.getElementById('fb').textContent='';
-  document.getElementById('fb').className='feedback';
-  var ex=document.getElementById('explain');ex.style.display='none';ex.innerHTML='';
-  var opts=shuffle(q.o.slice());
-  var box=document.getElementById('opts');box.innerHTML='';
-  opts.forEach(function(o){
+function buildGrid(){
+  var g=document.getElementById('grid');g.innerHTML='';
+  PREPS.forEach(function(p){
     var b=document.createElement('button');
-    b.textContent=o;
-    b.addEventListener('click',function(){answer(b,o,q);});
-    box.appendChild(b);
+    b.textContent=p;b.dataset.p=p;
+    b.addEventListener('click',function(){tap(p,b);});
+    g.appendChild(b);
   });
 }
-function answer(btn,choice,q){
-  var btns=document.getElementById('opts').children;
-  for(var i=0;i<btns.length;i++)btns[i].disabled=true;
+function setGrid(on){
+  var bs=document.getElementById('grid').children;
+  for(var i=0;i<bs.length;i++)bs[i].disabled=!on;
+}
+function tick(){
+  timeLeft-=0.1;
+  if(timeLeft<=0){timeLeft=0;endGame();return;}
+  document.getElementById('time').textContent=timeLeft.toFixed(1);
+  document.getElementById('tfill').style.width=(timeLeft/60*100)+'%';
+}
+function showQ(){
+  if(idx>=order.length){order=shuffle(QS.slice());idx=0;}
+  cur=order[idx++];
+  document.getElementById('qtext').innerHTML=cur.q;
+  document.getElementById('fb').textContent='';
+  document.getElementById('fb').className='feedback';
+  setGrid(true);
+  qStart=Date.now();lock=false;
+}
+function tap(p,btn){
+  if(lock||timeLeft<=0)return;
+  lock=true;setGrid(false);
   var fb=document.getElementById('fb');
-  var ex=document.getElementById('explain');
-  if(choice===q.a){
-    btn.className='correct';
-    streak++;
-    var pts=100+(streak-1)*20;
-    score+=pts;
-    fb.textContent='✅ 啱！+'+pts+' 分';
+  var elapsed=(Date.now()-qStart)/1000;
+  if(p===cur.a){
+    var pts=Math.max(60,Math.round(150-elapsed*15));
+    score+=pts;cnt++;
+    document.getElementById('score').textContent=score;
+    document.getElementById('cnt').textContent=cnt;
+    fb.textContent='✅ +'+pts+' 分（'+elapsed.toFixed(1)+'s）';
     fb.className='feedback good';
+    nextT=setTimeout(showQ,400);
   }else{
-    btn.className='wrong';
-    streak=0;
-    fb.textContent='❌ 答案係「'+q.a+'」';
+    fb.innerHTML='❌ 答案係「'+cur.a+'」💡 '+cur.e;
     fb.className='feedback bad';
-    for(var j=0;j<btns.length;j++){
-      if(btns[j].textContent===q.a)btns[j].className='correct';
-    }
+    nextT=setTimeout(showQ,1100);
   }
-  document.getElementById('score').textContent=score;
-  document.getElementById('streak').textContent=streak;
-  ex.innerHTML='💡 '+q.e;
-  ex.style.display='block';
-  setTimeout(function(){
-    qi++;
-    if(qi>=10)endGame();else showQ();
-  },2200);
 }
 function endGame(){
+  clearInterval(clock);clearTimeout(nextT);lock=true;setGrid(false);
+  document.getElementById('time').textContent='0.0';
+  document.getElementById('tfill').style.width='0%';
   document.getElementById('gameover').style.display='flex';
-  var msg='總分：<b style="color:#fbbf24">'+score+'</b> 分<br>';
-  msg+=score>=1000?'🌟 介詞大師！at/on/in 難唔到你！':score>=700?'👍 好叻，繼續努力！':'💪 記住口訣：at 時刻、on 日子、in 較長時間！';
+  var msg='總分：<b style="color:#fbbf24">'+score+'</b> 分<br>答啱：'+cnt+' 題<br>';
+  msg+=cnt>=15?'🌟 快打王！手快有手慢冇！':cnt>=8?'👍 反應唔錯，繼續練！':'💪 記熟口訣再嚟過：at 時刻、on 日子、in 較長時間！';
   document.getElementById('finalScore').innerHTML=msg;
 }
 </script>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-<title>問句大師</title>
+<title>問句重組</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;touch-action:manipulation}
@@ -14,19 +14,21 @@ header p{margin:4px 0 0;font-size:14px;opacity:.85}
 .wrap{max-width:640px;margin:0 auto;padding:16px 14px 40px}
 .hud{display:flex;justify-content:space-around;background:#1e293b;border-radius:12px;padding:12px;margin-bottom:14px;font-size:15px;font-weight:700}
 .hud span{color:#fbbf24}
-.qcard{background:#1e293b;border-radius:16px;padding:22px 18px;margin-bottom:14px;text-align:center}
-.qnum{font-size:14px;color:#94a3b8;margin-bottom:8px}
-.qtext{font-size:20px;font-weight:700;line-height:1.6;margin-bottom:6px}
-.qtext .blank{color:#fbbf24;border-bottom:3px solid #fbbf24;padding:0 12px}
-.opts{display:grid;gap:10px}
-.opt{min-height:56px;font-size:18px;font-weight:700;border-radius:12px;border:2px solid #334155;background:#0f172a;color:#e2e8f0;cursor:pointer;padding:10px 14px;text-align:left}
-.opt:active{transform:scale(.98)}
-.opt.correct{background:#166534;border-color:#4ade80;color:#fff}
-.opt.wrong{background:#7f1d1d;border-color:#f87171;color:#fff}
-.opt:disabled{opacity:.9;cursor:default}
-.feedback{min-height:44px;font-size:16px;font-weight:700;text-align:center;margin-top:10px}
+.build{min-height:96px;background:#1e293b;border:2px dashed #3b82f6;border-radius:14px;padding:14px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;font-size:19px;font-weight:700}
+.build .ph{color:#64748b;font-size:15px;font-weight:400}
+.wbank{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:14px}
+.wbtn{min-height:56px;font-size:19px;font-weight:700;border-radius:12px;border:2px solid #3b82f6;background:#1e3a8a;color:#fff;padding:10px 18px;cursor:pointer}
+.wbtn:active{transform:scale(.95)}
+.wbtn.used{opacity:.25;pointer-events:none}
+.picked{background:#0f766e;border-color:#5eead4;color:#fff;border-radius:10px;padding:6px 12px;font-size:19px;font-weight:700;cursor:pointer}
+.btnrow{display:flex;gap:10px;margin-top:6px}
+button.big{flex:1;min-height:56px;font-size:18px;font-weight:800;border:none;border-radius:14px;cursor:pointer}
+#checkBtn{background:#10b981;color:#022c22}
+#clearBtn{background:#57534e;color:#fff}
+.feedback{min-height:48px;font-size:16px;font-weight:700;text-align:center;margin-top:10px}
 .feedback.good{color:#4ade80}
 .feedback.bad{color:#f87171}
+.hintbox{background:#1e293b;border-radius:12px;padding:12px 14px;font-size:15px;margin-bottom:12px;text-align:center}
 .overlay{position:fixed;inset:0;background:rgba(2,6,23,.96);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;overflow-y:auto}
 .card{background:#1e293b;border-radius:20px;padding:28px 24px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto}
 .card h2{margin:0 0 12px;font-size:24px;color:#93c5fd}
@@ -40,27 +42,29 @@ header p{margin:4px 0 0;font-size:14px;opacity:.85}
 </style>
 </head>
 <body>
-<header><h1>❓ 問句大師</h1><p>do / does / did 問句 · wh-questions</p></header>
+<header><h1>🧩 問句重組</h1><p>親手砌出正確嘅英文問句</p></header>
 <a class="back" href="games.html">← 返回遊戲列表</a>
 <div class="wrap">
-<div class="hud"><div>📝 第 <span id="qnum">1</span>/10 題</div><div>⭐ <span id="score">0</span> 分</div><div>🔥 連擊 <span id="streak">0</span></div></div>
+<div class="hud"><div>📝 第 <span id="rnum">1</span>/10 句</div><div>⭐ <span id="score">0</span> 分</div><div>🔥 連擊 <span id="streak">0</span></div></div>
 <div class="progress"><div class="bar" id="pbar"></div></div>
-<div class="qcard">
-<div class="qnum" id="qhint">揀出正確嘅問句</div>
-<div class="qtext" id="qtext"></div>
+<div class="hintbox" id="hint">按正確次序撳單詞，砌出問句</div>
+<div class="build" id="build"><span class="ph">撳下面嘅單詞砌問句…</span></div>
+<div class="wbank" id="bank"></div>
+<div class="btnrow">
+<button class="big" id="clearBtn">🧹 清除</button>
+<button class="big" id="checkBtn">✅ 檢查</button>
 </div>
-<div class="opts" id="opts"></div>
 <div class="feedback" id="fb"></div>
 </div>
 <div class="overlay" id="intro"><div class="card">
-<h2>❓ 問句大師</h2>
-<p><b>玩法：</b>每題會畀你一個唔完整嘅問句，撳出正確嘅選項。10 題，答啱 +10 分，連擊有加成！</p>
-<div class="concept">💡 <b>文法概念 — 問句倒裝：</b><br>
-• 第三人稱單數（he/she/it）用 <b>Does</b>，動詞用原形：<b>Does</b> she <b>like</b> coffee?<br>
-• I/you/we/they 用 <b>Do</b>：<b>Do</b> you <b>play</b> football?<br>
-• 過去式一律用 <b>Did</b>：<b>Did</b> he <b>go</b> yesterday?<br>
-• Wh-questions：who（邊個）、what（咩）、where（邊度）、when（幾時）、why（點解）、how（點樣）</div>
-<button onclick="startGame()">開始挑戰！</button>
+<h2>🧩 問句重組</h2>
+<p><b>玩法：</b>單詞打散咗！按正確次序撳佢哋，親手砌出一句完整嘅英文問句。撳錯可以撳返個詞拎走，或者撳「清除」重嚟。10 句，砌啱有分，連擊有加成！</p>
+<div class="concept">💡 <b>文法概念 — 問句詞序：</b><br>
+• 疑問詞行先：<b>Where</b> did you go?<br>
+• 助動詞喺主語前面：<b>Did</b> he <b>go</b>?（動詞用原形！）<br>
+• be 動詞問句：<b>Is</b> she <b>playing</b>?<br>
+• 問句一定要用 <b>?</b> 收尾</div>
+<button onclick="startGame()">開始砌問句！</button>
 </div></div>
 <div class="overlay" id="gameover" style="display:none"><div class="card">
 <h2>🏁 完成！</h2>
@@ -70,85 +74,106 @@ header p{margin:4px 0 0;font-size:14px;opacity:.85}
 <script>
 (function(){
 "use strict";
-var QS=[
-{q:"___ she like coffee?",a:"Does",opts:["Do","Does","Is","Are"],tip:"第三人稱單數用 Does"},
-{q:"___ you play basketball?",a:"Do",opts:["Do","Does","Did","Is"],tip:"you 用 Do"},
-{q:"___ he go to school yesterday?",a:"Did",opts:["Do","Does","Did","Is"],tip:"yesterday 係過去式，用 Did"},
-{q:"___ they watch TV last night?",a:"Did",opts:["Do","Does","Did","Were"],tip:"last night 係過去式，用 Did"},
-{q:"___ are you going?",a:"Where",opts:["Where","What","When","Why"],tip:"問地點用 Where"},
-{q:"___ did she cry?",a:"Why",opts:["Why","Where","What","When"],tip:"問原因用 Why"},
-{q:"___ is your birthday?",a:"When",opts:["When","Where","What","Who"],tip:"問時間用 When"},
-{q:"___ broke the window?",a:"Who",opts:["Who","Whom","Whose","Which"],tip:"問邊個做嘅用 Who"},
-{q:"___ does it cost?",a:"How much",opts:["How much","How many","What","How long"],tip:"問價錢用 How much"},
-{q:"___ books do you have?",a:"How many",opts:["How many","How much","How long","How often"],tip:"可數名詞用 How many"},
-{q:"___ she playing now?",a:"Is",opts:["Is","Does","Do","Are"],tip:"be 動詞問句用 Is"},
-{q:"___ your parents at home?",a:"Are",opts:["Is","Are","Do","Does"],tip:"parents 係眾數，用 Are"}
+var SS=[
+{w:["Where","did","you","go","?"],t:"Where + did + 主語 + 動詞原形 + ?"},
+{w:["Does","she","like","coffee","?"],t:"第三人稱單數用 Does，動詞用原形"},
+{w:["What","did","he","say","?"],t:"What + did + 主語 + 動詞原形"},
+{w:["Why","are","you","crying","?"],t:"Why + be動詞 + 主語 + V-ing"},
+{w:["How","much","does","it","cost","?"],t:"How much + does + it + cost"},
+{w:["When","is","your","birthday","?"],t:"When + is + 主語"},
+{w:["Who","broke","the","window","?"],t:"Who 做主語，動詞直接跟住"},
+{w:["Did","they","watch","TV","last","night","?"],t:"Did + 主語 + 動詞原形 + 時間"},
+{w:["How","many","books","do","you","have","?"],t:"How many + 可數名詞 + do + 主語"},
+{w:["Is","your","father","at","home","?"],t:"be動詞放句首：Is + 主語"},
+{w:["Where","does","he","live","?"],t:"Where + does + 主語 + 動詞原形"},
+{w:["What","time","do","you","get","up","?"],t:"What time + do + 主語 + 動詞原形"}
 ];
-var qi=0,score=0,streak=0,answered=false;
+var ri=0,score=0,streak=0,chosen=[],order=[];
 function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
-var order=[];
-function newQ(){
-  answered=false;
+function newRound(){
+  chosen=[];
   document.getElementById('fb').textContent='';
   document.getElementById('fb').className='feedback';
-  var q=QS[order[qi]];
-  document.getElementById('qnum').textContent=qi+1;
-  document.getElementById('pbar').style.width=((qi)/10*100)+'%';
-  document.getElementById('qtext').innerHTML=q.q.replace('___','<span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;</span>');
-  var box=document.getElementById('opts');box.innerHTML='';
-  shuffle(q.opts.slice()).forEach(function(o){
-    var b=document.createElement('button');
-    b.className='opt';b.textContent=o;
-    b.addEventListener('click',function(){answer(b,o,q);});
-    box.appendChild(b);
+  var s=SS[order[ri]];
+  document.getElementById('rnum').textContent=ri+1;
+  document.getElementById('pbar').style.width=(ri/10*100)+'%';
+  document.getElementById('hint').textContent='💡 呢句有 '+s.w.length+' 個詞（含 ?）';
+  renderBuild();renderBank(s);
+}
+function renderBuild(){
+  var el=document.getElementById('build');el.innerHTML='';
+  if(chosen.length===0){el.innerHTML='<span class="ph">撳下面嘅單詞砌問句…</span>';return;}
+  chosen.forEach(function(c,idx){
+    var sp=document.createElement('span');
+    sp.className='picked';sp.textContent=c.w;
+    sp.addEventListener('click',function(){unpick(idx);});
+    el.appendChild(sp);
   });
 }
-function answer(btn,choice,q){
-  if(answered)return;answered=true;
-  var btns=document.getElementById('opts').children;
-  for(var i=0;i<btns.length;i++){
-    btns[i].disabled=true;
-    if(btns[i].textContent===q.a)btns[i].classList.add('correct');
-  }
-  var fb=document.getElementById('fb');
-  if(choice===q.a){
-    streak++;
-    var pts=10+Math.min(streak-1,5)*2;
-    score+=pts;
-    fb.textContent='✅ 啱！+'+pts+' 分（'+q.tip+'）';fb.className='feedback good';
-  }else{
-    streak=0;
-    btn.classList.add('wrong');
-    fb.textContent='❌ 答案係「'+q.a+'」（'+q.tip+'）';fb.className='feedback bad';
-  }
-  document.getElementById('score').textContent=score;
-  document.getElementById('streak').textContent=streak;
-  setTimeout(function(){
-    qi++;
-    if(qi>=10)endGame();else newQ();
-  },1600);
+function renderBank(s){
+  var el=document.getElementById('bank');el.innerHTML='';
+  var idxs=shuffle(s.w.map(function(_,i){return i;}));
+  idxs.forEach(function(i){
+    var b=document.createElement('button');
+    b.className='wbtn';b.textContent=s.w[i];b.dataset.i=i;
+    b.addEventListener('click',function(){pickWord(s,i,b);});
+    el.appendChild(b);
+  });
 }
+function pickWord(s,i,btn){
+  if(btn.classList.contains('used'))return;
+  btn.classList.add('used');
+  chosen.push({w:s.w[i],i:i});
+  renderBuild();
+}
+function unpick(idx){
+  var c=chosen[idx];chosen.splice(idx,1);
+  var btns=document.getElementById('bank').children;
+  for(var i=0;i<btns.length;i++){
+    if(btns[i].dataset.i==String(c.i))btns[i].classList.remove('used');
+  }
+  renderBuild();
+}
+document.getElementById('clearBtn').addEventListener('click',function(){
+  chosen=[];var s=SS[order[ri]];renderBuild();renderBank(s);
+  document.getElementById('fb').textContent='';
+});
+document.getElementById('checkBtn').addEventListener('click',function(){
+  var s=SS[order[ri]],fb=document.getElementById('fb');
+  if(chosen.length!==s.w.length){
+    fb.textContent='⚠️ 仲未砌完，仲差 '+(s.w.length-chosen.length)+' 個詞';fb.className='feedback bad';return;
+  }
+  var ok=true;
+  for(var i=0;i<s.w.length;i++){if(chosen[i].w!==s.w[i]){ok=false;break;}}
+  if(ok){
+    streak++;
+    var pts=10+Math.min(streak-1,5)*2;score+=pts;
+    document.getElementById('score').textContent=score;
+    document.getElementById('streak').textContent=streak;
+    fb.textContent='✅ 啱！+'+pts+' 分（'+s.t+'）';fb.className='feedback good';
+    setTimeout(function(){ri++;if(ri>=10)endGame();else newRound();},1500);
+  }else{
+    streak=0;document.getElementById('streak').textContent='0';
+    fb.textContent='❌ 詞序唔啱，再諗下！（'+s.t+'）';fb.className='feedback bad';
+  }
+});
 function endGame(){
   document.getElementById('pbar').style.width='100%';
-  var msg='總分：<b style="color:#fbbf24">'+score+'</b> / 100+<br>';
-  msg+=score>=100?'🌟 文法大師！問句難唔到你！':score>=70?'👍 好叻，繼續努力！':'💪 多啲練習 do/does/did 嘅分別！';
+  var msg='砌啱 10 句！總分：<b style="color:#fbbf24">'+score+'</b><br>';
+  msg+=score>=120?'🌟 問句大師！':score>=80?'👍 好叻！':'💪 記住疑問詞行先、助動詞喺主語前！';
   document.getElementById('finalScore').innerHTML=msg;
   document.getElementById('gameover').style.display='flex';
 }
 function resetGame(){
-  qi=0;score=0;streak=0;
+  ri=0;score=0;streak=0;chosen=[];
   document.getElementById('score').textContent='0';
   document.getElementById('streak').textContent='0';
   document.getElementById('gameover').style.display='none';
-  order=shuffle(QS.map(function(_,i){return i;})).slice(0,10);
-  newQ();
+  order=shuffle(SS.map(function(_,i){return i;})).slice(0,10);
+  newRound();
 }
-function startGame(){
-  document.getElementById('intro').style.display='none';
-  resetGame();
-}
-window.startGame=startGame;
-window.resetGame=resetGame;
+function startGame(){document.getElementById('intro').style.display='none';resetGame();}
+window.startGame=startGame;window.resetGame=resetGame;
 })();
 </script>
 </body>

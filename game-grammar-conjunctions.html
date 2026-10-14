@@ -3,167 +3,215 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-<title>連接詞大作戰</title>
+<title>句子合併師</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#fdf2f8;color:#831843;min-height:100vh}
-header{background:linear-gradient(135deg,#be185d,#ec4899);color:#fff;padding:16px;text-align:center}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#172554;color:#e0e7ff;min-height:100vh}
+header{background:linear-gradient(135deg,#1d4ed8,#3b82f6);padding:14px;text-align:center}
 header h1{margin:0;font-size:22px}
-.hud{display:flex;justify-content:space-around;background:#831843;color:#fff;padding:10px;font-size:15px;font-weight:700}
-.hud span{color:#fde047}
-main{max-width:600px;margin:0 auto;padding:16px}
-.qcard{background:#fff;border-radius:16px;padding:22px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.08);text-align:center;border:2px solid #fbcfe8}
-.qnum{font-size:14px;color:#be185d;font-weight:700;margin-bottom:8px}
-.qtext{font-size:21px;font-weight:700;line-height:1.7}
-.qtext .blank{color:#dc2626;border-bottom:3px dashed #dc2626;padding:0 8px}
-.answers{display:flex;flex-direction:column;gap:12px}
-.abtn{min-height:60px;font-size:19px;font-weight:700;border:3px solid #be185d;background:#fff;color:#831843;border-radius:14px;cursor:pointer;touch-action:manipulation}
-.abtn:active{transform:scale(.98)}
-.abtn.correct{background:#16a34a;color:#fff;border-color:#16a34a}
-.abtn.wrong{background:#dc2626;color:#fff;border-color:#dc2626}
-.abtn:disabled{opacity:1;cursor:default}
-.feedback{min-height:60px;font-size:16px;font-weight:700;text-align:center;margin-top:10px;line-height:1.6}
-.feedback.good{color:#16a34a}.feedback.bad{color:#dc2626}
-.explain{font-size:14px;color:#475569;font-weight:400}
-.nextbtn{display:none;width:100%;min-height:56px;font-size:18px;font-weight:800;background:#be185d;color:#fff;border:none;border-radius:14px;margin-top:8px;cursor:pointer;touch-action:manipulation}
-.overlay{position:fixed;inset:0;background:rgba(131,24,67,.96);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
-.card{background:#fff;border-radius:20px;padding:28px 24px;max-width:540px;width:100%;max-height:92vh;overflow-y:auto;color:#831843}
-.card h2{margin:0 0 12px;font-size:24px}
+.back{display:block;text-align:center;color:#93c5fd;text-decoration:none;padding:10px;font-size:15px}
+.hud{display:flex;justify-content:space-around;background:#1e3a8a;padding:10px;font-size:15px;font-weight:700}
+.hud span{color:#fbbf24}
+main{max-width:640px;margin:0 auto;padding:14px}
+.scards{display:flex;gap:10px;margin:6px 0}
+.scard{flex:1;background:#1e3a8a;border-radius:12px;padding:14px;font-size:17px;text-align:center;font-weight:600}
+.scard .lbl{font-size:14px;color:#93c5fd;display:block;margin-bottom:4px}
+#stage1 h3,#stage2 h3{font-size:17px;margin:14px 0 8px;color:#bfdbfe}
+#conjRow{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.conj{min-height:56px;min-width:88px;font-size:19px;font-weight:800;border-radius:12px;border:2px solid #3b82f6;background:#172554;color:#e0e7ff;cursor:pointer;padding:10px 16px}
+.conj:active{transform:scale(.95)}
+.conj.right{border-color:#4ade80;background:#14532d}
+#stage2{display:none}
+#tiles{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:8px 0}
+.tile{background:#e0e7ff;color:#172554;font-size:19px;font-weight:700;min-height:54px;border-radius:12px;border:none;cursor:pointer;padding:10px 16px}
+.tile:active{transform:scale(.95)}
+#answer{background:#0f1e4d;border:2px dashed #3b82f6;border-radius:12px;min-height:70px;padding:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+#answer .hint{color:#64748b;font-size:14px;width:100%;text-align:center}
+.at{background:#fbbf24;color:#172554;font-size:19px;font-weight:700;min-height:50px;border-radius:10px;border:none;cursor:pointer;padding:8px 14px}
+#btnrow{display:flex;gap:10px;margin-top:10px}
+#checkBtn{flex:1;min-height:58px;font-size:19px;font-weight:800;border:none;border-radius:14px;background:#22c55e;color:#052e16;cursor:pointer}
+#clearBtn{flex:1;min-height:58px;font-size:19px;font-weight:800;border:none;border-radius:14px;background:#475569;color:#fff;cursor:pointer}
+#fb{min-height:42px;text-align:center;font-size:17px;font-weight:700;margin-top:10px}
+#fb.good{color:#4ade80}
+#fb.bad{color:#f87171}
+.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-9px)}75%{transform:translateX(9px)}}
+.tip{font-size:14px;color:#93c5fd;text-align:center;margin:2px 0 4px}
+.overlay{position:fixed;inset:0;background:rgba(2,6,23,.95);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.card{background:#1e3a8a;border-radius:20px;padding:26px 22px;max-width:540px;width:100%;max-height:90vh;overflow-y:auto}
+.card h2{margin:0 0 12px;font-size:24px;color:#bfdbfe}
 .card p,.card li{font-size:16px;line-height:1.7}
 .card ul{padding-left:20px}
-.concept{background:#fdf2f8;border-radius:12px;padding:14px;margin:14px 0;font-size:15px;border:1px solid #fbcfe8}
-.concept b{color:#be185d}
-.card button{width:100%;min-height:58px;font-size:18px;font-weight:800;background:#be185d;color:#fff;border:none;border-radius:14px;margin-top:12px;cursor:pointer;touch-action:manipulation}
-.stars{font-size:40px;text-align:center;margin:8px 0}
+.concept{background:#172554;border-radius:12px;padding:14px;margin:14px 0;font-size:15px;line-height:1.8}
+.concept b{color:#4ade80}
+.card button{width:100%;min-height:56px;font-size:18px;font-weight:700;background:#3b82f6;color:#fff;border:none;border-radius:14px;margin-top:10px;cursor:pointer}
 </style>
 </head>
 <body>
-<header><h1>🔗 連接詞大作戰</h1></header>
-<div class="hud"><div>題目 <span id="qnum">1</span>/10</div><div>分數 <span id="score">0</span></div><div>最高 <span id="best">0</span></div></div>
+<header><h1>🔗 句子合併師</h1></header>
+<a class="back" href="games.html">← 返回遊戲列表</a>
+<div class="hud"><div>🔗 第 <span id="round">1</span>/8 題</div><div>⭐ <span id="score">0</span> 分</div></div>
 <main>
-<div class="qcard">
-<div class="qnum" id="qhint">第 1 題</div>
-<div class="qtext" id="qtext"></div>
+<div class="scards">
+<div class="scard"><span class="lbl">句子一</span><span id="s1"></span></div>
+<div class="scard"><span class="lbl">句子二</span><span id="s2"></span></div>
 </div>
-<div class="answers" id="answers"></div>
-<div class="feedback" id="fb"></div>
-<button class="nextbtn" id="nextBtn">下一題 →</button>
+<div id="stage1">
+<h3>第一步：揀啱連接詞</h3>
+<div id="conjRow"></div>
+<div class="tip">8 個連接詞入面只有一個啱，諗下兩句係咩關係！</div>
+</div>
+<div id="stage2">
+<h3>第二步：撳次序砌成一句</h3>
+<div id="tiles"></div>
+<div class="tip">👆 撳字砌句子（撳答案欄嘅字可以拎走）</div>
+<div id="answer"><span class="hint">撳上面嘅字，砌出合併後嘅句子</span></div>
+<div id="btnrow">
+<button id="checkBtn">✅ 對答案</button>
+<button id="clearBtn">🧹 清除</button>
+</div>
+</div>
+<div id="fb"></div>
 </main>
 <div class="overlay" id="intro"><div class="card">
-<h2>🔗 連接詞大作戰</h2>
-<p><b>玩法：</b>睇住前後兩句嘅關係，揀啱嘅連接詞。共 10 題，答啱 +100 分。</p>
-<div class="concept">💡 <b>文法概念：</b><br>
-• <b>and</b>（而且）：加埋一齊。例：I like tea <b>and</b> coffee.<br>
-• <b>but</b>（但係）：轉折、相反。例：He is rich <b>but</b> unhappy.<br>
-• <b>so</b>（所以）：講結果。例：I was tired, <b>so</b> I slept.<br>
-• <b>because</b>（因為）：講原因。例：I stayed home <b>because</b> it rained.<br>
-• <b>although</b>（雖然）：讓步（後面唔可以用 but）。<br>
-例：<b>Although</b> it rained, we went out.<br>
-• <b>or</b>（或者）：二揀一。例：Hurry up <b>or</b> you'll be late.<br>
-• <b>if</b>（如果）：講條件。例：<b>If</b> you study, you'll pass.<br><br>
-⚠️ 記住：although 同 but 唔可以同時用！</div>
-<button onclick="startGame()">開始挑戰！</button>
+<h2>🔗 句子合併師</h2>
+<p><b>玩法：</b>有兩句句子。第一步：由 8 個連接詞入面揀啱嗰個（因為？所以？雖然？）。第二步：撳打散咗嘅字，砌返成一句通順嘅合併句。8 題！</p>
+<div class="concept">💡 <b>文法概念：</b><b>because</b>（因為）講原因、<b>so</b>（所以）講結果、<b>although</b>（雖然）講讓步、<b>but</b>（但係）講對比、<b>or</b>（否則）講選擇。合併之後意思要同原本兩句一樣！</div>
+<button onclick="startGame()">開始合併！</button>
 </div></div>
-<div class="overlay" id="gameover" style="display:none"><div class="card">
-<h2>🎉 完成！</h2>
-<div class="stars" id="stars"></div>
-<p id="finalScore" style="font-size:19px;text-align:center"></p>
-<button onclick="resetGame()">🔁 再玩一次</button>
+<div class="overlay" id="over" style="display:none"><div class="card">
+<h2>🏁 合併完成！</h2>
+<p id="finalScore" style="font-size:18px"></p>
+<button onclick="newGame()">🔁 再玩一次</button>
 </div></div>
 <script>
-(function(){
-"use strict";
-var BANK=[
-{q:"I was tired, ___ I went to bed early.",correct:"so",wrong:"because",tip:"後句係結果（去瞓）→ 用 so（所以）"},
-{q:"She studied hard, ___ she failed the exam.",correct:"but",wrong:"and",tip:"前後相反（努力但失敗）→ 用 but（但係）"},
-{q:"___ it was raining, they went hiking.",correct:"Although",wrong:"Because",tip:"讓步關係（雖然落雨都去）→ 用 Although"},
-{q:"He is rich ___ unhappy.",correct:"but",wrong:"and",tip:"有錢但唔開心，前後對比 → but"},
-{q:"She can't swim, ___ she loves the beach.",correct:"but",wrong:"so",tip:"唔識游水但鍾意沙灘，轉折 → but"},
-{q:"___ he was ill, he went to school.",correct:"Although",wrong:"Because",tip:"病咗都返學，讓步 → Although（唔可以用 but）"},
-{q:"Hurry up, ___ you'll be late!",correct:"or",wrong:"and",tip:"二揀一（快啲，唔係就遲到）→ or"},
-{q:"I like tea ___ coffee.",correct:"and",wrong:"or",tip:"兩樣都鍾意，加埋 → and"},
-{q:"He stayed up late ___ he had an exam the next day.",correct:"because",wrong:"although",tip:"後句係原因（有考試）→ because"},
-{q:"It's sunny ___ cold today.",correct:"but",wrong:"and",tip:"好天但凍，對比 → but"},
-{q:"She was hungry, ___ she ate a sandwich.",correct:"so",wrong:"because",tip:"肚餓所以食嘢，結果 → so"},
-{q:"___ you study hard, you will pass.",correct:"If",wrong:"Although",tip:"講條件（如果努力）→ If"},
-{q:"He ran fast ___ missed the bus.",correct:"but",wrong:"so",tip:"跑得快但miss咗巴士，轉折 → but"},
-{q:"I called ___ no one answered.",correct:"but",wrong:"because",tip:"打電話但冇人聽，轉折 → but"},
-{q:"She was ill, ___ she stayed in bed.",correct:"so",wrong:"but",tip:"病咗所以瞓床，結果 → so"}
+var CONJS=["because","so","although","but","and","or","if","when"];
+var ROUNDS=[
+ {s1:"It was raining.",s2:"We stayed home.",conj:"because",target:"We stayed home because it was raining.",tiles:["We","stayed","home","because","it","was","raining"]},
+ {s1:"She was tired.",s2:"She kept working.",conj:"although",target:"She kept working although she was tired.",tiles:["She","kept","working","although","she","was","tired"]},
+ {s1:"I was hungry.",s2:"I ate a sandwich.",conj:"so",target:"I was hungry so I ate a sandwich.",tiles:["I","was","hungry","so","I","ate","a","sandwich"]},
+ {s1:"The movie was boring.",s2:"We left early.",conj:"so",target:"The movie was boring so we left early.",tiles:["The","movie","was","boring","so","We","left","early"]},
+ {s1:"He studied hard.",s2:"He passed the exam.",conj:"because",target:"He passed the exam because he studied hard.",tiles:["He","passed","the","exam","because","he","studied","hard"]},
+ {s1:"It was late.",s2:"They went home.",conj:"so",target:"It was late so they went home.",tiles:["It","was","late","so","They","went","home"]},
+ {s1:"She likes coffee.",s2:"He likes tea.",conj:"but",target:"She likes coffee but he likes tea.",tiles:["She","likes","coffee","but","he","likes","tea"]},
+ {s1:"Hurry up.",s2:"You will miss the bus.",conj:"or",target:"Hurry up or you will miss the bus.",tiles:["Hurry","up","or","you","will","miss","the","bus"]}
 ];
-var qs=[],idx=0,score=0,best=0,answered=false;
-try{best=parseInt(localStorage.getItem('conjBest')||'0',10)||0;}catch(e){}
-document.getElementById('best').textContent=best;
-
+var idx=0,score=0,best=0,conjTries=0,pool=[],answer=[],clock=false;
+try{best=parseInt(localStorage.getItem("conjBest")||"0");}catch(e){}
 function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
-
-function startGame(){
-  document.getElementById('intro').style.display='none';
-  document.getElementById('gameover').style.display='none';
-  resetGame();
+function upd(){
+  document.getElementById("round").textContent=Math.min(idx+1,8);
+  document.getElementById("score").textContent=score;
 }
-function resetGame(){
-  qs=shuffle(BANK.slice()).slice(0,10);
-  idx=0;score=0;answered=false;
-  document.getElementById('score').textContent='0';
-  document.getElementById('gameover').style.display='none';
-  renderQ();
-}
-function renderQ(){
-  answered=false;
-  var item=qs[idx];
-  document.getElementById('qnum').textContent=(idx+1);
-  document.getElementById('qhint').textContent='第 '+(idx+1)+' 題';
-  var parts=item.q.split('___');
-  document.getElementById('qtext').innerHTML=parts[0]+'<span class="blank">____</span>'+parts[1];
-  var opts=shuffle([item.correct,item.wrong]);
-  var box=document.getElementById('answers');box.innerHTML='';
-  opts.forEach(function(o){
-    var b=document.createElement('button');
-    b.className='abtn';b.textContent=o;
-    b.addEventListener('click',function(){answer(b,o,item);});
-    box.appendChild(b);
-  });
-  document.getElementById('fb').textContent='';
-  document.getElementById('fb').className='feedback';
-  document.getElementById('nextBtn').style.display='none';
-}
-function answer(btn,choice,item){
-  if(answered)return;answered=true;
-  var btns=document.getElementById('answers').children;
-  for(var i=0;i<btns.length;i++){btns[i].disabled=true;}
-  var fb=document.getElementById('fb');
-  if(choice===item.correct){
-    btn.classList.add('correct');
-    score+=100;
-    document.getElementById('score').textContent=score;
-    fb.innerHTML='✅ 答啱！<div class="explain">'+item.tip+'</div>';
-    fb.className='feedback good';
-  }else{
-    btn.classList.add('wrong');
-    for(var j=0;j<btns.length;j++){if(btns[j].textContent===item.correct)btns[j].classList.add('correct');}
-    fb.innerHTML='❌ 唔啱，正確答案係 <b>'+item.correct+'</b><div class="explain">'+item.tip+'</div>';
-    fb.className='feedback bad';
+function render(){
+  var r=ROUNDS[idx];
+  document.getElementById("s1").textContent=r.s1;
+  document.getElementById("s2").textContent=r.s2;
+  document.getElementById("stage1").style.display="block";
+  document.getElementById("stage2").style.display="none";
+  document.getElementById("fb").textContent="";document.getElementById("fb").className="";
+  conjTries=0;
+  var row=document.getElementById("conjRow");row.innerHTML="";
+  var cs=shuffle(CONJS.slice());
+  for(var i=0;i<cs.length;i++){
+    (function(c){
+      var b=document.createElement("button");
+      b.className="conj";b.textContent=c;
+      b.addEventListener("click",function(){
+        var fb=document.getElementById("fb");
+        if(c===r.conj){
+          b.classList.add("right");
+          var pts=conjTries===0?40:20;score+=pts;upd();
+          fb.textContent="✅ "+c+" 啱！（+"+pts+"）而家砌句子…";
+          fb.className="good";
+          setTimeout(startTiles,800);
+        }else{
+          conjTries++;
+          fb.textContent="❌ 唔係 "+c+"，諗下兩句係咩關係！";
+          fb.className="bad";
+          b.classList.add("shake");setTimeout(function(){b.classList.remove("shake");},450);
+        }
+      });
+      row.appendChild(b);
+    })(cs[i]);
   }
-  var nb=document.getElementById('nextBtn');
-  nb.textContent=(idx>=qs.length-1)?'睇成績 →':'下一題 →';
-  nb.style.display='block';
+  upd();
 }
-document.getElementById('nextBtn').addEventListener('click',function(){
-  idx++;
-  if(idx>=qs.length){endGame();}else{renderQ();}
-});
+function startTiles(){
+  var r=ROUNDS[idx];
+  document.getElementById("stage1").style.display="none";
+  document.getElementById("stage2").style.display="block";
+  document.getElementById("fb").textContent="";document.getElementById("fb").className="";
+  pool=shuffle(r.tiles.slice());answer=[];
+  drawTiles();drawAnswer();
+}
+function drawTiles(){
+  var t=document.getElementById("tiles");t.innerHTML="";
+  for(var i=0;i<pool.length;i++){
+    (function(w,n){
+      var b=document.createElement("button");
+      b.className="tile";b.textContent=w;
+      b.addEventListener("click",function(){
+        pool.splice(n,1);answer.push(w);drawTiles();drawAnswer();
+      });
+      t.appendChild(b);
+    })(pool[i],i);
+  }
+}
+function drawAnswer(){
+  var a=document.getElementById("answer");a.innerHTML="";
+  if(answer.length===0){
+    var h=document.createElement("span");h.className="hint";
+    h.textContent="撳上面嘅字，砌出合併後嘅句子";a.appendChild(h);return;
+  }
+  for(var i=0;i<answer.length;i++){
+    (function(w,n){
+      var b=document.createElement("button");
+      b.className="at";b.textContent=w;
+      b.addEventListener("click",function(){
+        answer.splice(n,1);pool.push(w);drawTiles();drawAnswer();
+      });
+      a.appendChild(b);
+    })(answer[i],i);
+  }
+}
+function clearTiles(){
+  var r=ROUNDS[idx];
+  pool=shuffle(r.tiles.slice());answer=[];
+  drawTiles();drawAnswer();
+}
+function check(){
+  if(clock)return;
+  var r=ROUNDS[idx],fb=document.getElementById("fb");
+  if(answer.length!==r.tiles.length){fb.textContent="⚠️ 仲未砌完！";fb.className="bad";return;}
+  if(answer.join(" ").toLowerCase()===r.target.toLowerCase().replace(/\.$/,"")){
+    clock=true;score+=60;upd();
+    fb.textContent="✅ 啱晒！「"+r.target+"」（+60）";
+    fb.className="good";
+    idx++;setTimeout(function(){clock=false;if(idx>=ROUNDS.length)endGame();else render();},1500);
+  }else{
+    fb.textContent="❌ 次序唔啱，再排過！";
+    fb.className="bad";
+    document.getElementById("answer").classList.add("shake");
+    setTimeout(function(){document.getElementById("answer").classList.remove("shake");},450);
+  }
+}
+document.getElementById("checkBtn").addEventListener("click",check);
+document.getElementById("clearBtn").addEventListener("click",clearTiles);
 function endGame(){
-  var nb='';
-  if(score>best){best=score;try{localStorage.setItem('conjBest',best);}catch(e){}nb=' 🏅 新紀錄！';}
-  document.getElementById('best').textContent=best;
-  var st=score>=900?'⭐⭐⭐':score>=600?'⭐⭐':'⭐';
-  document.getElementById('stars').textContent=st;
-  document.getElementById('finalScore').innerHTML='總分：<b>'+score+'</b> / 1000'+nb;
-  document.getElementById('gameover').style.display='flex';
+  var msg="總分：<b style='color:#fbbf24'>"+score+"</b> / 800 分<br>";
+  if(score>best){best=score;try{localStorage.setItem("conjBest",best);}catch(e){}msg+="🏅 新紀錄！<br>";}
+  else{msg+="歷史最佳："+best+" 分<br>";}
+  msg+=score>=700?"🌟 合併大師！連接詞＋詞序無懈可擊！":score>=450?"👍 好嘢，砌句子嗰陣要睇清楚邊句行先！":"💪 記住：because講原因、so講結果、although講讓步！";
+  document.getElementById("finalScore").innerHTML=msg;
+  document.getElementById("over").style.display="flex";
 }
-window.startGame=startGame;
-window.resetGame=resetGame;
-})();
+function newGame(){
+  ROUNDS=shuffle(ROUNDS.slice());idx=0;score=0;
+  document.getElementById("over").style.display="none";
+  render();
+}
+function startGame(){document.getElementById("intro").style.display="none";newGame();}
 </script>
 </body>
 </html>
