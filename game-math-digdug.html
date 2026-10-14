@@ -1,225 +1,305 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>數學掘地蟲</title>
 <style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;font-family:"Courier New",Courier,"Microsoft JhengHei",monospace;background:#0d1b2a;color:#e0f2fe;min-height:100vh;touch-action:manipulation}
-.scan{position:fixed;inset:0;pointer-events:none;z-index:60;background:repeating-linear-gradient(0deg,rgba(0,0,0,.10) 0 2px,transparent 2px 4px)}
-header{background:#1b2a4a;border-bottom:4px solid #f472b6;padding:12px;text-align:center}
-header h1{margin:0;font-size:22px;letter-spacing:2px;color:#ffe14d;text-shadow:2px 2px 0 #831843}
-.hud{display:flex;justify-content:space-around;background:#1b2a4a;padding:10px;font-size:14px;font-weight:700;border-bottom:4px solid #f472b6}
-.hud b{color:#ffe14d}
-.target{background:#1b2a4a;text-align:center;padding:8px;font-size:18px;font-weight:800;color:#7CFC98;border-bottom:4px solid #f472b6}
-.back{display:block;text-align:center;background:#24365c;color:#a9c6f2;text-decoration:none;padding:12px;font-size:15px;font-weight:700}
-.wrap{max-width:460px;margin:0 auto;padding:12px 12px 40px}
-#cv{width:100%;height:auto;display:block;background:#0d1b2a;border:4px solid #f472b6;image-rendering:pixelated;touch-action:none}
-.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px auto;max-width:340px}
-.pbtn{min-height:60px;font-size:24px;font-weight:800;font-family:inherit;background:#1b2a4a;color:#fff;border:4px solid #f472b6;border-radius:0;cursor:pointer}
-.pbtn:active{background:#f472b6;transform:scale(.96)}
-.tip{text-align:center;font-size:13px;color:#a9c6f2;margin-top:4px}
-#msg{min-height:30px;text-align:center;font-size:15px;font-weight:700;margin-top:8px;color:#7CFC98}
-.overlay{position:fixed;inset:0;background:rgba(10,15,30,.96);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
-.card{background:#1b2a4a;border:4px solid #f472b6;padding:26px 22px;max-width:480px;width:100%;max-height:92vh;overflow-y:auto}
-.card h2{margin:0 0 10px;color:#ffe14d;font-size:22px;letter-spacing:2px}
-.card p,.card li{font-size:15px;line-height:1.7}
-.card ul{padding-left:20px}
-.concept{background:#0d1b2a;border:2px solid #f472b6;padding:12px;margin:12px 0;font-size:14px}
-.concept b{color:#7CFC98}
-.card button{width:100%;min-height:58px;font-size:18px;font-weight:800;font-family:inherit;background:#e33;color:#fff;border:4px solid #fff;margin-top:10px;cursor:pointer;letter-spacing:2px}
-.blink{animation:bl 1s steps(2) infinite}
-@keyframes bl{50%{opacity:.2}}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang HK","Microsoft JhengHei","Noto Sans HK",sans-serif;background:linear-gradient(180deg,#0f1b2d 0%,#12263f 50%,#0a1420 100%);color:#fff;min-height:100vh;overflow-x:hidden;user-select:none;-webkit-user-select:none}
+/* 晶體微光 */
+.crystal{position:fixed;border-radius:50%;filter:blur(40px);opacity:.35;z-index:0;pointer-events:none;animation:glow 6s ease-in-out infinite alternate}
+@keyframes glow{from{opacity:.2;transform:scale(1)}to{opacity:.45;transform:scale(1.15)}}
+.wrap{position:relative;z-index:2;max-width:560px;margin:0 auto;padding:12px 14px 30px}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:6px 2px 10px}
+.back{display:inline-flex;align-items:center;gap:6px;color:#fff;text-decoration:none;font-size:15px;font-weight:600;background:rgba(255,255,255,.1);border:1px solid rgba(103,232,249,.4);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:10px 16px;border-radius:999px;min-height:44px}
+.best{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;background:rgba(255,255,255,.1);border:1px solid rgba(103,232,249,.4);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:10px 16px;border-radius:999px;min-height:44px}
+.hud{display:flex;gap:10px;margin-bottom:10px}
+.hud .pill{flex:1;text-align:center;background:rgba(255,255,255,.1);border:1px solid rgba(103,232,249,.35);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:16px;padding:9px 6px;font-size:14px;font-weight:800}
+.hud .pill small{display:block;font-size:11px;font-weight:500;opacity:.7}
+.qbar{background:linear-gradient(135deg,rgba(103,232,249,.18),rgba(167,139,250,.18));border:1px solid rgba(103,232,249,.45);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:20px;padding:14px;text-align:center;margin-bottom:10px;box-shadow:0 10px 28px rgba(0,0,0,.35)}
+.qbar .ql{font-size:12px;font-weight:700;letter-spacing:2px;color:#67e8f9}
+.qbar .qv{font-size:26px;font-weight:900;margin-top:4px;letter-spacing:1px}
+.qbar .qn{font-size:13px;opacity:.75;margin-top:4px}
+.board{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;background:rgba(0,0,0,.4);border:1px solid rgba(103,232,249,.3);border-radius:18px;padding:7px;box-shadow:0 18px 44px rgba(0,0,0,.55),inset 0 0 40px rgba(0,0,0,.5);touch-action:none}
+.cell{aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;position:relative}
+.cell.soil{background:linear-gradient(145deg,#2c3e57,#1a2638);box-shadow:inset 0 2px 4px rgba(255,255,255,.1)}
+.cell.tunnel{background:rgba(103,232,249,.07)}
+.cell .p{animation:pop-in .25s ease;font-size:18px}
+@keyframes pop-in{from{transform:scale(.4)}to{transform:scale(1)}}
+.gem{background:radial-gradient(circle,rgba(103,232,249,.4),rgba(103,232,249,.08));box-shadow:0 0 10px rgba(103,232,249,.6);cursor:default}
+.gem span{animation:gembob 2s ease-in-out infinite;display:inline-block}
+@keyframes gembob{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-3px) scale(1.12)}}
+.controls{display:flex;justify-content:center;margin-top:14px}
+.dpad{display:grid;grid-template-columns:repeat(3,60px);grid-template-rows:repeat(3,60px);gap:6px}
+.dpad button{border:none;border-radius:18px;background:rgba(103,232,249,.14);border:1px solid rgba(103,232,249,.4);color:#a5f3fc;font-size:26px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.4);font-family:inherit}
+.dpad button:active{transform:scale(.92);background:rgba(103,232,249,.32)}
+.dpad .up{grid-column:2;grid-row:1}.dpad .left{grid-column:1;grid-row:2}.dpad .right{grid-column:3;grid-row:2}.dpad .down{grid-column:2;grid-row:3}
+.hint{text-align:center;font-size:13px;opacity:.65;margin-top:10px;line-height:1.7}
+.screen{display:none}
+.screen.show{display:block;animation:fadeUp .45s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.hero{text-align:center;padding:22px 10px 14px}
+.hero .emoji{font-size:64px;filter:drop-shadow(0 8px 16px rgba(0,0,0,.5))}
+.hero h1{font-size:32px;font-weight:900;margin:10px 0 6px;color:#a5f3fc}
+.hero p{font-size:15px;opacity:.85;line-height:1.8}
+.diffcards{display:grid;gap:12px;margin:16px 0}
+.diff{background:rgba(255,255,255,.08);border:1px solid rgba(103,232,249,.35);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:20px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;min-height:76px;transition:transform .12s;box-shadow:0 10px 26px rgba(0,0,0,.4);text-align:left;width:100%;color:#fff;font-family:inherit}
+.diff:active{transform:scale(.97)}
+.diff .dicon{font-size:38px}
+.diff b{font-size:19px;display:block;color:#a5f3fc}
+.diff span{font-size:13px;opacity:.75}
+.concept{background:rgba(103,232,249,.1);border:1px solid rgba(103,232,249,.4);border-radius:18px;padding:14px 16px;font-size:14px;line-height:1.9}
+.endcard{text-align:center;background:rgba(255,255,255,.07);border:1px solid rgba(103,232,249,.35);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:24px;padding:34px 20px;box-shadow:0 18px 44px rgba(0,0,0,.5);margin-top:16px}
+.endcard .emoji{font-size:72px}
+.endcard h2{font-size:30px;margin:12px 0 8px;color:#a5f3fc}
+.endcard .score{font-size:52px;font-weight:900;color:#67e8f9}
+.endcard p{font-size:15px;opacity:.85;margin:8px 0 20px;line-height:1.7}
+.bigbtn{display:block;width:100%;min-height:60px;margin-top:12px;font-size:20px;font-weight:800;color:#06202a;background:linear-gradient(135deg,#67e8f9,#38bdf8);border:none;border-radius:18px;cursor:pointer;box-shadow:0 10px 24px rgba(56,189,248,.4);font-family:inherit}
+.bigbtn.ghost{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(103,232,249,.4);box-shadow:none}
+.feedback{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%) scale(.6);font-size:56px;font-weight:900;opacity:0;pointer-events:none;z-index:70;text-shadow:0 6px 24px rgba(0,0,0,.5)}
+.feedback.pop{animation:pop .7s ease forwards}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}30%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-60%) scale(1)}}
 </style>
 </head>
 <body>
-<div class="scan"></div>
-<header><h1>⛏️ 數學掘地蟲</h1></header>
-<a class="back" href="games.html">← 返回遊戲列表</a>
+<div class="crystal" style="left:8%;top:12%;width:120px;height:120px;background:#22d3ee"></div>
+<div class="crystal" style="right:6%;top:45%;width:90px;height:90px;background:#a78bfa;animation-delay:-3s"></div>
+<div class="crystal" style="left:15%;bottom:8%;width:100px;height:100px;background:#34d399;animation-delay:-1.5s"></div>
 <div class="wrap">
-<div class="hud"><div>❤ <b id="lives">3</b></div><div>💎 <b id="gems">0</b>/5</div><div>⭐ <b id="score">0</b></div></div>
-<div class="target">🎯 題目：<span id="tgt">—</span> ＝ ?</div>
-<canvas id="cv" width="384" height="320"></canvas>
-<div class="pad">
-<div></div><button class="pbtn" id="up">▲</button><div></div>
-<button class="pbtn" id="lf">◀</button><button class="pbtn" id="dn">▼</button><button class="pbtn" id="rt">▶</button>
+  <div class="topbar">
+    <a class="back" href="games.html">← 返回遊戲列表</a>
+    <div class="best">🏆 <span id="bestNum">0</span></div>
+  </div>
+
+  <div id="menu" class="screen show">
+    <div class="hero">
+      <div class="emoji">⛏️</div>
+      <h1>數學掘地蟲</h1>
+      <p>睇住頂部嘅數列題目，掘地去拎寫住<b>正確答案</b>的寶石！<br>錯寶石係陷阱，仲有怪獸追你——集齊 5 粒過版，共 3 版。</p>
+    </div>
+    <div class="diffcards">
+      <button class="diff" data-d="easy"><div class="dicon">🌱</div><div><b>初階 · 中一至中二</b><span>整數規律</span></div></button>
+      <button class="diff" data-d="mid"><div class="dicon">🌿</div><div><b>中階 · 中三至中四</b><span>等差、等比數列</span></div></button>
+      <button class="diff" data-d="hard"><div class="dicon">🌳</div><div><b>高階 · 中五至中六</b><span>數列通項</span></div></button>
+    </div>
+    <div class="concept">💡 <b>數學概念</b><br>初階：找數字規律（每次加幾、乘幾）。<br>中階：等差數列（公差 d）、等比數列（公比 r）。<br>高階：通項公式 T(n)，如 T(n)=3n+2 求 T(5)。</div>
+  </div>
+
+  <div id="game" class="screen">
+    <div class="hud">
+      <div class="pill">❤️ <span id="lives">3</span><small>生命</small></div>
+      <div class="pill">💎 <span id="gems">0</span>/5<small>寶石</small></div>
+      <div class="pill">⭐ <span id="score">0</span><small>分數</small></div>
+    </div>
+    <div class="qbar">
+      <div class="ql">🔍 數列題目 · 第 <span id="lvl">1</span> 版</div>
+      <div class="qv" id="qSeq">…</div>
+      <div class="qn">下一項是？去拎啱數字嘅寶石 💎</div>
+    </div>
+    <div class="board" id="board"></div>
+    <div class="controls">
+      <div class="dpad">
+        <button class="up" data-m="0,-1">▲</button>
+        <button class="left" data-m="-1,0">◀</button>
+        <button class="right" data-m="1,0">▶</button>
+        <button class="down" data-m="0,1">▼</button>
+      </div>
+    </div>
+    <div class="hint">方向掣或滑動棋盤移動，行入泥土即掘開</div>
+  </div>
+
+  <div id="end" class="screen">
+    <div class="endcard">
+      <div class="emoji" id="endEmoji">🏆</div>
+      <h2 id="endTitle">全部過版！</h2>
+      <div class="score" id="endScore">0</div>
+      <p id="endMsg"></p>
+      <button class="bigbtn" id="againBtn">🔁 再玩一次</button>
+      <button class="bigbtn ghost" id="menuBtn">🏠 返回選單</button>
+    </div>
+  </div>
 </div>
-<div class="tip">方向掣行路 · 撳隔籬泥土掘窿 · 行到寶石度：啱答案＋150，錯答案扣命！避開紅色怪獸</div>
-<div id="msg"></div>
-</div>
-<div class="overlay" id="intro"><div class="card">
-<h2>⛏️ 數學掘地蟲</h2>
-<p><b>玩法：</b>地底有寶石，每粒寫住個數字。心算題目答案，掘窿去拎<b>等於答案</b>嘅寶石！錯答案寶石係陷阱，紅色怪獸會追你。拎齊 5 粒啱寶石過一版，共 3 版。</p>
-<div class="concept">💡 <b>數學概念：</b>整數運算（＋－×÷）。先計答案，再揀寶石，唔好貪心！</div>
-<button onclick="startGame()">▶ START</button>
-<p class="blink" style="text-align:center;color:#a9c6f2">★ 8-BIT 挑戰 ★</p>
-</div></div>
-<div class="overlay" id="over" style="display:none"><div class="card">
-<h2 id="overT">🏁 完成！</h2>
-<p id="overS" style="font-size:17px"></p>
-<button onclick="resetGame()">🔁 再玩一次</button>
-</div></div>
+<div class="feedback" id="feedback"></div>
+
 <script>
-(function(){
 "use strict";
-var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+function ri(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;}
+/* 每題：{seq:[顯示的項], ans:正確答案, distract:[干擾數字]} */
+function genEasy(){
+  var t=ri(0,2);
+  if(t===0){var s=ri(1,9),d=ri(2,7);var seq=[s,s+d,s+2*d,s+3*d];return {seq:seq,ans:s+4*d,distract:[s+4*d+1,s+4*d-1,s+4*d+2,s+5*d]};}
+  if(t===1){var s2=ri(1,6),m=ri(2,4);var q2=[s2,s2*m,s2*m*m,s2*m*m*m];return {seq:q2,ans:s2*m*m*m*m,distract:[s2*m*m*m*m+1,s2*m*m*m*m-1,s2*m*m*m*m+m,s2*m*m*m]};}
+  var s3=ri(2,10);var q3=[s3,s3-3,s3-6,s3-9];return {seq:q3,ans:s3-12,distract:[s3-11,s3-13,s3-10,s3-14]};
+}
+function genMid(){
+  var t=ri(0,2);
+  if(t===0){var a=ri(2,12),d=ri(3,9);if(Math.random()<.5)d=-d;var seq=[a,a+d,a+2*d,a+3*d];
+    return {seq:seq,ans:a+4*d,distract:[a+4*d+1,a+4*d-1,a+5*d,a+3*d]};}
+  if(t===1){var a2=ri(1,8),r=ri(2,4);if(Math.random()<.4)r=-r;var q=[a2,a2*r,a2*r*r,a2*r*r*r];
+    return {seq:q,ans:a2*r*r*r*r,distract:[a2*r*r*r*r+r,a2*r*r*r*r-r,a2*r*r*r,a2*r*r*r*r+1]};}
+  var a3=ri(1,10),d3=ri(2,6);var n=ri(5,8);var qq=[];
+  for(var i=1;i<=4;i++)qq.push(a3+(i-1)*d3);
+  return {seq:qq,ans:a3+(n-1)*d3,distract:[a3+(n-1)*d3+1,a3+(n-1)*d3-1,a3+n*d3,a3+(n-2)*d3],extra:'（等差數列首項 '+a3+'，公差 '+d3+'，求第 '+n+' 項）'};
+}
+function genHard(){
+  var t=ri(0,2);
+  if(t===0){var a=ri(2,6),b=ri(1,9),n=ri(4,7);var qq=[];
+    for(var i=1;i<=4;i++)qq.push(a*i+b);
+    return {seq:qq,ans:a*n+b,distract:[a*n+b+1,a*n+b-1,a*(n+1)+b,a*n+b+a],extra:'（通項 T(n) = '+a+'n + '+b+'，求 T('+n+')）'};}
+  if(t===1){var a2=ri(2,5),n2=ri(4,6);var q2=[];
+    for(var j=1;j<=4;j++)q2.push(a2*j*j);
+    return {seq:q2,ans:a2*n2*n2,distract:[a2*n2*n2+1,a2*n2*n2-1,a2*(n2+1)*(n2+1),a2*n2*n2+a2],extra:'（通項 T(n) = '+a2+'n²，求 T('+n2+')）'};}
+  var f=ri(2,5),n3=ri(4,6);var q3=[];
+  for(var k=1;k<=4;k++)q3.push(f*k*(k+1)/2);
+  return {seq:q3,ans:f*n3*(n3+1)/2,distract:[f*n3*(n3+1)/2+1,f*n3*(n3+1)/2-1,f*(n3+1)*(n3+2)/2,f*n3*(n3-1)/2],extra:'（三角形數規律，求第 '+n3+' 項）'};
+}
 var AC=null;
-function beep(f,d){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();var o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=f;g.gain.value=0.07;g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d);}catch(e){}}
-var CS=32,COLS=12,ROWS=10;
-var grid,gems,mons,px,py,lives,score,gemsGot,ans,level,moveCD,over,paused;
-function ri(a,b){return a+Math.floor(Math.random()*(b-a+1));}
-function fmtD(n){return (''+n).replace(/-/g,'−');}
-function mkQ(lv){
-  var a,b,ans,q;
-  if(lv===1){a=ri(4,20);b=ri(4,20);if(Math.random()<0.5){ans=a+b;q=a+' + '+b;}else{ans=a-b;q=a+' − '+b;}}
-  else if(lv===2){a=ri(3,9);b=ri(3,9);if(Math.random()<0.5){ans=a*b;q=a+' × '+b;}else{ans=a;a=ans*b;q=a+' ÷ '+b;}}
-  else{a=ri(-9,9);b=ri(-9,9);var t=Math.random();
-    if(t<0.4){ans=a+b;q=fmtD(a)+' + '+fmtD(b);}
-    else if(t<0.7){ans=a*b;q=fmtD(a)+' × '+fmtD(b);}
-    else{ans=a-b;q=fmtD(a)+' − '+fmtD(b);}}
-  return {q:q+' = ?',ans:ans};
-}
+function tone(f,d,type,g){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();var o=AC.createOscillator(),ga=AC.createGain();o.type=type||'sine';o.frequency.value=f;ga.gain.setValueAtTime(g||.1,AC.currentTime);ga.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);o.connect(ga);ga.connect(AC.destination);o.start();o.stop(AC.currentTime+d);}catch(e){}}
+function sndGood(){tone(880,.12,'sine');setTimeout(function(){tone(1174.7,.2,'sine');},100);}
+function sndBad(){tone(180,.3,'sawtooth',.07);}
+function sndDig(){tone(240,.06,'triangle',.05);}
+function sndWin(){[523,659,784,1047].forEach(function(f,i){setTimeout(function(){tone(f,.2,'sine');},i*140);});}
+var DIFFS={easy:{gen:genEasy,key:'dig_best_easy'},mid:{gen:genMid,key:'dig_best_mid'},hard:{gen:genHard,key:'dig_best_hard'}};
+var W=12,H=10,diff='easy',level=1,lives=3,score=0;
+var soil=[],player={x:0,y:0},mons=[],gems=[],cur=null,got=0,paused=false,loopId=null;
+var MAXLV=3,NEED=5;
+function show(id){var ss=['menu','game','end'];for(var i=0;i<ss.length;i++)document.getElementById(ss[i]).classList.toggle('show',ss[i]===id);}
+function getBest(){return parseInt(localStorage.getItem(DIFFS[diff].key)||'0',10);}
+function setBest(v){if(v>getBest())localStorage.setItem(DIFFS[diff].key,String(v));}
+document.getElementById('bestNum').textContent=getBest();
+var db=document.querySelectorAll('.diff');
+for(var bi=0;bi<db.length;bi++)(function(b){b.addEventListener('click',function(){diff=b.dataset.d;startGame();});})(db[bi]);
+document.getElementById('againBtn').addEventListener('click',startGame);
+document.getElementById('menuBtn').addEventListener('click',function(){stopLoop();show('menu');document.getElementById('bestNum').textContent=getBest();});
+function feedback(t){var f=document.getElementById('feedback');f.textContent=t;f.classList.remove('pop');void f.offsetWidth;f.classList.add('pop');}
+function startGame(){level=1;lives=3;score=0;document.getElementById('bestNum').textContent=getBest();show('game');buildLevel();}
 function buildLevel(){
-  grid=[];gems=[];mons=[];
-  for(var r=0;r<ROWS;r++){grid.push([]);for(var c=0;c<COLS;c++)grid[r].push(r===0?0:1);}
-  px=6;py=0;
-  var q=mkQ(level);ans=q.ans;
-  document.getElementById('tgt').textContent=q.q;
-  var spots=[];
-  for(var r2=2;r2<ROWS;r2++)for(var c2=1;c2<COLS-1;c2++)spots.push([r2,c2]);
-  spots.sort(function(){return Math.random()-0.5;});
-  var wrongs=[ans+1,ans-1,ans+2,ans-2,ans+10,ans-10,ans+3,ans-3];
-  wrongs=wrongs.filter(function(v,i){return wrongs.indexOf(v)===i;});
-  for(var i=0;i<5;i++)gems.push({r:spots[i][0],c:spots[i][1],v:ans,ok:true,got:false});
-  for(var j=0;j<4;j++)gems.push({r:spots[5+j][0],c:spots[5+j][1],v:wrongs[j%wrongs.length],ok:false,got:false});
-  mons=[{r:8,c:1},{r:8,c:10}];
-  mons.forEach(function(m){grid[m.r][m.c]=0;});
-  gemsGot=0;
-  document.getElementById('gems').textContent='0';
+  soil=[];mons=[];gems=[];got=0;paused=false;
+  player={x:0,y:0};
+  for(var y=0;y<H;y++){soil.push([]);for(var x=0;x<W;x++)soil[y].push(1);}
+  soil[0][0]=0;soil[0][1]=0;soil[1][0]=0;
+  var nm=1+level;
+  for(var i=0;i<nm;i++){var p=farCell();if(p)mons.push({x:p.x,y:p.y});}
+  newQuestion();render();updateHud();startLoop();
 }
-function draw(){
-  ctx.clearRect(0,0,COLS*CS,ROWS*CS);
-  for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){
-    var x=c*CS,y=r*CS;
-    if(r===0){ctx.fillStyle='#0d1b2a';ctx.fillRect(x,y,CS,CS);}
-    else if(grid[r][c]===1){ctx.fillStyle='#6b4226';ctx.fillRect(x,y,CS,CS);
-      ctx.fillStyle='#54331d';ctx.fillRect(x+5,y+7,4,4);ctx.fillRect(x+20,y+18,4,4);ctx.fillRect(x+10,y+24,4,4);
-      ctx.fillStyle='#8a5a30';ctx.fillRect(x,y,CS,2);}
-    else{ctx.fillStyle='#0d1b2a';ctx.fillRect(x,y,CS,CS);}
+function farCell(){
+  for(var k=0;k<80;k++){var x=ri(4,W-1),y=ri(3,H-1);
+    if(Math.abs(x-player.x)+Math.abs(y-player.y)>6)return {x:x,y:y};}
+  return {x:W-1,y:H-1};
+}
+function emptyCell(){
+  for(var k=0;k<100;k++){var x=ri(0,W-1),y=ri(0,H-1);
+    if(x===player.x&&y===player.y)continue;
+    var dup=false;
+    for(var i=0;i<gems.length;i++)if(gems[i].x===x&&gems[i].y===y)dup=true;
+    if(!dup)return {x:x,y:y};}
+  return {x:ri(0,W-1),y:ri(0,H-1)};
+}
+function newQuestion(){
+  cur=DIFFS[diff].gen();
+  document.getElementById('qSeq').textContent=cur.seq.join(', ')+', …';
+  document.getElementById('lvl').textContent=level;
+  var nums=[{v:cur.ans,ok:true}];
+  var ds=shuffle(cur.distract);
+  for(var i=0;i<Math.min(4,ds.length);i++)nums.push({v:ds[i],ok:false});
+  gems=[];
+  var cells=shuffle(nums);
+  for(var j=0;j<cells.length;j++){var c=emptyCell();gems.push({x:c.x,y:c.y,v:cells[j].v,ok:cells[j].ok});}
+}
+function startLoop(){stopLoop();loopId=setInterval(function(){if(paused)return;moveMons();render();checkMon();},1000-Math.min(400,(level-1)*150));}
+function stopLoop(){clearInterval(loopId);loopId=null;}
+function render(){
+  var bd=document.getElementById('board');bd.innerHTML='';
+  for(var y=0;y<H;y++)for(var x=0;x<W;x++){
+    var c=document.createElement('div');
+    c.className='cell '+(soil[y][x]===1?'soil':'tunnel');
+    var gem=null;
+    for(var i=0;i<gems.length;i++)if(gems[i].x===x&&gems[i].y===y){gem=gems[i];break;}
+    if(gem){c.classList.add('gem');c.innerHTML='<span>💎'+gem.v+'</span>';}
+    else if(player.x===x&&player.y===y)c.innerHTML='<span class="p">🐛</span>';
+    else{for(var j=0;j<mons.length;j++)if(mons[j].x===x&&mons[j].y===y){c.innerHTML='<span class="p">👹</span>';break;}}
+    bd.appendChild(c);
   }
-  gems.forEach(function(g){
-    if(g.got)return;
-    var x=g.c*CS,y=g.r*CS;
-    ctx.fillStyle=g.ok?'#22d3ee':'#f472b6';
-    ctx.beginPath();ctx.moveTo(x+CS/2,y+5);ctx.lineTo(x+CS-5,y+CS/2);ctx.lineTo(x+CS/2,y+CS-5);ctx.lineTo(x+5,y+CS/2);ctx.closePath();ctx.fill();
-    ctx.fillStyle='#fff';ctx.font='bold 13px monospace';ctx.textAlign='center';
-    ctx.fillText(fmtD(g.v),x+CS/2,y+CS/2+5);
-  });
-  mons.forEach(function(m){
-    var x=m.c*CS,y=m.r*CS;
-    ctx.fillStyle='#dc2626';ctx.fillRect(x+6,y+6,CS-12,CS-12);
-    ctx.fillStyle='#fff';ctx.fillRect(x+10,y+10,5,6);ctx.fillRect(x+CS-15,y+10,5,6);
-    ctx.fillStyle='#000';ctx.fillRect(x+11,y+12,3,3);ctx.fillRect(x+CS-14,y+12,3,3);
-  });
-  var x=px*CS,y=py*CS;
-  ctx.fillStyle='#facc15';ctx.fillRect(x+7,y+7,CS-14,CS-14);
-  ctx.fillStyle='#000';ctx.fillRect(x+11,y+11,4,5);ctx.fillRect(x+CS-15,y+11,4,5);
-  ctx.fillStyle='#7c4a1e';ctx.fillRect(x+CS/2-2,y+CS-12,4,8);
 }
-function dug(r,c){return r>=0&&c>=0&&r<ROWS&&c<COLS&&grid[r][c]===0;}
-function move(dr,dc){
-  if(paused||over||moveCD>performance.now())return;
-  moveCD=performance.now()+170;
-  var nr=py+dr,nc=px+dc;
-  if(dug(nr,nc)){py=nr;px=nc;beep(440,0.05);afterMove();}
-  draw();
+function updateHud(){document.getElementById('lives').textContent=lives;document.getElementById('gems').textContent=got;document.getElementById('score').textContent=score;}
+function move(dx,dy){
+  if(paused)return;
+  var nx=player.x+dx,ny=player.y+dy;
+  if(nx<0||ny<0||nx>=W||ny>=H)return;
+  if(soil[ny][nx]===1){soil[ny][nx]=0;sndDig();}
+  player.x=nx;player.y=ny;tone(300,.04,'triangle',.04);
+  collect();if(!paused)checkMon();render();
 }
-function afterMove(){
-  for(var i=0;i<gems.length;i++){
-    var g=gems[i];
-    if(!g.got&&g.r===py&&g.c===px){
-      g.got=true;
-      if(g.ok){beep(880,0.1);score+=150;gemsGot++;
-        document.getElementById('score').textContent=score;
-        document.getElementById('gems').textContent=gemsGot;
-        document.getElementById('msg').textContent='💎 啱答案！+150';
-        if(gemsGot>=5){nextLevel();return;}
-      }else{beep(160,0.25);lives--;
-        document.getElementById('lives').textContent=lives;
-        document.getElementById('msg').textContent='💥 錯答案陷阱！正確係 '+fmtD(ans);
-        if(lives<=0){lose();return;}
+function collect(){
+  for(var i=gems.length-1;i>=0;i--){
+    if(gems[i].x===player.x&&gems[i].y===player.y){
+      var g=gems[i];gems.splice(i,1);
+      if(g.ok){
+        got++;score+=150;sndGood();feedback('💎 +150');updateHud();
+        if(got>=NEED){
+          paused=true;
+          setTimeout(function(){
+            if(level>=MAXLV)finish(true);
+            else{level++;score+=200;buildLevel();}
+          },800);
+        }else newQuestion();
+      }else{
+        lives--;sndBad();feedback('🪤 陷阱！');updateHud();
+        if(lives<=0){finish(false);return;}
+        newQuestion();
       }
+      break;
     }
   }
-  mons.forEach(function(m){if(m.r===py&&m.c===px)hit();});
 }
-function nextLevel(){
-  level++;
-  if(level>3){win();return;}
-  document.getElementById('msg').textContent='🗺️ 第 '+level+' 版！';
-  buildLevel();draw();
+function moveMons(){
+  for(var i=0;i<mons.length;i++){
+    var m=mons[i],dx=player.x-m.x,dy=player.y-m.y;
+    var opts=[];
+    if(Math.abs(dx)>Math.abs(dy)){opts=[[dx>0?1:-1,0],[0,dy>0?1:-1],[0,dy>0?-1:1]];}
+    else{opts=[[0,dy>0?1:-1],[dx>0?1:-1,0],[dx>0?-1:1,0]];}
+    for(var j=0;j<opts.length;j++){
+      var nx=m.x+opts[j][0],ny=m.y+opts[j][1];
+      if(nx>=0&&ny>=0&&nx<W&&ny<H){m.x=nx;m.y=ny;break;}
+    }
+  }
 }
-function hit(){
-  beep(160,0.25);lives--;
-  document.getElementById('lives').textContent=lives;
-  document.getElementById('msg').textContent='💥 俾怪獸捉到！';
-  px=6;py=0;
-  if(lives<=0)lose();
+function checkMon(){
+  for(var i=0;i<mons.length;i++)if(mons[i].x===player.x&&mons[i].y===player.y){hitPlayer();break;}
 }
-cv.addEventListener('pointerdown',function(e){
-  if(paused||over)return;
-  var r=cv.getBoundingClientRect();
-  var c=Math.floor((e.clientX-r.left)/(r.width/COLS)),rr=Math.floor((e.clientY-r.top)/(r.height/ROWS));
-  if(Math.abs(c-px)+Math.abs(rr-py)===1&&rr>0&&grid[rr][c]===1){
-    grid[rr][c]=0;beep(220,0.08);
-    document.getElementById('msg').textContent='⛏️ 掘開咗！';
-    draw();
+function hitPlayer(){
+  lives--;sndBad();feedback('👹');updateHud();
+  if(lives<=0){finish(false);return;}
+  player={x:0,y:0};
+  if(soil[0][0]===1)soil[0][0]=0;
+}
+function finish(won){
+  stopLoop();paused=true;setBest(score);
+  if(won){sndWin();document.getElementById('endEmoji').textContent='🏆';document.getElementById('endTitle').textContent='全部過版！';document.getElementById('endMsg').innerHTML='3 版全破，掘地大師！<br>🏆 歷史最佳：'+getBest()+' 分';}
+  else{document.getElementById('endEmoji').textContent='👹';document.getElementById('endTitle').textContent='遊戲結束';document.getElementById('endMsg').innerHTML='第 '+level+' 版集齊 '+got+' 粒寶石，再接再厲！<br>🏆 歷史最佳：'+getBest()+' 分';}
+  document.getElementById('endScore').textContent=score;
+  show('end');
+}
+var dp=document.querySelectorAll('.dpad button');
+for(var di=0;di<dp.length;di++)(function(b){var m=b.dataset.m.split(',');b.addEventListener('click',function(){move(parseInt(m[0],10),parseInt(m[1],10));});})(dp[di]);
+(function(){
+  var bd=document.getElementById('board'),sx=0,sy=0;
+  bd.addEventListener('touchstart',function(e){var t=e.changedTouches[0];sx=t.clientX;sy=t.clientY;},{passive:true});
+  bd.addEventListener('touchend',function(e){
+    var t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
+    if(Math.abs(dx)<20&&Math.abs(dy)<20)return;
+    if(Math.abs(dx)>Math.abs(dy))move(dx>0?1:-1,0);else move(0,dy>0?1:-1);
+  },{passive:true});
+})();
+document.addEventListener('keydown',function(e){
+  if(document.getElementById('game').classList.contains('show')){
+    if(e.key==='ArrowUp')move(0,-1);else if(e.key==='ArrowDown')move(0,1);
+    else if(e.key==='ArrowLeft')move(-1,0);else if(e.key==='ArrowRight')move(1,0);
   }
 });
-setInterval(function(){
-  if(paused||over||document.getElementById('intro').style.display!=='none')return;
-  mons.forEach(function(m){
-    var dirs=[[1,0],[-1,0],[0,1],[0,-1]].filter(function(d){
-      var r=m.r+d[0],c=m.c+d[1];return dug(r,c);
-    });
-    if(dirs.length){var d=dirs[ri(0,dirs.length-1)];m.r+=d[0];m.c+=d[1];}
-    if(m.r===py&&m.c===px)hit();
-  });
-  draw();
-},1000);
-function win(){
-  over=true;
-  var total=score+lives*200;
-  var best=0;try{best=parseInt(localStorage.getItem('digBest')||'0');}catch(e){}
-  var nb='';if(total>best){try{localStorage.setItem('digBest',total);}catch(e){}nb=' 🏅 新紀錄！';}
-  document.getElementById('overT').textContent='🏆 掘地大師！';
-  document.getElementById('overS').innerHTML='3 版全過！總分：<b style="color:#ffe14d">'+total+'</b>'+nb;
-  document.getElementById('over').style.display='flex';
-  beep(660,0.1);setTimeout(function(){beep(880,0.15);},130);
-}
-function lose(){
-  over=true;
-  document.getElementById('overT').textContent='💥 掘地蟲陣亡…';
-  document.getElementById('overS').innerHTML='去到第 '+level+' 版，得分 '+score+'。再接再厲！';
-  document.getElementById('over').style.display='flex';
-}
-function resetGame(){
-  level=1;lives=3;score=0;over=false;paused=false;moveCD=0;
-  document.getElementById('lives').textContent='3';
-  document.getElementById('score').textContent='0';
-  document.getElementById('msg').textContent='';
-  document.getElementById('over').style.display='none';
-  buildLevel();draw();
-}
-function startGame(){document.getElementById('intro').style.display='none';resetGame();}
-document.getElementById('up').addEventListener('pointerdown',function(){move(-1,0);});
-document.getElementById('dn').addEventListener('pointerdown',function(){move(1,0);});
-document.getElementById('lf').addEventListener('pointerdown',function(){move(0,-1);});
-document.getElementById('rt').addEventListener('pointerdown',function(){move(0,1);});
-window.startGame=startGame;window.resetGame=resetGame;
-draw();
-})();
 </script>
 </body>
 </html>

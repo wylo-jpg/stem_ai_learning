@@ -3,166 +3,471 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-<title>數學貪食蛇</title>
+<meta name="theme-color" content="#04150d"/>
+<title>數學貪食蛇 · 深綠霓虹花園</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;font-family:"Courier New",monospace;background:#0a0a0a;color:#fff;min-height:100vh;touch-action:manipulation;user-select:none;-webkit-user-select:none}
-.crt{position:fixed;inset:0;pointer-events:none;z-index:99;background:repeating-linear-gradient(0deg,rgba(0,0,0,.12) 0 1px,transparent 1px 3px);opacity:.5}
-header{background:#1a1a2e;padding:12px;text-align:center;border-bottom:4px solid #4ade80}
-header h1{margin:0;font-size:20px;letter-spacing:2px;color:#4ade80;text-shadow:2px 2px 0 #166534}
-.back{display:block;text-align:center;background:#222;color:#4ade80;text-decoration:none;padding:12px;font-size:15px;font-weight:700}
-.wrap{max-width:520px;margin:0 auto;padding:12px}
-.hud{display:flex;justify-content:space-between;background:#1a1a2e;border:3px solid #4ade80;padding:10px 12px;font-size:14px;font-weight:700;margin-bottom:10px;flex-wrap:wrap;gap:6px}
-.hud span{color:#ffd23f}
-#cvwrap{border:4px solid #4ade80;background:#000}
-canvas{display:block;width:100%;height:auto;image-rendering:pixelated}
-.dpad{display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(3,64px);gap:6px;justify-content:center;margin-top:14px}
-.dpad button{font-size:24px;font-weight:700;font-family:inherit;background:#1a1a2e;color:#4ade80;border:3px solid #4ade80;cursor:pointer}
-.dpad button:active{background:#4ade80;color:#000}
-.dpad .blank{visibility:hidden}
-.msg{min-height:30px;text-align:center;font-size:16px;font-weight:700;margin-top:8px;color:#4ade80}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px;overflow-y:auto}
-.card{background:#1a1a2e;border:4px solid #4ade80;padding:24px 20px;max-width:480px;width:100%;text-align:center}
-.card h2{margin:0 0 12px;font-size:22px;color:#4ade80;text-shadow:2px 2px 0 #166534}
-.card p{font-size:15px;line-height:1.8;text-align:left}
-.bigbtn{width:100%;min-height:60px;font-size:20px;font-weight:700;font-family:inherit;background:#4ade80;color:#000;border:3px solid #fff;margin-top:14px;cursor:pointer}
-.bigbtn:active{transform:scale(.96)}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,"PingFang HK","Microsoft JhengHei",sans-serif;
+  background:linear-gradient(165deg,#04150d 0%,#062a1b 45%,#020f09 100%);
+  color:#e9f7ef;min-height:100vh;touch-action:manipulation;
+  user-select:none;-webkit-user-select:none;font-size:16px;
+}
+.orb{position:fixed;border-radius:50%;filter:blur(70px);opacity:.32;pointer-events:none;z-index:0;animation:drift 14s ease-in-out infinite alternate}
+.orb.o1{width:280px;height:280px;left:-80px;top:-60px;background:radial-gradient(circle,#34d399,transparent 70%)}
+.orb.o2{width:340px;height:340px;right:-100px;top:30%;background:radial-gradient(circle,#22d3ee,transparent 70%);animation-delay:-5s}
+.orb.o3{width:260px;height:260px;left:10%;bottom:-80px;background:radial-gradient(circle,#a3e635,transparent 70%);animation-delay:-9s}
+@keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(40px,30px) scale(1.12)}}
+header{position:relative;z-index:1;text-align:center;padding:14px 12px 6px}
+.back{display:inline-block;margin-bottom:8px;padding:10px 18px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#a7f3d0;text-decoration:none;font-size:15px;font-weight:700;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.back:active{transform:scale(.96)}
+header h1{margin:6px 0 6px;font-size:24px;font-weight:800;letter-spacing:1px;text-shadow:0 0 18px rgba(52,211,153,.6)}
+.difftag{display:inline-block;font-size:14px;font-weight:700;padding:6px 14px;border-radius:999px;background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.4);color:#a7f3d0}
+.wrap{position:relative;z-index:1;max-width:520px;margin:0 auto;padding:10px 14px 32px}
+.glass{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-radius:18px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.hud{padding:12px 14px;margin-bottom:12px}
+.hud-top{display:flex;justify-content:space-between;gap:10px}
+.stat{flex:1;text-align:center;padding:8px 6px;border-radius:12px;background:rgba(0,0,0,.25)}
+.stat .k{display:block;font-size:13px;color:#a7f3d0;margin-bottom:2px}
+.stat .v{display:block;font-size:22px;font-weight:800;color:#fff;text-shadow:0 0 12px rgba(52,211,153,.7)}
+.pbar{height:12px;border-radius:999px;background:rgba(0,0,0,.4);margin:12px 2px 10px;overflow:hidden;border:1px solid rgba(255,255,255,.12)}
+.pfill{height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,#34d399,#a3e635);box-shadow:0 0 12px rgba(163,230,53,.8);transition:width .25s ease}
+.hud-bot{display:flex;justify-content:space-between;align-items:center;font-size:14px;flex-wrap:wrap;gap:6px;color:#d1fae5}
+.hud-bot b{color:#fff}
+.cvwrap{border-radius:20px;overflow:hidden;border:1px solid rgba(110,231,183,.35);box-shadow:0 0 30px rgba(52,211,153,.25),0 10px 30px rgba(0,0,0,.4)}
+canvas{display:block;width:100%;height:auto;touch-action:none}
+.msg{min-height:30px;text-align:center;font-size:15px;font-weight:600;color:#a7f3d0;margin:10px 4px;line-height:1.6}
+.dpad{display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(3,64px);gap:10px;justify-content:center;margin-top:6px}
+.dpad button{border:none;border-radius:20px;font-size:26px;color:#062b1a;font-weight:800;background:linear-gradient(145deg,#6ee7b7,#34d399);box-shadow:0 4px 14px rgba(52,211,153,.4),inset 0 1px 0 rgba(255,255,255,.5);cursor:pointer;min-width:64px;min-height:64px;font-family:inherit}
+.dpad button:active{transform:scale(.93);box-shadow:0 2px 8px rgba(52,211,153,.4)}
+.dpad .midbtn{font-size:22px;background:linear-gradient(145deg,#fde68a,#fbbf24)}
+.overlay{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(2,15,9,.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);overflow-y:auto}
+.card{width:100%;max-width:540px;max-height:92vh;overflow-y:auto;padding:26px 22px;text-align:center;border-radius:24px}
+.card h2{margin:0 0 10px;font-size:24px}
+.card p{font-size:15px;line-height:1.9;text-align:left;margin:10px 0}
+.concept{font-size:14px;line-height:1.8;text-align:left;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.35);border-radius:14px;padding:12px 14px;margin:12px 0;color:#d1fae5}
+.diffrow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:14px 0}
+.diffcard{border:2px solid rgba(255,255,255,.15);border-radius:16px;padding:12px 6px;background:rgba(0,0,0,.25);cursor:pointer;transition:transform .15s}
+.diffcard:active{transform:scale(.95)}
+.diffcard.sel{border-color:#34d399;box-shadow:0 0 16px rgba(52,211,153,.5);background:rgba(52,211,153,.12)}
+.diffcard .e{font-size:30px}
+.diffcard .n{font-size:16px;font-weight:800;margin:6px 0 2px}
+.diffcard .s{font-size:12px;color:#a7f3d0;line-height:1.5}
+.bigbtn{width:100%;min-height:62px;font-size:20px;font-weight:800;border:none;border-radius:18px;margin-top:10px;cursor:pointer;color:#052e1b;font-family:inherit;background:linear-gradient(145deg,#6ee7b7,#10b981);box-shadow:0 6px 20px rgba(52,211,153,.45)}
+.bigbtn:active{transform:scale(.97)}
+#overText{font-size:17px;line-height:2;text-align:center}
+@media (max-width:380px){
+  .diffrow{grid-template-columns:1fr}
+  .dpad{grid-template-columns:repeat(3,60px);grid-template-rows:repeat(3,60px)}
+  .dpad button{min-width:60px;min-height:60px}
+}
 </style>
 </head>
 <body>
-<div class="crt"></div>
-<header><h1>🐍 數學貪食蛇</h1></header>
-<a class="back" href="games.html">← 返回遊戲列表</a>
-<div class="wrap">
-<div class="hud"><div>🎯 目標 <span id="target">20</span></div><div>🍎 肚 <span id="belly">0</span></div><div>⭐ <span id="score">0</span></div><div>❤️ <span id="lives">3</span></div></div>
-<div id="cvwrap"><canvas id="cv" width="400" height="400"></canvas></div>
-<div class="dpad">
-<button class="blank"></button><button id="up">▲</button><button class="blank"></button>
-<button id="left">◀</button><button id="down">▼</button><button id="right">▶</button>
-<button class="blank"></button><button id="restart" style="font-size:14px">↻</button><button class="blank"></button>
-</div>
-<div class="msg" id="msg"></div>
-</div>
-<div class="overlay" id="intro"><div class="card">
-<h2>🐍 數學貪食蛇</h2>
-<p>🕹️ 玩法：用方向掣控制條蛇，食數字！你個「肚」係食咗嘅數字總和——要啱啱好等於🎯目標先過關！<br>
-⚠️ 肚超過目標會爆肚（扣一命）；撞牆、撞自己都扣一命。3 條命，過 5 關！<br>
-💡 數學概念：加法、心算湊數，諗下邊幾個數加埋啱啱好！</p>
-<button class="bigbtn" onclick="startGame()">▶ 開始遊戲</button>
+<div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>
+
+<header>
+  <a class="back" href="games.html">← 返回遊戲列表</a>
+  <h1>🐍 數學貪食蛇</h1>
+  <div><span class="difftag" id="diffTag">🌱 初階</span></div>
+</header>
+
+<main class="wrap">
+  <section class="hud glass">
+    <div class="hud-top">
+      <div class="stat"><span class="k">🎯 目標和</span><span class="v" id="targetVal">–</span></div>
+      <div class="stat"><span class="k">🐍 而家總和</span><span class="v" id="bellyVal">0</span></div>
+    </div>
+    <div class="pbar"><div class="pfill" id="progFill"></div></div>
+    <div class="hud-bot">
+      <span>⭐ <b id="scoreVal">0</b></span>
+      <span id="livesVal">❤️❤️❤️</span>
+      <span>第 <b id="roundVal">1</b> / 5 關</span>
+      <span>🏅 <b id="bestVal">0</b></span>
+    </div>
+  </section>
+
+  <div class="cvwrap"><canvas id="cv" width="480" height="480"></canvas></div>
+  <div class="msg" id="msg">揀個難度，開始挑戰啦！</div>
+
+  <div class="dpad">
+    <span></span><button id="btnUp" aria-label="向上">▲</button><span></span>
+    <button id="btnLeft" aria-label="向左">◀</button><button id="btnRetry" class="midbtn" aria-label="重整本關">🔄</button><button id="btnRight" aria-label="向右">▶</button>
+    <span></span><button id="btnDown" aria-label="向下">▼</button><span></span>
+  </div>
+</main>
+
+<div class="overlay" id="intro"><div class="card glass">
+  <h2>🐍 數學貪食蛇</h2>
+  <p>🕹️ <b>玩法：</b>用方向掣／手指滑動／鍵盤控制條蛇，食發光寶石。寶石上面嘅數會加入你個「肚」（總和）——肚啱啱好等於 🎯 目標和就過關！<br>
+  ⚠️ 肚超過目標會 💥爆肚扣一命；撞牆、撞自己都扣一命。3 條命，5 關，愈後條蛇愈快、目標愈難！<br>
+  🔄 掣可以重整本關（唔扣命），諗錯數唔使驚。</p>
+  <div class="diffrow">
+    <div class="diffcard sel" data-d="easy"><div class="e">🌱</div><div class="n">初階</div><div class="s">中一 – 中二<br>正整數加減湊數</div></div>
+    <div class="diffcard" data-d="mid"><div class="e">🌿</div><div class="n">中階</div><div class="s">中三 – 中四<br>有向數（正負數）</div></div>
+    <div class="diffcard" data-d="hard"><div class="e">🌳</div><div class="n">高階</div><div class="s">中五 – 中六<br>代數式合併同類項</div></div>
+  </div>
+  <div class="concept" id="concept"></div>
+  <button class="bigbtn" id="startBtn">▶ 開始遊戲</button>
 </div></div>
-<div class="overlay" id="over" style="display:none"><div class="card">
-<h2 id="overTitle">🏁 GAME OVER</h2>
-<p id="overText" style="text-align:center;font-size:18px"></p>
-<button class="bigbtn" onclick="startGame()">🔁 再玩一次</button>
+
+<div class="overlay" id="over" style="display:none"><div class="card glass">
+  <h2 id="overTitle">🏁 遊戲結束</h2>
+  <p id="overText"></p>
+  <button class="bigbtn" id="againBtn">🔁 再玩一次</button>
 </div></div>
+
 <script>
 (function(){
 "use strict";
+/* ================= 基本設定 ================= */
 var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
-var N=16,CELL=25;
-var snake,dir,ndir,food,target,belly,score,lives,round,running,timer,foods;
+var N=16,CELL=30,SZ=N*CELL;
+var FONT='-apple-system,"PingFang HK","Microsoft JhengHei",sans-serif';
+var BEST_KEY='math_snake_best';
+
 function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
-function newFood(){
-  while(true){
-    var x=rnd(0,N-1),y=rnd(0,N-1),bad=false;
-    for(var s of snake)if(s.x===x&&s.y===y){bad=true;break;}
-    for(var f of foods)if(f.x===x&&f.y===y){bad=true;break;}
-    if(!bad)return {x:x,y:y,v:rnd(1,9)};
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=rnd(0,i),t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+var DIFFS={
+  easy:{name:'初階',icon:'🌱',sub:'中一 – 中二｜正整數加減湊數',tick:250,foodScore:10,
+    concept:'💡 數學概念｜加法湊數：心算邊幾個正整數加埋啱啱好等於目標和，訓練數感同心算速度！'},
+  mid:{name:'中階',icon:'🌿',sub:'中三 – 中四｜有向數加減',tick:230,foodScore:15,
+    concept:'💡 數學概念｜有向數：負數代表「欠」；加上一個負數，等於減去佢嘅絕對值。湊數嗰陣要識得用正負相消！'},
+  hard:{name:'高階',icon:'🌳',sub:'中五 – 中六｜代數式合併同類項',tick:230,foodScore:20,
+    concept:'💡 數學概念｜合併同類項：只有同類項先可以相加減——x 嘅係數歸 x 計，常數歸常數計，湊出同目標等值嘅代數式！'}
+};
+
+/* ================= 狀態 ================= */
+var diff='easy',selDiff='easy';
+var snake=[],dir={x:1,y:0},ndir={x:1,y:0},foods=[];
+var bellyN=0,bx=0,bc=0;          // 肚：數字版 / 代數版(x係數,常數)
+var targetN=0,tx=0,tc=0;        // 目標：數字版 / 代數版
+var score=0,lives=3,round=1,running=false,timer=null;
+
+var targetVal=document.getElementById('targetVal'),
+    bellyVal=document.getElementById('bellyVal'),
+    scoreVal=document.getElementById('scoreVal'),
+    livesVal=document.getElementById('livesVal'),
+    roundVal=document.getElementById('roundVal'),
+    bestVal=document.getElementById('bestVal'),
+    progFill=document.getElementById('progFill'),
+    msgEl=document.getElementById('msg'),
+    diffTag=document.getElementById('diffTag'),
+    intro=document.getElementById('intro'),
+    over=document.getElementById('over'),
+    overTitle=document.getElementById('overTitle'),
+    overText=document.getElementById('overText');
+
+function msg(t){msgEl.textContent=t;}
+function loadBest(){try{return parseInt(localStorage.getItem(BEST_KEY)||'0',10)||0;}catch(e){return 0;}}
+function saveBest(v){try{localStorage.setItem(BEST_KEY,String(v));}catch(e){}}
+
+/* 代數式文字：x 用斜體由 drawLabel 處理 */
+function termText(x,c){
+  var out='';
+  if(x!==0){out+=(x<0?'−':'')+(Math.abs(x)===1?'x':Math.abs(x)+'x');}
+  if(c!==0){
+    var m=String(Math.abs(c));
+    out+=out===''?(c<0?'−'+m:m):(c<0?'−'+m:'+'+m);
   }
+  return out===''?'0':out;
+}
+function foodLabel(f){
+  if(f.kind==='num')return String(f.v).replace('-','−');
+  return termText(f.cx,f.cc);
+}
+function targetText(){return diff==='hard'?termText(tx,tc):String(targetN);}
+function bellyText(){return diff==='hard'?termText(bx,bc):String(bellyN);}
+
+/* ================= 出題：拆目標成食物，保證有解 ================= */
+function genPieces(){
+  var pieces=[],i,p,rem,k;
+  if(diff==='easy'){
+    targetN=16+round*4+rnd(0,4);            /* 第1關約20–24，第5關約36–40 */
+    rem=targetN;
+    while(rem>0){p=rnd(1,Math.min(9,rem));pieces.push({kind:'num',v:p});rem-=p;}
+    pieces.push({kind:'num',v:rnd(1,9)},{kind:'num',v:rnd(1,9)}); /* 干擾 */
+  }else if(diff==='mid'){
+    targetN=4+round*2+rnd(0,3);             /* 第1關約6–9，第5關約14–17 */
+    rem=targetN;
+    while(rem>0){p=rnd(1,Math.min(9,rem));pieces.push({kind:'num',v:p});rem-=p;}
+    k=rnd(2,5);pieces.push({kind:'num',v:k},{kind:'num',v:-k});  /* 正負相消對 */
+    for(i=0;i<2;i++){p=rnd(-5,9);if(p===0)p=4;pieces.push({kind:'num',v:p});}
+  }else{
+    tx=2+round+rnd(0,1);                    /* x 係數：第1關3–4，第5關7–8 */
+    tc=2+round*2+rnd(0,2);                  /* 常數：第1關4–6，第5關12–14 */
+    rem=tx;
+    while(rem>0){p=rnd(1,Math.min(4,rem));pieces.push({kind:'term',cx:p,cc:0});rem-=p;}
+    if(Math.random()<0.6){k=rnd(1,3);pieces.push({kind:'term',cx:k,cc:0},{kind:'term',cx:-k,cc:0});}
+    rem=tc;
+    while(rem>0){p=rnd(1,Math.min(5,rem));pieces.push({kind:'term',cx:0,cc:p});rem-=p;}
+    if(Math.random()<0.6){k=rnd(1,4);pieces.push({kind:'term',cx:0,cc:k},{kind:'term',cx:0,cc:-k});}
+    for(i=0;i<2;i++){
+      if(Math.random()<0.5){p=rnd(-3,4);if(p!==0)pieces.push({kind:'term',cx:p,cc:0});}
+      else{p=rnd(-4,6);if(p!==0)pieces.push({kind:'term',cx:0,cc:p});}
+    }
+  }
+  return shuffle(pieces);
+}
+function cellFree(x,y){
+  var i;
+  for(i=0;i<snake.length;i++)if(snake[i].x===x&&snake[i].y===y)return false;
+  for(i=0;i<foods.length;i++)if(foods[i].x===x&&foods[i].y===y)return false;
+  return true;
+}
+function placeFood(f){
+  for(var t=0;t<300;t++){
+    var x=rnd(0,N-1),y=rnd(0,N-1);
+    if(cellFree(x,y)){f.x=x;f.y=y;f.ph=Math.random()*6.28;foods.push(f);return true;}
+  }
+  return false;
+}
+function randomExtra(){
+  if(diff==='easy')return{kind:'num',v:rnd(1,9)};
+  if(diff==='mid'){var p=rnd(-5,9);return{kind:'num',v:(p===0?4:p)};}
+  if(Math.random()<0.5){var q=rnd(-3,4);return{kind:'term',cx:(q===0?2:q),cc:0};}
+  var r=rnd(-4,6);return{kind:'term',cx:0,cc:(r===0?3:r)};
+}
+
+/* ================= HUD ================= */
+function updateLives(){livesVal.textContent='❤️'.repeat(lives)+'🖤'.repeat(Math.max(0,3-lives));}
+function updateTargetHUD(){targetVal.textContent=targetText();}
+function progressPct(){
+  if(diff==='hard'){
+    var px=Math.max(0,Math.min(bx/tx,1)),pc=Math.max(0,Math.min(bc/tc,1));
+    return (px+pc)/2;
+  }
+  return Math.max(0,Math.min(bellyN/targetN,1));
+}
+function updateBellyHUD(){
+  bellyVal.textContent=bellyText();
+  progFill.style.width=(progressPct()*100).toFixed(1)+'%';
+}
+
+/* ================= 遊戲流程 ================= */
+function restartTimer(){
+  if(timer)clearInterval(timer);
+  var t=Math.max(120,DIFFS[diff].tick-(round-1)*22);
+  timer=setInterval(step,t);
 }
 function newRound(){
   snake=[{x:8,y:8},{x:7,y:8},{x:6,y:8}];
-  dir={x:1,y:0};ndir=dir;belly=0;
-  target=rnd(2,5)*10+round*5; // 20,25,30...
-  foods=[];for(var i=0;i<3;i++)foods.push(newFood());
-  document.getElementById('target').textContent=target;
-  document.getElementById('belly').textContent='0';
-  document.getElementById('msg').textContent='第 '+round+' / 5 關：湊到 '+target+'！';
+  dir={x:1,y:0};ndir={x:1,y:0};
+  bellyN=0;bx=0;bc=0;foods=[];
+  var pieces=genPieces();
+  for(var i=0;i<pieces.length;i++)placeFood(pieces[i]);
+  updateTargetHUD();updateBellyHUD();
+  msg('第 '+round+' / 5 關：'+DIFFS[diff].icon+DIFFS[diff].name+'，湊出 '+targetText()+'！');
+  restartTimer();
 }
-function draw(){
-  ctx.fillStyle='#000';ctx.fillRect(0,0,400,400);
-  ctx.strokeStyle='#1a1a1a';
-  for(var i=0;i<=N;i++){ctx.beginPath();ctx.moveTo(i*CELL,0);ctx.lineTo(i*CELL,400);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(0,i*CELL);ctx.lineTo(400,i*CELL);ctx.stroke();}
-  ctx.textAlign='center';ctx.textBaseline='middle';
-  for(var f of foods){
-    ctx.fillStyle='#e94560';ctx.fillRect(f.x*CELL+2,f.y*CELL+2,CELL-4,CELL-4);
-    ctx.fillStyle='#fff';ctx.font='bold 15px "Courier New",monospace';
-    ctx.fillText(f.v,f.x*CELL+CELL/2,f.y*CELL+CELL/2+1);
-  }
-  snake.forEach(function(s,i){
-    ctx.fillStyle=i===0?'#4ade80':'#22c55e';
-    ctx.fillRect(s.x*CELL+1,s.y*CELL+1,CELL-2,CELL-2);
-    if(i===0){ctx.fillStyle='#000';ctx.fillRect(s.x*CELL+6,s.y*CELL+6,4,4);ctx.fillRect(s.x*CELL+15,s.y*CELL+6,4,4);}
-  });
+function isPass(){return diff==='hard'?(bx===tx&&bc===tc):(bellyN===targetN);}
+function isBurst(){return diff==='hard'?(bx>tx||bc>tc):(bellyN>targetN);}
+function burstText(){
+  if(diff==='hard')return '💥 爆肚！肚肚 '+bellyText()+' 唔啱 '+targetText()+'，扣一命！';
+  return '💥 爆肚！'+bellyN+' 超過目標 '+targetN+'，扣一命！';
 }
-function loseLife(msg){
-  lives--;document.getElementById('lives').textContent=lives;
-  document.getElementById('msg').textContent=msg+'（仲有 '+lives+' 命）';
+function roundClear(){
+  var bonus=100*round;
+  score+=bonus;scoreVal.textContent=score;
+  if(round>=5){gameOver(true);return;}
+  msg('🎉 第 '+round+' 關完成！+'+bonus+' 分');
+  round++;roundVal.textContent=round;
+  newRound();
+}
+function loseLife(m){
+  lives--;updateLives();
   if(lives<=0){gameOver(false);return;}
+  msg(m+'（仲有 '+lives+' 條命）');
   newRound();
 }
 function gameOver(win){
-  running=false;clearInterval(timer);
-  document.getElementById('overTitle').textContent=win?'🏆 全部過關！':'💀 GAME OVER';
-  var best=0;try{best=parseInt(localStorage.getItem('snakeBest')||'0');}catch(e){}
-  var nb='';
-  if(score>best){try{localStorage.setItem('snakeBest',score);}catch(e){}nb=' 🏅新紀錄！';}
-  document.getElementById('overText').innerHTML='總分：'+score+nb+'<br>最佳：'+Math.max(score,best);
-  document.getElementById('over').style.display='flex';
+  running=false;
+  if(timer){clearInterval(timer);timer=null;}
+  var best=loadBest(),nb=false;
+  if(score>best){saveBest(score);best=score;nb=true;}
+  bestVal.textContent=best;
+  overTitle.textContent=win?'🏆 五關全過！犀利！':'💀 遊戲結束';
+  overText.innerHTML='難度：'+DIFFS[diff].icon+' '+DIFFS[diff].name+'<br>'+
+    '總分：<b>'+score+'</b>'+(nb?' 🏅新紀錄！':'')+'<br>'+
+    '最高分：<b>'+best+'</b>';
+  over.style.display='flex';
 }
 function step(){
   if(!running)return;
   dir=ndir;
   var h={x:snake[0].x+dir.x,y:snake[0].y+dir.y};
-  if(h.x<0||h.x>=N||h.y<0||h.y>=N){loseLife('🧱 撞牆！');return;}
-  for(var s of snake)if(s.x===h.x&&s.y===h.y){loseLife('🌀 撞到自己！');return;}
+  if(h.x<0||h.y<0||h.x>=N||h.y>=N){loseLife('🧱 撞牆！');return;}
+  for(var i=0;i<snake.length;i++)if(snake[i].x===h.x&&snake[i].y===h.y){loseLife('🌀 撞到自己！');return;}
   snake.unshift(h);
-  var ate=-1;
-  for(var i=0;i<foods.length;i++)if(foods[i].x===h.x&&foods[i].y===h.y){ate=i;break;}
-  if(ate>=0){
-    var v=foods[ate].v;
-    belly+=v;
-    document.getElementById('belly').textContent=belly;
-    foods.splice(ate,1);foods.push(newFood());
-    if(belly===target){
-      score+=200;document.getElementById('score').textContent=score;
-      if(round>=5){gameOver(true);return;}
-      round++;newRound();
-    }else if(belly>target){
-      loseLife('💥 爆肚！'+belly+' > '+target);
-      return;
-    }
-  }else snake.pop();
-  draw();
+  var ate=null;
+  for(var j=0;j<foods.length;j++)if(foods[j].x===h.x&&foods[j].y===h.y){ate=foods[j];break;}
+  if(ate){
+    if(diff==='hard'){bx+=ate.cx;bc+=ate.cc;}else{bellyN+=ate.v;}
+    score+=DIFFS[diff].foodScore;scoreVal.textContent=score;
+    foods.splice(foods.indexOf(ate),1);
+    updateBellyHUD();
+    if(isPass()){roundClear();return;}
+    if(isBurst()){loseLife(burstText());return;}
+    placeFood(randomExtra());
+  }else{
+    snake.pop();
+  }
 }
-function setD(x,y){
+function setDir(x,y){
+  if(!running)return;
   if(x===-dir.x&&y===-dir.y)return;
   ndir={x:x,y:y};
 }
-document.getElementById('up').onclick=()=>setD(0,-1);
-document.getElementById('down').onclick=()=>setD(0,1);
-document.getElementById('left').onclick=()=>setD(-1,0);
-document.getElementById('right').onclick=()=>setD(1,0);
-document.getElementById('restart').onclick=function(){if(running)newRound();};
-// swipe
-var sx=0,sy=0;
-cv.addEventListener('touchstart',function(e){var t=e.touches[0];sx=t.clientX;sy=t.clientY;},{passive:true});
+function startGame(d){
+  diff=d||diff||'easy';
+  score=0;lives=3;round=1;
+  scoreVal.textContent='0';roundVal.textContent='1';updateLives();
+  bestVal.textContent=loadBest();
+  diffTag.textContent=DIFFS[diff].icon+' '+DIFFS[diff].name;
+  intro.style.display='none';over.style.display='none';
+  running=true;
+  newRound();
+}
+window.startGame=startGame;
+
+/* ================= 繪圖 ================= */
+function foodColor(f){
+  if(f.kind==='num'){
+    if(diff==='mid')return f.v>=0?'#34d399':'#fb7185';
+    return 'hsl('+(150-f.v*13)+',95%,62%)';
+  }
+  return f.cx!==0?'#22d3ee':'#fbbf24';
+}
+/* 逐字繪製，x 用斜體 */
+function drawLabel(text,px,py,size,color){
+  var chars=text.split(''),i,ch,widths=[],total=0;
+  for(i=0;i<chars.length;i++){
+    ch=chars[i];
+    ctx.font=(ch==='x'?'italic ':'')+'700 '+size+'px '+FONT;
+    widths.push(ctx.measureText(ch).width);total+=widths[i];
+  }
+  var sx=px-total/2;
+  ctx.fillStyle=color;ctx.textBaseline='middle';ctx.textAlign='left';
+  for(i=0;i<chars.length;i++){
+    ch=chars[i];
+    ctx.font=(ch==='x'?'italic ':'')+'700 '+size+'px '+FONT;
+    ctx.fillText(ch,sx,py);
+    sx+=widths[i];
+  }
+}
+function drawFoods(t){
+  for(var i=0;i<foods.length;i++){
+    var f=foods[i],px=(f.x+0.5)*CELL,py=(f.y+0.5)*CELL;
+    var r=CELL*0.42*(1+0.07*Math.sin(t/320+f.ph));
+    var col=foodColor(f);
+    var g=ctx.createRadialGradient(px-r*0.35,py-r*0.35,r*0.1,px,py,r);
+    g.addColorStop(0,'#ffffff');g.addColorStop(0.35,col);g.addColorStop(1,'rgba(0,0,0,0.55)');
+    ctx.save();ctx.shadowColor=col;ctx.shadowBlur=18;
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(px,py,r,0,6.29);ctx.fill();ctx.restore();
+    ctx.fillStyle='rgba(255,255,255,0.85)';
+    ctx.beginPath();ctx.arc(px-r*0.3,py-r*0.35,r*0.14,0,6.29);ctx.fill();
+    var label=foodLabel(f);
+    drawLabel(label,px,py+r*0.05,label.length>=3?13:15,'#052e1b');
+  }
+}
+function drawSnake(){
+  var i,s,px,py,r,g;
+  for(i=snake.length-1;i>=0;i--){
+    s=snake[i];px=(s.x+0.5)*CELL;py=(s.y+0.5)*CELL;
+    r=i===0?CELL*0.46:Math.max(CELL*0.30,CELL*0.40-i*0.35);
+    g=ctx.createRadialGradient(px-r*0.35,py-r*0.35,r*0.15,px,py,r);
+    if(i===0){g.addColorStop(0,'#d1fae5');g.addColorStop(0.5,'#6ee7b7');g.addColorStop(1,'#10b981');}
+    else{g.addColorStop(0,'#a7f3d0');g.addColorStop(0.6,'#34d399');g.addColorStop(1,'#047857');}
+    ctx.save();ctx.shadowColor='rgba(52,211,153,0.9)';ctx.shadowBlur=i===0?20:12;
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(px,py,r,0,6.29);ctx.fill();ctx.restore();
+  }
+  var h=snake[0],hx=(h.x+0.5)*CELL,hy=(h.y+0.5)*CELL;
+  var ox=dir.y!==0?5.5:0,oy=dir.x!==0?5.5:0,fx=dir.x*4,fy=dir.y*4;
+  var eyes=[[hx+fx-ox,hy+fy-oy],[hx+fx+ox,hy+fy+oy]];
+  for(i=0;i<2;i++){
+    ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(eyes[i][0],eyes[i][1],4.4,0,6.29);ctx.fill();
+    ctx.fillStyle='#052e1b';ctx.beginPath();ctx.arc(eyes[i][0]+dir.x*1.6,eyes[i][1]+dir.y*1.6,2.2,0,6.29);ctx.fill();
+  }
+}
+var parts=[];
+for(var pi=0;pi<46;pi++)parts.push({x:Math.random()*SZ,y:Math.random()*SZ,r:1+Math.random()*2.2,s:0.15+Math.random()*0.45,a:0.12+Math.random()*0.35,ph:Math.random()*6.28});
+var lastT=0;
+function render(t){
+  requestAnimationFrame(render);
+  var dt=Math.min(50,t-(lastT||t));lastT=t;
+  var g=ctx.createLinearGradient(0,0,0,SZ);
+  g.addColorStop(0,'#062b1a');g.addColorStop(0.55,'#041f13');g.addColorStop(1,'#02120b');
+  ctx.fillStyle=g;ctx.fillRect(0,0,SZ,SZ);
+  var i,p;
+  for(i=0;i<parts.length;i++){
+    p=parts[i];
+    p.y-=p.s*dt/16.7;p.x+=Math.sin(t/1400+p.ph)*0.15;
+    if(p.y<-6){p.y=SZ+6;p.x=Math.random()*SZ;}
+    var tw=p.a*(0.6+0.4*Math.sin(t/500+p.ph));
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,6.29);
+    ctx.fillStyle='rgba(110,231,183,'+tw.toFixed(3)+')';ctx.fill();
+  }
+  ctx.strokeStyle='rgba(255,255,255,0.045)';ctx.lineWidth=1;
+  ctx.beginPath();
+  for(i=1;i<N;i++){ctx.moveTo(i*CELL+0.5,0);ctx.lineTo(i*CELL+0.5,SZ);ctx.moveTo(0,i*CELL+0.5);ctx.lineTo(SZ,i*CELL+0.5);}
+  ctx.stroke();
+  if(snake.length===0)return;
+  drawFoods(t);drawSnake();
+}
+
+/* ================= 輸入 ================= */
+function bindBtn(id,x,y){
+  var b=document.getElementById(id);
+  var fn=function(e){if(e)e.preventDefault();setDir(x,y);};
+  b.addEventListener('pointerdown',fn);
+  b.addEventListener('click',function(e){e.preventDefault();});
+}
+bindBtn('btnUp',0,-1);bindBtn('btnDown',0,1);
+bindBtn('btnLeft',-1,0);bindBtn('btnRight',1,0);
+document.getElementById('btnRetry').addEventListener('pointerdown',function(e){
+  e.preventDefault();
+  if(running){newRound();msg('🔄 本關已重整，唔扣命！');}
+});
+window.addEventListener('keydown',function(e){
+  var k=e.key;
+  if(k==='ArrowUp'||k==='w'||k==='W'){setDir(0,-1);e.preventDefault();}
+  else if(k==='ArrowDown'||k==='s'||k==='S'){setDir(0,1);e.preventDefault();}
+  else if(k==='ArrowLeft'||k==='a'||k==='A'){setDir(-1,0);e.preventDefault();}
+  else if(k==='ArrowRight'||k==='d'||k==='D'){setDir(1,0);e.preventDefault();}
+});
+var tsx=0,tsy=0;
+cv.addEventListener('touchstart',function(e){var t=e.touches[0];tsx=t.clientX;tsy=t.clientY;},{passive:true});
 cv.addEventListener('touchend',function(e){
-  var t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
-  if(Math.abs(dx)<20&&Math.abs(dy)<20)return;
-  if(Math.abs(dx)>Math.abs(dy))setD(dx>0?1:-1,0);else setD(0,dy>0?1:-1);
+  var t=e.changedTouches[0],dx=t.clientX-tsx,dy=t.clientY-tsy;
+  if(Math.abs(dx)<24&&Math.abs(dy)<24)return;
+  if(Math.abs(dx)>Math.abs(dy))setDir(dx>0?1:-1,0);else setDir(0,dy>0?1:-1);
 },{passive:true});
-window.startGame=function(){
-  document.getElementById('intro').style.display='none';
-  document.getElementById('over').style.display='none';
-  score=0;lives=3;round=1;running=true;
-  document.getElementById('score').textContent='0';
-  document.getElementById('lives').textContent='3';
-  newRound();draw();
-  clearInterval(timer);timer=setInterval(step,220);
-};
-draw();
+
+/* ================= 開局 overlay ================= */
+var cards=document.querySelectorAll('.diffcard');
+function paintCards(){
+  for(var i=0;i<cards.length;i++){
+    if(cards[i].classList.toggle)cards[i].classList.toggle('sel',cards[i].getAttribute('data-d')===selDiff);
+  }
+}
+for(var ci=0;ci<cards.length;ci++){
+  (function(c){
+    c.addEventListener('click',function(){
+      selDiff=c.getAttribute('data-d');
+      paintCards();
+      document.getElementById('concept').textContent=DIFFS[selDiff].concept;
+    });
+  })(cards[ci]);
+}
+document.getElementById('concept').textContent=DIFFS.easy.concept;
+document.getElementById('startBtn').addEventListener('click',function(){startGame(selDiff);});
+document.getElementById('againBtn').addEventListener('click',function(){startGame(diff);});
+
+/* ================= 啟動 ================= */
+bestVal.textContent=loadBest();
+requestAnimationFrame(render);
 })();
 </script>
 </body>

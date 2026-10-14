@@ -6,162 +6,658 @@
 <title>數學青蛙過河</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;font-family:"Courier New",monospace;background:#0a0a0a;color:#fff;min-height:100vh;touch-action:manipulation;user-select:none;-webkit-user-select:none}
-.crt{position:fixed;inset:0;pointer-events:none;z-index:99;background:repeating-linear-gradient(0deg,rgba(0,0,0,.12) 0 1px,transparent 1px 3px);opacity:.5}
-header{background:#1a1a2e;padding:12px;text-align:center;border-bottom:4px solid #22d3ee}
-header h1{margin:0;font-size:20px;letter-spacing:2px;color:#22d3ee;text-shadow:2px 2px 0 #0e7490}
-.back{display:block;text-align:center;background:#222;color:#22d3ee;text-decoration:none;padding:12px;font-size:15px;font-weight:700}
-.wrap{max-width:520px;margin:0 auto;padding:12px}
-.hud{display:flex;justify-content:space-between;background:#1a1a2e;border:3px solid #22d3ee;padding:10px 12px;font-size:15px;font-weight:700;margin-bottom:10px}
-.hud span{color:#ffd23f}
-#qbar{background:#0e7490;border:3px solid #22d3ee;text-align:center;font-size:24px;font-weight:700;padding:12px;margin-bottom:10px;letter-spacing:2px}
-#cvwrap{border:4px solid #22d3ee;background:#000}
-canvas{display:block;width:100%;height:auto;image-rendering:pixelated;cursor:pointer}
-.msg{min-height:30px;text-align:center;font-size:16px;font-weight:700;margin-top:8px;color:#4ade80}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px;overflow-y:auto}
-.card{background:#1a1a2e;border:4px solid #22d3ee;padding:24px 20px;max-width:480px;width:100%;text-align:center}
-.card h2{margin:0 0 12px;font-size:22px;color:#22d3ee;text-shadow:2px 2px 0 #0e7490}
-.card p{font-size:15px;line-height:1.8;text-align:left}
-.bigbtn{width:100%;min-height:60px;font-size:20px;font-weight:700;font-family:inherit;background:#22d3ee;color:#000;border:3px solid #fff;margin-top:14px;cursor:pointer}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,"PingFang HK","Microsoft JhengHei","Noto Sans TC",sans-serif;
+  min-height:100vh;color:#fff;touch-action:manipulation;
+  user-select:none;-webkit-user-select:none;
+  background:linear-gradient(180deg,#241a3f 0%,#4a2560 30%,#8a3a6e 55%,#c65f6e 75%,#e8935f 100%);
+  background-attachment:fixed;
+}
+header{
+  text-align:center;padding:14px 12px 10px;
+  background:rgba(20,10,35,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border-bottom:1px solid rgba(255,255,255,.18);
+}
+header h1{margin:0;font-size:22px;font-weight:800;letter-spacing:2px;color:#ffe9c9;text-shadow:0 2px 8px rgba(0,0,0,.4)}
+header .sub{font-size:14px;color:#ffd9e8;opacity:.9;margin-top:4px}
+.back{
+  display:block;text-align:center;margin:10px auto 0;max-width:520px;width:calc(100% - 24px);
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);color:#fff;
+  text-decoration:none;padding:11px;font-size:15px;font-weight:700;border-radius:14px;
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+}
+.back:active{transform:scale(.97)}
+.wrap{max-width:520px;margin:0 auto;padding:12px 12px 28px}
+.hud{
+  display:flex;justify-content:space-between;align-items:center;gap:6px;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  padding:10px 12px;font-size:15px;font-weight:700;border-radius:16px;margin-bottom:10px;
+  box-shadow:0 6px 18px rgba(0,0,0,.25);
+}
+.hud .diff{font-size:13px;opacity:.95}
+/* 玻璃擬態題目卡 */
+#qcard{
+  background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-radius:18px;padding:14px 14px 10px;margin-bottom:10px;text-align:center;
+  box-shadow:0 8px 24px rgba(0,0,0,.28);
+}
+#qtext{font-size:23px;font-weight:800;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.35);line-height:1.5}
+#concept{font-size:14px;color:#ffe9c9;margin-top:8px;line-height:1.6;text-align:left;
+  background:rgba(0,0,0,.18);border-radius:10px;padding:8px 10px}
+/* 池塘 */
+#pond{
+  position:relative;border-radius:22px;overflow:hidden;
+  border:1px solid rgba(255,255,255,.3);
+  box-shadow:0 12px 32px rgba(0,0,0,.4);
+}
+.sky{height:112px;position:relative;overflow:hidden;
+  background:linear-gradient(180deg,#3b2063 0%,#7a2f74 40%,#d65f7e 68%,#f9a55e 88%,#ffd9a0 100%);}
+.sun{position:absolute;left:50%;top:64px;width:64px;height:64px;transform:translateX(-50%);
+  border-radius:50%;
+  background:radial-gradient(circle at 50% 45%,#fff8e0 0%,#ffe9a8 35%,#ffb45e 70%,rgba(255,160,80,0) 100%);
+  box-shadow:0 0 40px 18px rgba(255,190,110,.55);
+  animation:sunfloat 6s ease-in-out infinite}
+@keyframes sunfloat{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-6px)}}
+.cloud{position:absolute;background:rgba(255,255,255,.75);border-radius:999px;filter:blur(6px);
+  animation:drift 26s linear infinite}
+.cloud.c1{width:110px;height:26px;top:26px;left:-120px}
+.cloud.c2{width:70px;height:18px;top:56px;left:-80px;animation-duration:38s;opacity:.6}
+@keyframes drift{to{transform:translateX(calc(100vw + 240px))}}
+.bird{position:absolute;font-size:16px;opacity:.85;animation:fly 18s linear infinite}
+.bird.b1{top:30px;left:-40px}
+.bird.b2{top:52px;left:-40px;animation-delay:-9s;font-size:12px}
+@keyframes fly{to{transform:translateX(calc(100vw + 80px)) translateY(-14px)}}
+.water{
+  position:relative;padding:10px 8px 12px;
+  background:linear-gradient(180deg,#8a4a72 0%,#5c3a6e 12%,#274b63 34%,#123c4e 62%,#0a2c3c 100%);
+}
+.sunrefl{position:absolute;top:2px;left:50%;transform:translateX(-50%);width:90px;height:120px;
+  background:linear-gradient(180deg,rgba(255,200,120,.5),rgba(255,170,100,.08));
+  filter:blur(10px);border-radius:50%;pointer-events:none;animation:shimmer 4s ease-in-out infinite}
+@keyframes shimmer{0%,100%{opacity:.7;transform:translateX(-50%) scaleX(1)}50%{opacity:1;transform:translateX(-50%) scaleX(1.25)}}
+.shimmer{position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background:repeating-linear-gradient(115deg,rgba(255,255,255,.07) 0 10px,transparent 10px 30px);
+  animation:slideshim 9s linear infinite}
+@keyframes slideshim{to{background-position:120px 0}}
+.bank{
+  text-align:center;font-size:14px;font-weight:700;color:#ffe9c9;
+  background:rgba(0,0,0,.22);border:1px dashed rgba(255,255,255,.35);
+  border-radius:14px;padding:9px;margin:6px 4px;position:relative;z-index:2;
+}
+.bank.far{background:rgba(255,255,255,.14)}
+.lanes{position:relative;z-index:2}
+.lane{display:flex;justify-content:space-around;align-items:center;gap:10px;padding:7px 6px}
+/* 荷葉 */
+.lily{
+  position:relative;flex:1 1 0;max-width:170px;min-height:66px;
+  border:none;border-radius:50%;cursor:pointer;color:#fff;
+  font-family:inherit;font-size:20px;font-weight:800;
+  text-shadow:0 2px 5px rgba(0,0,0,.45);line-height:1.25;padding:8px 6px;
+  background:radial-gradient(circle at 35% 28%,#9be3a4 0%,#55bd76 42%,#2e8b57 72%,#1e6439 100%);
+  box-shadow:0 7px 15px rgba(0,0,0,.4),inset 0 -7px 13px rgba(0,40,20,.35),inset 0 7px 11px rgba(255,255,255,.35);
+  transition:transform .12s ease, opacity .3s;
+}
+.lily::before{ /* 葉脈缺口 */
+  content:'';position:absolute;top:2px;right:16%;width:30px;height:22px;
+  background:#1e6439;clip-path:polygon(50% 0,100% 100%,0 100%);opacity:.55;transform:rotate(12deg);
+}
+.lily .drop{position:absolute;top:16%;left:20%;width:15px;height:15px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.95),rgba(255,255,255,.12));
+  box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.lily .val{position:relative;z-index:1}
+.lily:active{transform:scale(.93)}
+.lily.dim{opacity:.5}
+.lily.target{outline:3px solid rgba(255,238,160,.95);outline-offset:3px;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 7px 15px rgba(0,0,0,.4),inset 0 -7px 13px rgba(0,40,20,.35),inset 0 7px 11px rgba(255,255,255,.35),0 0 0 0 rgba(255,238,160,.55)}50%{box-shadow:0 7px 15px rgba(0,0,0,.4),inset 0 -7px 13px rgba(0,40,20,.35),inset 0 7px 11px rgba(255,255,255,.35),0 0 22px 6px rgba(255,238,160,.55)}}
+.lily.shake{animation:shk .4s}
+@keyframes shk{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}50%{transform:translateX(7px)}75%{transform:translateX(-4px)}}
+/* 青蛙 */
+#frog{position:absolute;left:0;top:0;width:74px;height:74px;z-index:5;pointer-events:none;
+  filter:drop-shadow(0 8px 8px rgba(0,0,0,.4))}
+#frog svg{width:100%;height:100%;animation:bob 2.4s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+#frog.sad svg{animation:sadshk .45s}
+@keyframes sadshk{0%,100%{transform:rotate(0)}25%{transform:rotate(-14deg)}50%{transform:rotate(12deg)}75%{transform:rotate(-7deg)}}
+/* 蓮花裝飾 */
+.lotus{position:absolute;z-index:1;pointer-events:none;opacity:.95;animation:lotusfloat 7s ease-in-out infinite}
+.lotus.l1{left:6px;top:150px;width:56px}
+.lotus.l2{right:8px;top:330px;width:44px;animation-delay:-3s}
+@keyframes lotusfloat{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-7px) rotate(3deg)}}
+/* 漣漪 */
+#fx{position:absolute;inset:0;pointer-events:none;z-index:4}
+.ripple{position:absolute;width:24px;height:24px;border:3px solid rgba(255,255,255,.85);
+  border-radius:50%;transform:translate(-50%,-50%);animation:rip 1.1s ease-out forwards}
+.ripple.big{border-color:rgba(255,220,150,.9)}
+@keyframes rip{to{width:150px;height:64px;opacity:0}}
+.splashdrop{position:absolute;width:9px;height:9px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#eafcff,#7fd4f2);
+  transform:translate(-50%,-50%);animation:dropfly .7s ease-out forwards}
+@keyframes dropfly{to{transform:translate(calc(-50% + var(--dx)),calc(-50% - 64px));opacity:0}}
+#msg{min-height:30px;text-align:center;font-size:16px;font-weight:700;margin-top:10px;color:#ffe9c9;
+  text-shadow:0 2px 6px rgba(0,0,0,.4)}
+/* Overlay */
+.overlay{position:fixed;inset:0;background:rgba(24,10,40,.82);display:flex;align-items:center;
+  justify-content:center;z-index:50;padding:16px;overflow-y:auto;
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.card{background:linear-gradient(160deg,rgba(70,35,95,.95),rgba(40,20,60,.97));
+  border:1px solid rgba(255,255,255,.3);border-radius:22px;padding:26px 20px;max-width:480px;width:100%;
+  text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.card h2{margin:0 0 12px;font-size:24px;color:#ffe9c9}
+.card p{font-size:15px;line-height:1.9;text-align:left;color:#f3e6ff}
+.card .center{text-align:center}
+.bigbtn{display:block;width:100%;min-height:62px;font-size:18px;font-weight:800;font-family:inherit;
+  color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:16px;margin-top:12px;cursor:pointer;
+  background:linear-gradient(135deg,#7bc96f,#2e9e5b);box-shadow:0 8px 20px rgba(0,0,0,.35)}
+.bigbtn.mid{background:linear-gradient(135deg,#f0b429,#d97b1e)}
+.bigbtn.hard{background:linear-gradient(135deg,#e0657a,#a83a5e)}
+.bigbtn.ghost{background:rgba(255,255,255,.14)}
 .bigbtn:active{transform:scale(.96)}
+.bigbtn small{display:block;font-size:13px;font-weight:600;opacity:.92;margin-top:3px}
+.score-line{font-size:17px;font-weight:700;color:#ffe9c9;margin:8px 0}
+@media (max-width:380px){
+  #qtext{font-size:20px}
+  .lily{font-size:18px;min-height:62px}
+  .hud{font-size:13px}
+}
 </style>
 </head>
 <body>
-<div class="crt"></div>
-<header><h1>🐸 數學青蛙過河</h1></header>
+<header>
+  <h1>🐸 數學青蛙過河</h1>
+  <div class="sub">夢幻日落蓮花池 · 答啱先跳得過去</div>
+</header>
 <a class="back" href="games.html">← 返回遊戲列表</a>
+
 <div class="wrap">
-<div class="hud"><div>⭐ <span id="score">0</span></div><div>❤️ <span id="lives">3</span></div><div>🌊 第 <span id="round">1</span>/5 關</div></div>
-<div id="qbar">15 − 7 = ?</div>
-<div id="cvwrap"><canvas id="cv" width="480" height="560"></canvas></div>
-<div class="msg" id="msg">撳正確答案嘅荷葉跳過去！</div>
+  <div class="hud">
+    <div>⭐ <span id="score">0</span></div>
+    <div id="lives">❤️❤️❤️</div>
+    <div>🌊 第 <span id="level">1</span>/5 關</div>
+    <div class="diff" id="diffLabel">🌱 初階</div>
+  </div>
+
+  <div id="qcard">
+    <div id="qtext">準備好未？</div>
+    <div id="concept">💡 撳開始之後，題目會喺呢度出現。</div>
+  </div>
+
+  <div id="pond">
+    <div class="sky">
+      <div class="sun"></div>
+      <div class="cloud c1"></div>
+      <div class="cloud c2"></div>
+      <div class="bird b1">﹏𓅪﹏</div>
+      <div class="bird b2">﹏𓅪﹏</div>
+    </div>
+    <div class="water">
+      <div class="sunrefl"></div>
+      <div class="shimmer"></div>
+      <svg class="lotus l1" viewBox="0 0 80 70">
+        <g>
+          <ellipse cx="40" cy="46" rx="11" ry="20" fill="#f7a8c4"/>
+          <ellipse cx="40" cy="46" rx="11" ry="20" fill="#f7a8c4" transform="rotate(38 40 46)"/>
+          <ellipse cx="40" cy="46" rx="11" ry="20" fill="#f7a8c4" transform="rotate(-38 40 46)"/>
+          <ellipse cx="40" cy="46" rx="11" ry="20" fill="#f9c2d8" transform="rotate(72 40 46)"/>
+          <ellipse cx="40" cy="46" rx="11" ry="20" fill="#f9c2d8" transform="rotate(-72 40 46)"/>
+          <ellipse cx="40" cy="40" rx="9" ry="16" fill="#fde7f0"/>
+          <circle cx="40" cy="50" r="6" fill="#ffd964"/>
+        </g>
+        <ellipse cx="40" cy="66" rx="30" ry="8" fill="#2e8b57"/>
+      </svg>
+      <svg class="lotus l2" viewBox="0 0 80 70">
+        <g>
+          <ellipse cx="40" cy="46" rx="11" ry="20" fill="#e58bb0"/>
+          <ellipse cx="40" cy="46" rx="11" ry="20" fill="#e58bb0" transform="rotate(38 40 46)"/>
+          <ellipse cx="40" cy="46" rx="11" ry="20" fill="#e58bb0" transform="rotate(-38 40 46)"/>
+          <ellipse cx="40" cy="46" rx="11" ry="20" fill="#f0a8c6" transform="rotate(72 40 46)"/>
+          <ellipse cx="40" cy="46" rx="11" ry="20" fill="#f0a8c6" transform="rotate(-72 40 46)"/>
+          <ellipse cx="40" cy="40" rx="9" ry="16" fill="#fbd9e8"/>
+          <circle cx="40" cy="50" r="6" fill="#ffd964"/>
+        </g>
+        <ellipse cx="40" cy="66" rx="30" ry="8" fill="#2e8b57"/>
+      </svg>
+      <div class="bank far" id="farBank">🌸 對岸 — 跳晒 5 行就到喇！</div>
+      <div class="lanes" id="lanes"></div>
+      <div class="bank" id="nearBank">🐸 起點</div>
+      <div id="frog">
+        <svg viewBox="0 0 100 96">
+          <defs>
+            <radialGradient id="fg" cx="35%" cy="30%" r="85%">
+              <stop offset="0%" stop-color="#b8f0b4"/>
+              <stop offset="55%" stop-color="#63cf82"/>
+              <stop offset="100%" stop-color="#35955a"/>
+            </radialGradient>
+          </defs>
+          <ellipse cx="50" cy="60" rx="40" ry="30" fill="url(#fg)"/>
+          <ellipse cx="50" cy="69" rx="24" ry="15" fill="#ddf6d4" opacity=".85"/>
+          <circle cx="30" cy="32" r="16" fill="url(#fg)"/>
+          <circle cx="70" cy="32" r="16" fill="url(#fg)"/>
+          <circle cx="30" cy="32" r="11" fill="#fff"/>
+          <circle cx="70" cy="32" r="11" fill="#fff"/>
+          <circle cx="32" cy="34" r="5.5" fill="#223322"/>
+          <circle cx="68" cy="34" r="5.5" fill="#223322"/>
+          <circle cx="34" cy="32" r="2" fill="#fff"/>
+          <circle cx="70" cy="32" r="2" fill="#fff"/>
+          <ellipse cx="26" cy="58" rx="7" ry="5" fill="#ff9db0" opacity=".7"/>
+          <ellipse cx="74" cy="58" rx="7" ry="5" fill="#ff9db0" opacity=".7"/>
+          <path d="M38 62 Q50 73 62 62" stroke="#1e5c38" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div id="fx"></div>
+    </div>
+  </div>
+  <div id="msg">撳正確答案嘅荷葉，幫青蛙過河！</div>
 </div>
-<div class="overlay" id="intro"><div class="card">
-<h2>🐸 數學青蛙過河</h2>
-<p>🕹️ 玩法：青蛙要過河！上面題目係減法（例：15−7=?），每行有 4 塊荷葉寫住唔同答案——<b>撳啱答案嗰塊</b>青蛙先跳得過去！<br>
-⚠️ 撳錯會跌落水扣一命（3 條命）。跳晒 5 行就過一關，共 5 關！<br>
-💡 數學概念：減法、心算，愈跳愈快！</p>
-<button class="bigbtn" onclick="startGame()">▶ 開始遊戲</button>
-</div></div>
-<div class="overlay" id="over" style="display:none"><div class="card">
-<h2 id="overTitle">🏁 GAME OVER</h2>
-<p id="overText" style="text-align:center;font-size:18px"></p>
-<button class="bigbtn" onclick="startGame()">🔁 再玩一次</button>
-</div></div>
+
+<div class="overlay" id="intro">
+  <div class="card">
+    <h2>🐸 數學青蛙過河</h2>
+    <p>
+      🕹️ <b>玩法</b>：青蛙要由起點跳過 <b>5 行荷葉</b>去對岸！題目卡出題，每行荷葉寫住唔同答案——<b>撳啱答案嗰塊</b>青蛙先跳得過去。<br/>
+      💦 撳錯會跌落水扣一命（共 <b>3 條命</b>）。跳晒 5 行就過一關，合共 <b>5 關</b>，愈後愈難、荷葉選項愈多！<br/>
+      💡 每條題目下面都有<b>數學概念</b>提示，玩完仲學到嘢㗎！
+    </p>
+    <p class="center" style="font-weight:800;color:#ffe9c9">👇 揀個難度開始 👇</p>
+    <button class="bigbtn" id="btnEasy">🌱 初階<small>中一至中二 · 減法與分數（答案用分數形式）</small></button>
+    <button class="bigbtn mid" id="btnMid">🌿 中階<small>中三至中四 · 百分數與比例</small></button>
+    <button class="bigbtn hard" id="btnHard">🌳 高階<small>中五至中六 · 變分應用與比率</small></button>
+  </div>
+</div>
+
+<div class="overlay" id="over" style="display:none">
+  <div class="card">
+    <h2 id="overTitle">🏁 遊戲結束</h2>
+    <div class="score-line" id="overScore"></div>
+    <div class="score-line" id="overBest"></div>
+    <p class="center" id="overMsg" style="text-align:center"></p>
+    <button class="bigbtn" id="btnAgain">🔁 再玩一次</button>
+    <button class="bigbtn ghost" id="btnChangeDiff">🏠 轉難度</button>
+    <a class="back" href="games.html" style="margin-top:12px">← 返回遊戲列表</a>
+  </div>
+</div>
+
 <script>
 (function(){
 "use strict";
-var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
-var W=480,H=560,ROWS=5;
-var frog={row:-1,col:1},pads=[],q={txt:'',ans:0};
-var score=0,lives=3,round=1,running=false,t=0;
-function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
-function newQuestion(){
-  var a=rnd(6,25),b=rnd(2,a-1);
-  q={txt:a+' − '+b+' = ?',ans:a-b};
-  document.getElementById('qbar').textContent=q.txt;
+/* ---------- 基本工具 ---------- */
+var ROWS=5;
+var pond=document.getElementById('pond'),
+    lanesEl=document.getElementById('lanes'),
+    frogEl=document.getElementById('frog'),
+    fxEl=document.getElementById('fx'),
+    farBank=document.getElementById('farBank'),
+    nearBank=document.getElementById('nearBank'),
+    qtextEl=document.getElementById('qtext'),
+    conceptEl=document.getElementById('concept'),
+    msgEl=document.getElementById('msg'),
+    scoreEl=document.getElementById('score'),
+    livesEl=document.getElementById('lives'),
+    levelEl=document.getElementById('level'),
+    diffLabel=document.getElementById('diffLabel'),
+    introEl=document.getElementById('intro'),
+    overEl=document.getElementById('over');
+var FW=74, FH=74;
+
+var diff='easy', score=0, lives=3, level=1, targetRow=ROWS-1;
+var rows=[], locked=false, playing=false, frogX=0, frogY=0;
+var best=0;
+try{ best=parseInt(localStorage.getItem('math_frogger_best')||'0',10)||0; }catch(e){ best=0; }
+
+function R(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+function pick(arr){ return arr[R(0,arr.length-1)]; }
+function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ var t=a%b; a=b; b=t; } return a||1; }
+function simpF(n,d){ if(d<0){n=-n;d=-d;} var g=gcd(n,d); return (n/g)+'/'+(d/g); }
+function evalFrac(s){ var p=s.split('/'); return parseInt(p[0],10)/parseInt(p[1],10); }
+function decStr(s){ var v=evalFrac(s); var t=String(Math.round(v*1000000)/1000000); return t; }
+function shuffle(a){ for(var i=a.length-1;i>0;i--){ var j=R(0,i); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function uniq(arr,ans){ var out=[],seen={}; for(var i=0;i<arr.length;i++){ var v=arr[i]; if(v===ans||seen[v]) continue; seen[v]=1; out.push(v); } return out; }
+
+var DIFF_NAME={easy:'🌱 初階', mid:'🌿 中階', hard:'🌳 高階'};
+
+/* ---------- 出題：初階（減法與分數） ---------- */
+function gSub(level){
+  var dens = level<=1 ? [2,3,4,6] : [3,4,5,6,8,10,12];
+  var a,b,c,d,tries=0;
+  do{
+    b=pick(dens); a=R(1,b-1); d=pick(dens); c=R(1,d-1); tries++;
+  }while((a*d<=c*b)&&tries<300);
+  var n=a*d-c*b, dd=b*d;
+  var ans=simpF(n,dd);
+  var dist=[];
+  if(b!==d && a>c && (b-d)!==0) dist.push(simpF(a-c,Math.abs(b-d))); /* 常見錯：分母相減 */
+  dist.push(simpF(a+c,b+d)); /* 常見錯：分子分母各自相加 */
+  var val=n/dd, i;
+  var ds=[2,3,4,5,6,8,10,12];
+  for(i=0;i<ds.length;i++){
+    var D=ds[i], N=Math.round(val*D);
+    if(N>0){ dist.push(simpF(N+1,D)); dist.push(simpF(Math.max(1,N-1),D)); }
+  }
+  return {
+    text:a+'/'+b+' − '+c+'/'+d+' = ?',
+    ans:ans, dist:uniq(dist,ans),
+    concept:'💡 異分母分數減法：先通分母，分子相減、分母不變，最後約至最簡分數。切忌分子分母各自相減！'
+  };
 }
-function newRowPads(){
-  pads=[];
-  for(var r=0;r<ROWS;r++){
-    var opts=new Set([q.ans]);
-    while(opts.size<4){var d=q.ans+rnd(-6,6);if(d!==q.ans&&d>=0)opts.add(d);}
-    var arr=Array.from(opts).sort(()=>Math.random()-0.5);
-    pads.push(arr.map(function(v,i){return {v:v,x:40+i*110,baseX:40+i*110,ph:Math.random()*6.28};}));
+function gDec(level){
+  var simple=['1/2','1/4','3/4','1/5','2/5','3/5','4/5','1/8','3/8','5/8','7/8','1/10','3/10','7/10','9/10'];
+  var extra=['1/20','3/20','7/20','9/20','11/20','13/20','17/20','19/20','4/25','6/25','9/25','11/25','14/25','16/25','19/25','21/25','24/25'];
+  var pool = level<=1 ? simple : simple.concat(extra);
+  var ans=pick(pool), val=evalFrac(ans), i;
+  var others=[];
+  for(i=0;i<pool.length;i++){ if(pool[i]!==ans) others.push(pool[i]); }
+  others.sort(function(x,y){ return Math.abs(evalFrac(x)-val)-Math.abs(evalFrac(y)-val); });
+  return {
+    text:decStr(ans)+' = ?（化為最簡分數）',
+    ans:ans, dist:uniq(others.slice(0,6),ans),
+    concept:'💡 小數化分數：先寫成分母係 10、100、1000… 的分數，再約至最簡。例如 0.75 = 75/100 = 3/4。'
+  };
+}
+
+/* ---------- 出題：中階（百分數與比例） ---------- */
+function gPct(level){
+  var p=pick(level<=1?[10,20,25,50,75]:[15,20,25,30,35,40,45,60,80]);
+  var base=R(2, level<=1?12:25)*20;
+  var ans=base*p/100;
+  var dist=[ base*(p+10)/100, base*Math.max(5,p-10)/100, ans*10, base*(100-p)/100, ans+base/20 ];
+  return {
+    text:base+' 的 '+p+'% 是多少？',
+    ans:String(ans), dist:uniq(dist.map(String),String(ans)),
+    concept:'💡 求百分數：數量 × 百分率。先將 '+p+'% 化為小數 '+ (p/100) +'（或分數），再乘 '+base+'。'
+  };
+}
+function gRatio(level){
+  var m=R(1,4), n=R(2,5);
+  if(m===n) n=m+1;
+  var k=R(2, level<=1?6:10);
+  var sum=(m+n)*k, ansB=n*k, ansA=m*k;
+  var dist=[ansA, k, ansB+k, Math.max(1,ansB-k), sum];
+  return {
+    text:'a : b = '+m+' : '+n+'，且 a + b = '+sum+'，求 b。',
+    ans:String(ansB), dist:uniq(dist.map(String),String(ansB)),
+    concept:'💡 比例分配：每份 = 總和 ÷ ('+m+' + '+n+') = '+k+'，b 佔 '+n+' 份，所以 b = '+n+' × '+k+' = '+ansB+'。'
+  };
+}
+function gMarkup(level){
+  var cost=R(2, level<=1?20:40)*(level<=1?10:20);
+  var r=pick(level<=1?[10,20,50]:[10,15,20,25,30,50]);
+  var ans=cost*(100+r)/100;
+  var dist=[cost+r, cost*(100-r)/100, cost+2*r, cost*(100+2*r)/100, ans+r];
+  return {
+    text:'成本 $'+cost+'，加價 '+r+'% 後售價是多少？',
+    ans:'$'+ans, dist:uniq(dist.map(function(v){return '$'+v;}),'$'+ans),
+    concept:'💡 加價後售價 = 成本 × (1 + 加價率) = '+cost+' × '+(1+r/100)+'。唔係直接加 $'+r+' 咁簡單！'
+  };
+}
+
+/* ---------- 出題：高階（變分應用） ---------- */
+function sup2(){ return '²'; }
+function gVarD(level){
+  var pw = level<=2 ? 2 : (Math.random()<0.5?2:3);
+  var x1=R(2,5), c=R(1, level<=2?4:6);
+  var y1=c*Math.pow(x1,pw);
+  var x2=R(2,6); if(x2===x1) x2=(x2===6?5:6);
+  var ans=c*Math.pow(x2,pw);
+  var dist=[c*x2, y1+c*(x2-x1), ans+c, ans-c>0?ans-c:ans+2*c, c*Math.pow(x1,pw-1)*x2];
+  var pwStr = pw===2 ? 'x²' : 'x³';
+  return {
+    text:'y 正變於 '+pwStr+'。當 x = '+x1+' 時，y = '+y1+'；求當 x = '+x2+' 時 y 的值。',
+    ans:String(ans), dist:uniq(dist.map(String),String(ans)),
+    concept:'💡 正變：y = k'+pwStr+'。先用 x = '+x1+'、y = '+y1+' 求 k = '+c+'，再代 x = '+x2+' 得 y = '+c+' × '+x2+pwStr.replace('x','')+' = '+ans+'。'
+  };
+}
+function gVarI(level){
+  var pw = level<=3 ? 1 : 2;
+  var x1,y1,x2,C,tries=0;
+  do{
+    x1=R(2,6); y1=R(2,9); x2=R(2,9);
+    C=Math.pow(x1,pw)*y1; tries++;
+  }while((x2===x1 || C%Math.pow(x2,pw)!==0)&&tries<500);
+  var ans=C/Math.pow(x2,pw);
+  var dist=[Math.round(y1*x2/x1), y1+Math.abs(x2-x1), ans*2, ans+2>0?ans+2:ans+1, Math.max(1,ans-2)];
+  var vStr = pw===2 ? 'x²' : 'x';
+  return {
+    text:'y 反變於 '+vStr+'。當 x = '+x1+' 時，y = '+y1+'；求當 x = '+x2+' 時 y 的值。',
+    ans:String(ans), dist:uniq(dist.map(String),String(ans)),
+    concept:'💡 反變：'+vStr+' × y = k（常數）。先求 k = '+C+'，再由 '+C+' ÷ '+Math.pow(x2,pw)+' 得 y = '+ans+'。'
+  };
+}
+function gRatioApp(level){
+  var m=R(2, level<=1?4:5), n=m+R(1,3);
+  var ans=n+' : '+m;
+  var dist=[m+' : '+n, (m+1)+' : '+n, n+' : '+(m+1), '1 : 1', m+' : '+(n+1)];
+  return {
+    text:'甲、乙兩人跑同一距離，速度比是 '+m+' : '+n+'。求他們所需時間之比（甲 : 乙）。',
+    ans:ans, dist:uniq(dist,ans),
+    concept:'💡 同一距離下，時間與速度成反比：速度比 '+m+' : '+n+'，時間比就係倒轉嘅 '+n+' : '+m+'。'
+  };
+}
+
+function genQuestion(){
+  var q;
+  if(diff==='easy'){ q = Math.random()<0.5 ? gSub(level) : gDec(level); }
+  else if(diff==='mid'){ var t=Math.random(); q = t<0.34?gPct(level):(t<0.67?gRatio(level):gMarkup(level)); }
+  else { var t2=Math.random(); q = t2<0.36?gVarD(level):(t2<0.72?gVarI(level):gRatioApp(level)); }
+  var need = level<=2 ? 3 : 4;
+  var opts=[q.ans], i=0;
+  while(opts.length<need && i<q.dist.length){ if(opts.indexOf(q.dist[i])<0) opts.push(q.dist[i]); i++; }
+  /* 後備：數字鄰近值 */
+  var numAns=parseFloat(q.ans.replace('$',''));
+  var delta=1;
+  while(opts.length<need && delta<20){
+    var cand=String(numAns+delta), cand2=String(numAns-delta);
+    if(!isNaN(numAns)){
+      if(opts.indexOf(cand)<0) opts.push(cand);
+      if(opts.length<need && numAns-delta>0 && opts.indexOf(cand2)<0) opts.push(cand2);
+    }
+    delta++;
+  }
+  q.options=shuffle(opts.slice(0,need));
+  return q;
+}
+
+/* ---------- 遊戲流程 ---------- */
+function updateHUD(){
+  scoreEl.textContent=score;
+  livesEl.textContent='❤️'.repeat(lives)+'🤍'.repeat(3-lives);
+  levelEl.textContent=level;
+  diffLabel.textContent=DIFF_NAME[diff];
+}
+function updateQCard(){
+  var q=rows[targetRow].q;
+  qtextEl.textContent=q.text;
+  conceptEl.textContent=q.concept;
+}
+function setMsg(t){ msgEl.textContent=t; }
+
+function centerOf(el){
+  var pr=pond.getBoundingClientRect(), r=el.getBoundingClientRect();
+  return { x:r.left-pr.left+r.width/2, y:r.top-pr.top+r.height/2 };
+}
+function placeFrog(x,y){
+  frogX=x; frogY=y;
+  frogEl.style.transform='translate('+(x-FW/2)+'px,'+(y-FH/2)+'px)';
+}
+function spawnRipple(x,y,big){
+  var d=document.createElement('div');
+  d.className='ripple'+(big?' big':'');
+  d.style.left=x+'px'; d.style.top=y+'px';
+  fxEl.appendChild(d);
+  setTimeout(function(){ d.remove(); },1200);
+}
+function spawnSplash(x,y){
+  spawnRipple(x,y,true);
+  var i;
+  for(i=0;i<8;i++){
+    var s=document.createElement('div');
+    s.className='splashdrop';
+    s.style.left=x+'px'; s.style.top=y+'px';
+    s.style.setProperty('--dx',(R(-46,46))+'px');
+    fxEl.appendChild(s);
+    (function(el){ setTimeout(function(){ el.remove(); },800); })(s);
   }
 }
-function newRound(){
-  frog={row:-1,col:1};newQuestion();newRowPads();
-  document.getElementById('round').textContent=round;
-  document.getElementById('msg').textContent='撳正確答案嘅荷葉跳過去！';
+function jumpTo(x,y,done){
+  var sx=frogX, sy=frogY, t0=performance.now(), dur=620, arc=86;
+  locked=true;
+  function step(t){
+    var p=Math.min(1,(t-t0)/dur);
+    var e=p<0.5 ? 2*p*p : 1-Math.pow(-2*p+2,2)/2;
+    var nx=sx+(x-sx)*e, ny=sy+(y-sy)*e-Math.sin(Math.PI*e)*arc;
+    frogX=nx; frogY=ny;
+    var sc=1+Math.sin(Math.PI*e)*0.28;
+    frogEl.style.transform='translate('+(nx-FW/2)+'px,'+(ny-FH/2)+'px) scale('+sc.toFixed(3)+')';
+    if(p<1){ requestAnimationFrame(step); }
+    else { locked=false; placeFrog(x,y); if(done) done(); }
+  }
+  requestAnimationFrame(step);
 }
-function rowY(r){return H-90-r*95;}
-function frogPos(){
-  if(frog.row<0)return {x:W/2,y:H-35};
-  var p=pads[frog.row][frog.col];
-  return {x:p.x+45,y:rowY(frog.row)+22};
+
+function buildLevel(){
+  lanesEl.innerHTML='';
+  rows=[];
+  targetRow=ROWS-1;
+  var i,j;
+  for(i=0;i<ROWS;i++){
+    var q=genQuestion();
+    var lane=document.createElement('div');
+    lane.className='lane';
+    for(j=0;j<q.options.length;j++){
+      (function(val,row){
+        var b=document.createElement('button');
+        b.type='button';
+        b.className='lily';
+        b.innerHTML='<span class="drop"></span><span class="val"></span>';
+        b.querySelector('.val').textContent=val;
+        b.setAttribute('data-val',val);
+        b.addEventListener('pointerdown',function(e){ e.preventDefault(); onPad(b,row); });
+        lane.appendChild(b);
+      })(q.options[j],i);
+    }
+    lanesEl.appendChild(lane);
+    rows.push({q:q,lane:lane});
+  }
+  refreshLaneStates();
+  updateQCard();
+  updateHUD();
 }
-function draw(){
-  ctx.fillStyle='#0a2540';ctx.fillRect(0,0,W,H);
-  // water waves
-  ctx.fillStyle='#0e3a5c';
-  for(var i=0;i<8;i++){var wy=60+i*62+Math.sin(t*2+i)*4;ctx.fillRect(0,wy,W,3);}
-  // bank top
-  ctx.fillStyle='#166534';ctx.fillRect(0,0,W,50);
-  ctx.fillStyle='#4ade80';ctx.font='bold 16px "Courier New",monospace';ctx.textAlign='center';
-  ctx.fillText('🏁 終點',W/2,32);
-  // bank bottom
-  ctx.fillStyle='#166534';ctx.fillRect(0,H-60,W,60);
-  // pads
-  ctx.textAlign='center';ctx.textBaseline='middle';
-  for(var r=0;r<ROWS;r++){
-    for(var c=0;c<4;c++){
-      var p=pads[r][c];
-      p.x=p.baseX+Math.sin(t*1.5+p.ph)*12;
-      var y=rowY(r);
-      ctx.fillStyle='#22c55e';
-      ctx.beginPath();ctx.ellipse(p.x+45,y+22,46,26,0,0,7);ctx.fill();
-      ctx.fillStyle='#16a34a';
-      ctx.beginPath();ctx.ellipse(p.x+35,y+16,18,10,0,0,7);ctx.fill();
-      ctx.fillStyle='#fff';ctx.font='bold 20px "Courier New",monospace';
-      ctx.fillText(p.v,p.x+45,y+23);
+function refreshLaneStates(){
+  var i,btns,k;
+  for(i=0;i<ROWS;i++){
+    btns=rows[i].lane.children;
+    for(k=0;k<btns.length;k++){
+      btns[k].classList.toggle('target', i===targetRow);
+      btns[k].classList.toggle('dim', i!==targetRow);
     }
   }
-  // frog
-  var f=frogPos();
-  ctx.fillStyle='#4ade80';
-  ctx.fillRect(f.x-16,f.y-14,32,28);
-  ctx.fillStyle='#22c55e';ctx.fillRect(f.x-16,f.y-14,32,8);
-  ctx.fillStyle='#000';ctx.fillRect(f.x-10,f.y-8,6,6);ctx.fillRect(f.x+4,f.y-8,6,6);
-  ctx.fillStyle='#4ade80';ctx.fillRect(f.x-20,f.y+2,8,12);ctx.fillRect(f.x+12,f.y+2,8,12);
 }
-cv.addEventListener('pointerdown',function(e){
-  if(!running)return;
-  var r=cv.getBoundingClientRect();
-  var x=(e.clientX-r.left)/r.width*W, y=(e.clientY-r.top)/r.height*H;
-  var nr=frog.row+1;
-  if(nr>=ROWS)return;
-  for(var c=0;c<4;c++){
-    var p=pads[nr][c],py=rowY(nr);
-    if(x>p.x&&x<p.x+90&&y>py-4&&y<py+48){
-      if(p.v===q.ans){
-        frog.row=nr;frog.col=c;score+=50;
-        document.getElementById('score').textContent=score;
-        document.getElementById('msg').textContent='✅ 跳啱！+50';
-        if(nr===ROWS-1){
-          score+=100;document.getElementById('score').textContent=score;
-          if(round>=5){gameOver(true);return;}
-          round++;newRound();
-          document.getElementById('msg').textContent='🎉 過河！+100 bonus，第 '+round+' 關！';
-        }
-      }else{
-        lives--;document.getElementById('lives').textContent=lives;
-        document.getElementById('msg').textContent='💦 跌落水！'+p.v+' 唔係答案（仲有 '+lives+' 命）';
-        if(lives<=0){gameOver(false);return;}
-      }
-      break;
+
+function onPad(btn,row){
+  if(!playing||locked) return;
+  if(row!==targetRow){
+    btn.classList.remove('shake'); void btn.offsetWidth; btn.classList.add('shake');
+    setMsg('👆 每次只可以跳去發光嗰行荷葉呀！');
+    return;
+  }
+  var q=rows[row].q;
+  var val=btn.getAttribute('data-val');
+  if(val===q.ans){
+    /* 答啱：跳過去 */
+    locked=true;
+    score+=10; updateHUD();
+    var c=centerOf(btn);
+    spawnRipple(c.x,c.y,false);
+    setMsg('✅ 答啱！+10 分');
+    jumpTo(c.x,c.y,function(){
+      spawnRipple(c.x,c.y,false);
+      targetRow--;
+      if(targetRow<0){ levelComplete(); }
+      else { refreshLaneStates(); updateQCard(); }
+    });
+  }else{
+    /* 答錯：跌落水 */
+    var c2=centerOf(btn);
+    spawnSplash(c2.x,c2.y);
+    btn.classList.remove('shake'); void btn.offsetWidth; btn.classList.add('shake');
+    frogEl.classList.remove('sad'); void frogEl.offsetWidth; frogEl.classList.add('sad');
+    lives--; updateHUD();
+    if(lives<=0){
+      setMsg('💦 跌咗落水…');
+      setTimeout(function(){ gameOver(false); },900);
+    }else{
+      setMsg('💦 跌咗落水！扣一命，再諗清楚㩒過～');
     }
   }
-});
+}
+
+function levelComplete(){
+  score+=50; updateHUD();
+  var c=centerOf(farBank);
+  setMsg('🎉 第 '+level+' 關完成！+50 分');
+  jumpTo(c.x,c.y,function(){
+    spawnRipple(c.x,c.y,true);
+    setTimeout(function(){
+      if(level>=5){ gameOver(true); return; }
+      level++;
+      var start=centerOf(nearBank);
+      frogEl.style.transition='opacity .4s'; frogEl.style.opacity='0';
+      setTimeout(function(){
+        placeFrog(start.x,start.y);
+        frogEl.style.opacity='1';
+        frogEl.style.transition='';
+        buildLevel();
+        refreshLaneStates();
+        setMsg('🌊 第 '+level+' 關！題目更難、選項更多，加油！');
+      },450);
+    },900);
+  });
+}
+
+function saveBest(){
+  if(score>best){
+    best=score;
+    try{ localStorage.setItem('math_frogger_best',String(best)); }catch(e){}
+  }
+}
 function gameOver(win){
-  running=false;
-  document.getElementById('overTitle').textContent=win?'🏆 全部過關！':'💀 GAME OVER';
-  var best=0;try{best=parseInt(localStorage.getItem('frogBest')||'0');}catch(e){}
-  var nb='';
-  if(score>best){try{localStorage.setItem('frogBest',score);}catch(e){}nb=' 🏅新紀錄！';}
-  document.getElementById('overText').innerHTML='總分：'+score+nb+'<br>最佳：'+Math.max(score,best);
-  document.getElementById('over').style.display='flex';
+  playing=false; saveBest();
+  document.getElementById('overTitle').textContent = win ? '🏆 全部過關！' : '💔 遊戲結束';
+  document.getElementById('overScore').textContent='⭐ 今次得分：'+score+' 分';
+  document.getElementById('overBest').textContent='🏅 歷史最高：'+best+' 分';
+  document.getElementById('overMsg').textContent = win
+    ? '你幫青蛙跳過晒 5 關，真係好叻！'+DIFF_NAME[diff]+'都難唔到你～'
+    : '青蛙跌咗落水三次…唔緊要，睇埋概念提示再挑戰過！';
+  overEl.style.display='flex';
 }
-function loop(){t+=0.03;if(running)draw();requestAnimationFrame(loop);}
-window.startGame=function(){
-  document.getElementById('intro').style.display='none';
-  document.getElementById('over').style.display='none';
-  score=0;lives=3;round=1;running=true;
-  document.getElementById('score').textContent='0';
-  document.getElementById('lives').textContent='3';
-  newRound();
-};
-draw();loop();
+
+function resetGame(){
+  score=0; lives=3; level=1;
+  overEl.style.display='none';
+  playing=true; locked=false;
+  buildLevel();
+  requestAnimationFrame(function(){
+    var s=centerOf(nearBank);
+    placeFrog(s.x,s.y);
+  });
+  setMsg('🌱 '+DIFF_NAME[diff]+' · 撳正確答案嘅荷葉，幫青蛙過河！');
+}
+
+/* ---------- 按鈕 ---------- */
+document.getElementById('btnEasy').addEventListener('click',function(){ diff='easy'; introEl.style.display='none'; resetGame(); });
+document.getElementById('btnMid').addEventListener('click',function(){ diff='mid'; introEl.style.display='none'; resetGame(); });
+document.getElementById('btnHard').addEventListener('click',function(){ diff='hard'; introEl.style.display='none'; resetGame(); });
+document.getElementById('btnAgain').addEventListener('click',function(){ resetGame(); });
+document.getElementById('btnChangeDiff').addEventListener('click',function(){
+  overEl.style.display='none';
+  introEl.style.display='flex';
+});
+window.addEventListener('resize',function(){
+  if(!playing) return;
+  placeFrog(frogX,frogY);
+});
+updateHUD();
 })();
 </script>
 </body>

@@ -2,176 +2,645 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-<title>數學電單車</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>數學電單車・霓虹競速</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;font-family:"Courier New",monospace;background:#0a0a0a;color:#fff;min-height:100vh;touch-action:manipulation;user-select:none;-webkit-user-select:none}
-.crt{position:fixed;inset:0;pointer-events:none;z-index:99;background:repeating-linear-gradient(0deg,rgba(0,0,0,.12) 0 1px,transparent 1px 3px);opacity:.5}
-header{background:#1a1a2e;padding:12px;text-align:center;border-bottom:4px solid #e94560}
-header h1{margin:0;font-size:20px;letter-spacing:2px;color:#e94560;text-shadow:2px 2px 0 #fff}
-.back{display:block;text-align:center;background:#222;color:#e94560;text-decoration:none;padding:12px;font-size:15px;font-weight:700}
-.wrap{max-width:560px;margin:0 auto;padding:12px}
-.hud{display:flex;justify-content:space-between;background:#1a1a2e;border:3px solid #e94560;padding:10px 12px;font-size:14px;font-weight:700;margin-bottom:10px;flex-wrap:wrap;gap:6px}
-.hud span{color:#ffd23f}
-#cvwrap{border:4px solid #e94560;background:#000}
-canvas{display:block;width:100%;height:auto;image-rendering:pixelated}
-#gateQ{display:none;background:#1a1a2e;border:3px solid #ffd23f;padding:14px;margin-top:10px;text-align:center}
-#gateQ .qq{font-size:26px;font-weight:700;margin-bottom:10px;letter-spacing:2px}
-#gateQ .abtns{display:flex;gap:8px;justify-content:center}
-#gateQ .abtns button{flex:1;min-height:60px;max-width:120px;font-size:22px;font-weight:700;font-family:inherit;background:#0f3460;color:#fff;border:3px solid #ffd23f;cursor:pointer}
-#gateQ .abtns button:active{transform:scale(.94);background:#e94560}
-.msg{min-height:30px;text-align:center;font-size:16px;font-weight:700;margin-top:8px;color:#4ade80}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px;overflow-y:auto}
-.card{background:#1a1a2e;border:4px solid #e94560;padding:24px 20px;max-width:480px;width:100%;text-align:center}
-.card h2{margin:0 0 12px;font-size:22px;color:#e94560;text-shadow:2px 2px 0 #fff}
-.card p{font-size:15px;line-height:1.8;text-align:left}
-.bigbtn{width:100%;min-height:60px;font-size:20px;font-weight:700;font-family:inherit;background:#e94560;color:#fff;border:3px solid #fff;margin-top:14px;cursor:pointer}
-.bigbtn:active{transform:scale(.96)}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,"PingFang HK","Microsoft JhengHei",sans-serif;
+  background:linear-gradient(180deg,#04061a 0%,#0a1030 60%,#140b32 100%);
+  color:#eef2ff;min-height:100vh;touch-action:manipulation;
+  user-select:none;-webkit-user-select:none;font-size:16px;
+}
+header{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:10px 14px;background:rgba(10,14,40,.88);
+  border-bottom:1px solid rgba(120,200,255,.25);
+  position:sticky;top:0;z-index:20;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+.back{color:#7dd3fc;text-decoration:none;font-size:15px;font-weight:700;white-space:nowrap}
+.ttl{font-size:17px;font-weight:800;letter-spacing:1px;
+  background:linear-gradient(90deg,#22d3ee,#e879f9);
+  -webkit-background-clip:text;background-clip:text;color:transparent;white-space:nowrap}
+.hbest{font-size:14px;color:#ffd23f;font-weight:700;white-space:nowrap}
+.wrap{max-width:600px;margin:0 auto;padding:10px 12px 28px}
+/* HUD */
+#hud{margin-bottom:10px}
+.prow{display:flex;align-items:center;gap:10px}
+#pbar{position:relative;flex:1;height:28px;border-radius:14px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(140,200,255,.35);overflow:hidden}
+.mk{position:absolute;top:3px;left:0;width:22px;height:22px;border-radius:50%;
+  transform:translateX(-50%);font-size:13px;line-height:22px;text-align:center;
+  transition:left .2s linear}
+.me{box-shadow:0 0 0 2px #22d3ee,0 0 10px #22d3ee;background:#0e2a3a}
+.flag{position:absolute;right:3px;top:3px;font-size:18px;line-height:22px}
+.pmeta{font-size:14px;font-weight:700;color:#bfe3ff;white-space:nowrap}
+.pmeta span{color:#fff;font-size:16px}
+.hrow{display:flex;justify-content:space-between;margin-top:8px;font-size:15px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(140,200,255,.25);
+  border-radius:12px;padding:8px 12px}
+.hrow b{color:#ffd23f}
+/* 畫布 */
+#cvwrap{position:relative}
+canvas{display:block;width:100%;height:auto;border-radius:14px;
+  border:1px solid rgba(120,200,255,.35);
+  box-shadow:0 0 26px rgba(34,211,238,.22),0 8px 30px rgba(0,0,0,.5)}
+/* 題目卡：玻璃擬態 */
+#qcard{margin-top:10px;border-radius:16px;padding:14px;
+  background:rgba(22,30,66,.55);border:1px solid rgba(160,220,255,.4);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  box-shadow:0 8px 30px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.15)}
+.qtitle{font-size:15px;font-weight:800;color:#7dd3fc;margin-bottom:6px;letter-spacing:1px}
+.qq{font-size:27px;font-weight:800;margin:6px 0 12px;letter-spacing:1px;text-align:center;color:#fff;
+  text-shadow:0 0 14px rgba(34,211,238,.6)}
+.abtns{display:flex;gap:10px}
+.abtns button{flex:1;min-height:54px;font-size:20px;font-weight:800;border-radius:12px;
+  border:1px solid rgba(160,220,255,.55);background:rgba(34,211,238,.12);color:#fff;
+  cursor:pointer;font-family:inherit;transition:transform .08s}
+.abtns button:active{transform:scale(.95);background:rgba(34,211,238,.3)}
+.abtns button:disabled{cursor:default}
+.abtns button.ok{background:rgba(52,245,163,.35);border-color:#34f5a3;box-shadow:0 0 14px rgba(52,245,163,.5)}
+.abtns button.no{background:rgba(255,77,109,.35);border-color:#ff4d6d}
+.concept{margin-top:12px;font-size:14px;line-height:1.6;color:#cde9ff;
+  background:rgba(125,211,252,.1);border-left:3px solid #7dd3fc;
+  padding:8px 10px;border-radius:0 8px 8px 0}
+#msg{min-height:30px;text-align:center;font-size:16px;font-weight:700;margin-top:10px;color:#34f5a3}
+/* 覆蓋層 */
+.overlay{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+  background:rgba(4,7,24,.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);padding:16px}
+.panel{width:100%;max-width:520px;max-height:92vh;overflow-y:auto;
+  background:rgba(16,22,52,.92);border:1px solid rgba(150,210,255,.35);border-radius:20px;
+  padding:22px;box-shadow:0 0 44px rgba(34,211,238,.25)}
+.panel h1{margin:0 0 4px;font-size:26px;text-align:center;
+  background:linear-gradient(90deg,#22d3ee,#e879f9,#ffd23f);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.tagline{text-align:center;color:#9db8dd;font-size:14px;margin-bottom:14px;letter-spacing:2px}
+.how{background:rgba(255,255,255,.05);border:1px solid rgba(150,210,255,.25);
+  border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:14px;line-height:1.7}
+.how b{color:#7dd3fc}
+.how ul{margin:8px 0 0;padding-left:20px}
+.how li{margin-bottom:4px}
+.diff{display:flex;align-items:center;gap:12px;width:100%;text-align:left;margin:8px 0;
+  padding:13px 14px;border-radius:14px;background:rgba(255,255,255,.06);
+  border:1px solid rgba(150,210,255,.3);color:#fff;cursor:pointer;font-family:inherit;font-size:15px}
+.diff:active{transform:scale(.98);background:rgba(34,211,238,.16)}
+.diff .di{font-size:30px}
+.diff small{color:#9db8dd;font-size:13px}
+.diff .go{margin-left:auto;color:#22d3ee;font-size:20px}
+.best{text-align:center;margin-top:12px;color:#ffd23f;font-weight:700;font-size:15px}
+.frank{text-align:center;font-size:30px;font-weight:800;margin:10px 0}
+.fstats{text-align:center;font-size:15px;line-height:2;color:#cde9ff}
+.fstats b{color:#ffd23f}
+.fscoreRow{text-align:center;font-size:17px;margin:10px 0;color:#9db8dd}
+.fscoreRow span{font-size:34px;font-weight:800;color:#fff;text-shadow:0 0 16px rgba(34,211,238,.7)}
+.fbest{text-align:center;font-size:15px;color:#ffd23f;font-weight:700;margin-bottom:14px}
+.bigbtn{display:block;width:100%;margin:8px 0;padding:14px;border:none;border-radius:14px;
+  font-size:18px;font-weight:800;font-family:inherit;cursor:pointer;color:#06202b;
+  background:linear-gradient(90deg,#22d3ee,#34f5a3);box-shadow:0 4px 18px rgba(34,211,238,.4)}
+.bigbtn:active{transform:scale(.97)}
+.bigbtn.ghost{background:rgba(255,255,255,.08);color:#cde9ff;border:1px solid rgba(150,210,255,.35);box-shadow:none}
+.hidden{display:none!important}
+@media (max-width:420px){
+  .qq{font-size:23px}
+  .abtns button{font-size:18px;min-height:52px}
+  .hrow{font-size:13px}
+}
 </style>
 </head>
 <body>
-<div class="crt"></div>
-<header><h1>🏍️ 數學電單車</h1></header>
-<a class="back" href="games.html">← 返回遊戲列表</a>
+<header>
+  <a class="back" href="games.html">← 返回遊戲列表</a>
+  <div class="ttl">🏍️ 數學電單車</div>
+  <div class="hbest">🏆 <span id="bestHead">0</span></div>
+</header>
+
 <div class="wrap">
-<div class="hud"><div>🏁 <span id="dist">0</span>/1500m</div><div>💨 <span id="spd">0</span>km/h</div><div>🤖 對手 <span id="foe">0</span>m</div></div>
-<div id="cvwrap"><canvas id="cv" width="520" height="360"></canvas></div>
-<div id="gateQ"><div class="qq" id="qText">7 + 8 = ?</div><div class="abtns" id="ansBtns"></div></div>
-<div class="msg" id="msg">同 AI 車手鬥快！答啱算式閘加速！</div>
+  <div id="hud">
+    <div class="prow">
+      <div id="pbar">
+        <div class="mk" id="mA1" style="background:#ff5d8f">💨</div>
+        <div class="mk" id="mA2" style="background:#b78a1e">💨</div>
+        <div class="mk me" id="mP">🏍</div>
+        <div class="flag">🏁</div>
+      </div>
+      <div class="pmeta"><span id="hdist">0 m</span> / 1500 m</div>
+    </div>
+    <div class="hrow">
+      <span>🚀 <b id="hspd">0</b> m/s</span>
+      <span>🏅 名次 <b id="hrank">–</b>/3</span>
+      <span>⭐ 分數 <b id="hscore">0</b></span>
+    </div>
+  </div>
+
+  <div id="cvwrap"><canvas id="cv" width="800" height="450"></canvas></div>
+
+  <div id="qcard" class="hidden">
+    <div class="qtitle">🚦 算式閘門　<span id="qnum"></span></div>
+    <div class="qq" id="qq"></div>
+    <div class="abtns" id="abtns"></div>
+    <div class="concept" id="concept"></div>
+  </div>
+  <div id="msg"></div>
 </div>
-<div class="overlay" id="intro"><div class="card">
-<h2>🏍️ 數學電單車</h2>
-<p>🕹️ 玩法：架車會自己向前衝，跑道上有算式閘——埋閘前要答啱條數！<br>
-✅ 答啱：turbo 加速 🚀<br>
-❌ 答錯：減速 🐢<br>
-🏆 同 AI 車手鬥，1500m 先到終點贏！<br>
-💡 數學概念：四則混合運算，反應要快！</p>
-<button class="bigbtn" onclick="startGame()">▶ 開始比賽</button>
-</div></div>
-<div class="overlay" id="over" style="display:none"><div class="card">
-<h2 id="overTitle">🏁 比賽完！</h2>
-<p id="overText" style="text-align:center;font-size:18px"></p>
-<button class="bigbtn" onclick="startGame()">🔁 再賽一次</button>
-</div></div>
+
+<div id="menu" class="overlay">
+  <div class="panel">
+    <h1>🏍️ 數學電單車</h1>
+    <div class="tagline">霓虹城市・夜間競速 1500 米</div>
+    <div class="how">
+      <b>📖 玩法說明</b>
+      <ul>
+        <li>🏁 與 <b>疾風</b>、<b>雷霆</b> 兩位 AI 車手競速 <b>1500 米</b>，電單車會自動向前衝。</li>
+        <li>🚦 接近<b>霓虹閘門</b>時會彈出題目，必須在通過閘門前點選答案。</li>
+        <li>✅ 答啱 → <b>Turbo 加速</b>（速度線＋尾焰粒子）；❌ 答錯／嚟唔切答 → 減速 3 秒。</li>
+        <li>⭐ 答啱每題 +100 分；名次獎勵 🥇+600 🥈+350 🥉+200，另有時間獎勵。</li>
+      </ul>
+    </div>
+    <b>🎚️ 選擇難度</b>
+    <button class="diff" data-lv="easy"><span class="di">🌱</span><span><b>初階</b>・中一至中二<br><small>一元一次方程　例：2x + 6 = 18</small></span><span class="go">▶</span></button>
+    <button class="diff" data-lv="mid"><span class="di">🌿</span><span><b>中階</b>・中三至中四<br><small>二次方程求根　例：x² − 5x + 6 = 0</small></span><span class="go">▶</span></button>
+    <button class="diff" data-lv="hard"><span class="di">🌳</span><span><b>高階</b>・中五至中六<br><small>函數求值　例：f(x)=2x²−3x+1，求 f(2)</small></span><span class="go">▶</span></button>
+    <div class="best">🏆 最高分：<span id="bestMenu">0</span> 分</div>
+  </div>
+</div>
+
+<div id="finish" class="overlay hidden">
+  <div class="panel">
+    <h1>🏁 比賽結束</h1>
+    <div id="fRank" class="frank"></div>
+    <div id="fStats" class="fstats"></div>
+    <div class="fscoreRow">總分 <span id="fScore"></span></div>
+    <div id="fBest" class="fbest"></div>
+    <button id="againBtn" class="bigbtn">🔁 再玩一次</button>
+    <button id="menuBtn" class="bigbtn ghost">🎚️ 揀過難度</button>
+  </div>
+</div>
+
 <script>
-(function(){
-"use strict";
-var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
-var W=520,H=360,FINISH=1500;
-var px,foeX,speed,boostT,running,gates,nextGate,curQ,trackOff;
+'use strict';
+/* ================= 工具 ================= */
+const $=id=>document.getElementById(id);
+const W=800,H=450,ROAD=300,FINISH=1500,PXM=1.3;
+const FONT='-apple-system,"PingFang HK","Microsoft JhengHei",sans-serif';
 function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
-function mkQ(){
-  var op=rnd(0,3),a,b,ans,txt;
-  if(op===0){a=rnd(3,29);b=rnd(3,29);ans=a+b;txt=a+' + '+b;}
-  else if(op===1){a=rnd(6,39);b=rnd(3,a-2);ans=a-b;txt=a+' − '+b;}
-  else if(op===2){a=rnd(3,9);b=rnd(3,9);ans=a*b;txt=a+' × '+b;}
-  else{b=rnd(3,9);ans=rnd(3,9);a=b*ans;txt=a+' ÷ '+b;}
-  return {txt:txt+' = ?',ans:ans};
-}
-function reset(){
-  px=0;foeX=0;speed=60;boostT=0;trackOff=0;gates=[];nextGate=250;curQ=null;
-  document.getElementById('dist').textContent='0';
-  document.getElementById('spd').textContent='60';
-  document.getElementById('foe').textContent='0';
-  document.getElementById('gateQ').style.display='none';
-  document.getElementById('msg').textContent='同 AI 車手鬥快！答啱算式閘加速！';
-}
-function draw(){
-  ctx.fillStyle='#87ceeb';ctx.fillRect(0,0,W,H);
-  ctx.fillStyle='#fff';
-  for(var i=0;i<5;i++){var cx2=((i*200-trackOff*0.2)%(W+120))-60;ctx.fillRect(cx2,30+i*8,80,14);}
-  // ground
-  ctx.fillStyle='#3a7d2c';ctx.fillRect(0,H-110,W,110);
-  // road
-  ctx.fillStyle='#555';ctx.fillRect(0,H-90,W,70);
-  ctx.fillStyle='#ffd23f';
-  for(var d=0;d<W;d+=40){var dx=d-((trackOff)%40);ctx.fillRect(dx,H-58,22,5);}
-  // gates ahead
-  ctx.textAlign='center';ctx.textBaseline='middle';
-  for(var g of gates){
-    var gx=g.x-px*0.35+150;
-    if(gx<-40||gx>W+40)continue;
-    ctx.fillStyle='#e94560';ctx.fillRect(gx-4,H-160,8,90);
-    ctx.fillStyle='#ffd23f';ctx.fillRect(gx-34,H-170,68,26);
-    ctx.fillStyle='#000';ctx.font='bold 16px "Courier New",monospace';
-    ctx.fillText('🧮',gx,H-156);
+function pick(a){return a[rnd(0,a.length-1)];}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=rnd(0,i);const t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+/* ================= 數學出題 ================= */
+function polyStr(terms){
+  let s='',first=true;
+  for(const [c,v] of terms){
+    if(c===0)continue;
+    const ac=Math.abs(c),cs=(ac===1&&v!=='')?'':String(ac),part=cs+v;
+    if(first){s=(c<0?'−':'')+part;first=false;}
+    else s+=(c<0?' − ':' + ')+part;
   }
-  // foe bike
-  drawBike(foeX-px*0.35+60,H-70,'#3b82f6');
-  // player bike
-  drawBike(150,H-70,'#e94560');
-  // finish
-  var fx=FINISH-px*0.35+150;
-  if(fx<W+40){ctx.fillStyle='#fff';for(var f=0;f<6;f++)for(var ff=0;ff<4;ff++){if((f+ff)%2===0)ctx.fillRect(fx+f*8,H-160+ff*14,8,14);}
-    ctx.fillStyle='#000';ctx.font='bold 14px "Courier New",monospace';ctx.fillText('FINISH',fx+24,H-175);}
-  // boost flame
-  if(boostT>0){ctx.fillStyle='#f59e0b';ctx.fillRect(120,H-78,24,10);
-    ctx.fillStyle='#e94560';ctx.fillRect(112,H-76,10,6);}
+  return s||'0';
 }
-function drawBike(x,y,color){
-  ctx.fillStyle='#222';ctx.fillRect(x-20,y,12,12);ctx.fillRect(x+10,y,12,12);
-  ctx.fillStyle=color;ctx.fillRect(x-14,y-18,30,10);
-  ctx.fillStyle='#222';ctx.fillRect(x-2,y-30,10,12);
-  ctx.fillStyle='#ffd23f';ctx.fillRect(x-1,y-28,5,5);
+/* 數字選項：答案 + 2 個干擾項（常見計算錯誤），去重後隨機排序 */
+function numOpts(ans,cands){
+  const opts=[ans];
+  for(const v of cands){
+    if(opts.length>=3)break;
+    if(Number.isInteger(v)&&opts.indexOf(v)<0)opts.push(v);
+  }
+  let d=1;
+  while(opts.length<3&&d<60){
+    for(const v of [ans+d,ans-d]){if(opts.indexOf(v)<0){opts.push(v);break;}}
+    d++;
+  }
+  const idx=shuffle([0,1,2]);
+  return {text:'',opts:idx.map(i=>String(opts[i])),correct:idx.indexOf(0)};
 }
-function askGate(){
-  curQ=mkQ();
-  document.getElementById('qText').textContent=curQ.txt;
-  var box=document.getElementById('ansBtns');box.innerHTML='';
-  var opts=new Set([curQ.ans]);
-  while(opts.size<3){var d=curQ.ans+rnd(-9,9);if(d!==curQ.ans&&d>0)opts.add(d);}
-  Array.from(opts).sort(()=>Math.random()-0.5).forEach(function(v){
-    var b=document.createElement('button');b.textContent=v;
-    b.onclick=function(){answerGate(v);};box.appendChild(b);
+/* 初階：一元一次方程 */
+function qLinear(){
+  const t=rnd(0,3);let text,ans,ds;
+  if(t===0){const a=rnd(3,18),x=rnd(2,15),b=a+x;
+    text='x + '+a+' = '+b;ans=x;ds=[x+2,x-2,a-b];}
+  else if(t===1){const a=rnd(2,6),x=rnd(2,9),b=rnd(1,12),c=a*x+b;
+    text=polyStr([[a,'x'],[b,'']])+' = '+c;ans=x;
+    ds=[c-b,(c+b)/a,x+1,x-1,x+2];}
+  else if(t===2){const a=rnd(4,8),c0=rnd(1,a-2),x=rnd(2,9),b=rnd(1,10),d=(a-c0)*x+b;
+    text=polyStr([[a,'x'],[b,'']])+' = '+polyStr([[c0,'x'],[d,'']]);ans=x;
+    ds=[(d-b)/(a+c0),(d+b)/(a-c0),x+1,x-1];}
+  else{const a=rnd(2,5),b=rnd(1,9),x=rnd(2,8),c=a*(x+b);
+    text=a+'('+polyStr([[1,'x'],[b,'']])+') = '+c;ans=x;
+    ds=[c/a+b,c-a-b,x+1,x-1];}
+  const q=numOpts(ans,ds);q.text=text;return q;
+}
+/* 中階：二次方程求根（十字相乘可解，整數根） */
+function qQuadratic(){
+  let r1=rnd(-6,6),r2=rnd(-6,6);
+  if(r1===0)r1=2; if(r2===0)r2=-3;
+  if(r1===r2)r2=r1>0?r1-3:r1+3;
+  const lo=Math.min(r1,r2),hi=Math.max(r1,r2);
+  const a=pick([1,1,2]);
+  const B=-a*(r1+r2),C=a*r1*r2;
+  const text=polyStr([[a,'x²'],[B,'x'],[C,'']])+' = 0';
+  const ans='x = '+lo+' 或 x = '+hi;
+  const cands=[
+    'x = '+(-hi)+' 或 x = '+(-lo),
+    'x = '+(-hi)+' 或 x = '+lo,
+    'x = '+lo+' 或 x = '+(-hi),
+    'x = '+Math.min(lo+hi,lo*hi)+' 或 x = '+Math.max(lo+hi,lo*hi)
+  ];
+  const opts=[ans];
+  for(const s of cands){if(opts.length>=3)break;if(opts.indexOf(s)<0)opts.push(s);}
+  let f=1;
+  while(opts.length<3){const s='x = '+(lo+f)+' 或 x = '+(hi+f);if(opts.indexOf(s)<0)opts.push(s);f++;}
+  const idx=shuffle([0,1,2]);
+  return {text:text,opts:idx.map(i=>opts[i]),correct:idx.indexOf(0)};
+}
+/* 高階：函數求值 */
+function qFunc(){
+  const t=rnd(0,2);let text,ans,ds;
+  if(t===0){const a=pick([1,2]),b=rnd(-5,5),c=rnd(-8,8),k=pick([2,3,-2]);
+    text='f(x) = '+polyStr([[a,'x²'],[b,'x'],[c,'']])+'，求 f('+k+')';
+    ans=a*k*k+b*k+c;
+    ds=[a*2*k+b*k+c,a*k*k-b*k+c,ans+2,ans-2];}
+  else if(t===1){const k=pick([3,4,5,6]),d=pick([1,2]),b=k-d;
+    let a=0,q=0,tries=0;
+    while(a<1&&tries<40){q=rnd(2,7);a=q*d-k;tries++;}
+    text='g(x) = (x + '+a+')/(x − '+b+')，求 g('+k+')';
+    ans=q;
+    ds=[(k+a)/(k+b),(k-a)/(k-b),q+1,q-1,q+2];}
+  else{const a=rnd(1,3),b=rnd(-4,4),c=rnd(1,3),d=rnd(-4,4),k=pick([2,3]);
+    const inner=c*k+d;
+    text='f(x) = '+polyStr([[a,'x'],[b,'']])+'，g(x) = '+polyStr([[c,'x'],[d,'']])+'，求 f(g('+k+'))';
+    ans=a*inner+b;
+    ds=[c*(a*k+b)+d,a*inner-b,ans+2,ans-2];}
+  const q=numOpts(ans,ds);q.text=text;return q;
+}
+
+const LEVELS={
+  easy:{concept:'💡 數學概念：一元一次方程 — 移項要變號（+ 變 −、× 變 ÷），先乘除後加減，最後代入驗算。',gen:qLinear,aiSkill:[0.62,0.55]},
+  mid:{concept:'💡 數學概念：先用十字相乘因式分解，再令每個因式等於 0 求根；小心根的正負號。',gen:qQuadratic,aiSkill:[0.70,0.62]},
+  hard:{concept:'💡 數學概念：函數求值即把 x 換成指定數字逐項計算；複合函數 f(g(k)) 由內而外逐層代入。',gen:qFunc,aiSkill:[0.75,0.68]}
+};
+
+/* ================= 遊戲狀態 ================= */
+const G={state:'menu',level:'easy',dist:0,speed:0,boostT:0,slowT:0,
+  score:0,correct:0,wrong:0,gates:[],active:null,ai:[],parts:[],elapsed:0,qToken:0};
+const AI_DEFS=[
+  {name:'疾風',col:'#ff5d8f',base:20.6},
+  {name:'雷霆',col:'#ffd23f',base:21.8}
+];
+
+function reset(level){
+  G.level=level;G.state='race';
+  G.dist=0;G.speed=14;G.boostT=0;G.slowT=0;
+  G.score=0;G.correct=0;G.wrong=0;G.active=null;G.parts=[];G.elapsed=0;G.qToken++;
+  G.gates=[];
+  for(let i=0;i<9;i++){
+    G.gates.push({n:i+1,dist:150*(i+1),q:LEVELS[level].gen(),done:false,state:''});
+  }
+  const sk=LEVELS[level].aiSkill;
+  G.ai=AI_DEFS.map((a,i)=>({name:a.name,col:a.col,lane:i,dist:0,
+    speed:11+i,base:a.base,skill:sk[i],boostT:0,slowT:0}));
+  hideQ();
+  $('msg').textContent='';$('msg').style.color='#34f5a3';
+  $('menu').classList.add('hidden');$('finish').classList.add('hidden');
+  updateHUD();
+}
+
+/* ================= 題目卡 ================= */
+function showQ(g){
+  $('qnum').textContent='第 '+g.n+' / 9 閘';
+  $('qq').textContent=g.q.text;
+  $('concept').textContent=LEVELS[G.level].concept;
+  const box=$('abtns');box.innerHTML='';
+  g.q.opts.forEach((op,i)=>{
+    const b=document.createElement('button');
+    b.type='button';b.textContent=op;
+    b.addEventListener('click',()=>answer(i,b));
+    box.appendChild(b);
   });
-  document.getElementById('gateQ').style.display='block';
+  $('qcard').classList.remove('hidden');
 }
-function answerGate(v){
-  document.getElementById('gateQ').style.display='none';
-  if(v===curQ.ans){
-    boostT=3;speed=Math.min(150,speed+40);
-    document.getElementById('msg').textContent='🚀 答啱！Turbo 加速！';
+function hideQ(){$('qcard').classList.add('hidden');}
+function answer(i,btn){
+  const g=G.active;if(!g||g.done)return;
+  g.done=true;G.active=null;
+  const ok=(i===g.q.correct);
+  const btns=$('abtns').children;
+  for(let k=0;k<btns.length;k++){
+    btns[k].disabled=true;
+    if(k===g.q.correct)btns[k].classList.add('ok');
+  }
+  if(!ok&&btn)btn.classList.add('no');
+  const tk=++G.qToken;
+  if(ok){
+    G.correct++;G.score+=100;G.boostT=3;g.state='ok';
+    $('msg').textContent='⚡ 答啱！Turbo 加速！+100 分';$('msg').style.color='#34f5a3';
   }else{
-    speed=Math.max(35,speed-25);
-    document.getElementById('msg').textContent='🐢 答錯（答案 '+curQ.ans+'），減速…';
+    G.wrong++;G.score=Math.max(0,G.score-20);G.slowT=3;g.state='bad';
+    $('msg').textContent='💥 答錯咗…減速 3 秒（−20 分）';$('msg').style.color='#ff8fa3';
   }
-  curQ=null;
+  updateHUD();
+  setTimeout(()=>{if(tk===G.qToken&&G.state==='race')hideQ();},800);
 }
-function endRace(win){
-  running=false;
-  document.getElementById('overTitle').textContent=win?'🏆 你贏咗！':'🤖 AI 贏咗…';
-  var best=0;try{best=parseInt(localStorage.getItem('bikeBest')||'0');}catch(e){}
-  var sc=Math.round(px);
-  var nb='';
-  if(win&&sc>best){try{localStorage.setItem('bikeBest',sc);}catch(e){}nb=' 🏅新紀錄！';}
-  document.getElementById('overText').innerHTML=(win?'你跑贏 AI 車手！':'下次答快啲答啱啲！')+nb+'<br>距離：'+sc+'m';
-  document.getElementById('over').style.display='flex';
+function missGate(g){
+  g.done=true;g.state='bad';G.active=null;
+  G.wrong++;G.score=Math.max(0,G.score-20);G.slowT=3;
+  $('msg').textContent='⏰ 嚟唔切回答，減速 3 秒（−20 分）';$('msg').style.color='#ff8fa3';
+  hideQ();updateHUD();
 }
-function loop(){
-  if(running){
-    if(boostT>0){boostT-=0.03;}else{speed+=(60-speed)*0.02;}
-    px+=speed*0.03;foeX+=72*0.03;trackOff+=speed*0.03;
-    document.getElementById('dist').textContent=Math.min(FINISH,Math.round(px));
-    document.getElementById('spd').textContent=Math.round(speed);
-    document.getElementById('foe').textContent=Math.round(foeX);
-    if(px>=nextGate-120&&!curQ){askGate();}
-    if(px>=nextGate){nextGate+=rnd(220,340);}
-    gates=gates.filter(g=>g.x>px-200);
-    if(gates.length===0||gates[gates.length-1].x!==nextGate)gates.push({x:nextGate});
-    if(px>=FINISH){endRace(true);return;}
-    if(foeX>=FINISH){endRace(false);return;}
-    draw();
+
+/* ================= 主循環邏輯 ================= */
+function spawnExhaust(){
+  for(let i=0;i<3;i++){
+    G.parts.push({x:184+Math.random()*10,y:394+Math.random()*8-4,
+      vx:-120-Math.random()*140,vy:(Math.random()-0.5)*90,
+      life:0.4+Math.random()*0.4,r:2+Math.random()*3.5,
+      col:pick(['#ffd166','#ff9f1c','#22d3ee','#ffffff'])});
   }
+}
+function update(dt){
+  G.elapsed+=dt;
+  if(G.boostT>0)G.boostT-=dt;
+  if(G.slowT>0)G.slowT-=dt;
+  const tgt=G.boostT>0?36:(G.slowT>0?13:22);
+  G.speed+=(tgt-G.speed)*Math.min(1,dt*2.5);
+  G.dist+=G.speed*dt;
+  if(G.boostT>0)spawnExhaust();
+  for(const a of G.ai){
+    if(a.boostT>0)a.boostT-=dt;
+    if(a.slowT>0)a.slowT-=dt;
+    const rubber=Math.max(-3,Math.min(5,(G.dist-a.dist)*0.03));
+    const at=a.base+rubber+(a.boostT>0?11:(a.slowT>0?-7:0));
+    a.speed+=(at-a.speed)*Math.min(1,dt*2);
+    a.dist+=a.speed*dt;
+    for(const g of G.gates){
+      const key='a'+a.lane;
+      if(!g[key]&&a.dist>=g.dist){
+        g[key]=true;
+        if(Math.random()<a.skill)a.boostT=2.5;else a.slowT=2;
+      }
+    }
+  }
+  if(!G.active){
+    const g=G.gates.find(x=>!x.done);
+    if(g&&G.dist>=g.dist-150){G.active=g;showQ(g);}
+  }else if(G.dist>G.active.dist+15){
+    missGate(G.active);
+  }
+  for(const p of G.parts){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=60*dt;p.life-=dt;}
+  G.parts=G.parts.filter(p=>p.life>0);
+  if(G.parts.length>240)G.parts.splice(0,G.parts.length-240);
+  if(G.dist>=FINISH)finishRace();
+  updateHUD();
+}
+function updateHUD(){
+  $('mP').style.left=Math.min(100,G.dist/FINISH*100)+'%';
+  if(G.ai[0])$('mA1').style.left=Math.min(100,G.ai[0].dist/FINISH*100)+'%';
+  if(G.ai[1])$('mA2').style.left=Math.min(100,G.ai[1].dist/FINISH*100)+'%';
+  $('hdist').textContent=Math.floor(Math.min(G.dist,FINISH))+' m';
+  $('hspd').textContent=Math.round(G.speed);
+  let r=1;
+  for(const a of G.ai)if(a.dist>G.dist)r++;
+  $('hrank').textContent=r;
+  $('hscore').textContent=G.score;
+}
+function finishRace(){
+  G.state='finish';G.qToken++;hideQ();G.active=null;
+  const order=[{n:'你',d:G.dist}]
+    .concat(G.ai.map(a=>({n:a.name,d:a.dist})))
+    .sort((a,b)=>b.d-a.d);
+  const rank=order.findIndex(o=>o.n==='你')+1;
+  const rankBonus=[600,350,200][rank-1]||200;
+  const timeBonus=Math.max(0,Math.round(400-G.elapsed*4));
+  const total=G.score+rankBonus+timeBonus;
+  let best=0;
+  try{best=parseInt(localStorage.getItem('math_bike_best')||'0',10)||0;}catch(e){}
+  const isNew=total>best;
+  if(isNew){best=total;try{localStorage.setItem('math_bike_best',String(total));}catch(e){}}
+  $('bestHead').textContent=best;
+  $('fRank').textContent=['🥇','🥈','🥉'][rank-1]+' 第 '+rank+' 名';
+  const mm=Math.floor(G.elapsed/60),ss=String(Math.floor(G.elapsed%60)).padStart(2,'0');
+  $('fStats').innerHTML='答對 <b>'+G.correct+'</b> / 9 題　用時 <b>'+mm+'分'+ss+'秒</b><br>名次獎勵 +'+rankBonus+'　時間獎勵 +'+timeBonus;
+  $('fScore').textContent=total+' 分';
+  $('fBest').textContent=(isNew?'🎉 新紀錄！':'🏆 最高分：')+best+' 分';
+  $('finish').classList.remove('hidden');
+  updateHUD();
+}
+
+/* ================= 霓虹城市渲染 ================= */
+const cv=$('cv'),ctx=cv.getContext('2d');
+const SPAN=2600;
+let stars=[],farB=null,nearB=null;
+function buildCity(){
+  stars=[];
+  for(let i=0;i<90;i++)stars.push({x:Math.random()*W,y:Math.random()*250,r:0.4+Math.random()*1.4,p:Math.random()*6});
+  farB=mkRow(0.16,'#141b3d',80,150,false);
+  nearB=mkRow(0.38,'#1e2653',130,225,true);
+}
+function mkRow(par,col,h0,h1,win){
+  const arr=[];let x=0;
+  while(x<SPAN){
+    const w=50+Math.random()*90,h=h0+Math.random()*(h1-h0);
+    const b={x:x,w:w,h:h,win:[]};
+    if(win){
+      for(let wy=12;wy<h-14;wy+=18)for(let wx=8;wx<w-10;wx+=16){
+        if(Math.random()<0.5)b.win.push({x:wx,y:wy,c:pick(['#ffe08a','#9be8ff','#ffc7e8','#fff6c9'])});
+      }
+    }
+    arr.push(b);x+=w+10+Math.random()*40;
+  }
+  return {par:par,col:col,arr:arr};
+}
+function drawRow(row,cam){
+  const off=(cam*row.par)%SPAN;
+  for(const dx of [-off,-off+SPAN]){
+    for(const b of row.arr){
+      const x=dx+b.x;
+      if(x+b.w<-20||x>W+20)continue;
+      ctx.fillStyle=row.col;ctx.fillRect(x,ROAD-b.h,b.w,b.h);
+      ctx.fillStyle='rgba(140,180,255,.14)';ctx.fillRect(x,ROAD-b.h,b.w,3);
+      ctx.globalAlpha=0.75;
+      for(const wn of b.win){ctx.fillStyle=wn.c;ctx.fillRect(x+wn.x,ROAD-b.h+wn.y,9,11);}
+      ctx.globalAlpha=1;
+    }
+  }
+}
+function neonLine(x1,y1,x2,y2,col){
+  ctx.save();ctx.strokeStyle=col;ctx.shadowColor=col;ctx.shadowBlur=10;ctx.lineWidth=3;
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore();
+}
+function bikeWheel(c,x,y,r,col){
+  c.fillStyle='#07070f';c.beginPath();c.arc(x,y,r,0,7);c.fill();
+  c.strokeStyle=col;c.lineWidth=3;c.beginPath();c.arc(x,y,r-4,0,7);c.stroke();
+  c.strokeStyle='rgba(255,255,255,.5)';c.lineWidth=1.5;
+  c.beginPath();c.moveTo(x-(r-4),y);c.lineTo(x+(r-4),y);c.stroke();
+  c.fillStyle=col;c.beginPath();c.arc(x,y,2.4,0,7);c.fill();
+}
+/* 流線型電單車插畫（向量繪製，非像素風） */
+function drawBike(c,x,y,s,col,turbo){
+  c.save();c.translate(x,y);c.scale(s,s);
+  c.fillStyle='rgba(0,0,0,.45)';c.beginPath();c.ellipse(0,26,46,9,0,0,7);c.fill();
+  if(turbo){
+    const f=16+Math.random()*16;
+    const fg=c.createLinearGradient(-44,0,-44-f,0);
+    fg.addColorStop(0,'rgba(255,255,255,.95)');
+    fg.addColorStop(0.4,'rgba(255,190,60,.9)');
+    fg.addColorStop(1,'rgba(255,90,0,0)');
+    c.fillStyle=fg;c.beginPath();
+    c.moveTo(-44,-7);c.lineTo(-44-f,0);c.lineTo(-44,7);c.closePath();c.fill();
+  }
+  bikeWheel(c,-30,10,13,col);
+  bikeWheel(c,32,10,13,col);
+  const bg=c.createLinearGradient(0,-26,0,12);
+  bg.addColorStop(0,col);bg.addColorStop(1,'#0d0d22');
+  c.fillStyle=bg;
+  c.beginPath();
+  c.moveTo(-40,4);
+  c.quadraticCurveTo(-32,-12,-10,-17);
+  c.quadraticCurveTo(12,-22,30,-9);
+  c.lineTo(41,1);
+  c.quadraticCurveTo(18,10,-12,10);
+  c.closePath();c.fill();
+  c.strokeStyle='rgba(255,255,255,.85)';c.lineWidth=1.6;c.stroke();
+  c.save();c.shadowColor='#fff7c2';c.shadowBlur=12;c.fillStyle='#fff7c2';
+  c.beginPath();c.arc(40,-2,4,0,7);c.fill();c.restore();
+  c.lineCap='round';
+  c.strokeStyle='#dfe6ff';c.lineWidth=9;
+  c.beginPath();c.moveTo(-8,-18);c.quadraticCurveTo(2,-34,14,-30);c.stroke();
+  c.lineWidth=6;
+  c.beginPath();c.moveTo(10,-31);c.lineTo(29,-13);c.stroke();
+  c.beginPath();c.moveTo(-6,-16);c.lineTo(-24,-1);c.stroke();
+  c.save();c.shadowColor=col;c.shadowBlur=14;c.fillStyle=col;
+  c.beginPath();c.arc(-1,-40,9,0,7);c.fill();c.restore();
+  c.fillStyle='rgba(10,10,25,.85)';c.fillRect(0,-43,8,6);
+  c.restore();
+}
+function drawGate(c,gx,g){
+  const col=g.state==='ok'?'#34f5a3':(g.state==='bad'?'#ff4d6d':'#22d3ee');
+  c.save();
+  c.strokeStyle=col;c.shadowColor=col;c.shadowBlur=20;c.lineWidth=7;c.lineCap='round';
+  c.beginPath();c.moveTo(gx-115,H);c.lineTo(gx-115,ROAD+28);c.stroke();
+  c.beginPath();c.moveTo(gx+115,H);c.lineTo(gx+115,ROAD+28);c.stroke();
+  c.beginPath();c.arc(gx,ROAD+28,115,Math.PI,0);c.stroke();
+  c.shadowBlur=0;c.strokeStyle='rgba(255,255,255,.9)';c.lineWidth=2;
+  c.beginPath();c.arc(gx,ROAD+28,115,Math.PI,0);c.stroke();
+  c.restore();
+  c.fillStyle=col;c.font='700 19px '+FONT;c.textAlign='center';
+  c.fillText('第 '+g.n+' 閘',gx,ROAD-8);
+  if(!g.done){c.fillStyle='#ffffff';c.font='700 26px '+FONT;c.fillText('？',gx,ROAD+72);}
+}
+function drawFinish(c,fx){
+  if(fx<-60||fx>W+60)return;
+  c.save();c.shadowColor='#ffffff';c.shadowBlur=14;
+  for(let r=0;r<6;r++)for(let q=0;q<2;q++){
+    c.fillStyle=(r+q)%2?'#111111':'#ffffff';
+    c.fillRect(fx-14+q*14,ROAD+30+r*20,14,20);
+  }
+  c.restore();
+  c.fillStyle='#ffffff';c.font='700 20px '+FONT;c.textAlign='center';
+  c.fillText('🏁 終點',fx,ROAD-8);
+}
+function drawPlayer(c,t){
+  drawBike(c,230,395+Math.sin(t*9)*2.5,1,'#22d3ee',G.boostT>0);
+}
+function drawRider(c,a,t){
+  const sx=230+(a.dist-G.dist)*PXM;
+  const L=a.lane===0?{y:342,s:0.85}:{y:430,s:0.92};
+  if(sx<-80||sx>W+80){
+    const ex=sx<-80?14:W-14,dir=sx<-80?'◀':'▶';
+    c.fillStyle=a.col;c.font='700 22px '+FONT;c.textAlign='center';
+    c.fillText(dir,ex,L.y);
+    c.font='700 14px '+FONT;c.fillText(a.name,ex,L.y+22);
+    return;
+  }
+  drawBike(c,sx,L.y+Math.sin(t*8+a.lane*2.3)*2,L.s,a.col,a.boostT>0);
+}
+function render(t){
+  const c=ctx;
+  const sky=c.createLinearGradient(0,0,0,ROAD);
+  sky.addColorStop(0,'#03051a');sky.addColorStop(0.55,'#0a1238');sky.addColorStop(1,'#1b1440');
+  c.fillStyle=sky;c.fillRect(0,0,W,ROAD);
+  for(const s of stars){
+    c.globalAlpha=0.4+0.6*Math.abs(Math.sin(t*1.5+s.p));
+    c.fillStyle='#cfe6ff';c.beginPath();c.arc(s.x,s.y,s.r,0,7);c.fill();
+  }
+  c.globalAlpha=1;
+  c.save();c.shadowColor='#fdf6d8';c.shadowBlur=40;c.fillStyle='#fdf6d8';
+  c.beginPath();c.arc(672,74,30,0,7);c.fill();c.restore();
+  c.fillStyle='rgba(200,190,160,.35)';
+  c.beginPath();c.arc(662,66,7,0,7);c.fill();
+  c.beginPath();c.arc(680,84,5,0,7);c.fill();
+  const cam=G.dist-230/PXM;
+  drawRow(farB,cam);drawRow(nearB,cam);
+  const rd=c.createLinearGradient(0,ROAD,0,H);
+  rd.addColorStop(0,'#181a30');rd.addColorStop(1,'#0c0d1d');
+  c.fillStyle=rd;c.fillRect(0,ROAD,W,H-ROAD);
+  neonLine(0,ROAD+2,W,ROAD+2,'#22d3ee');
+  neonLine(0,H-3,W,H-3,'#e879f9');
+  c.save();c.lineCap='round';
+  for(const ly of [366,414]){
+    for(let i=0;i<12;i++){
+      const x=(((i*97-G.dist*PXM*2.2)%(W+240))+(W+240))%(W+240)-120;
+      c.strokeStyle=i%2?'rgba(34,211,238,.55)':'rgba(232,121,249,.55)';
+      c.lineWidth=4;c.beginPath();c.moveTo(x,ly);c.lineTo(x+44,ly);c.stroke();
+    }
+  }
+  c.restore();
+  for(const g of G.gates){
+    const gx=230+(g.dist-G.dist)*PXM;
+    if(gx>-160&&gx<W+160)drawGate(c,gx,g);
+  }
+  drawFinish(c,230+(FINISH-G.dist)*PXM);
+  for(const a of G.ai)drawRider(c,a,t);
+  drawPlayer(c,t);
+  for(const p of G.parts){
+    c.globalAlpha=Math.max(0,Math.min(1,p.life*2));
+    c.fillStyle=p.col;c.beginPath();c.arc(p.x,p.y,p.r,0,7);c.fill();
+  }
+  c.globalAlpha=1;
+  if(G.boostT>0&&G.state==='race'){
+    c.save();c.strokeStyle='rgba(255,255,255,.4)';c.lineWidth=2;
+    for(let i=0;i<16;i++){
+      const y=Math.random()*H,len=70+Math.random()*130,x=Math.random()*W;
+      c.globalAlpha=0.25;c.beginPath();c.moveTo(x,y);c.lineTo(x+len,y);c.stroke();
+    }
+    c.restore();c.globalAlpha=1;
+  }
+}
+
+/* ================= 啟動 ================= */
+let lastT=0;
+function loop(ts){
+  requestAnimationFrame(loop);
+  const t=ts/1000;
+  let dt=t-lastT;lastT=t;
+  if(!(dt>0&&dt<0.1))dt=0.016;
+  if(G.state==='race')update(dt);
+  render(t);
+}
+function init(){
+  buildCity();
+  let best=0;
+  try{best=parseInt(localStorage.getItem('math_bike_best')||'0',10)||0;}catch(e){}
+  $('bestHead').textContent=best;
+  $('bestMenu').textContent=best;
+  const diffs=document.querySelectorAll('.diff');
+  for(const b of diffs)b.addEventListener('click',()=>reset(b.dataset.lv));
+  $('againBtn').addEventListener('click',()=>reset(G.level));
+  $('menuBtn').addEventListener('click',()=>{
+    G.state='menu';G.qToken++;
+    $('finish').classList.add('hidden');
+    $('menu').classList.remove('hidden');
+  });
+  document.addEventListener('keydown',e=>{
+    if(G.state!=='race'||!G.active)return;
+    const k=parseInt(e.key,10);
+    if(k>=1&&k<=3){
+      const b=$('abtns').children[k-1];
+      if(b)answer(k-1,b);
+    }
+  });
   requestAnimationFrame(loop);
 }
-window.startGame=function(){
-  document.getElementById('intro').style.display='none';
-  document.getElementById('over').style.display='none';
-  reset();running=true;
-};
-reset();draw();loop();
-})();
+init();
 </script>
 </body>
 </html>

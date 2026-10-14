@@ -1,166 +1,236 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>數學登山者</title>
 <style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;font-family:"Courier New",Courier,"Microsoft JhengHei",monospace;background:#0b1026;color:#e8f4ff;min-height:100vh;touch-action:manipulation}
-.scan{position:fixed;inset:0;pointer-events:none;z-index:60;background:repeating-linear-gradient(0deg,rgba(0,0,0,.10) 0 2px,transparent 2px 4px)}
-header{background:#101a3a;border-bottom:4px solid #3b5bff;padding:12px;text-align:center}
-header h1{margin:0;font-size:22px;letter-spacing:2px;color:#ffe14d;text-shadow:2px 2px 0 #b3541e}
-.hud{display:flex;justify-content:space-around;background:#101a3a;padding:10px;font-size:15px;font-weight:700;border-bottom:4px solid #3b5bff}
-.hud b{color:#ffe14d}
-.back{display:block;text-align:center;background:#1c2a5e;color:#9fd0ff;text-decoration:none;padding:12px;font-size:15px;font-weight:700}
-.wrap{max-width:480px;margin:0 auto;padding:12px 12px 40px}
-#cv{width:100%;height:auto;display:block;background:#0b1026;border:4px solid #3b5bff;image-rendering:pixelated}
-.qbox{background:#101a3a;border:4px solid #3b5bff;border-radius:0;padding:12px;margin:12px 0;text-align:center}
-.qbox .q{font-size:26px;font-weight:800;color:#ffe14d;letter-spacing:1px}
-.qbox .lv{font-size:14px;color:#9fd0ff}
-.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.opt{min-height:60px;font-size:22px;font-weight:800;font-family:inherit;background:#1c2a5e;color:#fff;border:4px solid #3b5bff;border-radius:0;cursor:pointer}
-.opt:active{background:#3b5bff;transform:scale(.97)}
-#msg{min-height:30px;text-align:center;font-size:16px;font-weight:700;margin-top:8px;color:#7CFC98}
-.overlay{position:fixed;inset:0;background:rgba(5,8,20,.95);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
-.card{background:#101a3a;border:4px solid #3b5bff;padding:26px 22px;max-width:480px;width:100%;max-height:92vh;overflow-y:auto}
-.card h2{margin:0 0 10px;color:#ffe14d;font-size:22px;letter-spacing:2px}
-.card p,.card li{font-size:15px;line-height:1.7}
-.card ul{padding-left:20px}
-.concept{background:#0b1026;border:2px solid #3b5bff;padding:12px;margin:12px 0;font-size:14px}
-.concept b{color:#7CFC98}
-.card button{width:100%;min-height:58px;font-size:18px;font-weight:800;font-family:inherit;background:#e33;color:#fff;border:4px solid #fff;margin-top:10px;cursor:pointer;letter-spacing:2px}
-.blink{animation:bl 1s steps(2) infinite}
-@keyframes bl{50%{opacity:.2}}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--glass:rgba(255,255,255,.14);--glass-brd:rgba(255,255,255,.28)}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang HK","Microsoft JhengHei","Noto Sans HK",sans-serif;background:linear-gradient(180deg,#070b24 0%,#141b4d 40%,#2b3a8f 70%,#5b6fd6 100%);color:#fff;min-height:100vh;overflow-x:hidden;user-select:none;-webkit-user-select:none}
+.aurora{position:fixed;top:-10%;left:0;width:100%;height:55%;pointer-events:none;z-index:0;overflow:hidden}
+.aurora span{position:absolute;border-radius:50%;filter:blur(70px);opacity:.45;animation:drift 14s ease-in-out infinite alternate}
+.aurora span:nth-child(1){width:60vw;height:26vh;left:5%;top:5%;background:linear-gradient(120deg,#22d3ee,#818cf8)}
+.aurora span:nth-child(2){width:50vw;height:22vh;right:8%;top:12%;background:linear-gradient(120deg,#a78bfa,#f472b6);animation-delay:-6s}
+@keyframes drift{from{transform:translateX(-6%) rotate(-4deg)}to{transform:translateX(6%) rotate(5deg)}}
+#snow{position:fixed;inset:0;pointer-events:none;z-index:1}
+.flake{position:absolute;top:-12px;background:#fff;border-radius:50%;opacity:.85;animation:fall linear infinite}
+@keyframes fall{to{transform:translateY(110vh)}}
+.wrap{position:relative;z-index:2;max-width:640px;margin:0 auto;padding:12px 14px 30px}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:6px 2px 12px}
+.back{display:inline-flex;align-items:center;gap:6px;color:#fff;text-decoration:none;font-size:15px;font-weight:600;background:var(--glass);border:1px solid var(--glass-brd);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:10px 16px;border-radius:999px;min-height:44px}
+.best{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;background:var(--glass);border:1px solid var(--glass-brd);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:10px 16px;border-radius:999px;min-height:44px}
+.hud{display:flex;gap:10px;margin-bottom:12px}
+.hud .pill{flex:1;text-align:center;background:var(--glass);border:1px solid var(--glass-brd);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:16px;padding:10px 6px;font-size:14px;font-weight:700}
+.hud .pill small{display:block;font-size:11px;font-weight:500;opacity:.75}
+.scene{position:relative;height:300px;border-radius:24px;overflow:hidden;background:linear-gradient(180deg,rgba(10,14,40,.35),rgba(10,14,40,0) 40%);border:1px solid var(--glass-brd);box-shadow:0 18px 40px rgba(0,0,0,.35);margin-bottom:14px}
+.scene svg{position:absolute;inset:0;width:100%;height:100%}
+.camp{position:absolute;width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.35);border:2px solid rgba(255,255,255,.7);transform:translate(-50%,-50%);transition:all .4s}
+.camp.done{background:#fbbf24;border-color:#fde68a;box-shadow:0 0 12px #fbbf24}
+.camp.now{box-shadow:0 0 0 6px rgba(251,191,36,.35)}
+#climber{position:absolute;font-size:34px;transform:translate(-50%,-70%);transition:left .9s cubic-bezier(.34,1.4,.64,1),top .9s cubic-bezier(.34,1.4,.64,1);z-index:3;filter:drop-shadow(0 4px 6px rgba(0,0,0,.4))}
+.flag{position:absolute;font-size:30px;transform:translate(-50%,-90%)}
+.qcard{background:var(--glass);border:1px solid var(--glass-brd);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:24px;padding:20px 16px;box-shadow:0 18px 40px rgba(0,0,0,.35)}
+.qcard .lvl{font-size:13px;font-weight:700;color:#fde68a;letter-spacing:1px;margin-bottom:8px}
+.qcard .q{font-size:30px;font-weight:800;text-align:center;margin:6px 0 4px;letter-spacing:1px}
+.timerbar{height:8px;background:rgba(255,255,255,.18);border-radius:99px;overflow:hidden;margin:12px 0 16px}
+.timerbar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#34d399,#a7f3d0);border-radius:99px;transition:width 1s linear}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opt{min-height:64px;font-size:22px;font-weight:800;color:#0b1026;background:linear-gradient(180deg,#ffffff,#dbe4ff);border:none;border-radius:18px;box-shadow:0 8px 20px rgba(0,0,0,.25);cursor:pointer;transition:transform .12s;font-family:inherit}
+.opt:active{transform:scale(.95)}
+.opt.right{background:linear-gradient(180deg,#6ee7b7,#34d399);color:#064e3b}
+.opt.wrong{background:linear-gradient(180deg,#fca5a5,#ef4444);color:#fff}
+.screen{display:none}
+.screen.show{display:block;animation:fadeUp .45s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.hero{text-align:center;padding:26px 10px 18px}
+.hero .emoji{font-size:64px;filter:drop-shadow(0 8px 16px rgba(0,0,0,.4))}
+.hero h1{font-size:34px;font-weight:900;margin:10px 0 6px;text-shadow:0 4px 18px rgba(0,0,0,.4)}
+.hero p{font-size:15px;opacity:.85;line-height:1.7}
+.diffcards{display:grid;gap:12px;margin:18px 0}
+.diff{background:var(--glass);border:1px solid var(--glass-brd);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:20px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;min-height:76px;transition:transform .12s;box-shadow:0 10px 26px rgba(0,0,0,.25);text-align:left;width:100%;color:#fff;font-family:inherit}
+.diff:active{transform:scale(.97)}
+.diff .dicon{font-size:38px}
+.diff b{font-size:19px;display:block}
+.diff span{font-size:13px;opacity:.8}
+.concept{background:rgba(253,230,138,.12);border:1px solid rgba(253,230,138,.35);border-radius:18px;padding:14px 16px;font-size:14px;line-height:1.8;margin-top:6px}
+.endcard{text-align:center;background:var(--glass);border:1px solid var(--glass-brd);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:24px;padding:34px 20px;box-shadow:0 18px 40px rgba(0,0,0,.35)}
+.endcard .emoji{font-size:72px}
+.endcard h2{font-size:30px;margin:12px 0 8px}
+.endcard .score{font-size:52px;font-weight:900;color:#fde68a;text-shadow:0 4px 16px rgba(0,0,0,.4)}
+.endcard p{font-size:15px;opacity:.85;margin:8px 0 20px;line-height:1.7}
+.bigbtn{display:block;width:100%;min-height:60px;margin-top:12px;font-size:20px;font-weight:800;color:#0b1026;background:linear-gradient(180deg,#fde68a,#f59e0b);border:none;border-radius:18px;cursor:pointer;box-shadow:0 10px 24px rgba(245,158,11,.4);font-family:inherit}
+.bigbtn.ghost{background:var(--glass);color:#fff;border:1px solid var(--glass-brd);box-shadow:none}
+.feedback{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%) scale(.6);font-size:60px;font-weight:900;opacity:0;pointer-events:none;z-index:50;text-shadow:0 6px 24px rgba(0,0,0,.5)}
+.feedback.pop{animation:pop .8s ease forwards}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}60%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-60%) scale(1)}}
+@media(min-width:520px){.scene{height:340px}}
 </style>
 </head>
 <body>
-<div class="scan"></div>
-<header><h1>🧊 數學登山者</h1></header>
-<a class="back" href="games.html">← 返回遊戲列表</a>
+<div class="aurora"><span></span><span></span></div>
+<div id="snow"></div>
 <div class="wrap">
-<div class="hud"><div>❤ <b id="lives">3</b></div><div>🏔 <b id="floor">1</b>/10</div><div>⭐ <b id="score">0</b></div></div>
-<canvas id="cv" width="360" height="400"></canvas>
-<div class="qbox"><div class="lv" id="lv">第 1 層</div><div class="q" id="q">—</div></div>
-<div class="opts" id="opts"></div>
-<div id="msg"></div>
+  <div class="topbar">
+    <a class="back" href="games.html">← 返回遊戲列表</a>
+    <div class="best">🏆 <span id="bestNum">0</span></div>
+  </div>
+  <div id="menu" class="screen show">
+    <div class="hero">
+      <div class="emoji">🏔️</div>
+      <h1>數學登山者</h1>
+      <p>答啱題目一步一步登上雪山頂！答錯會跌落一級兼扣一條命。<br>3 條命，登頂成功！</p>
+    </div>
+    <div class="diffcards">
+      <button class="diff" data-d="easy"><div class="dicon">🌱</div><div><b>初階 · 中一至中二</b><span>有向數四則運算</span></div></button>
+      <button class="diff" data-d="mid"><div class="dicon">🌿</div><div><b>中階 · 中三至中四</b><span>指數律</span></div></button>
+      <button class="diff" data-d="hard"><div class="dicon">🌳</div><div><b>高階 · 中五至中六</b><span>根式與對數</span></div></button>
+    </div>
+    <div class="concept">💡 <b>數學概念</b><br>初階：有向數加減乘除，注意負負得正。<br>中階：指數律 a<sup>m</sup>×a<sup>n</sup>=a<sup>m+n</sup>、(a<sup>m</sup>)<sup>n</sup>=a<sup>mn</sup>、a<sup>0</sup>=1。<br>高階：根式化簡（如 √12=2√3）及對數定義 log<sub>a</sub>b=c ⇔ a<sup>c</sup>=b。</div>
+  </div>
+  <div id="game" class="screen">
+    <div class="hud">
+      <div class="pill">❤️ <span id="lives">3</span><small>生命</small></div>
+      <div class="pill">⭐ <span id="score">0</span><small>分數</small></div>
+      <div class="pill">🚩 <span id="lvl">1</span>/10<small>高度</small></div>
+    </div>
+    <div class="scene" id="scene">
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+        <polygon points="0,100 42,18 70,55 58,100" fill="#e8eefc" opacity=".92"/>
+        <polygon points="42,18 50,34 36,32" fill="#ffffff"/>
+        <polygon points="55,100 78,40 100,100" fill="#c9d6f5" opacity=".85"/>
+        <polygon points="0,100 20,70 34,100" fill="#dbe4fb" opacity=".8"/>
+      </svg>
+      <div class="flag" style="left:42%;top:16%">🚩</div>
+      <div id="camps"></div>
+      <div id="climber">🧗</div>
+    </div>
+    <div class="qcard">
+      <div class="lvl" id="qLvl">第 1 級</div>
+      <div class="q" id="qText">…</div>
+      <div class="timerbar"><i id="timerFill"></i></div>
+      <div class="opts" id="opts"></div>
+    </div>
+  </div>
+  <div id="end" class="screen">
+    <div class="endcard">
+      <div class="emoji" id="endEmoji">🏆</div>
+      <h2 id="endTitle">登頂成功！</h2>
+      <div class="score" id="endScore">0</div>
+      <p id="endMsg"></p>
+      <button class="bigbtn" id="againBtn">🔁 再玩一次</button>
+      <button class="bigbtn ghost" id="menuBtn">🏠 返回選單</button>
+    </div>
+  </div>
 </div>
-<div class="overlay" id="intro"><div class="card">
-<h2>🧊 數學登山者</h2>
-<p><b>玩法：</b>向上爬 10 層雪山！每層有一條算式，撳啱答案先上到去。撳錯會跌返落嚟扣一格命（3 格命）。</p>
-<div class="concept">💡 <b>數學概念：</b>整數四則運算（＋－×÷），包括負數。記住：負負得正，乘除先於加減！</div>
-<button onclick="startGame()">▶ START</button>
-<p class="blink" style="text-align:center;color:#9fd0ff">★ 8-BIT 挑戰 ★</p>
-</div></div>
-<div class="overlay" id="over" style="display:none"><div class="card">
-<h2 id="overT">🏁 完成！</h2>
-<p id="overS" style="font-size:17px"></p>
-<button onclick="resetGame()">🔁 再玩一次</button>
-</div></div>
+<div class="feedback" id="feedback"></div>
 <script>
-(function(){
 "use strict";
-var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+function ri(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;}
+var SUP={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+function sup(n){return String(n).split('').map(function(c){return SUP[c]||c;}).join('');}
+function makeOpts(ans,cands){
+  var seen={},out=[String(ans)];seen[String(ans)]=1;
+  var cs=shuffle(cands);
+  for(var i=0;i<cs.length;i++){var s=String(cs[i]);if(!seen[s]){seen[s]=1;out.push(s);if(out.length>=4)break;}}
+  var s2=shuffle(out);return {opts:s2,ans:s2.indexOf(String(ans))};
+}
+function Q(q,ans,cands){var o=makeOpts(ans,cands);return {q:q,opts:o.opts,ans:o.ans};}
+function genEasy(){
+  var t=ri(0,3),a=ri(-12,12),b=ri(-12,12);
+  if(t===0)return Q(a+' + ('+b+') = ?',a+b,[a+b+1,a+b-1,a+b+2,a+b-2,a-b]);
+  if(t===1)return Q(a+' − ('+b+') = ?',a-b,[a-b+1,a-b-1,a-b+2,a+b,a-b-3]);
+  if(t===2){if(b===0)b=3;return Q('('+a+') × ('+b+') = ?',a*b,[a*b+1,a*b-1,-(a*b),a*b+2,a*b-2]);}
+  if(b===0)b=4;var k=ri(-6,6);a=b*k;
+  return Q('('+a+') ÷ ('+b+') = ?',k,[k+1,k-1,k+2,-k,k+3]);
+}
+function genMid(){
+  var t=ri(0,5);
+  if(t===0){var m=ri(2,4),n=ri(2,4);return Q('x'+sup(m)+' × x'+sup(n)+' = ?','x'+sup(m+n),['x'+sup(m*n),'x'+sup(m+n+1),'x'+sup(Math.abs(m-n)),'x'+sup(m+n-1)]);}
+  if(t===1){var m2=ri(3,6),n2=ri(2,m2-1);return Q('x'+sup(m2)+' ÷ x'+sup(n2)+' = ?','x'+sup(m2-n2),['x'+sup(m2+n2),'x'+sup(m2-n2+1),'x'+sup(Math.floor(m2/n2)),'x'+sup(m2-n2-1)]);}
+  if(t===2){var m3=ri(2,3),n3=ri(2,3);return Q('(x'+sup(m3)+')'+sup(n3)+' = ?','x'+sup(m3*n3),['x'+sup(m3+n3),'x'+sup(m3*n3+1),'x'+sup(m3*n3-1),'x'+sup(m3+n3+2)]);}
+  if(t===3){var m4=ri(2,4),n4=ri(2,3),v=Math.pow(2,m4*n4);return Q('(2'+sup(m4)+')'+sup(n4)+' = ?',v,[v*2,v/2,Math.pow(2,m4+n4),v+2]);}
+  if(t===4){var b=ri(2,9);return Q(b+sup(0)+' = ?',1,[0,b,b+sup(1),'1/'+b]);}
+  var e=ri(1,3);
+  return Q('2'+sup(-e)+' = ?','1/'+Math.pow(2,e),['−'+e,'1/'+(e*2),'2'+sup(e),'1/'+e]);
+}
+var SURDS=[[12,'2√3',['3√2','4√3','6','2√5']],[50,'5√2',['2√5','10','5√3','7√2']],[75,'5√3',['3√5','15','5√5','9√3']],[18,'3√2',['2√3','9','3√3','6']],[27,'3√3',['3√2','9','5√3','3√5']],[20,'2√5',['5√2','10','4√5','2√3']],[45,'3√5',['5√3','15','3√3','9']],[48,'4√3',['3√4','12','4√2','8']],[72,'6√2',['2√6','12','6√3','8√2']],[98,'7√2',['2√7','14','7√3','9√2']]];
+function genHard(){
+  var t=ri(0,4);
+  if(t===0){var s=SURDS[ri(0,SURDS.length-1)];return Q('√'+s[0]+' = ?（化簡）',s[1],s[2]);}
+  if(t===1){var p=[[2,3,8],[2,5,32],[3,3,27],[5,2,25],[10,3,1000],[2,4,16]][ri(0,5)];return Q('log'+(p[0]===10?'':p[0])+' '+p[2]+' = ?',p[1],[p[1]+1,p[1]-1,p[1]+2,p[2]]);}
+  if(t===2)return Q('log₂ (1/2) = ?',-1,[1,0,2,-2]);
+  if(t===3){var a=ri(2,5);return Q('(√'+a+')² = ?',a,[a*a,'√'+a,'2√'+a,a+1]);}
+  var pairs=[[2,8,4],[3,12,6],[5,20,10],[2,18,6]][ri(0,3)];
+  return Q('√'+pairs[0]+' × √'+pairs[1]+' = ?',pairs[2],[pairs[2]+1,pairs[2]-1,pairs[2]*2,'√'+(pairs[0]*pairs[1])]);
+}
 var AC=null;
-function beep(f,d){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();var o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=f;g.gain.value=0.07;g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d);}catch(e){}}
-var level=1,score=0,lives=3,wrongs=0,ans=0,lock=false;
-function ri(a,b){return a+Math.floor(Math.random()*(b-a+1));}
-function fmt(n){return n<0?'(−'+(-n)+')':''+n;}
-function fmtD(n){return (''+n).replace(/-/g,'−');}
-function newQ(){
-  var a,b,c,op,q;
-  if(level<=3){a=ri(2,19);b=ri(2,19);op=Math.random()<0.5?'+':'−';ans=op==='+'?a+b:a-b;q=fmtD(a)+' '+op+' '+fmtD(b);}
-  else if(level<=6){a=ri(2,9);b=ri(2,9);if(Math.random()<0.5){op='×';ans=a*b;q=a+' × '+b;}else{ans=a;a=ans*b;q=a+' ÷ '+b;}}
-  else{a=ri(-9,9);b=ri(-9,9);c=ri(2,9);var t=Math.random();
-    if(t<0.4){ans=a+b;q=fmtD(a)+' + '+fmtD(b);}
-    else if(t<0.7){ans=a*b+c;q=fmtD(a)+' × '+fmtD(b)+' + '+c;}
-    else{ans=a-b-c;q=fmtD(a)+' − '+fmtD(b)+' − '+c;}}
-  document.getElementById('q').textContent=q+' = ?';
-  document.getElementById('lv').textContent='第 '+level+' 層';
-  var opts=[ans],guard=0;
-  while(opts.length<4&&guard++<60){
-    var d=[1,-1,2,-2,10,-10][ri(0,5)];
-    var v=ans+d;
-    if(opts.indexOf(v)<0)opts.push(v);
-  }
-  for(var i=opts.length-1;i>0;i--){var j=ri(0,i),t2=opts[i];opts[i]=opts[j];opts[j]=t2;}
+function tone(f,d,type,g){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();var o=AC.createOscillator(),ga=AC.createGain();o.type=type||'sine';o.frequency.value=f;ga.gain.setValueAtTime(g||.1,AC.currentTime);ga.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);o.connect(ga);ga.connect(AC.destination);o.start();o.stop(AC.currentTime+d);}catch(e){}}
+function sndGood(){tone(523.25,.15,'sine');setTimeout(function(){tone(659.25,.15,'sine');},120);setTimeout(function(){tone(783.99,.25,'sine');},240);}
+function sndBad(){tone(196,.3,'sawtooth',.07);}
+function sndWin(){var fs=[523,659,784,1047];for(var i=0;i<fs.length;i++)(function(f,j){setTimeout(function(){tone(f,.22,'sine');},j*150);})(fs[i],i);}
+var DIFFS={easy:{gen:genEasy,key:'ice_best_easy',label:'初階'},mid:{gen:genMid,key:'ice_best_mid',label:'中階'},hard:{gen:genHard,key:'ice_best_hard',label:'高階'}};
+var diff='easy',level=0,lives=3,score=0,locked=false,timerId=null,timeLeft=30;
+var TOTAL=10;
+(function(){var s=document.getElementById('snow');for(var i=0;i<36;i++){var f=document.createElement('div');f.className='flake';var sz=(2+Math.random()*4).toFixed(1);f.style.width=f.style.height=sz+'px';f.style.left=(Math.random()*100)+'vw';f.style.animationDuration=(6+Math.random()*8)+'s';f.style.animationDelay=(-Math.random()*10)+'s';f.style.opacity=(.4+Math.random()*.5).toFixed(2);s.appendChild(f);}})();
+var campsEl=document.getElementById('camps'),climber=document.getElementById('climber'),pos=[];
+for(var i=0;i<TOTAL;i++){var x=14+i*7.6,y=86-i*7.4;pos.push({x:x,y:y});var d=document.createElement('div');d.className='camp';d.id='camp'+i;d.style.left=x+'%';d.style.top=y+'%';campsEl.appendChild(d);}
+function placeClimber(){climber.style.left=pos[level].x+'%';climber.style.top=pos[level].y+'%';for(var i=0;i<TOTAL;i++){var c=document.getElementById('camp'+i);c.classList.toggle('done',i<level);c.classList.toggle('now',i===level);}}
+function show(id){var ss=['menu','game','end'];for(var i=0;i<ss.length;i++)document.getElementById(ss[i]).classList.toggle('show',ss[i]===id);}
+function bestKey(){return DIFFS[diff].key;}
+function getBest(){return parseInt(localStorage.getItem(bestKey())||'0',10);}
+function setBest(v){if(v>getBest())localStorage.setItem(bestKey(),String(v));}
+document.getElementById('bestNum').textContent=getBest();
+var diffBtns=document.querySelectorAll('.diff');
+for(var bi=0;bi<diffBtns.length;bi++)(function(b){b.addEventListener('click',function(){diff=b.dataset.d;startGame();});})(diffBtns[bi]);
+document.getElementById('againBtn').addEventListener('click',startGame);
+document.getElementById('menuBtn').addEventListener('click',function(){show('menu');document.getElementById('bestNum').textContent=getBest();});
+function startGame(){level=0;lives=3;score=0;document.getElementById('bestNum').textContent=getBest();show('game');placeClimber();updateHud();nextQ();}
+function updateHud(){document.getElementById('lives').textContent=lives;document.getElementById('score').textContent=score;document.getElementById('lvl').textContent=Math.min(level+1,TOTAL);}
+function nextQ(){
+  locked=false;
+  var q=DIFFS[diff].gen();
+  document.getElementById('qLvl').textContent='第 '+(level+1)+' 級 · '+DIFFS[diff].label;
+  document.getElementById('qText').textContent=q.q;
   var box=document.getElementById('opts');box.innerHTML='';
-  opts.forEach(function(v){
-    var b=document.createElement('button');b.className='opt';b.textContent=fmtD(v);
-    b.addEventListener('click',function(){pick(v,b);});
-    box.appendChild(b);
-  });
+  for(var i=0;i<q.opts.length;i++)(function(t,idx){var b=document.createElement('button');b.className='opt';b.textContent=t;b.addEventListener('click',function(){answer(idx===q.ans,b,box,q);});box.appendChild(b);})(q.opts[i],i);
+  timeLeft=30;var fill=document.getElementById('timerFill');fill.style.transition='none';fill.style.width='100%';
+  clearInterval(timerId);
+  timerId=setInterval(function(){timeLeft--;fill.style.transition='width 1s linear';fill.style.width=(timeLeft/30*100)+'%';if(timeLeft<=0){clearInterval(timerId);onWrong(null,box,q);}},1000);
 }
-function pick(v,btn){
-  if(lock)return;lock=true;
-  if(v===ans){
-    beep(880,0.12);score+=100;level++;
-    document.getElementById('score').textContent=score;
-    document.getElementById('msg').textContent='✅ 上升！';
-    if(level>10){win();return;}
-    document.getElementById('floor').textContent=level;
-    setTimeout(function(){newQ();draw();lock=false;},450);
-  }else{
-    beep(160,0.25);lives--;wrongs++;
-    document.getElementById('lives').textContent=lives;
-    document.getElementById('msg').textContent='❌ 跌咗！正確答案係 '+fmtD(ans);
-    btn.style.background='#a00';
-    if(lives<=0){setTimeout(lose,700);return;}
-    setTimeout(function(){newQ();draw();lock=false;},900);
-  }
+function feedback(txt){var f=document.getElementById('feedback');f.textContent=txt;f.classList.remove('pop');void f.offsetWidth;f.classList.add('pop');}
+function answer(ok,btn,box,q){if(locked)return;locked=true;clearInterval(timerId);if(ok){onRight(btn);}else{onWrong(btn,box,q);}}
+function onRight(btn){
+  btn.classList.add('right');sndGood();feedback('✅');
+  score+=100+timeLeft*2;level++;updateHud();placeClimber();
+  setTimeout(function(){if(level>=TOTAL){win();}else{nextQ();}},900);
 }
-function draw(){
-  var W=360,H=400;ctx.clearRect(0,0,W,H);
-  ctx.fillStyle='#0b1026';ctx.fillRect(0,0,W,H);
-  ctx.fillStyle='#fff';
-  for(var s=0;s<40;s++){var sx=(s*97)%W,sy=(s*61)%(H/2);ctx.fillRect(sx,sy,2,2);}
-  var base=H-40,rowH=64;
-  for(var r=0;r<6;r++){
-    var y=base-r*rowH,shade=200-r*18;
-    ctx.fillStyle='rgb('+(120+r*8)+','+(170+r*8)+','+(220)+')';
-    ctx.fillRect(20,y,W-40,14);
-    ctx.fillStyle='#fff';
-    for(var px=24;px<W-24;px+=16)ctx.fillRect(px,y,3,3);
-  }
-  var pr=base-(level-1)*rowH;
-  var py=pr<base-4*rowH?base-4*rowH:pr;
-  var pxx=W/2;
-  ctx.fillStyle='#e33';ctx.fillRect(pxx-9,py-34,18,14);
-  ctx.fillStyle='#fc9';ctx.fillRect(pxx-7,py-46,14,12);
-  ctx.fillStyle='#222';ctx.fillRect(pxx-5,py-42,4,4);ctx.fillRect(pxx+1,py-42,4,4);
-  ctx.fillStyle='#963';ctx.fillRect(pxx-13,py-30,4,14);
-  ctx.fillStyle='#ffe14d';ctx.font='bold 13px monospace';ctx.textAlign='center';
-  ctx.fillText('LV.'+Math.min(level,10),pxx,py-52);
-  ctx.fillStyle='#ffe14d';ctx.font='bold 12px monospace';
-  ctx.fillText('▲ 登頂！',W/2,24);
+function onWrong(btn,box,q){
+  locked=true;clearInterval(timerId);
+  if(btn)btn.classList.add('wrong');
+  if(box.children[q.ans])box.children[q.ans].classList.add('right');
+  sndBad();feedback('❌');
+  lives--;level=Math.max(0,level-1);updateHud();placeClimber();
+  setTimeout(function(){if(lives<=0){lose();}else{nextQ();}},1400);
 }
 function win(){
-  var bonus=lives*200,total=score+bonus;
-  var best=0;try{best=parseInt(localStorage.getItem('iceBest')||'0');}catch(e){}
-  var nb='';if(total>best){try{localStorage.setItem('iceBest',total);}catch(e){}nb=' 🏅 新紀錄！';}
-  document.getElementById('overT').textContent='🏆 登頂成功！';
-  document.getElementById('overS').innerHTML='分數：'+score+' ＋ 生命獎勵 '+bonus+' = <b style="color:#ffe14d">'+total+'</b>'+nb;
-  document.getElementById('over').style.display='flex';
-  beep(660,0.1);setTimeout(function(){beep(880,0.15);},120);
+  setBest(score);sndWin();var bonus=lives*200;score+=bonus;setBest(score);
+  document.getElementById('endEmoji').textContent='🏆';
+  document.getElementById('endTitle').textContent='登頂成功！';
+  document.getElementById('endScore').textContent=score;
+  document.getElementById('endMsg').innerHTML='你征服了雪山之巔！<br>生命獎勵 +'+bonus+' 分<br>🏆 歷史最佳：'+getBest()+' 分';
+  show('end');
 }
 function lose(){
-  document.getElementById('overT').textContent='💥 跌落山崖…';
-  document.getElementById('overS').innerHTML='去到第 '+level+' 層，得分 '+score+'。再接再厲！';
-  document.getElementById('over').style.display='flex';
+  setBest(score);
+  document.getElementById('endEmoji').textContent='⛰️';
+  document.getElementById('endTitle').textContent='差少少…';
+  document.getElementById('endScore').textContent=score;
+  document.getElementById('endMsg').innerHTML='到達第 '+(level+1)+' 級，再接再厲！<br>🏆 歷史最佳：'+getBest()+' 分';
+  show('end');
 }
-function resetGame(){
-  level=1;score=0;lives=3;wrongs=0;lock=false;
-  document.getElementById('lives').textContent='3';
-  document.getElementById('floor').textContent='1';
-  document.getElementById('score').textContent='0';
-  document.getElementById('msg').textContent='';
-  document.getElementById('over').style.display='none';
-  newQ();draw();
-}
-function startGame(){document.getElementById('intro').style.display='none';resetGame();}
-window.startGame=startGame;window.resetGame=resetGame;
-draw();
-})();
 </script>
 </body>
 </html>

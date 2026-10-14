@@ -1,149 +1,251 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>數學氣球大戰</title>
 <style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;font-family:"Courier New",Courier,"Microsoft JhengHei",monospace;background:#06121f;color:#e8f4ff;min-height:100vh;touch-action:manipulation}
-.scan{position:fixed;inset:0;pointer-events:none;z-index:60;background:repeating-linear-gradient(0deg,rgba(0,0,0,.10) 0 2px,transparent 2px 4px)}
-header{background:#0d2a4d;border-bottom:4px solid #38bdf8;padding:12px;text-align:center}
-header h1{margin:0;font-size:22px;letter-spacing:2px;color:#ffe14d;text-shadow:2px 2px 0 #0c4a6e}
-.hud{display:flex;justify-content:space-around;background:#0d2a4d;padding:10px;font-size:14px;font-weight:700;border-bottom:4px solid #38bdf8}
-.hud b{color:#ffe14d}
-.target{background:#0d2a4d;text-align:center;padding:8px;font-size:18px;font-weight:800;color:#7CFC98;border-bottom:4px solid #38bdf8}
-.back{display:block;text-align:center;background:#123a63;color:#9fd0ff;text-decoration:none;padding:12px;font-size:15px;font-weight:700}
-.wrap{max-width:440px;margin:0 auto;padding:12px 12px 40px}
-#cv{width:100%;height:auto;display:block;background:linear-gradient(#06121f,#0a2540);border:4px solid #38bdf8;image-rendering:pixelated;touch-action:none}
-.overlay{position:fixed;inset:0;background:rgba(3,10,20,.95);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
-.card{background:#0d2a4d;border:4px solid #38bdf8;padding:26px 22px;max-width:480px;width:100%;max-height:92vh;overflow-y:auto}
-.card h2{margin:0 0 10px;color:#ffe14d;font-size:22px;letter-spacing:2px}
-.card p,.card li{font-size:15px;line-height:1.7}
-.card ul{padding-left:20px}
-.concept{background:#06121f;border:2px solid #38bdf8;padding:12px;margin:12px 0;font-size:14px}
-.concept b{color:#7CFC98}
-.card button{width:100%;min-height:58px;font-size:18px;font-weight:800;font-family:inherit;background:#e33;color:#fff;border:4px solid #fff;margin-top:10px;cursor:pointer;letter-spacing:2px}
-.blink{animation:bl 1s steps(2) infinite}
-@keyframes bl{50%{opacity:.2}}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang HK","Microsoft JhengHei","Noto Sans HK",sans-serif;background:linear-gradient(180deg,#7dd3fc 0%,#bae6fd 30%,#fde68a 62%,#fda4af 85%,#f9a8d4 100%);min-height:100vh;overflow:hidden;user-select:none;-webkit-user-select:none;color:#1e293b}
+/* 太陽 */
+.sun{position:fixed;right:8%;top:6%;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff7d6,#fde047 55%,#fbbf24);box-shadow:0 0 60px 24px rgba(253,224,71,.55);z-index:0;animation:sunpulse 5s ease-in-out infinite}
+@keyframes sunpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+/* 雲 */
+.cloud{position:fixed;background:rgba(255,255,255,.85);border-radius:999px;z-index:0;filter:blur(2px);animation:drift linear infinite}
+.cloud::before,.cloud::after{content:'';position:absolute;background:rgba(255,255,255,.85);border-radius:50%}
+.cloud::before{width:55%;height:160%;left:18%;top:-80%}
+.cloud::after{width:38%;height:110%;right:16%;top:-50%}
+@keyframes drift{from{transform:translateX(-30vw)}to{transform:translateX(120vw)}}
+.wrap{position:relative;z-index:2;max-width:640px;margin:0 auto;padding:12px 14px;height:100vh;display:flex;flex-direction:column}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:6px 2px 10px}
+.back{display:inline-flex;align-items:center;gap:6px;color:#1e293b;text-decoration:none;font-size:15px;font-weight:700;background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.8);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:10px 16px;border-radius:999px;min-height:44px;box-shadow:0 6px 18px rgba(0,0,0,.12)}
+.best{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.8);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:10px 16px;border-radius:999px;min-height:44px;box-shadow:0 6px 18px rgba(0,0,0,.12)}
+.hud{display:flex;gap:10px;margin-bottom:10px}
+.hud .pill{flex:1;text-align:center;background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.8);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:16px;padding:9px 6px;font-size:15px;font-weight:800;box-shadow:0 6px 18px rgba(0,0,0,.1)}
+.hud .pill small{display:block;font-size:11px;font-weight:600;opacity:.65}
+.target{background:rgba(255,255,255,.65);border:1px solid rgba(255,255,255,.9);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:22px;padding:14px;text-align:center;box-shadow:0 12px 30px rgba(0,0,0,.14);margin-bottom:8px}
+.target .t-label{font-size:13px;font-weight:700;color:#be185d;letter-spacing:2px}
+.target .t-val{font-size:34px;font-weight:900;color:#0c4a6e;margin-top:2px}
+.arena{position:relative;flex:1;overflow:hidden;border-radius:24px}
+/* 氣球 */
+.balloon{position:absolute;bottom:-160px;width:86px;height:110px;cursor:pointer;animation:rise linear forwards}
+.balloon .body{width:86px;height:104px;border-radius:50% 50% 50% 50%/55% 55% 45% 45%;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:900;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.3);box-shadow:inset -8px -10px 0 rgba(0,0,0,.12),0 10px 22px rgba(0,0,0,.18);animation:sway 2.6s ease-in-out infinite}
+.balloon .body::after{content:'';position:absolute;top:16px;left:22px;width:20px;height:34px;border-radius:50%;background:rgba(255,255,255,.45);transform:rotate(-18deg)}
+.balloon .string{width:2px;height:56px;background:rgba(30,41,59,.4);margin:0 auto}
+.balloon.c1 .body{background:radial-gradient(circle at 35% 30%,#fda4af,#f43f5e)}
+.balloon.c2 .body{background:radial-gradient(circle at 35% 30%,#93c5fd,#3b82f6)}
+.balloon.c3 .body{background:radial-gradient(circle at 35% 30%,#6ee7b7,#10b981)}
+.balloon.c4 .body{background:radial-gradient(circle at 35% 30%,#fcd34d,#f59e0b)}
+.balloon.c5 .body{background:radial-gradient(circle at 35% 30%,#c4b5fd,#8b5cf6)}
+.balloon.c6 .body{background:radial-gradient(circle at 35% 30%,#67e8f9,#06b6d4)}
+@keyframes rise{to{transform:translateY(-125vh)}}
+@keyframes sway{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+.balloon.pop .body{animation:popb .3s ease forwards}
+@keyframes popb{to{transform:scale(1.6);opacity:0}}
+.balloon.shake .body{animation:shakeb .4s ease}
+@keyframes shakeb{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px)}50%{transform:translateX(10px)}75%{transform:translateX(-6px)}}
+.screen{display:none;height:100%}
+.screen.show{display:flex;flex-direction:column;animation:fadeUp .45s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.hero{text-align:center;padding:20px 10px 14px}
+.hero .emoji{font-size:64px;filter:drop-shadow(0 8px 16px rgba(0,0,0,.25))}
+.hero h1{font-size:34px;font-weight:900;margin:10px 0 6px;color:#0c4a6e}
+.hero p{font-size:15px;color:#475569;line-height:1.7}
+.diffcards{display:grid;gap:12px;margin:16px 0}
+.diff{background:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:20px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;min-height:76px;transition:transform .12s;box-shadow:0 10px 26px rgba(0,0,0,.12);text-align:left;width:100%;color:#1e293b;font-family:inherit}
+.diff:active{transform:scale(.97)}
+.diff .dicon{font-size:38px}
+.diff b{font-size:19px;display:block;color:#0c4a6e}
+.diff span{font-size:13px;color:#64748b}
+.concept{background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.85);border-radius:18px;padding:14px 16px;font-size:14px;line-height:1.8;color:#334155;box-shadow:0 8px 22px rgba(0,0,0,.1)}
+.endcard{margin:auto;text-align:center;background:rgba(255,255,255,.65);border:1px solid rgba(255,255,255,.9);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:24px;padding:34px 24px;box-shadow:0 18px 40px rgba(0,0,0,.16);width:100%;max-width:420px}
+.endcard .emoji{font-size:72px}
+.endcard h2{font-size:30px;margin:12px 0 8px;color:#0c4a6e}
+.endcard .score{font-size:52px;font-weight:900;color:#db2777}
+.endcard p{font-size:15px;color:#475569;margin:8px 0 20px;line-height:1.7}
+.bigbtn{display:block;width:100%;min-height:60px;margin-top:12px;font-size:20px;font-weight:800;color:#fff;background:linear-gradient(135deg,#ec4899,#8b5cf6);border:none;border-radius:18px;cursor:pointer;box-shadow:0 10px 24px rgba(236,72,153,.4);font-family:inherit}
+.bigbtn.ghost{background:rgba(255,255,255,.6);color:#0c4a6e;border:1px solid rgba(255,255,255,.9);box-shadow:none}
+.feedback{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%) scale(.6);font-size:56px;font-weight:900;opacity:0;pointer-events:none;z-index:50;text-shadow:0 6px 24px rgba(0,0,0,.35)}
+.feedback.pop{animation:pop .7s ease forwards}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}30%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-60%) scale(1)}}
 </style>
 </head>
 <body>
-<div class="scan"></div>
-<header><h1>🎈 數學氣球大戰</h1></header>
-<a class="back" href="games.html">← 返回遊戲列表</a>
+<div class="sun"></div>
 <div class="wrap">
-<div class="hud"><div>❤ <b id="lives">3</b></div><div>⏱ <b id="time">60</b>s</div><div>⭐ <b id="score">0</b></div></div>
-<div class="target">🎯 目標分數：<span id="tgt">—</span></div>
-<canvas id="cv" width="360" height="480"></canvas>
+  <div class="topbar">
+    <a class="back" href="games.html">← 返回遊戲列表</a>
+    <div class="best">🏆 <span id="bestNum">0</span></div>
+  </div>
+
+  <div id="menu" class="screen show">
+    <div class="hero">
+      <div class="emoji">🎈</div>
+      <h1>數學氣球大戰</h1>
+      <p>氣球冉冉升空！篤爆<b>等於目標數值</b>的氣球。<br>篤錯扣一條命，60 秒內盡量得分！</p>
+    </div>
+    <div class="diffcards">
+      <button class="diff" data-d="easy"><div class="dicon">🌱</div><div><b>初階 · 中一至中二</b><span>等值分數</span></div></button>
+      <button class="diff" data-d="mid"><div class="dicon">🌿</div><div><b>中階 · 中三至中四</b><span>分數、小數、百分數互換</span></div></button>
+      <button class="diff" data-d="hard"><div class="dicon">🌳</div><div><b>高階 · 中五至中六</b><span>比的化簡與應用</span></div></button>
+    </div>
+    <div class="concept">💡 <b>數學概念</b><br>初階：等值分數——分子分母同乘，值不變（如 2/4 = 1/2）。<br>中階：分數 ⇄ 小數 ⇄ 百分數（如 1/4 = 0.25 = 25%）。<br>高階：比可約簡為最簡整數比（如 10:15 = 2:3）。</div>
+  </div>
+
+  <div id="game" class="screen">
+    <div class="hud">
+      <div class="pill">❤️ <span id="lives">3</span><small>生命</small></div>
+      <div class="pill">⭐ <span id="score">0</span><small>分數</small></div>
+      <div class="pill">⏱️ <span id="time">60</span><small>秒</small></div>
+    </div>
+    <div class="target">
+      <div class="t-label">🎯 目標數值</div>
+      <div class="t-val" id="targetVal">1/2</div>
+    </div>
+    <div class="arena" id="arena"></div>
+  </div>
+
+  <div id="end" class="screen">
+    <div class="endcard">
+      <div class="emoji" id="endEmoji">🎈</div>
+      <h2 id="endTitle">時間到！</h2>
+      <div class="score" id="endScore">0</div>
+      <p id="endMsg"></p>
+      <button class="bigbtn" id="againBtn">🔁 再玩一次</button>
+      <button class="bigbtn ghost" id="menuBtn">🏠 返回選單</button>
+    </div>
+  </div>
 </div>
-<div class="overlay" id="intro"><div class="card">
-<h2>🎈 數學氣球大戰</h2>
-<p><b>玩法：</b>氣球升上天，每個氣球有個分數。撳爆<b>等於目標分數</b>嘅氣球！記住：<b>2/4 = 1/2</b> 都算啱！撳錯扣一格命（3 格），限時 60 秒。</p>
-<div class="concept">💡 <b>數學概念：</b>等值分數。分子分母同時乘同一個數，分數值不變：1/2 = 2/4 = 3/6。比較分數用交叉相乘：a/b = c/d ⟺ a×d = b×c。</div>
-<button onclick="startGame()">▶ START</button>
-<p class="blink" style="text-align:center;color:#9fd0ff">★ 8-BIT 挑戰 ★</p>
-</div></div>
-<div class="overlay" id="over" style="display:none"><div class="card">
-<h2 id="overT">⏰ 時間到！</h2>
-<p id="overS" style="font-size:17px"></p>
-<button onclick="resetGame()">🔁 再玩一次</button>
-</div></div>
+<div class="feedback" id="feedback"></div>
 <script>
-(function(){
 "use strict";
-var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+function ri(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;}
+/* value: 用 [n,d] 表示，比較用交叉相乘 */
+function sameVal(v1,v2){return v1[0]*v2[1]===v1[1]*v2[0];}
+/* 題庫：每組 {target:{label,v}, pool:[{label,v,ok}] } */
+function fracPool(){
+  var bases=[[[1,2],['2/4','3/6','4/8','5/10']],[[1,3],['2/6','3/9','4/12']],[[2,3],['4/6','6/9','8/12']],[[3,4],['6/8','9/12']],[[1,4],['2/8','3/12']],[[2,5],['4/10','6/15']]];
+  var wrong=[['1/3',[1,3]],['2/5',[2,5]],['3/4',[3,4]],['1/4',[1,4]],['3/5',[3,5]],['2/7',[2,7]],['4/5',[4,5]],['5/6',[5,6]]];
+  var b=bases[ri(0,bases.length-1)];
+  var label=b[0][0]+'/'+b[0][1];
+  var pool=[];
+  var oks=shuffle(b[1]);
+  for(var i=0;i<Math.min(3,oks.length);i++)pool.push({label:oks[i],v:b[0],ok:true});
+  var ws=shuffle(wrong);
+  for(var j=0;j<ws.length&&pool.length<7;j++){if(!sameVal(ws[j][1],b[0]))pool.push({label:ws[j][0],v:ws[j][1],ok:false});}
+  return {targetLabel:label,pool:shuffle(pool)};
+}
+function pctPool(){
+  var defs=[{p:25,oks:['1/4','0.25','25%','2/8']},{p:50,oks:['1/2','0.5','50%','3/6']},{p:75,oks:['3/4','0.75','75%']},{p:20,oks:['1/5','0.2','20%','2/10']},{p:40,oks:['2/5','0.4','40%']},{p:60,oks:['3/5','0.6','60%']},{p:80,oks:['4/5','0.8','80%']},{p:12.5,oks:['1/8','0.125','12.5%']}];
+  var d=defs[ri(0,defs.length-1)];
+  var all=['1/3','0.3','30%','2/5','0.4','40%','1/5','0.2','20%','3/4','0.75','75%','1/2','0.5','50%','1/4','0.25','25%','2/3','0.7','70%'];
+  function toP(s){if(s.indexOf('%')>=0)return parseFloat(s);if(s.indexOf('/')>=0){var q=s.split('/');return parseFloat(q[0])/parseFloat(q[1])*100;}return parseFloat(s)*100;}
+  var pool=[],oks=shuffle(d.oks);
+  for(var i=0;i<Math.min(3,oks.length);i++)pool.push({label:oks[i],v:[d.p,100],ok:true});
+  var ws=shuffle(all);
+  for(var j=0;j<ws.length&&pool.length<7;j++){var pv=toP(ws[j]);if(Math.abs(pv-d.p)>0.001)pool.push({label:ws[j],v:[pv,100],ok:false});}
+  return {targetLabel:d.p+'%',pool:shuffle(pool)};
+}
+function ratioPool(){
+  var bases=[[[2,3],['4:6','6:9','10:15','8:12']],[[1,2],['2:4','3:6','5:10']],[[3,4],['6:8','9:12']],[[2,5],['4:10','6:15']],[[3,5],['6:10','9:15']]];
+  var wrong=[['3:4',[3,4]],['5:7',[5,7]],['2:5',[2,5]],['4:5',[4,5]],['1:3',[1,3]],['5:6',[5,6]],['3:7',[3,7]]];
+  var b=bases[ri(0,bases.length-1)];
+  var pool=[],oks=shuffle(b[1]);
+  for(var i=0;i<Math.min(3,oks.length);i++)pool.push({label:oks[i],v:b[0],ok:true});
+  var ws=shuffle(wrong);
+  for(var j=0;j<ws.length&&pool.length<7;j++){if(!sameVal(ws[j][1],b[0]))pool.push({label:ws[j][0],v:ws[j][1],ok:false});}
+  return {targetLabel:b[0][0]+' : '+b[0][1]+'（最簡比）',pool:shuffle(pool)};
+}
 var AC=null;
-function beep(f,d){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();var o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=f;g.gain.value=0.07;g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d);}catch(e){}}
-var W=360,H=480;
-var TG=[[1,2],[1,3],[2,3],[1,4],[3,4],[2,5],[3,5],[4,5],[1,6],[5,6]];
-var target=null,bals=[],parts=[],score=0,lives=3,timeLeft=60,run=false,spawnT=0,lastT=0,over=false;
-var COLS=['#f87171','#fbbf24','#34d399','#60a5fa','#c084fc'];
-function ri(a,b){return a+Math.floor(Math.random()*(b-a+1));}
-function pick(a){return a[ri(0,a.length-1)];}
-function eq(n1,d1,n2,d2){return n1*d2===n2*d1;}
-function newTarget(){target=pick(TG);document.getElementById('tgt').textContent=target[0]+'/'+target[1];}
-function spawn(){
-  var n,d;
-  if(Math.random()<0.45){var k=ri(2,4);n=target[0]*k;d=target[1]*k;}
-  else{do{n=ri(1,5);d=ri(2,6);}while(eq(n,d,target[0],target[1])||n>=d);}
-  bals.push({x:ri(45,W-45),y:H+40,vy:-(0.5+Math.random()*0.7),n:n,d:d,c:pick(COLS),r:34,pop:0});
+function tone(f,d,type,g){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();var o=AC.createOscillator(),ga=AC.createGain();o.type=type||'sine';o.frequency.value=f;ga.gain.setValueAtTime(g||.1,AC.currentTime);ga.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);o.connect(ga);ga.connect(AC.destination);o.start();o.stop(AC.currentTime+d);}catch(e){}}
+function sndGood(){tone(880,.12,'sine');setTimeout(function(){tone(1174.7,.18,'sine');},90);}
+function sndBad(){tone(220,.25,'sawtooth',.07);}
+function sndEnd(){[659,784,1047].forEach(function(f,i){setTimeout(function(){tone(f,.2,'sine');},i*140);});}
+var DIFFS={easy:{pool:fracPool,key:'bal_best_easy'},mid:{pool:pctPool,key:'bal_best_mid'},hard:{pool:ratioPool,key:'bal_best_hard'}};
+var diff='easy',lives=3,score=0,timeLeft=60,playing=false,timerId=null,spawnId=null,remain=0,roundId=0;
+/* 雲 */
+(function(){var cs=[[12,60,14],[38,90,20],[66,70,12],[85,110,18]];for(var i=0;i<cs.length;i++){var c=document.createElement('div');c.className='cloud';c.style.top=cs[i][0]+'%';c.style.width=cs[i][1]+'px';c.style.height=cs[i][1]/3+'px';c.style.animationDuration=(40+i*15)+'s';c.style.animationDelay=(-i*12)+'s';document.body.appendChild(c);}})();
+function show(id){var ss=['menu','game','end'];for(var i=0;i<ss.length;i++)document.getElementById(ss[i]).classList.toggle('show',ss[i]===id);}
+function getBest(){return parseInt(localStorage.getItem(DIFFS[diff].key)||'0',10);}
+function setBest(v){if(v>getBest())localStorage.setItem(DIFFS[diff].key,String(v));}
+document.getElementById('bestNum').textContent=getBest();
+var db=document.querySelectorAll('.diff');
+for(var bi=0;bi<db.length;bi++)(function(b){b.addEventListener('click',function(){diff=b.dataset.d;startGame();});})(db[bi]);
+document.getElementById('againBtn').addEventListener('click',startGame);
+document.getElementById('menuBtn').addEventListener('click',function(){show('menu');document.getElementById('bestNum').textContent=getBest();});
+function startGame(){
+  lives=3;score=0;timeLeft=60;playing=true;
+  document.getElementById('bestNum').textContent=getBest();
+  document.getElementById('arena').innerHTML='';
+  show('game');updateHud();newRound();
+  clearInterval(timerId);clearInterval(spawnId);
+  timerId=setInterval(function(){timeLeft--;updateHud();if(timeLeft<=0)endGame();},1000);
 }
-function burst(x,y,c,wrong){
-  for(var i=0;i<14;i++)parts.push({x:x,y:y,vx:(Math.random()-0.5)*4,vy:(Math.random()-0.5)*4-1,life:30,c:wrong?'#f87171':c});
+function updateHud(){document.getElementById('lives').textContent=lives;document.getElementById('score').textContent=score;document.getElementById('time').textContent=timeLeft;}
+function feedback(t){var f=document.getElementById('feedback');f.textContent=t;f.classList.remove('pop');void f.offsetWidth;f.classList.add('pop');}
+function newRound(){
+  if(!playing)return;
+  roundId++;
+  var r=DIFFS[diff].pool();
+  document.getElementById('targetVal').textContent=r.targetLabel;
+  var arena=document.getElementById('arena');
+  remain=r.pool.filter(function(p){return p.ok;}).length;
+  var items=shuffle(r.pool);
+  var n=items.length,idx=0,rid=roundId;
+  clearInterval(spawnId);
+  spawnId=setInterval(function(){
+    if(!playing||rid!==roundId||idx>=n){clearInterval(spawnId);return;}
+    spawnBalloon(arena,items[idx],rid);idx++;
+  },700);
 }
-cv.addEventListener('pointerdown',function(e){
-  if(!run||over)return;
-  var r=cv.getBoundingClientRect();
-  var mx=(e.clientX-r.left)*(W/r.width),my=(e.clientY-r.top)*(H/r.height);
-  for(var i=bals.length-1;i>=0;i--){
-    var b=bals[i];
-    if(Math.hypot(b.x-mx,b.y-my)<=b.r+8){
-      if(eq(b.n,b.d,target[0],target[1])){
-        beep(880,0.1);score+=100;burst(b.x,b.y,b.c,false);
-        document.getElementById('score').textContent=score;
-      }else{
-        beep(160,0.25);lives--;burst(b.x,b.y,b.c,true);
-        document.getElementById('lives').textContent=lives;
-        if(lives<=0){endGame(false);return;}
-      }
-      bals.splice(i,1);return;
+function checkRound(){
+  if(!playing||remain>0)return;
+  var ar=document.getElementById('arena');ar.innerHTML='';
+  setTimeout(function(){if(playing)newRound();},400);
+}
+function spawnBalloon(arena,item,rid){
+  var b=document.createElement('div');
+  b.className='balloon c'+ri(1,6);
+  var aw=arena.clientWidth||300;
+  b.style.left=(5+Math.random()*Math.max(10,aw-100))+'px';
+  var dur=(7+Math.random()*5).toFixed(1);
+  b.style.animationDuration=dur+'s';
+  b.innerHTML='<div class="body">'+item.label+'</div><div class="string"></div>';
+  var st={done:false};
+  function countMiss(){
+    if(!st.done&&rid===roundId&&playing&&item.ok){st.done=true;remain--;checkRound();}
+  }
+  function kill(){ if(b.parentNode)b.parentNode.removeChild(b); countMiss(); }
+  setTimeout(kill,dur*1000+400);
+  b.addEventListener('pointerdown',function(e){
+    e.preventDefault();
+    if(!playing||st.done)return;
+    if(item.ok){
+      st.done=true;b.classList.add('pop');sndGood();feedback('✅');
+      score+=50;updateHud();remain--;
+      setTimeout(kill,300);
+      checkRound();
+    }else{
+      st.done=true;b.classList.add('shake');sndBad();feedback('❌');
+      lives--;updateHud();setTimeout(kill,450);
+      if(lives<=0)endGame();
     }
-  }
-});
-function drawBalloon(b){
-  var w=[8,14,20,24,26,24,20,14,8],s=2.4;
-  ctx.fillStyle=b.c;
-  for(var i=0;i<w.length;i++)ctx.fillRect(b.x-w[i]*s/2,b.y-22+i*5,w[i]*s,5);
-  ctx.fillStyle='rgba(255,255,255,.55)';ctx.fillRect(b.x-14,b.y-14,6,10);
-  ctx.fillStyle='#333';ctx.fillRect(b.x-3,b.y+23,6,6);
-  ctx.strokeStyle='#94a3b8';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(b.x,b.y+29);ctx.lineTo(b.x,b.y+48);ctx.stroke();
-  ctx.fillStyle='#fff';ctx.font='bold 15px monospace';ctx.textAlign='center';
-  ctx.fillText(b.n+'/'+b.d,b.x,b.y+5);
+  });
+  arena.appendChild(b);
 }
-function loop(t){
-  if(!run)return;
-  var dt=Math.min(50,t-lastT);lastT=t;
-  timeLeft-=dt/1000;
-  if(timeLeft<=0){timeLeft=0;endGame(true);return;}
-  document.getElementById('time').textContent=Math.ceil(timeLeft);
-  spawnT-=dt;
-  if(spawnT<=0&&bals.length<7){spawn();spawnT=900+Math.random()*600;}
-  ctx.clearRect(0,0,W,H);
-  ctx.fillStyle='rgba(255,255,255,.15)';
-  for(var s=0;s<25;s++)ctx.fillRect((s*89)%W,(s*53)%H,2,2);
-  for(var i=bals.length-1;i>=0;i--){
-    var b=bals[i];b.y+=b.vy*dt/16;
-    if(b.y<-60){bals.splice(i,1);continue;}
-    drawBalloon(b);
-  }
-  for(var p=parts.length-1;p>=0;p--){
-    var q=parts[p];q.x+=q.vx;q.y+=q.vy;q.vy+=0.15;q.life--;
-    ctx.fillStyle=q.c;ctx.fillRect(q.x,q.y,4,4);
-    if(q.life<=0)parts.splice(p,1);
-  }
-  requestAnimationFrame(loop);
+function endGame(){
+  if(!playing)return;playing=false;
+  clearInterval(timerId);clearInterval(spawnId);
+  document.getElementById('arena').innerHTML='';
+  setBest(score);sndEnd();
+  document.getElementById('endEmoji').textContent='🎈';
+  document.getElementById('endTitle').textContent='時間到！';
+  document.getElementById('endScore').textContent=score;
+  document.getElementById('endMsg').innerHTML='篤爆氣球，得 '+score+' 分！<br>🏆 歷史最佳：'+getBest()+' 分';
+  show('end');
 }
-function endGame(timeout){
-  if(over)return;over=true;run=false;
-  var best=0;try{best=parseInt(localStorage.getItem('balBest')||'0');}catch(e){}
-  var nb='';if(score>best){try{localStorage.setItem('balBest',score);}catch(e){}nb=' 🏅 新紀錄！';}
-  document.getElementById('overT').textContent=timeout?'⏰ 時間到！':'💥 氣球爆晒…';
-  document.getElementById('overS').innerHTML='得分：<b style="color:#ffe14d">'+score+'</b>'+nb+'<br>最高紀錄：'+Math.max(best,score);
-  document.getElementById('over').style.display='flex';
-  beep(520,0.15);
-}
-function resetGame(){
-  bals=[];parts=[];score=0;lives=3;timeLeft=60;over=false;spawnT=0;
-  document.getElementById('score').textContent='0';
-  document.getElementById('lives').textContent='3';
-  document.getElementById('over').style.display='none';
-  newTarget();run=true;lastT=performance.now();
-  requestAnimationFrame(loop);
-}
-function startGame(){document.getElementById('intro').style.display='none';resetGame();}
-window.startGame=startGame;window.resetGame=resetGame;
-})();
 </script>
 </body>
 </html>
