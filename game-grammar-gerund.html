@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>動名詞 vs 不定詞</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#f0fdf4;color:#14532d;min-height:100vh}
+header{background:linear-gradient(135deg,#15803d,#22c55e);color:#fff;padding:16px;text-align:center}
+header h1{margin:0;font-size:22px}
+.hud{display:flex;justify-content:space-around;background:#14532d;color:#fff;padding:10px;font-size:15px;font-weight:700}
+.hud span{color:#fde047}
+main{max-width:600px;margin:0 auto;padding:16px}
+.qcard{background:#fff;border-radius:16px;padding:22px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.08);text-align:center}
+.qnum{font-size:14px;color:#16a34a;font-weight:700;margin-bottom:8px}
+.qtext{font-size:21px;font-weight:700;line-height:1.7}
+.qtext .blank{color:#dc2626;border-bottom:3px dashed #dc2626;padding:0 8px}
+.answers{display:flex;flex-direction:column;gap:12px}
+.abtn{min-height:60px;font-size:19px;font-weight:700;border:3px solid #16a34a;background:#fff;color:#14532d;border-radius:14px;cursor:pointer;touch-action:manipulation}
+.abtn:active{transform:scale(.98)}
+.abtn.correct{background:#16a34a;color:#fff}
+.abtn.wrong{background:#dc2626;color:#fff;border-color:#dc2626}
+.abtn:disabled{opacity:1;cursor:default}
+.feedback{min-height:60px;font-size:16px;font-weight:700;text-align:center;margin-top:10px;line-height:1.6}
+.feedback.good{color:#16a34a}.feedback.bad{color:#dc2626}
+.explain{font-size:14px;color:#475569;font-weight:400}
+.nextbtn{display:none;width:100%;min-height:56px;font-size:18px;font-weight:800;background:#16a34a;color:#fff;border:none;border-radius:14px;margin-top:8px;cursor:pointer;touch-action:manipulation}
+.overlay{position:fixed;inset:0;background:rgba(20,83,45,.96);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.card{background:#fff;border-radius:20px;padding:28px 24px;max-width:540px;width:100%;max-height:92vh;overflow-y:auto;color:#14532d}
+.card h2{margin:0 0 12px;font-size:24px}
+.card p,.card li{font-size:16px;line-height:1.7}
+.card ul{padding-left:20px}
+.concept{background:#f0fdf4;border-radius:12px;padding:14px;margin:14px 0;font-size:15px;border:1px solid #bbf7d0}
+.concept b{color:#15803d}
+.card button{width:100%;min-height:58px;font-size:18px;font-weight:800;background:#16a34a;color:#fff;border:none;border-radius:14px;margin-top:12px;cursor:pointer;touch-action:manipulation}
+.stars{font-size:40px;text-align:center;margin:8px 0}
+</style>
+</head>
+<body>
+<header><h1>🏃 動名詞 vs 不定詞</h1></header>
+<div class="hud"><div>題目 <span id="qnum">1</span>/10</div><div>分數 <span id="score">0</span></div><div>最高 <span id="best">0</span></div></div>
+<main>
+<div class="qcard">
+<div class="qnum" id="qhint">第 1 題</div>
+<div class="qtext" id="qtext"></div>
+</div>
+<div class="answers" id="answers"></div>
+<div class="feedback" id="fb"></div>
+<button class="nextbtn" id="nextBtn">下一題 →</button>
+</main>
+<div class="overlay" id="intro"><div class="card">
+<h2>🏃 動名詞 vs 不定詞</h2>
+<p><b>玩法：</b>睇住個句子，揀啱後面應該用 V-ing（動名詞）定係 to + V（不定詞）。共 10 題，答啱 +100 分。</p>
+<div class="concept">💡 <b>文法概念：</b><br>
+• 動名詞 (Gerund)：動詞 + ing，當名詞用。<br>
+例：enjoy <b>swimming</b>、finish <b>eating</b>、avoid <b>talking</b><br><br>
+• 不定詞 (Infinitive)：to + 動詞原形。<br>
+例：want <b>to go</b>、decide <b>to study</b>、hope <b>to win</b><br><br>
+記住常見配搭：enjoy、mind、finish、avoid、keep、suggest 後面跟 <b>V-ing</b>；want、decide、hope、plan、promise 後面跟 <b>to V</b>！</div>
+<button onclick="startGame()">開始挑戰！</button>
+</div></div>
+<div class="overlay" id="gameover" style="display:none"><div class="card">
+<h2>🎉 完成！</h2>
+<div class="stars" id="stars"></div>
+<p id="finalScore" style="font-size:19px;text-align:center"></p>
+<button onclick="resetGame()">🔁 再玩一次</button>
+</div></div>
+<script>
+(function(){
+"use strict";
+var BANK=[
+{q:"I enjoy ___ in the sea.",correct:"swimming",wrong:"to swim",tip:"enjoy 後面跟 V-ing（動名詞）"},
+{q:"She decided ___ abroad.",correct:"to study",wrong:"studying",tip:"decide 後面跟 to + V（不定詞）"},
+{q:"They finished ___ lunch.",correct:"eating",wrong:"to eat",tip:"finish 後面跟 V-ing"},
+{q:"He promised ___ me.",correct:"to help",wrong:"helping",tip:"promise 後面跟 to + V"},
+{q:"We avoided ___ about it.",correct:"talking",wrong:"to talk",tip:"avoid 後面跟 V-ing"},
+{q:"I hope ___ Japan one day.",correct:"to visit",wrong:"visiting",tip:"hope 後面跟 to + V"},
+{q:"She keeps ___ questions.",correct:"asking",wrong:"to ask",tip:"keep 後面跟 V-ing（表示「不斷」）"},
+{q:"They agreed ___ at noon.",correct:"to meet",wrong:"meeting",tip:"agree 後面跟 to + V"},
+{q:"He suggested ___ hiking.",correct:"going",wrong:"to go",tip:"suggest 後面跟 V-ing"},
+{q:"I want ___ the guitar.",correct:"to learn",wrong:"learning",tip:"want 後面跟 to + V"},
+{q:"She doesn't mind ___ long.",correct:"waiting",wrong:"to wait",tip:"mind 後面跟 V-ing"},
+{q:"We plan ___ together.",correct:"to travel",wrong:"travelling",tip:"plan 後面跟 to + V"},
+{q:"He imagined ___ the prize.",correct:"winning",wrong:"to win",tip:"imagine 後面跟 V-ing"},
+{q:"She expects ___ the exam.",correct:"to pass",wrong:"passing",tip:"expect 後面跟 to + V"},
+{q:"They practised ___ English.",correct:"speaking",wrong:"to speak",tip:"practise 後面跟 V-ing"}
+];
+var qs=[],idx=0,score=0,best=0,answered=false;
+try{best=parseInt(localStorage.getItem('gerundBest')||'0',10)||0;}catch(e){}
+document.getElementById('best').textContent=best;
+
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+function startGame(){
+  document.getElementById('intro').style.display='none';
+  document.getElementById('gameover').style.display='none';
+  resetGame();
+}
+function resetGame(){
+  qs=shuffle(BANK.slice()).slice(0,10);
+  idx=0;score=0;answered=false;
+  document.getElementById('score').textContent='0';
+  document.getElementById('gameover').style.display='none';
+  renderQ();
+}
+function renderQ(){
+  answered=false;
+  var item=qs[idx];
+  document.getElementById('qnum').textContent=(idx+1);
+  document.getElementById('qhint').textContent='第 '+(idx+1)+' 題';
+  var parts=item.q.split('___');
+  document.getElementById('qtext').innerHTML=parts[0]+'<span class="blank">____</span>'+parts[1];
+  var opts=shuffle([item.correct,item.wrong]);
+  var box=document.getElementById('answers');box.innerHTML='';
+  opts.forEach(function(o){
+    var b=document.createElement('button');
+    b.className='abtn';b.textContent=o;
+    b.addEventListener('click',function(){answer(b,o,item);});
+    box.appendChild(b);
+  });
+  document.getElementById('fb').textContent='';
+  document.getElementById('fb').className='feedback';
+  document.getElementById('nextBtn').style.display='none';
+}
+function answer(btn,choice,item){
+  if(answered)return;answered=true;
+  var btns=document.getElementById('answers').children;
+  for(var i=0;i<btns.length;i++){btns[i].disabled=true;}
+  var fb=document.getElementById('fb');
+  if(choice===item.correct){
+    btn.classList.add('correct');
+    score+=100;
+    document.getElementById('score').textContent=score;
+    fb.innerHTML='✅ 答啱！<div class="explain">'+item.tip+'</div>';
+    fb.className='feedback good';
+  }else{
+    btn.classList.add('wrong');
+    for(var j=0;j<btns.length;j++){if(btns[j].textContent===item.correct)btns[j].classList.add('correct');}
+    fb.innerHTML='❌ 唔啱，正確答案係 <b>'+item.correct+'</b><div class="explain">'+item.tip+'</div>';
+    fb.className='feedback bad';
+  }
+  var nb=document.getElementById('nextBtn');
+  nb.textContent=(idx>=qs.length-1)?'睇成績 →':'下一題 →';
+  nb.style.display='block';
+}
+document.getElementById('nextBtn').addEventListener('click',function(){
+  idx++;
+  if(idx>=qs.length){endGame();}else{renderQ();}
+});
+function endGame(){
+  var nb='';
+  if(score>best){best=score;try{localStorage.setItem('gerundBest',best);}catch(e){}nb=' 🏅 新紀錄！';}
+  document.getElementById('best').textContent=best;
+  var st=score>=900?'⭐⭐⭐':score>=600?'⭐⭐':'⭐';
+  document.getElementById('stars').textContent=st;
+  document.getElementById('finalScore').innerHTML='總分：<b>'+score+'</b> / 1000'+nb;
+  document.getElementById('gameover').style.display='flex';
+}
+window.startGame=startGame;
+window.resetGame=resetGame;
+})();
+</script>
+</body>
+</html>

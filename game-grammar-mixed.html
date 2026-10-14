@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>文法綜合大挑戰</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#1e1b4b;color:#e0e7ff;min-height:100vh;touch-action:manipulation}
+header{background:linear-gradient(135deg,#4c1d95,#8b5cf6);padding:16px;text-align:center}
+header h1{margin:0;font-size:22px}
+header p{margin:4px 0 0;font-size:14px;opacity:.85}
+.back{display:block;text-align:center;background:#312e81;color:#c4b5fd;text-decoration:none;padding:12px;font-size:16px;font-weight:600}
+.wrap{max-width:640px;margin:0 auto;padding:16px 14px 40px}
+.hud{display:flex;justify-content:space-around;background:#312e81;border-radius:12px;padding:12px;margin-bottom:14px;font-size:15px;font-weight:700}
+.hud span{color:#fbbf24}
+.hud .timer.low{color:#f87171;animation:blink .5s infinite alternate}
+@keyframes blink{from{opacity:1}to{opacity:.4}}
+.qcard{background:#312e81;border-radius:16px;padding:22px 18px;margin-bottom:14px}
+.qtype{display:inline-block;font-size:13px;font-weight:800;background:#4c1d95;color:#c4b5fd;border-radius:20px;padding:4px 12px;margin-bottom:10px}
+.qsent{font-size:19px;line-height:1.8}
+.qsent .blank{color:#fbbf24;border-bottom:3px solid #fbbf24;padding:0 10px;font-weight:800}
+.qzh{font-size:14px;color:#a5b4fc;margin-top:8px}
+.opts{display:grid;gap:10px}
+.opt{min-height:56px;font-size:18px;font-weight:700;border-radius:12px;border:2px solid #4c1d95;background:#1e1b4b;color:#e0e7ff;cursor:pointer;padding:10px 14px;text-align:left}
+.opt:active{transform:scale(.98)}
+.opt.correct{background:#166534;border-color:#4ade80;color:#fff}
+.opt.wrong{background:#7f1d1d;border-color:#f87171;color:#fff}
+.opt:disabled{opacity:.9;cursor:default}
+.feedback{min-height:44px;font-size:16px;font-weight:700;text-align:center;margin-top:10px}
+.feedback.good{color:#4ade80}
+.feedback.bad{color:#f87171}
+.progress{height:8px;background:#4c1d95;border-radius:4px;margin-bottom:14px;overflow:hidden}
+.progress .bar{height:100%;background:#8b5cf6;width:0%;transition:width .3s}
+.overlay{position:fixed;inset:0;background:rgba(30,27,75,.96);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;overflow-y:auto}
+.card{background:#312e81;border-radius:20px;padding:28px 24px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto}
+.card h2{margin:0 0 12px;font-size:24px;color:#c4b5fd}
+.card p,.card li{font-size:15px;line-height:1.7}
+.card ul{padding-left:20px}
+.card button{width:100%;min-height:56px;font-size:18px;font-weight:700;background:#8b5cf6;color:#fff;border:none;border-radius:14px;margin-top:10px;cursor:pointer}
+.rank{font-size:44px;text-align:center;margin:10px 0}
+</style>
+</head>
+<body>
+<header><h1>🏆 文法綜合大挑戰</h1><p>10 題限時 · 終極考驗</p></header>
+<a class="back" href="games.html">← 返回遊戲列表</a>
+<div class="wrap">
+<div class="hud"><div>📝 <span id="qnum">1</span>/10</div><div>⭐ <span id="score">0</span></div><div class="timer" id="timerBox">⏱️ <span id="timer">120</span>s</div></div>
+<div class="progress"><div class="bar" id="pbar"></div></div>
+<div class="qcard">
+<div class="qtype" id="qtype"></div>
+<div class="qsent" id="qsent"></div>
+<div class="qzh" id="qzh"></div>
+</div>
+<div class="opts" id="opts"></div>
+<div class="feedback" id="fb"></div>
+</div>
+<div class="overlay" id="intro"><div class="card">
+<h2>🏆 文法綜合大挑戰</h2>
+<p><b>玩法：</b>10 題混合題型（問句、片語、詞序、詞彙），限時 <b>120 秒</b>！答啱 +10 分，答錯唔扣分但會嘥時間。時間完或者做完 10 題即結算。</p>
+<div class="concept" style="background:#1e1b4b;border-radius:12px;padding:14px;margin:14px 0;font-size:15px">💡 <b>文法概念 — 綜合運用：</b>呢個挑戰混合晒問句倒裝、片語動詞、詞序規則同易混淆詞彙，考你融會貫通！</div>
+<ul><li>❓ 問句：do/does/did、wh-questions</li><li>🔗 片語：phrasal verbs 意思</li><li>🔤 詞序：揀正確句子</li><li>📚 詞彙：易混淆詞語境</li></ul>
+<p>攞到 90 分以上先係文法大師！</p>
+<button onclick="startGame()">接受挑戰！</button>
+</div></div>
+<div class="overlay" id="gameover" style="display:none"><div class="card">
+<div class="rank" id="rankEmoji">🏆</div>
+<h2 style="text-align:center">挑戰結束！</h2>
+<p id="finalScore" style="font-size:19px;text-align:center"></p>
+<button onclick="resetGame()">🔁 再挑戰一次</button>
+</div></div>
+<script>
+(function(){
+"use strict";
+var QS=[
+{t:"❓ 問句",s:"___ he watch TV yesterday?",zh:"",a:"Did",opts:["Do","Does","Did","Is"],tip:"yesterday 用 Did"},
+{t:"❓ 問句",s:"___ is knocking at the door?",zh:"",a:"Who",opts:["Who","What","Where","When"],tip:"問邊個用 Who"},
+{t:"🔗 片語",s:"\"give up\" 嘅意思係？",zh:"",a:"放棄",opts:["放棄","起身","出現","推遲"],tip:"give up = 放棄"},
+{t:"🔗 片語",s:"\"run out of\" 嘅意思係？",zh:"",a:"用完",opts:["跑出去","用完","想起","取消"],tip:"run out of = 用完"},
+{t:"🔤 詞序",s:"揀出正確嘅句子：",zh:"",a:"She always arrives early.",opts:["She always arrives early.","She arrives always early.","Always she arrives early.","She arrives early always."],tip:"頻率副詞放 be 動詞後、實義動詞前"},
+{t:"🔤 詞序",s:"揀出正確嘅句子：",zh:"",a:"We played football yesterday.",opts:["We played football yesterday.","We yesterday played football.","Yesterday we played football yesterday.","We played yesterday football."],tip:"時間放句尾"},
+{t:"📚 詞彙",s:"The medicine had a good ___ on him.",zh:"（隻藥對佢有好效果）",a:"effect",opts:["affect","effect","affects","effective"],tip:"effect 係名詞"},
+{t:"📚 詞彙",s:"Can you ___ me your notes?",zh:"（可唔可以借啲筆記畀我？）",a:"lend",opts:["borrow","lend","lent","borrows"],tip:"lend = 借出"},
+{t:"❓ 問句",s:"___ your mother cook well?",zh:"",a:"Does",opts:["Do","Does","Is","Are"],tip:"第三人稱單數用 Does"},
+{t:"📚 詞彙",s:"I need ___ help with my homework.",zh:"（我做功課需要少少幫忙）",a:"some",opts:["some","any","few","many"],tip:"肯定句用 some"},
+{t:"🔗 片語",s:"\"look after\" 嘅意思係？",zh:"",a:"照顧",opts:["照顧","尋找","期待","放棄"],tip:"look after = 照顧"},
+{t:"🔤 詞序",s:"揀出正確嘅句子：",zh:"",a:"There is a cat under the table.",opts:["There is a cat under the table.","Is there a cat under the table.","There a cat is under the table.","A cat there is under the table."],tip:"There is 句型"}
+];
+var qi=0,score=0,answered=false,order=[],timeLeft=120,timerId=null,gameActive=false;
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function startTimer(){
+  stopTimer();
+  timeLeft=120;
+  document.getElementById('timer').textContent=timeLeft;
+  document.getElementById('timerBox').classList.remove('low');
+  timerId=setInterval(function(){
+    timeLeft--;
+    document.getElementById('timer').textContent=timeLeft;
+    if(timeLeft<=20)document.getElementById('timerBox').classList.add('low');
+    if(timeLeft<=0){stopTimer();endGame(true);}
+  },1000);
+}
+function stopTimer(){if(timerId){clearInterval(timerId);timerId=null;}}
+function newQ(){
+  answered=false;
+  var fb=document.getElementById('fb');fb.textContent='';fb.className='feedback';
+  var q=QS[order[qi]];
+  document.getElementById('qnum').textContent=qi+1;
+  document.getElementById('pbar').style.width=(qi/10*100)+'%';
+  document.getElementById('qtype').textContent=q.t;
+  document.getElementById('qsent').innerHTML=q.s.replace('___','<span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;</span>');
+  document.getElementById('qzh').textContent=q.zh||'';
+  var box=document.getElementById('opts');box.innerHTML='';
+  shuffle(q.opts.slice()).forEach(function(o){
+    var b=document.createElement('button');
+    b.className='opt';b.textContent=o;
+    b.addEventListener('click',function(){answer(b,o,q);});
+    box.appendChild(b);
+  });
+}
+function answer(btn,choice,q){
+  if(answered||!gameActive)return;answered=true;
+  var btns=document.getElementById('opts').children;
+  for(var i=0;i<btns.length;i++){
+    btns[i].disabled=true;
+    if(btns[i].textContent===q.a)btns[i].classList.add('correct');
+  }
+  var fb=document.getElementById('fb');
+  if(choice===q.a){
+    score+=10;
+    fb.textContent='✅ 啱！+10 分';fb.className='feedback good';
+  }else{
+    btn.classList.add('wrong');
+    fb.textContent='❌ 答案係「'+q.a+'」';fb.className='feedback bad';
+  }
+  document.getElementById('score').textContent=score;
+  setTimeout(function(){
+    if(!gameActive)return;
+    qi++;
+    if(qi>=10){stopTimer();endGame(false);}else newQ();
+  },1300);
+}
+function endGame(timeout){
+  gameActive=false;stopTimer();
+  document.getElementById('pbar').style.width='100%';
+  var msg=(timeout?'⏱️ 時間到！<br>':'')+'做咗 '+Math.min(qi+(timeout?0:1),10)+' 題，總分：<b style="color:#fbbf24">'+score+'</b> / 100<br>';
+  var emoji='💪';
+  if(score>=90){msg+='🌟 文法大師！無人能敵！';emoji='🏆';}
+  else if(score>=70){msg+='👍 好叻，差少少就係大師！';emoji='🥈';}
+  else if(score>=50){msg+='📖 合格，繼續努力！';emoji='🥉';}
+  else{msg+='💪 多啲練習，唔好放棄！';}
+  document.getElementById('rankEmoji').textContent=emoji;
+  document.getElementById('finalScore').innerHTML=msg;
+  document.getElementById('gameover').style.display='flex';
+}
+function resetGame(){
+  qi=0;score=0;answered=false;
+  document.getElementById('score').textContent='0';
+  document.getElementById('gameover').style.display='none';
+  order=shuffle(QS.map(function(_,i){return i;})).slice(0,10);
+  gameActive=true;
+  startTimer();
+  newQ();
+}
+function startGame(){
+  document.getElementById('intro').style.display='none';
+  resetGame();
+}
+window.startGame=startGame;
+window.resetGame=resetGame;
+})();
+</script>
+</body>
+</html>

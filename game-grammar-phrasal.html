@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>片語動詞配對</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#1c1917;color:#fef3c7;min-height:100vh;touch-action:manipulation}
+header{background:linear-gradient(135deg,#7c2d12,#ea580c);padding:16px;text-align:center}
+header h1{margin:0;font-size:22px}
+header p{margin:4px 0 0;font-size:14px;opacity:.85}
+.back{display:block;text-align:center;background:#431407;color:#fdba74;text-decoration:none;padding:12px;font-size:16px;font-weight:600}
+.wrap{max-width:640px;margin:0 auto;padding:16px 14px 40px}
+.hud{display:flex;justify-content:space-around;background:#431407;border-radius:12px;padding:12px;margin-bottom:14px;font-size:15px;font-weight:700}
+.hud span{color:#fbbf24}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pcard{min-height:64px;font-size:16px;font-weight:700;border-radius:12px;border:2px solid #57534e;background:#292524;color:#fef3c7;cursor:pointer;padding:12px 8px;text-align:center;display:flex;align-items:center;justify-content:center}
+.pcard:active{transform:scale(.97)}
+.pcard.sel{background:#c2410c;border-color:#fdba74;color:#fff}
+.pcard.done{background:#166534;border-color:#4ade80;color:#fff;cursor:default;opacity:.85}
+.pcard.wrong{background:#7f1d1d;border-color:#f87171}
+.feedback{min-height:40px;font-size:16px;font-weight:700;text-align:center;margin-top:12px}
+.feedback.good{color:#4ade80}
+.tip{font-size:14px;color:#a8a29e;text-align:center;margin-top:8px}
+.overlay{position:fixed;inset:0;background:rgba(28,25,23,.96);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;overflow-y:auto}
+.card{background:#431407;border-radius:20px;padding:28px 24px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto}
+.card h2{margin:0 0 12px;font-size:24px;color:#fdba74}
+.card p,.card li{font-size:15px;line-height:1.7}
+.card ul{padding-left:20px}
+.concept{background:#1c1917;border-radius:12px;padding:14px;margin:14px 0;font-size:15px}
+.concept b{color:#4ade80}
+.card button{width:100%;min-height:56px;font-size:18px;font-weight:700;background:#ea580c;color:#fff;border:none;border-radius:14px;margin-top:10px;cursor:pointer}
+</style>
+</head>
+<body>
+<header><h1>🔗 片語動詞配對</h1><p>Phrasal Verbs 常用片語</p></header>
+<a class="back" href="games.html">← 返回遊戲列表</a>
+<div class="wrap">
+<div class="hud"><div>✅ <span id="matched">0</span>/8 對</div><div>⭐ <span id="score">0</span> 分</div><div>❌ 錯 <span id="miss">0</span></div></div>
+<div class="grid" id="grid"></div>
+<div class="feedback" id="fb"></div>
+<div class="tip">先撳一個英文片語，再撳佢嘅中文意思</div>
+</div>
+<div class="overlay" id="intro"><div class="card">
+<h2>🔗 片語動詞配對</h2>
+<p><b>玩法：</b>畫面有 8 個英文片語同 8 個中文意思，打散咗。先撳片語，再撳啱嘅意思，配啱一對 +10 分，配錯扣 2 分！</p>
+<div class="concept">💡 <b>文法概念 — Phrasal Verbs：</b><br>
+片語動詞 = 動詞 + 介詞／副詞，意思同原本個動詞可以完全唔同！<br>
+• <b>give up</b> = 放棄（唔係「畀起」）<br>
+• <b>look after</b> = 照顧（唔係「睇之後」）<br>
+• <b>run out of</b> = 用完（唔係「跑出」）<br>
+記片語要成個記，唔好逐隻字譯！</div>
+<button onclick="startGame()">開始配對！</button>
+</div></div>
+<div class="overlay" id="gameover" style="display:none"><div class="card">
+<h2>🏁 完成！</h2>
+<p id="finalScore" style="font-size:19px"></p>
+<button onclick="resetGame()">🔁 再玩一次</button>
+</div></div>
+<script>
+(function(){
+"use strict";
+var PAIRS=[
+["give up","放棄"],["look after","照顧"],["run out of","用完"],
+["put off","推遲"],["take off","起飛／脫下"],["break down","故障"],
+["come up with","想出"],["look forward to","期待"],
+["get over","克服"],["turn down","拒絕"],["pick up","拾起／接載"],
+["find out","查出"],["give in","讓步"],["call off","取消"]
+];
+var sel=null,matched=0,score=0,miss=0,lock=false;
+var cur=[];
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function build(){
+  sel=null;matched=0;score=0;miss=0;lock=false;
+  document.getElementById('matched').textContent='0';
+  document.getElementById('score').textContent='0';
+  document.getElementById('miss').textContent='0';
+  document.getElementById('fb').textContent='';
+  cur=shuffle(PAIRS.slice()).slice(0,8);
+  var cards=[];
+  cur.forEach(function(p,i){
+    cards.push({t:p[0],k:i,ph:true});
+    cards.push({t:p[1],k:i,ph:false});
+  });
+  shuffle(cards);
+  var g=document.getElementById('grid');g.innerHTML='';
+  cards.forEach(function(c){
+    var d=document.createElement('button');
+    d.className='pcard';d.textContent=c.t;
+    d.dataset.k=c.k;d.dataset.ph=c.ph?'1':'0';
+    d.addEventListener('click',function(){pick(d,c);});
+    g.appendChild(d);
+  });
+}
+function pick(el,c){
+  if(lock||el.classList.contains('done'))return;
+  var fb=document.getElementById('fb');
+  if(sel===null){
+    sel={el:el,k:c.k};
+    el.classList.add('sel');
+    return;
+  }
+  if(sel.el===el){el.classList.remove('sel');sel=null;return;}
+  // 必須一英一中
+  if(sel.el.dataset.ph===el.dataset.ph){
+    sel.el.classList.remove('sel');
+    sel={el:el,k:c.k};
+    el.classList.add('sel');
+    return;
+  }
+  if(String(sel.k)===String(c.k)){
+    sel.el.classList.remove('sel');
+    sel.el.classList.add('done');el.classList.add('done');
+    sel.el.disabled=true;el.disabled=true;
+    sel=null;matched++;
+    score+=10;
+    document.getElementById('matched').textContent=matched;
+    document.getElementById('score').textContent=score;
+    fb.textContent='✅ 配啱！+10 分';fb.className='feedback good';
+    if(matched>=8)setTimeout(endGame,800);
+  }else{
+    lock=true;
+    el.classList.add('wrong');sel.el.classList.add('wrong');
+    miss++;score=Math.max(0,score-2);
+    document.getElementById('miss').textContent=miss;
+    document.getElementById('score').textContent=score;
+    fb.textContent='❌ 唔啱，再試下！（-2 分）';fb.className='feedback';
+    var a=sel.el,b=el;
+    setTimeout(function(){
+      a.classList.remove('sel','wrong');b.classList.remove('wrong');
+      sel=null;lock=false;
+    },700);
+  }
+}
+function endGame(){
+  var msg='配啱 8 對！總分：<b style="color:#fbbf24">'+score+'</b><br>答錯 '+miss+' 次<br>';
+  msg+=miss===0?'🌟 完美！片語大師！':miss<=3?'👍 好叻！':'💪 繼續記熟啲片語！';
+  document.getElementById('finalScore').innerHTML=msg;
+  document.getElementById('gameover').style.display='flex';
+}
+function resetGame(){
+  document.getElementById('gameover').style.display='none';
+  build();
+}
+function startGame(){
+  document.getElementById('intro').style.display='none';
+  build();
+}
+window.startGame=startGame;
+window.resetGame=resetGame;
+})();
+</script>
+</body>
+</html>

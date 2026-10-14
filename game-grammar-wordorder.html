@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>詞序排列</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#082f2e;color:#ccfbf1;min-height:100vh;touch-action:manipulation}
+header{background:linear-gradient(135deg,#0f766e,#14b8a6);padding:16px;text-align:center}
+header h1{margin:0;font-size:22px}
+header p{margin:4px 0 0;font-size:14px;opacity:.85}
+.back{display:block;text-align:center;background:#134e4a;color:#5eead4;text-decoration:none;padding:12px;font-size:16px;font-weight:600}
+.wrap{max-width:640px;margin:0 auto;padding:16px 14px 40px}
+.hud{display:flex;justify-content:space-around;background:#134e4a;border-radius:12px;padding:12px;margin-bottom:14px;font-size:15px;font-weight:700}
+.hud span{color:#fbbf24}
+.sentence{min-height:84px;background:#134e4a;border-radius:14px;padding:14px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;font-size:18px;font-weight:700}
+.sentence .ph{color:#5eead4;font-size:15px;font-weight:400}
+.wbank{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:14px}
+.wbtn{min-height:52px;font-size:18px;font-weight:700;border-radius:12px;border:2px solid #14b8a6;background:#0f766e;color:#fff;padding:10px 16px;cursor:pointer}
+.wbtn:active{transform:scale(.95)}
+.wbtn.used{opacity:.25;pointer-events:none}
+.chosen{background:#0d9488;border-color:#5eead4;color:#fff;border-radius:10px;padding:6px 12px;font-size:18px;font-weight:700;cursor:pointer}
+.btnrow{display:flex;gap:10px;margin-top:6px}
+button.big{flex:1;min-height:56px;font-size:18px;font-weight:800;border:none;border-radius:14px;cursor:pointer}
+#checkBtn{background:#10b981;color:#022c22}
+#clearBtn{background:#57534e;color:#fff}
+.feedback{min-height:44px;font-size:16px;font-weight:700;text-align:center;margin-top:10px}
+.feedback.good{color:#4ade80}
+.feedback.bad{color:#f87171}
+.hintbox{background:#134e4a;border-radius:12px;padding:12px 14px;font-size:15px;margin-bottom:12px;text-align:center}
+.overlay{position:fixed;inset:0;background:rgba(4,47,46,.96);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;overflow-y:auto}
+.card{background:#134e4a;border-radius:20px;padding:28px 24px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto}
+.card h2{margin:0 0 12px;font-size:24px;color:#5eead4}
+.card p,.card li{font-size:15px;line-height:1.7}
+.card ul{padding-left:20px}
+.concept{background:#082f2e;border-radius:12px;padding:14px;margin:14px 0;font-size:15px}
+.concept b{color:#4ade80}
+.card button{width:100%;min-height:56px;font-size:18px;font-weight:700;background:#14b8a6;color:#042f2c;border:none;border-radius:14px;margin-top:10px;cursor:pointer}
+</style>
+</head>
+<body>
+<header><h1>🔤 詞序排列</h1><p>英文句子詞序 · SVO</p></header>
+<a class="back" href="games.html">← 返回遊戲列表</a>
+<div class="wrap">
+<div class="hud"><div>📝 第 <span id="rnum">1</span>/8 句</div><div>⭐ <span id="score">0</span> 分</div></div>
+<div class="hintbox" id="hint">撳下面嘅單詞，按正確次序砌成句子</div>
+<div class="sentence" id="sent"><span class="ph">撳單詞砌句子…</span></div>
+<div class="wbank" id="bank"></div>
+<div class="btnrow">
+<button class="big" id="clearBtn">🧹 清除</button>
+<button class="big" id="checkBtn">✅ 檢查</button>
+</div>
+<div class="feedback" id="fb"></div>
+</div>
+<div class="overlay" id="intro"><div class="card">
+<h2>🔤 詞序排列</h2>
+<p><b>玩法：</b>單詞打散咗，按正確英文詞序撳佢哋砌成句子。撳錯咗可以撳返個詞拎走，或者撳「清除」重嚟。8 句，砌啱 +10 分！</p>
+<div class="concept">💡 <b>文法概念 — 英文詞序：</b><br>
+• 基本：<b>主語 + 動詞 + 受詞 (SVO)</b>：I <b>like</b> apples.<br>
+• 時間地點放句尾，次序：<b>地點 → 時間</b>：We met <b>at school yesterday</b>.<br>
+• 頻率副詞（always/usually/often）放 be 動詞後、實義動詞前：She <b>is always</b> late. / He <b>often plays</b> football.</div>
+<button onclick="startGame()">開始砌句子！</button>
+</div></div>
+<div class="overlay" id="gameover" style="display:none"><div class="card">
+<h2>🏁 完成！</h2>
+<p id="finalScore" style="font-size:19px"></p>
+<button onclick="resetGame()">🔁 再玩一次</button>
+</div></div>
+<script>
+(function(){
+"use strict";
+var SS=[
+{w:["I","like","apples","."],t:"基本 SVO"},
+{w:["She","is","always","late","."],t:"頻率副詞放 be 動詞後"},
+{w:["He","often","plays","football","."],t:"頻率副詞放實義動詞前"},
+{w:["We","met","at","school","yesterday","."],t:"地點 → 時間"},
+{w:["They","went","to","the","park","last","Sunday","."],t:"地點 → 時間"},
+{w:["My","mother","cooks","dinner","every","day","."],t:"SVO + 時間"},
+{w:["The","cat","is","sleeping","on","the","sofa","."],t:"be + V-ing， 地點句尾"},
+{w:["Can","you","help","me","please","?"],t:"問句：情態動詞開頭"},
+{w:["There","is","a","book","on","the","desk","."],t:"There is 句型"},
+{w:["He","did","not","go","to","school","."],t:"否定句：did not + 原形"}
+];
+var ri=0,score=0,chosen=[],order=[];
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function newRound(){
+  chosen=[];
+  document.getElementById('fb').textContent='';
+  document.getElementById('fb').className='feedback';
+  var s=SS[order[ri]];
+  document.getElementById('rnum').textContent=ri+1;
+  document.getElementById('hint').textContent='💡 提示：'+s.t;
+  renderSent();renderBank(s);
+}
+function renderSent(){
+  var el=document.getElementById('sent');el.innerHTML='';
+  if(chosen.length===0){el.innerHTML='<span class="ph">撳單詞砌句子…</span>';return;}
+  chosen.forEach(function(c,idx){
+    var sp=document.createElement('span');
+    sp.className='chosen';sp.textContent=c.w;
+    sp.addEventListener('click',function(){unpick(idx);});
+    el.appendChild(sp);
+  });
+}
+function renderBank(s){
+  var el=document.getElementById('bank');el.innerHTML='';
+  var idxs=shuffle(s.w.map(function(_,i){return i;}));
+  idxs.forEach(function(i){
+    var b=document.createElement('button');
+    b.className='wbtn';b.textContent=s.w[i];b.dataset.i=i;
+    b.addEventListener('click',function(){pickWord(s,i,b);});
+    el.appendChild(b);
+  });
+}
+function pickWord(s,i,btn){
+  if(btn.classList.contains('used'))return;
+  btn.classList.add('used');
+  chosen.push({w:s.w[i],i:i});
+  renderSent();
+}
+function unpick(idx){
+  var c=chosen[idx];
+  chosen.splice(idx,1);
+  var btns=document.getElementById('bank').children;
+  for(var i=0;i<btns.length;i++){
+    if(btns[i].dataset.i==String(c.i))btns[i].classList.remove('used');
+  }
+  renderSent();
+}
+document.getElementById('clearBtn').addEventListener('click',function(){
+  chosen=[];
+  var s=SS[order[ri]];
+  renderSent();renderBank(s);
+  document.getElementById('fb').textContent='';
+});
+document.getElementById('checkBtn').addEventListener('click',function(){
+  var s=SS[order[ri]];
+  var fb=document.getElementById('fb');
+  if(chosen.length!==s.w.length){
+    fb.textContent='⚠️ 仲未砌完，仲差 '+(s.w.length-chosen.length)+' 個詞';fb.className='feedback bad';
+    return;
+  }
+  var ok=true;
+  for(var i=0;i<s.w.length;i++){
+    if(chosen[i].w!==s.w[i]){ok=false;break;}
+  }
+  if(ok){
+    score+=10;
+    document.getElementById('score').textContent=score;
+    fb.textContent='✅ 啱！+10 分（'+s.t+'）';fb.className='feedback good';
+    setTimeout(function(){
+      ri++;
+      if(ri>=8)endGame();else newRound();
+    },1400);
+  }else{
+    fb.textContent='❌ 詞序唔啱，再諗下！（'+s.t+'）';fb.className='feedback bad';
+  }
+});
+function endGame(){
+  var msg='砌啱 8 句！總分：<b style="color:#fbbf24">'+score+'</b> / 80<br>';
+  msg+=score>=70?'🌟 詞序大師！':score>=50?'👍 好叻！':'💪 記住 SVO 同時間地點次序！';
+  document.getElementById('finalScore').innerHTML=msg;
+  document.getElementById('gameover').style.display='flex';
+}
+function resetGame(){
+  ri=0;score=0;chosen=[];
+  document.getElementById('score').textContent='0';
+  document.getElementById('gameover').style.display='none';
+  order=shuffle(SS.map(function(_,i){return i;})).slice(0,8);
+  newRound();
+}
+function startGame(){
+  document.getElementById('intro').style.display='none';
+  resetGame();
+}
+window.startGame=startGame;
+window.resetGame=resetGame;
+})();
+</script>
+</body>
+</html>

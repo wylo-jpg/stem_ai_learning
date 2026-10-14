@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>冠詞大作戰</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#1e1b4b;color:#e0e7ff;min-height:100vh}
+header{background:linear-gradient(135deg,#4c1d95,#7c3aed);padding:16px;text-align:center}
+header h1{margin:0;font-size:22px}
+.hud{display:flex;justify-content:space-around;background:#2e1065;padding:12px;font-size:16px;font-weight:700}
+.hud span{color:#fbbf24}
+main{max-width:600px;margin:0 auto;padding:16px}
+.qcard{background:#312e81;border-radius:16px;padding:22px;margin:12px 0;min-height:120px}
+.qnum{font-size:14px;color:#a5b4fc;margin-bottom:8px}
+.qtext{font-size:20px;line-height:1.7}
+.qtext .blank{display:inline-block;min-width:70px;border-bottom:3px dashed #fbbf24;text-align:center;color:#fbbf24;font-weight:800}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.opts button{min-height:64px;font-size:20px;font-weight:800;border-radius:14px;border:2px solid #6d28d9;background:#2e1065;color:#e0e7ff;cursor:pointer;touch-action:manipulation}
+.opts button:active{transform:scale(.96)}
+.opts button.correct{background:#166534;border-color:#4ade80;color:#fff}
+.opts button.wrong{background:#7f1d1d;border-color:#f87171;color:#fff}
+.opts button:disabled{opacity:.9}
+.feedback{min-height:44px;font-size:16px;font-weight:700;text-align:center;margin-top:10px}
+.feedback.good{color:#4ade80}.feedback.bad{color:#f87171}
+.explain{background:#1e1b4b;border-left:4px solid #fbbf24;border-radius:8px;padding:10px 14px;margin-top:8px;font-size:15px;display:none}
+.overlay{position:fixed;inset:0;background:rgba(20,10,60,.96);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.card{background:#312e81;border-radius:20px;padding:28px 24px;max-width:540px;width:100%;max-height:92vh;overflow-y:auto}
+.card h2{margin:0 0 12px;font-size:24px;color:#fbbf24}
+.card p,.card li{font-size:16px;line-height:1.8}
+.card ul{padding-left:20px}
+.concept{background:#1e1b4b;border-radius:12px;padding:14px;margin:14px 0;font-size:15px}
+.concept b{color:#4ade80}
+.card button{width:100%;min-height:58px;font-size:18px;font-weight:700;background:#7c3aed;color:#fff;border:none;border-radius:14px;margin-top:10px;cursor:pointer;touch-action:manipulation}
+</style>
+</head>
+<body>
+<header><h1>📝 冠詞大作戰</h1></header>
+<div class="hud"><div>第 <span id="qn">1</span>/10 題</div><div>⭐ <span id="score">0</span> 分</div><div>🔥 <span id="streak">0</span> 連擊</div></div>
+<main>
+<div class="qcard">
+<div class="qnum" id="qnum"></div>
+<div class="qtext" id="qtext"></div>
+</div>
+<div class="opts" id="opts"></div>
+<div class="feedback" id="fb"></div>
+<div class="explain" id="explain"></div>
+</main>
+<div class="overlay" id="intro"><div class="card">
+<h2>📝 冠詞大作戰</h2>
+<p><b>玩法：</b>睇住英文句子，揀正確嘅冠詞（a / an / the / 唔使冠詞）填入空格。共 10 題，答啱 +100 分，連擊有加成！</p>
+<div class="concept">💡 <b>文法概念 — 冠詞三兄弟：</b><br>
+• <b>a</b>：子音「開頭發音」嘅單數名詞前（a book）<br>
+• <b>an</b>：母音「開頭發音」嘅單數名詞前（an apple、<b>an hour</b> — h 唔發音！）<br>
+• <b>the</b>：特指、獨一無二（the sun）、序數（the first）、雙方都知道嘅嘢<br>
+• <b>唔使冠詞</b>：複數／不可數名詞講緊一般概念（I like coffee）、專有名詞（Hong Kong）</div>
+<button onclick="startGame()">開始挑戰！</button>
+</div></div>
+<div class="overlay" id="gameover" style="display:none"><div class="card">
+<h2>🏁 完成！</h2>
+<p id="finalScore" style="font-size:19px"></p>
+<button onclick="resetGame()">再玩一次 🔁</button>
+</div></div>
+<script>
+var QS=[
+{q:"She is <b>___</b> honest girl.",a:"an",e:"honest 嘅 h 唔發音，開頭係母音 /ɒ/，所以用 an。"},
+{q:"I saw <b>___</b> movie yesterday. <b>___</b> movie was great.",a:"the",e:"第二句講返同一套戲，係特指，用 the。注意第一句係 a movie。",opts:["a","an","the","—"]},
+{q:"He is <b>___</b> university student.",a:"a",e:"university 開頭發 /j/（子音），雖然串法係 u，都係用 a。"},
+{q:"<b>___</b> sun rises in the east.",a:"the",e:"the sun 係獨一無二嘅嘢，永遠用 the。"},
+{q:"I need <b>___</b> hour to finish.",a:"an",e:"hour 嘅 h 唔發音，開頭係母音，所以用 an。"},
+{q:"She plays <b>___</b> piano very well.",a:"the",e:"樂器前面用 the：the piano、the guitar。"},
+{q:"They went to <b>___</b> Hong Kong last year.",a:"—",e:"專有名詞（地名）前面唔使冠詞。"},
+{q:"He is <b>___</b> tallest boy in class.",a:"the",e:"最高級前面一定要用 the：the tallest、the best。"},
+{q:"I had <b>___</b> sandwich for lunch.",a:"a",e:"第一次提到、單數、子音開頭，用 a。"},
+{q:"Water is <b>___</b> important resource.",a:"—",e:"water 係不可數名詞，講一般概念唔使冠詞。"},
+{q:"This is <b>___</b> first time I have been here.",a:"the",e:"序數 first 前面用 the。"},
+{q:"She is <b>___</b> doctor.",a:"a",e:"職業前面用 a/an：a doctor、an engineer。"},
+{q:"I like <b>___</b> dogs.",a:"—",e:"複數名詞講一般概念（所有狗），唔使冠詞。"},
+{q:"<b>___</b> Mount Everest is the highest mountain.",a:"—",e:"山名（單座山）唔使冠詞。但山脈要：the Himalayas。"},
+{q:"Pass me <b>___</b> salt, please.",a:"the",e:"雙方都知道係邊樽鹽，特指用 the。"},
+{q:"It takes <b>___</b> European to understand this.",a:"a",e:"European 開頭發 /j/（子音），用 a。"},
+{q:"She goes to <b>___</b> school by bus.",a:"—",e:"go to school 講緊「返學」呢個活動，唔使冠詞。"},
+{q:"He bought <b>___</b> umbrella.",a:"an",e:"umbrella 開頭係母音 /ʌ/，用 an。"},
+{q:"<b>___</b> English spoken here is very good.",a:"the",e:"特指「呢度講嘅英文」，用 the。"},
+{q:"I have <b>___</b> idea!",a:"an",e:"idea 開頭係母音 /aɪ/，用 an。"}
+];
+var ALL_OPTS=["a","an","the","—"];
+var qi=0,score=0,streak=0,order=[];
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function startGame(){document.getElementById('intro').style.display='none';resetGame();}
+function resetGame(){
+  document.getElementById('gameover').style.display='none';
+  qi=0;score=0;streak=0;
+  order=shuffle(QS.slice());
+  document.getElementById('score').textContent='0';
+  document.getElementById('streak').textContent='0';
+  showQ();
+}
+function showQ(){
+  var q=order[qi];
+  document.getElementById('qn').textContent=(qi+1);
+  document.getElementById('qnum').textContent='第 '+(qi+1)+' 題';
+  document.getElementById('qtext').innerHTML=q.q;
+  document.getElementById('fb').textContent='';
+  document.getElementById('fb').className='feedback';
+  var ex=document.getElementById('explain');ex.style.display='none';ex.innerHTML='';
+  var opts=shuffle(ALL_OPTS.slice());
+  var box=document.getElementById('opts');box.innerHTML='';
+  opts.forEach(function(o){
+    var b=document.createElement('button');
+    b.textContent=(o==='—'?'✕ 唔使冠詞':o);
+    b.addEventListener('click',function(){answer(b,o,q);});
+    box.appendChild(b);
+  });
+}
+function answer(btn,choice,q){
+  var btns=document.getElementById('opts').children;
+  for(var i=0;i<btns.length;i++)btns[i].disabled=true;
+  var fb=document.getElementById('fb');
+  var ex=document.getElementById('explain');
+  if(choice===q.a){
+    btn.className='correct';
+    streak++;
+    var pts=100+(streak-1)*20;
+    score+=pts;
+    fb.textContent='✅ 啱！+'+pts+' 分';
+    fb.className='feedback good';
+  }else{
+    btn.className='wrong';
+    streak=0;
+    fb.textContent='❌ 答案係「'+(q.a==='—'?'唔使冠詞':q.a)+'」';
+    fb.className='feedback bad';
+    for(var j=0;j<btns.length;j++){
+      if(btns[j].textContent===(q.a==='—'?'✕ 唔使冠詞':q.a))btns[j].className='correct';
+    }
+  }
+  document.getElementById('score').textContent=score;
+  document.getElementById('streak').textContent=streak;
+  ex.innerHTML='💡 '+q.e;
+  ex.style.display='block';
+  setTimeout(function(){
+    qi++;
+    if(qi>=10)endGame();else showQ();
+  },2200);
+}
+function endGame(){
+  document.getElementById('gameover').style.display='flex';
+  var msg='總分：<b style="color:#fbbf24">'+score+'</b> 分<br>';
+  msg+=score>=1000?'🌟 冠詞大師！完美！':score>=700?'👍 好叻，繼續努力！':'💪 記住 a/an 睇發音，唔係睇串法！';
+  document.getElementById('finalScore').innerHTML=msg;
+}
+</script>
+</body>
+</html>

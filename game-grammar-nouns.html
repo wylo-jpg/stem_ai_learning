@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>可數名詞大考驗</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#fffbeb;color:#78350f;min-height:100vh}
+header{background:linear-gradient(135deg,#b45309,#f59e0b);color:#fff;padding:16px;text-align:center}
+header h1{margin:0;font-size:22px}
+.hud{display:flex;justify-content:space-around;background:#78350f;color:#fff;padding:10px;font-size:15px;font-weight:700}
+.hud span{color:#fde047}
+main{max-width:600px;margin:0 auto;padding:16px}
+.qcard{background:#fff;border-radius:16px;padding:22px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.08);text-align:center;border:2px solid #fde68a}
+.qnum{font-size:14px;color:#b45309;font-weight:700;margin-bottom:8px}
+.qtext{font-size:21px;font-weight:700;line-height:1.7}
+.qtext .blank{color:#dc2626;border-bottom:3px dashed #dc2626;padding:0 8px}
+.answers{display:flex;flex-direction:column;gap:12px}
+.abtn{min-height:60px;font-size:19px;font-weight:700;border:3px solid #b45309;background:#fff;color:#78350f;border-radius:14px;cursor:pointer;touch-action:manipulation}
+.abtn:active{transform:scale(.98)}
+.abtn.correct{background:#16a34a;color:#fff;border-color:#16a34a}
+.abtn.wrong{background:#dc2626;color:#fff;border-color:#dc2626}
+.abtn:disabled{opacity:1;cursor:default}
+.feedback{min-height:60px;font-size:16px;font-weight:700;text-align:center;margin-top:10px;line-height:1.6}
+.feedback.good{color:#16a34a}.feedback.bad{color:#dc2626}
+.explain{font-size:14px;color:#475569;font-weight:400}
+.nextbtn{display:none;width:100%;min-height:56px;font-size:18px;font-weight:800;background:#b45309;color:#fff;border:none;border-radius:14px;margin-top:8px;cursor:pointer;touch-action:manipulation}
+.overlay{position:fixed;inset:0;background:rgba(120,53,15,.96);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.card{background:#fff;border-radius:20px;padding:28px 24px;max-width:540px;width:100%;max-height:92vh;overflow-y:auto;color:#78350f}
+.card h2{margin:0 0 12px;font-size:24px}
+.card p,.card li{font-size:16px;line-height:1.7}
+.card ul{padding-left:20px}
+.concept{background:#fffbeb;border-radius:12px;padding:14px;margin:14px 0;font-size:15px;border:1px solid #fde68a}
+.concept b{color:#b45309}
+.card button{width:100%;min-height:58px;font-size:18px;font-weight:800;background:#b45309;color:#fff;border:none;border-radius:14px;margin-top:12px;cursor:pointer;touch-action:manipulation}
+.stars{font-size:40px;text-align:center;margin:8px 0}
+</style>
+</head>
+<body>
+<header><h1>⚖️ 可數名詞大考驗</h1></header>
+<div class="hud"><div>題目 <span id="qnum">1</span>/10</div><div>分數 <span id="score">0</span></div><div>最高 <span id="best">0</span></div></div>
+<main>
+<div class="qcard">
+<div class="qnum" id="qhint">第 1 題</div>
+<div class="qtext" id="qtext"></div>
+</div>
+<div class="answers" id="answers"></div>
+<div class="feedback" id="fb"></div>
+<button class="nextbtn" id="nextBtn">下一題 →</button>
+</main>
+<div class="overlay" id="intro"><div class="card">
+<h2>⚖️ 可數名詞大考驗</h2>
+<p><b>玩法：</b>句子入面有個空格，揀啱嘅量詞或形式（many/much、a few/a little 等）。共 10 題，答啱 +100 分。</p>
+<div class="concept">💡 <b>文法概念：</b><br>
+• <b>可數名詞</b> (countable)：數得出，一個兩個咁數。例：book、apple、student<br>
+→ 用 <b>many</b>、<b>a few</b>、<b>few</b><br><br>
+• <b>不可數名詞</b> (uncountable)：數唔出，係一嚿嘢。例：water、money、time、information<br>
+→ 用 <b>much</b>、<b>a little</b>、<b>little</b><br><br>
+記住：<b>a few</b> + 可數（有少少，正面）；<b>few</b> + 可數（幾乎冇，負面）；<b>a little</b> + 不可數（有少少）；<b>little</b> + 不可數（幾乎冇）！</div>
+<button onclick="startGame()">開始挑戰！</button>
+</div></div>
+<div class="overlay" id="gameover" style="display:none"><div class="card">
+<h2>🎉 完成！</h2>
+<div class="stars" id="stars"></div>
+<p id="finalScore" style="font-size:19px;text-align:center"></p>
+<button onclick="resetGame()">🔁 再玩一次</button>
+</div></div>
+<script>
+(function(){
+"use strict";
+var BANK=[
+{q:"There isn't ___ water in the bottle.",correct:"much",wrong:"many",tip:"water 係不可數名詞，用 much"},
+{q:"She has ___ friends at school.",correct:"many",wrong:"much",tip:"friends 係可數名詞，用 many"},
+{q:"I need ___ sugar for the cake.",correct:"a little",wrong:"a few",tip:"sugar 係不可數名詞，用 a little（有少少）"},
+{q:"Only ___ students came to the meeting.",correct:"a few",wrong:"a little",tip:"students 係可數名詞，用 a few（有幾個）"},
+{q:"There is ___ milk left. Let's buy some.",correct:"little",wrong:"few",tip:"milk 不可數 + 幾乎冇（負面）→ little"},
+{q:"He doesn't have ___ money.",correct:"much",wrong:"many",tip:"money 係不可數名詞（唔可以數「一個錢兩個錢」），用 much"},
+{q:"I bought ___ apples yesterday.",correct:"some",wrong:"any",tip:"肯定句用 some"},
+{q:"Do you have ___ questions?",correct:"any",wrong:"some",tip:"疑問句一般用 any"},
+{q:"There are ___ books on the shelf.",correct:"many",wrong:"much",tip:"books 可數，用 many"},
+{q:"She drank ___ coffee this morning.",correct:"much",wrong:"many",tip:"coffee（飲品）不可數，用 much"},
+{q:"We have ___ time left. Hurry up!",correct:"little",wrong:"few",tip:"time 不可數 + 幾乎冇 → little"},
+{q:"___ children like vegetables.",correct:"Few",wrong:"Little",tip:"children 可數 + 幾乎冇（負面）→ Few"},
+{q:"I need ___ information about the trip.",correct:"some",wrong:"any",tip:"information 不可數；肯定句用 some"},
+{q:"He has ___ experience in teaching.",correct:"little",wrong:"few",tip:"experience（經驗）不可數，用 little"},
+{q:"How ___ people are coming?",correct:"many",wrong:"much",tip:"people 可數，用 many"}
+];
+var qs=[],idx=0,score=0,best=0,answered=false;
+try{best=parseInt(localStorage.getItem('nounsBest')||'0',10)||0;}catch(e){}
+document.getElementById('best').textContent=best;
+
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+function startGame(){
+  document.getElementById('intro').style.display='none';
+  document.getElementById('gameover').style.display='none';
+  resetGame();
+}
+function resetGame(){
+  qs=shuffle(BANK.slice()).slice(0,10);
+  idx=0;score=0;answered=false;
+  document.getElementById('score').textContent='0';
+  document.getElementById('gameover').style.display='none';
+  renderQ();
+}
+function renderQ(){
+  answered=false;
+  var item=qs[idx];
+  document.getElementById('qnum').textContent=(idx+1);
+  document.getElementById('qhint').textContent='第 '+(idx+1)+' 題';
+  var parts=item.q.split('___');
+  document.getElementById('qtext').innerHTML=parts[0]+'<span class="blank">____</span>'+parts[1];
+  var opts=shuffle([item.correct,item.wrong]);
+  var box=document.getElementById('answers');box.innerHTML='';
+  opts.forEach(function(o){
+    var b=document.createElement('button');
+    b.className='abtn';b.textContent=o;
+    b.addEventListener('click',function(){answer(b,o,item);});
+    box.appendChild(b);
+  });
+  document.getElementById('fb').textContent='';
+  document.getElementById('fb').className='feedback';
+  document.getElementById('nextBtn').style.display='none';
+}
+function answer(btn,choice,item){
+  if(answered)return;answered=true;
+  var btns=document.getElementById('answers').children;
+  for(var i=0;i<btns.length;i++){btns[i].disabled=true;}
+  var fb=document.getElementById('fb');
+  if(choice===item.correct){
+    btn.classList.add('correct');
+    score+=100;
+    document.getElementById('score').textContent=score;
+    fb.innerHTML='✅ 答啱！<div class="explain">'+item.tip+'</div>';
+    fb.className='feedback good';
+  }else{
+    btn.classList.add('wrong');
+    for(var j=0;j<btns.length;j++){if(btns[j].textContent===item.correct)btns[j].classList.add('correct');}
+    fb.innerHTML='❌ 唔啱，正確答案係 <b>'+item.correct+'</b><div class="explain">'+item.tip+'</div>';
+    fb.className='feedback bad';
+  }
+  var nb=document.getElementById('nextBtn');
+  nb.textContent=(idx>=qs.length-1)?'睇成績 →':'下一題 →';
+  nb.style.display='block';
+}
+document.getElementById('nextBtn').addEventListener('click',function(){
+  idx++;
+  if(idx>=qs.length){endGame();}else{renderQ();}
+});
+function endGame(){
+  var nb='';
+  if(score>best){best=score;try{localStorage.setItem('nounsBest',best);}catch(e){}nb=' 🏅 新紀錄！';}
+  document.getElementById('best').textContent=best;
+  var st=score>=900?'⭐⭐⭐':score>=600?'⭐⭐':'⭐';
+  document.getElementById('stars').textContent=st;
+  document.getElementById('finalScore').innerHTML='總分：<b>'+score+'</b> / 1000'+nb;
+  document.getElementById('gameover').style.display='flex';
+}
+window.startGame=startGame;
+window.resetGame=resetGame;
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>主謂一致</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#3f1d4e;color:#f5e6ff;min-height:100vh}
+header{background:linear-gradient(135deg,#6b21a8,#a855f7);padding:16px;text-align:center}
+header h1{margin:0;font-size:22px}
+.hud{display:flex;justify-content:space-around;background:#2e1065;padding:12px;font-size:16px;font-weight:700}
+.hud span{color:#fbbf24}
+main{max-width:600px;margin:0 auto;padding:16px}
+.qcard{background:#581c87;border-radius:16px;padding:22px;margin:12px 0;min-height:120px}
+.qnum{font-size:14px;color:#d8b4fe;margin-bottom:8px}
+.qtext{font-size:20px;line-height:1.7}
+.qtext .blank{display:inline-block;min-width:70px;border-bottom:3px dashed #fbbf24;text-align:center;color:#fbbf24;font-weight:800}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.opts button{min-height:64px;font-size:20px;font-weight:800;border-radius:14px;border:2px solid #a855f7;background:#2e1065;color:#f5e6ff;cursor:pointer;touch-action:manipulation}
+.opts button:active{transform:scale(.96)}
+.opts button.correct{background:#166534;border-color:#4ade80;color:#fff}
+.opts button.wrong{background:#7f1d1d;border-color:#f87171;color:#fff}
+.opts button:disabled{opacity:.9}
+.feedback{min-height:44px;font-size:16px;font-weight:700;text-align:center;margin-top:10px}
+.feedback.good{color:#4ade80}.feedback.bad{color:#f87171}
+.explain{background:#3f1d4e;border-left:4px solid #fbbf24;border-radius:8px;padding:10px 14px;margin-top:8px;font-size:15px;display:none}
+.overlay{position:fixed;inset:0;background:rgba(40,10,70,.96);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.card{background:#581c87;border-radius:20px;padding:28px 24px;max-width:540px;width:100%;max-height:92vh;overflow-y:auto}
+.card h2{margin:0 0 12px;font-size:24px;color:#fbbf24}
+.card p,.card li{font-size:16px;line-height:1.8}
+.card ul{padding-left:20px}
+.concept{background:#3f1d4e;border-radius:12px;padding:14px;margin:14px 0;font-size:15px}
+.concept b{color:#4ade80}
+.card button{width:100%;min-height:58px;font-size:18px;font-weight:700;background:#a855f7;color:#fff;border:none;border-radius:14px;margin-top:10px;cursor:pointer;touch-action:manipulation}
+</style>
+</head>
+<body>
+<header><h1>⚖️ 主謂一致</h1></header>
+<div class="hud"><div>第 <span id="qn">1</span>/10 題</div><div>⭐ <span id="score">0</span> 分</div><div>🔥 <span id="streak">0</span> 連擊</div></div>
+<main>
+<div class="qcard">
+<div class="qnum" id="qnum"></div>
+<div class="qtext" id="qtext"></div>
+</div>
+<div class="opts" id="opts"></div>
+<div class="feedback" id="fb"></div>
+<div class="explain" id="explain"></div>
+</main>
+<div class="overlay" id="intro"><div class="card">
+<h2>⚖️ 主謂一致</h2>
+<p><b>玩法：</b>睇住英文句子，揀正確嘅動詞形式填入空格。記住：主語單數 → 動詞加 s；主語複數 → 動詞唔加 s！共 10 題，答啱 +100 分，連擊有加成！</p>
+<div class="concept">💡 <b>文法概念 — Subject-Verb Agreement：</b><br>
+• <b>基本規則：</b>He <b>plays</b> / They <b>play</b>（第三身單數加 s）<br>
+• <b>陷阱：</b>主語同動詞之間嘅介詞片語唔影響單複數！（The boy <b>with</b> his friends <b>is</b>…）<br>
+• <b>each / every / either / neither</b> 永遠單數<br>
+• <b>There is / There are</b> 睇後面個名詞</div>
+<button onclick="startGame()">開始挑戰！</button>
+</div></div>
+<div class="overlay" id="gameover" style="display:none"><div class="card">
+<h2>🏁 完成！</h2>
+<p id="finalScore" style="font-size:19px"></p>
+<button onclick="resetGame()">再玩一次 🔁</button>
+</div></div>
+<script>
+var QS=[
+{q:"He <b>___</b> football every Sunday.",a:"plays",o:["play","plays"],e:"主語 He 係第三身單數，動詞要加 s：plays。"},
+{q:"They <b>___</b> in Hong Kong.",a:"live",o:["live","lives"],e:"主語 They 係複數，動詞唔加 s：live。"},
+{q:"The boy with his friends <b>___</b> waiting outside.",a:"is",o:["is","are"],e:"陷阱！真正主語係 The boy（單數），with his friends 係介詞片語，唔影響。"},
+{q:"Each of the students <b>___</b> a laptop.",a:"has",o:["have","has"],e:"each 永遠單數，動詞加 s：has。"},
+{q:"There <b>___</b> many books on the shelf.",a:"are",o:["is","are"],e:"There are + 複數名詞（many books）。"},
+{q:"My sister <b>___</b> like spicy food.",a:"doesn't",o:["don't","doesn't"],e:"My sister 係第三身單數，用 doesn't。"},
+{q:"The news <b>___</b> shocking.",a:"is",o:["is","are"],e:"news 係不可數名詞，永遠單數！唔好畀個 s 呃到。"},
+{q:"Neither of the answers <b>___</b> correct.",a:"is",o:["is","are"],e:"neither 永遠單數：is。"},
+{q:"My parents <b>___</b> going to travel next month.",a:"are",o:["is","are"],e:"My parents 係複數，用 are。"},
+{q:"She <b>___</b> to school by bus.",a:"goes",o:["go","goes"],e:"She 第三身單數，go → goes。"},
+{q:"The children <b>___</b> playing in the park.",a:"are",o:["is","are"],e:"children 係複數（child 嘅複數），用 are。"},
+{q:"Every student <b>___</b> to wear uniform.",a:"has",o:["have","has"],e:"every 永遠單數：has。"},
+{q:"Fish <b>___</b> good for health.",a:"is",o:["is","are"],e:"fish 講緊「魚肉」呢種食物，不可數，單數。"},
+{q:"The team <b>___</b> won the match.",a:"has",o:["have","has"],e:"team 係集體名詞，當一個整體睇，單數：has。"},
+{q:"I <b>___</b> a student.",a:"am",o:["am","is"],e:"I 永遠配 am。"},
+{q:"You <b>___</b> very kind.",a:"are",o:["is","are"],e:"You 永遠配 are，就算係單數「你」都係。"},
+{q:"The box of chocolates <b>___</b> on the table.",a:"is",o:["is","are"],e:"真正主語係 The box（單數），of chocolates 係介詞片語。"},
+{q:"Either Jack or his friends <b>___</b> coming.",a:"are",o:["is","are"],e:"either…or 就近原則：睇最近主語 his friends（複數），用 are。"},
+{q:"Mathematics <b>___</b> my favourite subject.",a:"is",o:["is","are"],e:"學科名（Mathematics、Physics）永遠單數，唔好畀個 s 呃到。"},
+{q:"The police <b>___</b> investigating the case.",a:"are",o:["is","are"],e:"police 永遠複數（指成班警察），用 are。"}
+];
+var qi=0,score=0,streak=0,order=[];
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function startGame(){document.getElementById('intro').style.display='none';resetGame();}
+function resetGame(){
+  document.getElementById('gameover').style.display='none';
+  qi=0;score=0;streak=0;
+  order=shuffle(QS.slice());
+  document.getElementById('score').textContent='0';
+  document.getElementById('streak').textContent='0';
+  showQ();
+}
+function showQ(){
+  var q=order[qi];
+  document.getElementById('qn').textContent=(qi+1);
+  document.getElementById('qnum').textContent='第 '+(qi+1)+' 題';
+  document.getElementById('qtext').innerHTML=q.q;
+  document.getElementById('fb').textContent='';
+  document.getElementById('fb').className='feedback';
+  var ex=document.getElementById('explain');ex.style.display='none';ex.innerHTML='';
+  var opts=shuffle(q.o.slice());
+  var box=document.getElementById('opts');box.innerHTML='';
+  opts.forEach(function(o){
+    var b=document.createElement('button');
+    b.textContent=o;
+    b.addEventListener('click',function(){answer(b,o,q);});
+    box.appendChild(b);
+  });
+}
+function answer(btn,choice,q){
+  var btns=document.getElementById('opts').children;
+  for(var i=0;i<btns.length;i++)btns[i].disabled=true;
+  var fb=document.getElementById('fb');
+  var ex=document.getElementById('explain');
+  if(choice===q.a){
+    btn.className='correct';
+    streak++;
+    var pts=100+(streak-1)*20;
+    score+=pts;
+    fb.textContent='✅ 啱！+'+pts+' 分';
+    fb.className='feedback good';
+  }else{
+    btn.className='wrong';
+    streak=0;
+    fb.textContent='❌ 答案係「'+q.a+'」';
+    fb.className='feedback bad';
+    for(var j=0;j<btns.length;j++){
+      if(btns[j].textContent===q.a)btns[j].className='correct';
+    }
+  }
+  document.getElementById('score').textContent=score;
+  document.getElementById('streak').textContent=streak;
+  ex.innerHTML='💡 '+q.e;
+  ex.style.display='block';
+  setTimeout(function(){
+    qi++;
+    if(qi>=10)endGame();else showQ();
+  },2200);
+}
+function endGame(){
+  document.getElementById('gameover').style.display='flex';
+  var msg='總分：<b style="color:#fbbf24">'+score+'</b> 分<br>';
+  msg+=score>=1000?'🌟 主謂一致大師！單複數難唔到你！':score>=700?'👍 好叻，繼續努力！':'💪 記住：搵出真正主語，唔好畀介詞片語呃到！';
+  document.getElementById('finalScore').innerHTML=msg;
+}
+</script>
+</body>
+</html>
