@@ -169,8 +169,8 @@ function draw(){
     ctx.beginPath();ctx.arc(X,Y,9,0,7);
     ctx.fillStyle=data[i][2]===1?'#ff595e':'#4cc9f0';ctx.fill();
     ctx.lineWidth=3;ctx.strokeStyle=pred===data[i][2]?'#06d6a0':'#ffd166';ctx.stroke();
-    ctx.fillStyle='#fff';ctx.font='bold 9px sans-serif';ctx.textAlign='center';
-    ctx.fillText(pred===data[i][2]?'✓':'✗',X,Y+3);
+    ctx.fillStyle='#fff';ctx.font='bold 14px sans-serif';ctx.textAlign='center';
+    ctx.fillText(pred===data[i][2]?'✓':'✗',X,Y+4);
   }
 }
 var lc=document.getElementById('lossC'),lctx=lc.getContext('2d');
@@ -246,7 +246,9 @@ function autoTrain(){
   },60);
 }
 function setLevel(l){
-  level=l;training=false;resetW();
+  level=l;training=false;
+  if(l===1)lv1done=false;
+  resetW();
   document.getElementById('lv1').classList.toggle('active',l===1);
   document.getElementById('lv2').classList.toggle('active',l===2);
   data=(l===1)?DATA1:DATA2;

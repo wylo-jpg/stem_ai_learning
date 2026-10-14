@@ -89,7 +89,7 @@ function init(){pop=[];for(let i=0;i<POP;i++)pop.push(newCreature());gen=0;bestH
 
 function simulate(){
   // reset positions
-  pop.forEach(c=>{c.x=rand(60,W-60);c.y=H-30;c.fit=0;c.steps=0;c.ph=rand(0,6.28);});
+  pop.forEach(c=>{c.x=rand(60,W-60);c.y=H-30;c.fit=0;c.steps=0;c.ph=rand(0,6.28);c.done=false;});
   for(let s=0;s<STEPS;s++){
     let allDone=true;
     pop.forEach(c=>{
@@ -152,13 +152,13 @@ function drawScene(){
     ctx.rotate(Math.sin(c.ph)*0.2);
     ctx.fillStyle=t;ctx.beginPath();ctx.moveTo(0,-9);ctx.lineTo(7,7);ctx.lineTo(-7,7);ctx.closePath();ctx.fill();
     ctx.restore();
-    if(c===best&&c.fit>0){ctx.fillStyle='#fbbf24';ctx.font='13px sans-serif';ctx.fillText('⭐',c.x,c.y-14);}
+    if(c===best&&c.fit>0){ctx.fillStyle='#fbbf24';ctx.font='14px sans-serif';ctx.fillText('⭐',c.x,c.y-14);}
   });
 }
 function drawChart(){
   const ch=document.getElementById('chart'),c=ch.getContext('2d');
   c.clearRect(0,0,480,90);
-  c.fillStyle='#86efac';c.font='12px sans-serif';c.fillText('歷代最佳適應度',8,16);
+  c.fillStyle='#86efac';c.font='14px sans-serif';c.fillText('歷代最佳適應度',8,16);
   if(bestHist.length<1)return;
   c.strokeStyle='#4ade80';c.lineWidth=2.5;c.beginPath();
   bestHist.forEach((v,i)=>{

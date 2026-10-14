@@ -146,7 +146,7 @@ function margin(){
  let m=1;
  for(let k=1;k<n;k++){
   let sx=0,sw=0;
-  for(let i=k;i<n;i++){sx+=blocks[i].x*b.w;sw+=b.w;}
+  for(let i=k;i<n;i++){sx+=blocks[i].x*blocks[i].w;sw+=blocks[i].w;}
   const com=sx/sw,sup=blocks[k-1];
   const d=Math.min(com-(sup.x-sup.w/2),(sup.x+sup.w/2)-com)/(sup.w/2);
   m=Math.min(m,d);
@@ -224,9 +224,9 @@ function draw(){
   const top=topY();
   ctx.fillStyle=mg<0.25?'#dc2626':'#f59e0b';
   ctx.beginPath();ctx.moveTo(com,top-46);ctx.lineTo(com-11,top-64);ctx.lineTo(com+11,top-64);ctx.closePath();ctx.fill();
-  ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText('重心',com,top-70);
-  if(mg<0.25){ctx.fillStyle='#dc2626';ctx.font='bold 15px sans-serif';
-   ctx.fillText('⚠️ 好危險！',com,top-90);}
+  ctx.font='bold 16px sans-serif';ctx.textAlign='center';ctx.fillText('重心',com,top-70);
+  if(mg<0.25){ctx.fillStyle='#dc2626';ctx.font='bold 18px sans-serif';
+   ctx.fillText('⚠️ 好危險！',com,top-92);}
  }
  // 跌緊嘅積木
  if(falling&&!over){
@@ -241,8 +241,8 @@ function draw(){
  // 高度線
  if(blocks.length){
   const hgt=Math.round((GROUND-topY())/BH);
-  ctx.fillStyle='#1f2937';ctx.font='bold 16px sans-serif';ctx.textAlign='left';
-  ctx.fillText('高度：'+hgt+' 層',14,30);
+  ctx.fillStyle='#1f2937';ctx.font='bold 18px sans-serif';ctx.textAlign='left';
+  ctx.fillText('高度：'+hgt+' 層',14,32);
  }
 }
 let last=0;

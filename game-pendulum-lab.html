@@ -132,7 +132,7 @@ function draw(){
   var gr=ctx.createRadialGradient(bx,by,2,bx,by,20);
   gr.addColorStop(0,'#ddd6fe'); gr.addColorStop(1,'#7c3aed');
   ctx.fillStyle=gr; ctx.beginPath(); ctx.arc(bx,by,18,0,7); ctx.fill();
-  ctx.fillStyle='#94a3b8'; ctx.font='13px sans-serif'; ctx.textAlign='center';
+  ctx.fillStyle='#94a3b8'; ctx.font='bold 15px sans-serif'; ctx.textAlign='center';
   ctx.fillText('支點',px,py-14);
   ctx.fillText('擺長 '+L.toFixed(2)+' m',(px+bx)/2-30,(py+by)/2);
 }

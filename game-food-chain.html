@@ -144,9 +144,18 @@ function nextRound(){
   if(r>=rounds.length){
     document.getElementById('stageTitle').innerHTML='🏆 全部完成！總分 '+score+' 分';
     document.getElementById('chain').innerHTML='';document.getElementById('pool').innerHTML='';
-    document.getElementById('qbox').classList.add('hidden');flash('','');return;
+    document.getElementById('qbox').classList.add('hidden');flash('','');
+    showRestart();return;
   }
   loadRound();
+}
+function showRestart(){
+  if(document.getElementById('btnRestart'))return;
+  const b=document.createElement('button');
+  b.id='btnRestart';b.textContent='🔁 再玩一次';
+  b.style.cssText='width:100%;min-height:56px;font-size:18px;font-weight:800;border:none;border-radius:12px;background:#65a30d;color:#fff;margin-top:10px;cursor:pointer;font-family:inherit';
+  b.onclick=()=>{r=0;score=0;upd();b.remove();loadRound();};
+  document.getElementById('qbox').after(b);
 }
 function flash(t,cls){const m=document.getElementById('msg');m.innerHTML=t;m.className='msg '+cls;}
 function upd(){document.getElementById('score').textContent=score;}

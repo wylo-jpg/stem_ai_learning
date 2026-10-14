@@ -26,7 +26,7 @@ button.big{flex:1;min-height:52px;font-size:16px;font-weight:700;border:none;bor
 .tile.sel{outline:4px solid var(--blue);outline-offset:-4px}
 .tile.glow{animation:glow 1s ease 2}
 @keyframes glow{0%,100%{box-shadow:0 2px 5px rgba(0,0,0,.12)}50%{box-shadow:0 0 0 5px var(--green)}}
-.tile .ailabel{display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;background:rgba(0,0,0,.55);border-radius:10px;padding:2px;text-align:center;line-height:1.3}
+.tile .ailabel{display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;background:rgba(0,0,0,.55);border-radius:10px;padding:2px;text-align:center;line-height:1.3}
 #board.aiview .tile .ailabel{display:flex}
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
 .overlay.hidden{display:none}
@@ -97,15 +97,32 @@ var board=document.getElementById('board');
 function $(id){return document.getElementById(id);}
 
 function shuffled(a){
-  var r=a.slice();
-  for(var i=r.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=r[i];r[i]=r[j];r[j]=t;}
-  if(r.every(function(v,i){return v===a[i];})){var k=Math.floor(Math.random()*(r.length-1));var t2=r[k];r[k]=r[k+1];r[k+1]=t2;}
+  var r=a.slice(),tries=0;
+  do{
+    for(var i=r.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=r[i];r[i]=r[j];r[j]=t;}
+    tries++;
+  }while(r.every(function(v,i){return v===a[i];})&&tries<20);
   return r;
+}
+
+var aiLabels=[]; // fixed per level to avoid flicker: {mis:bool, wrongKey}
+function genAiLabels(){
+  var L=LEVELS[lv];aiLabels=[];
+  for(var i=0;i<L.art.length;i++){
+    var isMis=L.mis.indexOf(i)>=0;
+    if(isMis){
+      var wrongs=Object.keys(C).filter(function(k){return k!==L.art[i];});
+      aiLabels.push({mis:true,wrongKey:wrongs[Math.floor(Math.random()*wrongs.length)],conf:52+Math.floor(Math.random()*16)});
+    }else{
+      aiLabels.push({mis:false,conf:88+Math.floor(Math.random()*12)});
+    }
+  }
 }
 
 function startLevel(){
   var L=LEVELS[lv];
   tiles=shuffled(L.art);
+  genAiLabels();
   sel=-1;moves=0;secs=0;hints=2;aiView=false;
   $('lv').textContent=lv+1;$('moves').textContent='0';$('time').textContent='0';$('hints').textContent='2';
   $('viewBtn').classList.remove('on');board.classList.remove('aiview');
@@ -133,13 +150,12 @@ function render(){
     b.classList.toggle('sel',i===sel);
     var lbl=b.querySelector('.ailabel');
     if(!lbl){lbl=document.createElement('span');lbl.className='ailabel';b.appendChild(lbl);}
-    var isMis=L.mis.indexOf(i)>=0;
-    if(isMis){
-      var wrongs=Object.keys(C).filter(function(k){return k!==tiles[i];});
-      var w=wrongs[Math.floor(Math.random()*wrongs.length)];
-      lbl.textContent=NAMES[w]+' '+(52+Math.floor(Math.random()*16))+'% ⚠️';
-    }else{
-      lbl.textContent=NAMES[tiles[i]]+' '+(88+Math.floor(Math.random()*12))+'%';
+    // stable labels: AI judges the tile currently at position i
+    var lab=aiLabels[i];
+    if(lab&&lab.mis){
+      lbl.textContent=NAMES[lab.wrongKey]+' '+lab.conf+'% ⚠️';
+    }else if(lab){
+      lbl.textContent=NAMES[tiles[i]]+' '+lab.conf+'%';
     }
   }
 }

@@ -26,7 +26,7 @@ header p{margin:0;color:#fde68a;font-size:14px}
 .chip.me{background:rgba(253,224,71,.25);border:1px solid rgba(253,224,71,.6)}
 .simgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0}
 @media(max-width:480px){.simgrid{grid-template-columns:1fr}}
-.sim{background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px;font-size:13px}
+.sim{background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px;font-size:14px}
 .sim .sn{font-weight:800;margin-bottom:6px;font-size:14px}
 .sim .mv{margin:3px 0}
 .candgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
@@ -107,6 +107,7 @@ var ROUNDS=[
   why:'3 個相似用戶都鍾意《玩具總動員》。文藝片迷都收貨嘅動畫，跨類型推薦成功！'}
 ];
 var r=0,score=0,streak=0;
+function shuffleArr(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
 function render(){
   var R=ROUNDS[r],i,j;
   document.getElementById('rnd').textContent='第 '+(r+1)+'/5 輪';
@@ -118,9 +119,12 @@ function render(){
     var h='<div class="sn">'+names[i]+'</div>';
     for(j=0;j<R.sims[i].length;j++)h+='<div class="mv">'+R.sims[i][j]+'</div>';
     d.innerHTML=h;sg.appendChild(d);}
+  // Shuffle candidates so the correct answer isn't always first
+  var order=shuffleArr([0,1,2,3]);
+  R._shuffled=order;
   var cg=document.getElementById('candGrid');cg.innerHTML='';
   for(i=0;i<4;i++)(function(i){
-    var b=document.createElement('button');b.className='cbtn';b.textContent=R.cands[i];
+    var b=document.createElement('button');b.className='cbtn';b.textContent=R.cands[order[i]];
     b.onclick=function(){pick(i,b);};cg.appendChild(b);
   })(i);
   document.getElementById('fb').style.display='none';
@@ -128,11 +132,12 @@ function render(){
 }
 function pick(i,btn){
   var R=ROUNDS[r];
+  var correctPos=R._shuffled.indexOf(R.ans);
   var btns=document.getElementById('candGrid').children;
   for(var k=0;k<btns.length;k++)btns[k].disabled=true;
-  btns[R.ans].classList.add('right');
+  btns[correctPos].classList.add('right');
   var fb=document.getElementById('fb');fb.style.display='block';
-  if(i===R.ans){
+  if(i===correctPos){
     var pts=20+Math.min(streak*5,10);score+=pts;streak++;
     fb.innerHTML='<b>✅ 推薦成功！+'+pts+' 分</b><br>'+R.why;
   }else{

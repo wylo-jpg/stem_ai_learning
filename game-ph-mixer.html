@@ -184,11 +184,27 @@ function nextRound(){
     document.getElementById('round').textContent='5';
     flash('🏆 全部完成！總分 '+score+' 分','ok');
     document.getElementById('btnDone').disabled=true;
+    showRestart();
     return;
   }
   document.getElementById('round').textContent=round+1;
   document.getElementById('targetPh').textContent=targets[round].toFixed(1);
   flash('','');render();
+}
+function showRestart(){
+  let b=document.getElementById('btnRestart');
+  if(!b){
+    b=document.createElement('button');
+    b.id='btnRestart';b.textContent='🔁 再玩一次';
+    b.style.cssText='width:100%;min-height:56px;font-size:18px;font-weight:800;border:none;border-radius:12px;background:#0e7490;color:#fff;margin-top:12px;cursor:pointer';
+    b.onclick=()=>{round=0;score=0;attempts=0;va=0;vb=0;
+      document.getElementById('score').textContent='0';
+      document.getElementById('round').textContent='1';
+      document.getElementById('targetPh').textContent=targets[0].toFixed(1);
+      document.getElementById('btnDone').disabled=false;
+      b.remove();flash('','');render();};
+    document.querySelector('.row').after(b);
+  }
 }
 render();
 </script>

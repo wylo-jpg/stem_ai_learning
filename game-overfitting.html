@@ -159,9 +159,9 @@ function draw(){
   ctx.beginPath();ctx.moveTo(14,Y(0));ctx.lineTo(W-14,Y(0));ctx.stroke();
   var i;
   ctx.fillStyle='#9ca3af';
-  for(i=0;i<test.length;i++){ctx.beginPath();ctx.arc(X(test[i].x),Y(test[i].y),3.5,0,7);ctx.fill();}
+  for(i=0;i<test.length;i++){ctx.beginPath();ctx.arc(X(test[i].x),Y(test[i].y),5,0,7);ctx.fill();}
   ctx.fillStyle='#60a5fa';
-  for(i=0;i<train.length;i++){ctx.beginPath();ctx.arc(X(train[i].x),Y(train[i].y),6,0,7);ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='rgba(255,255,255,.6)';ctx.stroke();}
+  for(i=0;i<train.length;i++){ctx.beginPath();ctx.arc(X(train[i].x),Y(train[i].y),7,0,7);ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='rgba(255,255,255,.6)';ctx.stroke();}
   if(reveal){
     ctx.strokeStyle='#4ade80';ctx.lineWidth=3;ctx.setLineDash([8,6]);ctx.beginPath();
     for(i=0;i<=100;i++){var x=-3.2+6.4*i/100;var px=X(x),py=Y(peval(ROUNDS[round].co,x));if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}

@@ -125,12 +125,12 @@ function buildLevel(){
  document.getElementById('btnDel').classList.remove('on');delMode=false;
 }
 function nodeAt(mx,my){
- let bestI=-1,bd=20;
+ let bestI=-1,bd=34;
  nodes.forEach((n,i)=>{const d=Math.hypot(n.x-mx,n.y-my);if(d<bd){bd=d;bestI=i;}});
  return bestI;
 }
 function beamAt(mx,my){
- let bi=-1,bd=14;
+ let bi=-1,bd=20;
  beams.forEach((b,i)=>{if(b.broken)return;
   const a=nodes[b.a],c=nodes[b.b];
   const dx=c.x-a.x,dy=c.y-a.y,L2=dx*dx+dy*dy;
@@ -229,7 +229,10 @@ function showRes(t,x,btn){document.getElementById('resTitle').textContent=t;
  document.getElementById('resBtn').textContent=btn;
  document.getElementById('resOv').classList.remove('hide');}
 function closeResult(){document.getElementById('resOv').classList.add('hide');
- if(passed){if(level<LEVELS.length-1){level++;buildLevel();}else{level=0;score=0;buildLevel();}}}
+ if(passed){passed=false;
+  if(level<LEVELS.length-1){level++;buildLevel();}
+  else{level=0;score=0;document.getElementById('hScore').textContent='0';buildLevel();}
+ }else{buildLevel();}}
 function stressColor(t){t=Math.max(0,Math.min(1,t));
  if(t<0.5){const k=t/0.5;return `rgb(${22+k*(234-22)},${163+k*(179-163)},${74+k*(8-74)})`;}
  const k=(t-0.5)/0.5;return `rgb(${234+k*(220-234)},${179+k*(38-179)},${8+k*(38-8)})`;}
@@ -254,9 +257,9 @@ function draw(){
   ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(C.x,C.y);ctx.stroke();}
  // 節點
  nodes.forEach((n,i)=>{
-  if(n.fixed){ctx.fillStyle='#1f2937';ctx.fillRect(n.x-7,n.y-7,14,14);}
-  else{ctx.fillStyle=i===selected?'#f59e0b':'#fff';ctx.strokeStyle='#1f2937';ctx.lineWidth=2;
-   ctx.beginPath();ctx.arc(n.x,n.y,7,0,7);ctx.fill();ctx.stroke();}});
+  if(n.fixed){ctx.fillStyle='#1f2937';ctx.fillRect(n.x-8,n.y-8,16,16);}
+  else{ctx.fillStyle=i===selected?'#f59e0b':'#fff';ctx.strokeStyle='#1f2937';ctx.lineWidth=2.5;
+   ctx.beginPath();ctx.arc(n.x,n.y,9,0,7);ctx.fill();ctx.stroke();}});
  // 貨車
  if(testing||testDone){
   let sy=0,sw=0;

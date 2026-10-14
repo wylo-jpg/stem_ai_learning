@@ -23,7 +23,7 @@ nav a{padding:12px 14px;text-decoration:none;color:var(--muted);font-weight:600;
 .mcard.up .inner{transform:rotateY(180deg)}
 .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px;box-shadow:0 2px 6px rgba(0,0,0,.12)}
 .back{background:linear-gradient(135deg,#f97316,#fb923c);color:#fff;font-size:26px}
-.front{background:#fff;transform:rotateY(180deg);font-size:14px;line-height:1.4;text-align:center;border:3px solid #fdba74}
+.front{background:#fff;transform:rotateY(180deg);font-size:12px;line-height:1.4;text-align:center;border:3px solid #fdba74;word-break:break-word;overflow:hidden}
 .mcard.done .front{border-color:var(--green);background:#dcfce7}
 .strbar{position:absolute;left:8px;right:8px;bottom:6px;height:6px;border-radius:3px;background:rgba(255,255,255,.35);overflow:hidden}
 .strbar i{display:block;height:100%;border-radius:3px;background:#fff;transition:width .3s}
@@ -109,10 +109,17 @@ function startRound(){
   render();
   clearInterval(timer);
   timer=setInterval(function(){
-    var anyFaded=false;
+    var anyFaded=false, allFaded=true;
     cards.forEach(function(cd){
       if(!cd.done&&!cd.up){cd.str=Math.max(0,cd.str-2);if(cd.str===0)anyFaded=true;}
+      if(!cd.done&&cd.str>0)allFaded=false;
     });
+    // anti-softlock: if all remaining cards faded and no attention, grant free focus
+    if(allFaded&&att<2){
+      att=2;
+      cards.forEach(function(cd){if(!cd.done)cd.str=Math.min(100,cd.str+40);});
+      allFaded=false;anyFaded=false;
+    }
     $('warn').style.display=anyFaded?'block':'none';
     render();
   },1000);

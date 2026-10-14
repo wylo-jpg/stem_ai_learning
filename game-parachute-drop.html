@@ -98,6 +98,8 @@ function newRound(){
   document.getElementById('msg').textContent='第 '+(round+1)+' 回合：風速 '+(wind>=0?'→':'←')+' '+Math.abs(wind).toFixed(1)+' m/s';
 }
 document.getElementById('btnDrop').addEventListener('click',function(){
+  if(round>=3){round=0;score=0;}
+  this.textContent='跳傘！';
   updPre();
   document.getElementById('setup').style.display='none';
   document.getElementById('fly').style.display='';
@@ -132,7 +134,10 @@ function land(){
   else{
     var best=0; try{best=parseInt(localStorage.getItem('chuteBest')||'0');}catch(e){}
     var nb=''; if(score>best){try{localStorage.setItem('chuteBest',score);}catch(e){} nb=' 🏅 新紀錄！';}
-    setTimeout(function(){document.getElementById('msg').textContent='🎉 3 回合完成！總分：'+score+' / 300'+nb;},2200);
+    setTimeout(function(){
+      document.getElementById('msg').textContent='🎉 3 回合完成！總分：'+score+' / 300'+nb+'　撳「跳傘！」再玩一次';
+      document.getElementById('btnDrop').textContent='🔄 再玩一次';
+    },2200);
   }
 }
 function draw(){
@@ -140,7 +145,7 @@ function draw(){
   var gy=H*0.82;
   ctx.fillStyle='#16a34a';
   ctx.fillRect(zoneX,gy,zoneW,H-gy);
-  ctx.fillStyle='rgba(255,255,255,.9)'; ctx.font='12px sans-serif'; ctx.textAlign='center';
+  ctx.fillStyle='rgba(255,255,255,.9)'; ctx.font='bold 14px sans-serif'; ctx.textAlign='center';
   ctx.fillText('目標區',zoneX+zoneW/2,gy+18);
   var y=gy-(py/HH)*(gy-20);
   ctx.strokeStyle='#e0f2fe'; ctx.lineWidth=2;
@@ -150,7 +155,7 @@ function draw(){
   ctx.beginPath(); ctx.moveTo(px-26,y-26); ctx.quadraticCurveTo(px,y-52,px+26,y-26); ctx.closePath(); ctx.fill();
   ctx.fillStyle='#0ea5e9';
   ctx.beginPath(); ctx.arc(px,y,8,0,7); ctx.fill();
-  ctx.fillStyle='#fff'; ctx.font='bold 13px sans-serif';
+  ctx.fillStyle='#fff'; ctx.font='bold 15px sans-serif';
   ctx.fillText((wind>=0?'→ ':'← ')+Math.abs(wind).toFixed(1)+' m/s',W-70,24);
 }
 var last=performance.now();

@@ -137,7 +137,7 @@ document.getElementById('scene').addEventListener('pointerdown',e=>{
   if(hit>=0){
     faces[hit].found=true;found++;
     document.getElementById('box'+hit).style.display='block';
-    score+=10;found++;
+    score+=10;
     document.getElementById('h-score').textContent=score;
     document.getElementById('h-found').textContent=faces.filter(f=>f.found).length;
     flash('rgba(34,197,94,.25)');

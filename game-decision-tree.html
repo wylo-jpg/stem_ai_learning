@@ -24,9 +24,9 @@ header p{margin:0;color:#a7f3d0;font-size:14px}
 .gcard{background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.14);border-radius:14px;padding:12px 14px;cursor:pointer}
 .gcard.sel{border-color:#fbbf24;background:rgba(251,191,36,.1)}
 .gcard.done{border-color:#34d399;opacity:.75;cursor:default}
-.gcard .ghead{font-size:13px;color:#a7f3d0;margin-bottom:8px}
+.gcard .ghead{font-size:14px;color:#a7f3d0;margin-bottom:8px}
 .gcard .animals{font-size:30px;line-height:1.5}
-.gcard .alabel{font-size:12px;color:#cbd5e1;margin-top:4px}
+.gcard .alabel{font-size:14px;color:#cbd5e1;margin-top:4px}
 .qlist{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
 .qbtn{border:none;border-radius:14px;padding:14px 16px;font-size:16px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#0d9488,#14b8a6);color:#fff;min-height:52px}
 .qbtn:active{transform:scale(.96)}
@@ -104,11 +104,12 @@ const LEVELS = [
   {animals:['dog','bird','fish','snake','bfly','spider'], qs:[0,3,4,5,6,7,8,9,10,2], par:3},
   {animals:['dog','cat','bird','fish','snake','frog','bfly','spider'], qs:[0,1,2,3,4,5,6,7,8,9,10,11], par:3}
 ];
-let lvl=0, groups=[], sel=-1, stars=0, maxDepth=0;
+let lvl=0, groups=[], sel=-1, stars=0, maxDepth=0, advancing=false;
 
 function tip(m){document.getElementById('tip').innerHTML=m;}
 
 function resetLevel(){
+  advancing=false;
   const L=LEVELS[lvl];
   groups=[{items:L.animals.slice(),depth:0}];
   sel=-1; maxDepth=0;
@@ -162,6 +163,8 @@ function applyQ(qi){
   if(groups.every(g=>g.items.length===1)) levelDone();
 }
 function levelDone(){
+  if(advancing)return;
+  advancing=true;
   const L=LEVELS[lvl];
   let s = maxDepth<=L.par?3:(maxDepth<=L.par+1?2:1);
   stars+=s;

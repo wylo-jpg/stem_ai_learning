@@ -103,13 +103,13 @@ function draw(){
   var scale=(W-80)/BEAM;
   ctx.fillStyle='#78716c';
   ctx.beginPath();ctx.moveTo(cx-24,gy);ctx.lineTo(cx+24,gy);ctx.lineTo(cx,gy-46);ctx.closePath();ctx.fill();
-  ctx.fillStyle='#fcd34d';ctx.font='bold 12px sans-serif';ctx.textAlign='center';
-  ctx.fillText('支點',cx,gy+22);
+  ctx.fillStyle='#fcd34d';ctx.font='bold 14px sans-serif';ctx.textAlign='center';
+  ctx.fillText('支點',cx,gy+24);
   ctx.save();ctx.translate(cx,gy-46);ctx.rotate(angle);
   ctx.fillStyle='#a16207';
   ctx.fillRect(-BEAM/2*scale,-7,BEAM*scale,14);
-  ctx.fillStyle='#fef3c7';ctx.font='11px sans-serif';
-  for(var i=0;i<=4;i++){var mx=(-BEAM/2+i)*scale;ctx.fillRect(mx-1,-7,2,14);ctx.fillText(i+'m',mx,26);}
+  ctx.fillStyle='#fef3c7';ctx.font='14px sans-serif';
+  for(var i=0;i<=4;i++){var mx=(-BEAM/2+i)*scale;ctx.fillRect(mx-1,-7,2,14);ctx.fillText(i+'m',mx,28);}
   var fx=(ful-BEAM/2)*scale;
   ctx.fillStyle='#ef4444';ctx.beginPath();ctx.arc(fx,0,6,0,7);ctx.fill();
   var bw1=14+m1*0.5, bw2=14+m2*0.5;

@@ -155,13 +155,21 @@ function loadCh(){
       else{b.classList.add('no');box.children[c.ans].classList.add('ok');flash('答案係「'+c.opts[c.ans]+'」。'+c.why,'bad');}
       document.querySelectorAll('.chbtn').forEach(x=>x.disabled=true);
       setTimeout(()=>{ch++;
-        if(ch>=challenges.length){document.getElementById('chDone').textContent='3';document.getElementById('chText').textContent='🏆 3 個挑戰全部完成！你已經掌握限制因素嘅概念！';box.innerHTML='';flash('','');}
+        if(ch>=challenges.length){document.getElementById('chDone').textContent='3';document.getElementById('chText').textContent='🏆 3 個挑戰全部完成！你已經掌握限制因素嘅概念！';box.innerHTML='';flash('','');showRestart();}
         else loadCh();
       },3000);
     };
     box.appendChild(b);
   });
   flash('','');
+}
+function showRestart(){
+  if(document.getElementById('btnRestart'))return;
+  const b=document.createElement('button');
+  b.id='btnRestart';b.textContent='🔁 再挑戰一次';b.className='chbtn';
+  b.style.cssText='background:#15803d;color:#fff;border-color:#15803d';
+  b.onclick=()=>{ch=0;b.remove();loadCh();};
+  document.getElementById('chOpts').after(b);
 }
 function flash(t,cls){const m=document.getElementById('msg');m.innerHTML=t;m.className='msg '+cls;}
 render();loadCh();

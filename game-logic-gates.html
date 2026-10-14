@@ -26,7 +26,7 @@ main{max-width:640px;margin:0 auto;padding:16px;width:100%}
 .outlamp.lit{background:#fef08a;border-color:#facc15;box-shadow:0 0 18px #facc15}
 .palette{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
 .gbtn{min-height:56px;font-size:16px;font-weight:800;border-radius:12px;border:2px solid #7c3aed;background:#2e1065;color:#e9d5ff;cursor:pointer;touch-action:manipulation}
-.gbtn small{display:block;font-size:11px;font-weight:400;color:#c4b5fd}
+.gbtn small{display:block;font-size:12px;font-weight:400;color:#c4b5fd}
 .bigbtn{width:100%;min-height:60px;font-size:19px;font-weight:800;border:none;border-radius:14px;background:#22c55e;color:#052e16;cursor:pointer;touch-action:manipulation;margin-top:6px}
 .feedback{min-height:40px;font-size:16px;font-weight:700;text-align:center;margin-top:10px}
 .feedback.good{color:#4ade80}.feedback.bad{color:#f87171}
@@ -152,9 +152,20 @@ document.getElementById('testBtn').addEventListener('click',()=>{
     const pts=Math.max(100,300-moves*10);score+=pts;
     document.getElementById('score').textContent=score;
     fb.textContent=`🎉 過關！+${pts} 分`;fb.className='feedback good';
-    setTimeout(()=>{lv++;if(lv>=levels.length){fb.innerHTML='🏆 全部過晒！你係邏輯大師！總分 '+score;document.getElementById('testBtn').disabled=true;}else{slotGates=Array(levels[lv].slots).fill(null);moves=0;render();}},1600);
+    setTimeout(()=>{lv++;if(lv>=levels.length){fb.innerHTML='🏆 全部過晒！你係邏輯大師！總分 '+score;document.getElementById('testBtn').disabled=true;showRestart();}else{slotGates=Array(levels[lv].slots).fill(null);moves=0;render();}},1600);
   }else{fb.textContent='❌ 有啲組合唔啱，睇下真值表再試！';fb.className='feedback bad';}
 });
+function showRestart(){
+  if(document.getElementById('btnRestart'))return;
+  const b=document.createElement('button');
+  b.id='btnRestart';b.textContent='🔁 再玩一次';b.className='bigbtn';
+  b.style.marginTop='10px';
+  b.onclick=()=>{lv=0;score=0;moves=0;inputs=[0,0];
+    document.getElementById('score').textContent='0';
+    document.getElementById('testBtn').disabled=false;
+    b.remove();slotGates=Array(levels[0].slots).fill(null);render();};
+  document.getElementById('testBtn').after(b);
+}
 function startGame(){document.getElementById('intro').style.display='none';slotGates=Array(levels[0].slots).fill(null);render();}
 </script>
 </body>

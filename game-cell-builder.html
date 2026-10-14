@@ -55,12 +55,12 @@ svg{width:100%;max-width:420px;height:auto}
 <ellipse cx="120" cy="250" rx="52" ry="30" fill="#bbf7d0" stroke="#15803d" stroke-width="3" transform="rotate(15 120 250)"/>
 <ellipse cx="120" cy="250" rx="34" ry="18" fill="#86efac" transform="rotate(15 120 250)"/>
 <rect class="zone" data-k="wall" x="14" y="14" width="392" height="312" rx="60"/>
-<rect class="zone" data-k="membrane" x="30" y="286" width="140" height="24" rx="12"/>
+<rect class="zone" data-k="membrane" x="30" y="280" width="140" height="36" rx="12"/>
 <circle class="zone" data-k="nucleus" cx="130" cy="120" r="52"/>
 <ellipse class="zone" data-k="mito" cx="250" cy="100" rx="46" ry="28"/>
 <ellipse class="zone" data-k="chloro" cx="120" cy="250" rx="52" ry="30"/>
 <ellipse class="zone" data-k="vacuole" cx="300" cy="230" rx="70" ry="52"/>
-<rect class="zone" data-k="cyto" x="180" y="188" width="64" height="38" rx="10"/>
+<rect class="zone" data-k="cyto" x="170" y="180" width="84" height="54" rx="10"/>
 </svg>
 </div>
 <div class="msg" id="msg">先撳下面嘅名稱，再撳圖中虛線位置</div>
@@ -123,13 +123,21 @@ document.querySelectorAll('.zone').forEach(z=>{
       f.innerHTML='<b>📖 '+sel.name+'：</b>'+sel.fact;
       sel=null;
       document.querySelectorAll('.chip').forEach(c=>c.classList.remove('sel'));
-      if(doneCount===items.length)flash('🏆 全部完成！你係細胞大師！','ok');
+      if(doneCount===items.length){flash('🏆 全部完成！你係細胞大師！','ok');showRestart();}
     }else{
       z.classList.add('wrong');setTimeout(()=>z.classList.remove('wrong'),400);
       flash('❌ 唔係呢度，再諗下！','bad');
     }
   });
 });
+function showRestart(){
+  if(document.getElementById('btnRestart'))return;
+  const b=document.createElement('button');
+  b.id='btnRestart';b.textContent='🔁 再玩一次';b.className='chip';
+  b.style.cssText='width:100%;margin-top:12px;background:#15803d;color:#fff;border-color:#15803d';
+  b.onclick=()=>{location.reload();};
+  document.getElementById('tray').after(b);
+}
 function flash(t,cls){const m=document.getElementById('msg');m.textContent=t;m.className='msg '+cls;}
 </script>
 </body>

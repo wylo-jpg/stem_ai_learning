@@ -61,7 +61,7 @@ button.big{flex:1;min-height:56px;font-size:18px;font-weight:700;border:none;bor
 </div>
 </div>
 <div class="overlay" id="gameover" style="display:none">
-<div class="card"><h2>🎉 完成！</h2><p id="finalScore" style="font-size:20px"></p><button onclick="location.reload()">再玩一次 🔁</button></div>
+<div class="card"><h2>🎉 完成！</h2><p id="finalScore" style="font-size:20px"></p><button onclick="startGame()">再玩一次 🔁</button></div>
 </div>
 <script>
 const weights=[128,64,32,16,8,4,2,1];
@@ -87,8 +87,13 @@ function newQ(){
 }
 function startGame(){
   document.getElementById('intro').style.display='none';
+  document.getElementById('gameover').style.display='none';
+  qNum=1;score=0;streak=0;timeLeft=60;answered=false;
+  document.getElementById('score').textContent='0';
+  document.getElementById('time').textContent='60';
   newQ();
-  timer=setInterval(()=>{timeLeft--;document.getElementById('time').textContent=timeLeft;
+  clearInterval(timer);
+  timer=setInterval(()=>{timeLeft--;document.getElementById('time').textContent=Math.max(0,timeLeft);
     if(timeLeft<=0)endGame();},1000);
 }
 document.getElementById('clearBtn').addEventListener('click',()=>{if(!answered){bits=[0,0,0,0,0,0,0,0];render();}});
@@ -101,7 +106,7 @@ document.getElementById('checkBtn').addEventListener('click',()=>{
     const pts=100+Math.min(streak*20,100)+timeLeft;
     score+=pts;document.getElementById('score').textContent=score;
     fb.textContent=`✅ 啱！+${pts} 分（連擊 x${streak}）`;fb.className='feedback good';
-    setTimeout(()=>{qNum++;if(qNum>10)endGame();else newQ();},900);
+    setTimeout(()=>{if(timeLeft<=0)return;qNum++;if(qNum>10)endGame();else newQ();},900);
   }else{streak=0;fb.textContent=`❌ 唔啱，你砌咗 ${val}，再試下！`;fb.className='feedback bad';}
 });
 function endGame(){

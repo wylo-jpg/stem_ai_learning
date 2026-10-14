@@ -97,6 +97,8 @@ function newRound(){
   });
 }
 document.getElementById('btnGo').addEventListener('click',function(){
+  if(round>=3){round=0;score=0;}
+  this.textContent='🏁 開車';
   state='run';
   document.getElementById('btnGo').style.display='none';
   document.getElementById('btnBrake').style.display='';
@@ -118,7 +120,11 @@ function finish(){
   else{
     var best=0;try{best=parseInt(localStorage.getItem('fricBest')||'0');}catch(e){}
     var nb='';if(score>best){try{localStorage.setItem('fricBest',score);}catch(e){}nb=' 🏅 新紀錄！';}
-    setTimeout(function(){document.getElementById('msg').textContent='🎉 3 回合完成！總分：'+score+' / 300'+nb;},2400);
+    setTimeout(function(){
+      document.getElementById('msg').textContent='🎉 3 回合完成！總分：'+score+' / 300'+nb;
+      var bg=document.getElementById('btnGo');
+      bg.textContent='🔄 再玩一次';bg.style.display='';bg.disabled=false;
+    },2400);
   }
 }
 function draw(){
@@ -129,9 +135,9 @@ function draw(){
   ctx.beginPath();ctx.moveTo(20,ry+8);ctx.lineTo(W-20,ry+8);ctx.stroke();ctx.setLineDash([]);
   ctx.fillStyle='rgba(74,222,128,.35)';
   ctx.fillRect(bx(zoneX),ry-24,bx(zoneX+zoneW)-bx(zoneX),64);
-  ctx.fillStyle='#4ade80';ctx.font='bold 12px sans-serif';ctx.textAlign='center';
+  ctx.fillStyle='#4ade80';ctx.font='bold 14px sans-serif';ctx.textAlign='center';
   ctx.fillText('目標區',(bx(zoneX)+bx(zoneX+zoneW))/2,ry-30);
-  ctx.fillStyle='#71717a';ctx.font='10px sans-serif';
+  ctx.fillStyle='#71717a';ctx.font='14px sans-serif';
   for(var m=0;m<=TRACK;m+=15){ctx.fillText(m+'m',bx(m),ry+52);}
   var cxp=bx(Math.min(x,TRACK));
   ctx.fillStyle=braking?'#fbbf24':'#ef4444';
@@ -147,7 +153,7 @@ function draw(){
     ctx.beginPath();ctx.moveTo(cxp-20,ry+9);ctx.lineTo(cxp-44,ry+9);ctx.stroke();
   }
   if(state==='brake'&&v>0.1){
-    ctx.fillStyle='#fbbf24';ctx.font='bold 14px sans-serif';
+    ctx.fillStyle='#fbbf24';ctx.font='bold 16px sans-serif';
     ctx.fillText('剎車中…',cxp,ry-40);
   }
 }

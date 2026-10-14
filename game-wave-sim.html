@@ -96,8 +96,8 @@ function draw(){
   ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();
   if(mode==='chal')drawWave(tF,tA,t,'rgba(251,191,36,.75)',true);
   drawWave(f,A,t,'#38bdf8',false);
-  ctx.fillStyle='#7dd3fc';ctx.font='12px sans-serif';ctx.textAlign='left';
-  if(mode==='chal')ctx.fillText('虛線 = 目標波，實線 = 你的波',10,20);
+  ctx.fillStyle='#7dd3fc';ctx.font='bold 14px sans-serif';ctx.textAlign='left';
+  if(mode==='chal')ctx.fillText('虛線 = 目標波，實線 = 你的波',10,22);
 }
 function setMode(m){
   mode=m;
