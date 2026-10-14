@@ -3,68 +3,67 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-<title>間接引語大挑戰</title>
+<title>打字轉述</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#1a1033;color:#ede9fe;min-height:100vh}
-header{background:linear-gradient(135deg,#5b21b6,#a855f7);padding:16px;text-align:center}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#1e1b4b;color:#e0e7ff;min-height:100vh}
+header{background:linear-gradient(135deg,#312e81,#6366f1);padding:16px;text-align:center}
 header h1{margin:0;font-size:22px}
-.back{display:block;text-align:center;background:#2e1065;color:#d8b4fe;text-decoration:none;padding:12px;font-size:16px;font-weight:600}
+.back{display:block;text-align:center;background:#1e1b4b;color:#a5b4fc;text-decoration:none;padding:12px;font-size:16px;font-weight:600;border-bottom:1px solid #312e81}
 .wrap{max-width:640px;margin:0 auto;padding:14px 16px 40px}
-.hud{display:flex;justify-content:space-between;background:#2e1065;border-radius:12px;padding:10px 14px;font-size:15px;font-weight:700;margin-bottom:12px}
+.hud{display:flex;justify-content:space-between;background:#312e81;border-radius:12px;padding:10px 14px;font-size:15px;font-weight:700;margin-bottom:12px}
 .hud span{color:#fbbf24}
-.qcard{background:#2e1065;border-radius:14px;padding:18px;margin-bottom:12px}
-.qcard .qlabel{font-size:14px;color:#c4b5fd;margin-bottom:6px}
-.qcard .direct{font-size:19px;line-height:1.7;font-weight:600;color:#fde68a;font-style:italic}
-.qcard .arrow{text-align:center;font-size:24px;margin:6px 0}
-.opts{display:grid;gap:10px}
-.opt{min-height:56px;font-size:16px;font-weight:600;border-radius:12px;border:2px solid #4c1d95;background:#1a1033;color:#ede9fe;cursor:pointer;padding:10px 14px;text-align:left;touch-action:manipulation;line-height:1.5}
-.opt:active{transform:scale(.98)}
-.opt.correct{background:#166534;border-color:#4ade80;color:#fff}
-.opt.wrong{background:#7f1d1d;border-color:#f87171;color:#fff}
-.opt:disabled{opacity:.9;cursor:default}
-.fb{min-height:60px;font-size:15px;line-height:1.6;margin-top:10px;padding:10px 14px;border-radius:10px;display:none}
+.qcard{background:#312e81;border-radius:14px;padding:18px;margin-bottom:12px}
+.qcard .qlabel{font-size:14px;color:#a5b4fc;margin-bottom:6px}
+.qcard .direct{font-size:21px;line-height:1.7;font-weight:700;color:#fef08a}
+.qcard .who{font-size:15px;color:#c7d2fe;margin-top:8px}
+textarea{width:100%;min-height:96px;font-size:18px;line-height:1.6;border-radius:12px;border:2px solid #4f46e5;background:#1e1b4b;color:#fff;padding:12px 14px;font-family:inherit;resize:vertical}
+textarea:focus{outline:none;border-color:#818cf8}
+.tip{font-size:13px;color:#a5b4fc;margin:6px 0 12px}
+.btnrow{display:flex;gap:10px}
+.btnrow button{flex:1;min-height:56px;font-size:17px;font-weight:800;border:none;border-radius:12px;cursor:pointer}
+#submitbtn{background:#16a34a;color:#fff}
+#skipbtn{background:#4f46e5;color:#fff}
+.fb{min-height:60px;font-size:15px;line-height:1.7;margin-top:10px;padding:12px 14px;border-radius:10px;display:none}
 .fb.good{display:block;background:#14532d;color:#bbf7d0}
 .fb.bad{display:block;background:#450a0a;color:#fecaca}
 .fb b{color:#fde047}
-.nextbtn{width:100%;min-height:52px;font-size:17px;font-weight:800;border:none;border-radius:12px;background:#a855f7;color:#fff;margin-top:8px;display:none;touch-action:manipulation}
-.overlay{position:fixed;inset:0;background:rgba(26,16,51,.97);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;overflow-y:auto}
+.nextbtn{width:100%;min-height:52px;font-size:17px;font-weight:800;border:none;border-radius:12px;background:#6366f1;color:#fff;margin-top:8px;display:none}
+.overlay{position:fixed;inset:0;background:rgba(30,27,75,.97);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;overflow-y:auto}
 .overlay.hide{display:none}
-.card{background:#2e1065;border-radius:18px;padding:26px 22px;max-width:540px;width:100%;max-height:92vh;overflow-y:auto}
-.card h2{margin:0 0 10px;font-size:24px;color:#d8b4fe}
+.card{background:#312e81;border-radius:18px;padding:26px 22px;max-width:540px;width:100%;max-height:92vh;overflow-y:auto}
+.card h2{margin:0 0 10px;font-size:24px;color:#a5b4fc}
 .card p,.card li{font-size:15px;line-height:1.7}
 .card ul{padding-left:20px}
-.concept{background:#1a1033;border-radius:12px;padding:14px;margin:14px 0;font-size:14px;line-height:1.8}
+.concept{background:#1e1b4b;border-radius:12px;padding:14px;margin:14px 0;font-size:14px;line-height:1.8}
 .concept b{color:#4ade80}
-.card .go{width:100%;min-height:56px;font-size:18px;font-weight:800;background:#a855f7;color:#fff;border:none;border-radius:14px;margin-top:10px;cursor:pointer;touch-action:manipulation}
+.card .go{width:100%;min-height:56px;font-size:18px;font-weight:800;background:#6366f1;color:#fff;border:none;border-radius:14px;margin-top:10px;cursor:pointer}
 #finalScore{font-size:18px;line-height:1.8}
-table.bs{width:100%;border-collapse:collapse;margin:10px 0;font-size:14px}
-table.bs td,table.bs th{border:1px solid #4c1d95;padding:6px 8px;text-align:left}
-table.bs th{background:#4c1d95;color:#fff}
+.kbd-hint{background:#1e1b4b;border-radius:8px;padding:8px 12px;font-size:13px;color:#a5b4fc;margin-bottom:10px;text-align:center}
 </style>
 </head>
 <body>
-<header><h1>💬 間接引語大挑戰</h1></header>
+<header><h1>⌨️ 打字轉述</h1></header>
 <a class="back" href="games.html">← 返回遊戲列表</a>
 <div class="wrap">
 <div class="hud"><div>第 <span id="qnum">1</span>/8 題</div><div>⭐ <span id="score">0</span></div><div>✅ <span id="acc">-</span></div></div>
-<div class="qcard"><div class="qlabel">👇 將呢句直接引語轉做間接引語：</div><div class="direct" id="direct"></div><div class="arrow">⬇️</div></div>
-<div class="opts" id="opts"></div>
+<div class="qcard"><div class="qlabel">👇 將呢句直接引語轉做間接引語：</div><div class="direct" id="direct"></div><div class="who" id="who"></div></div>
+<div class="kbd-hint">📱 用你部電話／平板嘅鍵盤打字（唔使理大小楷同標點）</div>
+<textarea id="ans" placeholder="喺度打英文答案…例如：he said he was tired" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
+<div class="tip">💡 貼士：that 可寫可唔寫；I→he、you→I/me 要轉返人稱</div>
+<div class="btnrow"><button id="skipbtn">⏭️ 跳過</button><button id="submitbtn">✅ 提交答案</button></div>
 <div class="fb" id="fb"></div>
 <button class="nextbtn" id="nextbtn">下一題 →</button>
 </div>
 <div class="overlay" id="intro"><div class="card">
-<h2>💬 間接引語大挑戰</h2>
-<p><b>玩法：</b>每題有一句<b>直接引語</b>（Direct Speech），你要揀出正確嘅<b>間接引語</b>（Reported Speech）。共 8 題，答啱 +100 分，連擊有加成。</p>
-<div class="concept">💡 <b>文法概念 — 時態倒退（Backshift）：</b>轉做間接引語時，動詞時態要退後一級：
-<table class="bs"><tr><th>直接引語</th><th>間接引語</th></tr>
-<tr><td>am/is/are</td><td>was/were</td></tr>
-<tr><td>do / does</td><td>did</td></tr>
-<tr><td>did / went</td><td>had done / had gone</td></tr>
-<tr><td>will</td><td>would</td></tr>
-<tr><td>can</td><td>could</td></tr></table>
-問句要轉做陳述句語序（She asked <b>if I liked</b> tea. / He asked <b>where I lived</b>.），人稱代詞都要跟住轉！</div>
-<button class="go" id="startbtn">開始挑戰！</button>
+<h2>⌨️ 打字轉述</h2>
+<p><b>玩法：</b>上面有一句<b>直接引語</b>（Direct Speech），你要用鍵盤<b>親手打出</b>間接引語（Reported Speech）！唔使理大細楷同標點，意思啱就得。共 8 題，答啱 +100 分。</p>
+<div class="concept">💡 <b>文法概念（時態退後一級）：</b>
+<br>• am/is → was；are → were
+<br>• can → could；will → would
+<br>• have done → had done；did → had done
+<br>• 問句轉陳述句語序：Do you…? → if I…；Where…? → where I…</div>
+<button class="go" id="startbtn">開始打字！</button>
 </div></div>
 <div class="overlay hide" id="end"><div class="card">
 <h2>🏁 完成！</h2>
@@ -75,72 +74,82 @@ table.bs th{background:#4c1d95;color:#fff}
 (function(){
 "use strict";
 var Q=[
-{dir:"\u201CI am tired,\u201D she said.",o:["She said that she is tired.","She said that she was tired.","She said that she had been tired.","She says that she was tired."],a:1,e:"am → was（時態倒退一級）；said 係過去式，所以引語動詞都要退。"},
-{dir:"\u201CI will help you,\u201D he said.",o:["He said that he will help me.","He said that he would help me.","He said that he helps me.","He says that he would help me."],a:1,e:"will → would；you → me（人稱要跟住轉）。"},
-{dir:"\u201CI can swim very well,\u201D Tom said.",o:["Tom said that he can swim very well.","Tom said that he could swim very well.","Tom said that he could swam very well.","Tom says that he could swim very well."],a:1,e:"can → could；注意 swim 唔使變過去式，could 後面跟原形。"},
-{dir:"\u201CWe visited Japan last year,\u201D they said.",o:["They said that they visited Japan last year.","They said that they had visited Japan last year.","They said that they have visited Japan last year.","They say that they had visited Japan last year."],a:1,e:"Past Simple（visited）→ Past Perfect（had visited），退後一級。"},
-{dir:"\u201CI am watching a movie,\u201D she said.",o:["She said that she is watching a movie.","She said that she was watching a movie.","She said that she had watched a movie.","She said that she watches a movie."],a:1,e:"Present Continuous（am watching）→ Past Continuous（was watching）。"},
-{dir:"\u201CI have finished my homework,\u201D he said.",o:["He said that he has finished his homework.","He said that he had finished his homework.","He said that he finished his homework.","He said that he finishes his homework."],a:1,e:"Present Perfect（have finished）→ Past Perfect（had finished）。"},
-{dir:"\u201CDo you like coffee?\u201D she asked.",o:["She asked if I like coffee.","She asked if I liked coffee.","She asked that I liked coffee.","She asked do I like coffee."],a:1,e:"Yes/No 問句用 if 帶領，轉做陳述句語序（主語+動詞），like → liked。唔用 that。"},
-{dir:"\u201CWhere do you live?\u201D he asked me.",o:["He asked me where do I live.","He asked me where I lived.","He asked me where did I live.","He asked me that where I lived."],a:1,e:"Wh- 問句保留疑問詞，後面轉陳述句語序（I lived，唔係 did I live），do → did 概念上變 lived。"}
+{dir:"\u201CI am tired,\u201D he said.",acc:["he said he was tired","he said that he was tired"],e:"am → was（退後一級）；I → he。"},
+{dir:"\u201CI can swim very well,\u201D Tom said.",acc:["tom said he could swim very well","tom said that he could swim very well"],e:"can → could；swim 跟原形，唔變過去式。"},
+{dir:"\u201CWe visited Japan last year,\u201D they said.",acc:["they said they had visited japan last year","they said that they had visited japan last year"],e:"Past Simple（visited）→ Past Perfect（had visited）。"},
+{dir:"\u201CI am watching a movie,\u201D she said.",acc:["she said she was watching a movie","she said that she was watching a movie"],e:"Present Continuous（am watching）→ Past Continuous（was watching）。"},
+{dir:"\u201CI have finished my homework,\u201D he said.",acc:["he said he had finished his homework","he said that he had finished his homework"],e:"Present Perfect（have finished）→ Past Perfect（had finished）；my → his。"},
+{dir:"\u201CDo you like coffee?\u201D she asked.",acc:["she asked if i liked coffee","she asked whether i liked coffee"],e:"Yes/No 問句用 if 帶領，轉陳述句語序；like → liked。"},
+{dir:"\u201CWhere do you live?\u201D he asked me.",acc:["he asked me where i lived"],e:"Wh- 問句保留疑問詞，後面轉陳述句語序（I lived）；唔用 that。"},
+{dir:"\u201CI will call you tonight,\u201D she said.",acc:["she said she would call me tonight","she said that she would call me tonight"],e:"will → would；you → me（對住我講）。"}
 ];
-var idx=0,score=0,streak=0,correct=0,best=0,locked=false,order=[];
-try{best=parseInt(localStorage.getItem('reportedBest')||'0',10)||0;}catch(e){}
+var idx=0,score=0,correct=0,best=0,locked=false,order=[];
+try{best=parseInt(localStorage.getItem('reportedTypeBest')||'0',10)||0;}catch(e){}
 function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
 function $(id){return document.getElementById(id);}
+function norm(s){
+  return s.toLowerCase()
+    .replace(/[\u201C\u201D"']/g,'')
+    .replace(/[.,?!;:]/g,'')
+    .replace(/\s+/g,' ')
+    .trim();
+}
 function showQ(){
-  locked=false;$('fb').className='fb';$('fb').style.display='none';$('nextbtn').style.display='none';
+  locked=false;
+  $('fb').className='fb';$('fb').style.display='none';$('nextbtn').style.display='none';
   var item=Q[order[idx]];
   $('qnum').textContent=idx+1;
   $('direct').textContent=item.dir;
-  var box=$('opts');box.innerHTML='';
-  item.o.forEach(function(opt,i){
-    var b=document.createElement('button');
-    b.className='opt';b.textContent=opt;
-    b.addEventListener('click',function(){answer(i);});
-    box.appendChild(b);
-  });
+  $('who').textContent='';
+  $('ans').value='';$('ans').disabled=false;
 }
-function answer(pick){
+function submit(skip){
   if(locked)return;locked=true;
+  $('ans').disabled=true;
   var item=Q[order[idx]];
-  var btns=$('opts').children;
-  for(var i=0;i<btns.length;i++){btns[i].disabled=true;}
-  var ok=(pick===item.a);
+  var typed=norm($('ans').value);
+  var ok=false;
+  if(!skip){
+    for(var i=0;i<item.acc.length;i++){
+      if(typed===norm(item.acc[i])){ok=true;break;}
+    }
+  }
   if(ok){
-    btns[item.a].classList.add('correct');
-    var gain=100+streak*25;score+=gain;streak++;correct++;
+    score+=100;correct++;
     $('fb').className='fb good';
-    $('fb').innerHTML='✅ 答啱！+'+gain+' 分<br><b>文法：</b>'+item.e;
+    $('fb').innerHTML='✅ 打啱！+100 分<br><b>文法：</b>'+item.e;
   }else{
-    btns[pick].classList.add('wrong');btns[item.a].classList.add('correct');streak=0;
+    score=Math.max(0,score-10);
     $('fb').className='fb bad';
-    $('fb').innerHTML='❌ 答錯咗！正確答案：<b>'+item.o[item.a]+'</b><br><b>文法：</b>'+item.e;
+    $('fb').innerHTML=(skip?'⏭️ 已跳過。':'❌ 未啱，扣 10 分。')+'參考答案：<b>'+item.acc[0]+'</b><br><b>文法：</b>'+item.e+(typed?'<br>你打咗：'+escapeHtml($('ans').value):'');
   }
   $('score').textContent=score;
   $('acc').textContent=Math.round(correct/(idx+1)*100)+'%';
   $('fb').style.display='block';$('nextbtn').style.display='block';
   $('nextbtn').textContent=(idx>=Q.length-1)?'睇成績 →':'下一題 →';
 }
+function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+$('submitbtn').addEventListener('click',function(){submit(false);});
+$('skipbtn').addEventListener('click',function(){submit(true);});
 function next(){idx++;if(idx>=Q.length){endGame();}else{showQ();}}
+$('nextbtn').addEventListener('click',next);
 function endGame(){
   $('end').classList.remove('hide');
   var nb='';
-  if(score>best){try{localStorage.setItem('reportedBest',String(score));}catch(e){}best=score;nb=' 🏅 新紀錄！';}
+  if(score>best){try{localStorage.setItem('reportedTypeBest',String(score));}catch(e){}best=score;nb=' 🏅 新紀錄！';}
   var acc=Math.round(correct/Q.length*100);
-  var msg='總分：<b>'+score+'</b> 分'+nb+'<br>準確率：'+acc+'%（'+correct+'/'+Q.length+'）<br>歷史最佳：'+best+' 分<br>';
-  msg+=acc===100?'🌟 完美！你係間接引語大師！':'💪 記住：時態退後一級，問句轉陳述句語序！';
-  $('finalScore').innerHTML=msg;
+  $('finalScore').innerHTML='總分：<b>'+score+'</b> 分'+nb+'<br>準確率：'+acc+'%（'+correct+'/'+Q.length+'）<br>歷史最佳：'+best+' 分<br>'+(acc===100?'🌟 完美！你係轉述大師！':'💪 記住：時態退後一級，問句轉陳述句語序！');
 }
 function reset(){
-  idx=0;score=0;streak=0;correct=0;
+  idx=0;score=0;correct=0;
   order=shuffle(Q.map(function(_,i){return i;}));
   $('score').textContent='0';$('acc').textContent='-';
   $('end').classList.add('hide');showQ();
 }
-$('nextbtn').addEventListener('click',next);
 $('startbtn').addEventListener('click',function(){$('intro').classList.add('hide');reset();});
 $('againbtn').addEventListener('click',reset);
+reset();
+$('intro').classList.remove('hide');
 })();
 </script>
 </body>

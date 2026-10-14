@@ -3,147 +3,175 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-<title>詞彙語境挑戰</title>
+<title>詞彙偵探</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#171717;color:#e7e5e4;min-height:100vh;touch-action:manipulation}
-header{background:linear-gradient(135deg,#713f12,#ca8a04);padding:16px;text-align:center}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#1e1b0e;color:#fef3c7;min-height:100vh;touch-action:manipulation}
+header{background:linear-gradient(135deg,#92400e,#f59e0b);padding:16px;text-align:center}
 header h1{margin:0;font-size:22px}
 header p{margin:4px 0 0;font-size:14px;opacity:.85}
-.back{display:block;text-align:center;background:#292524;color:#fcd34d;text-decoration:none;padding:12px;font-size:16px;font-weight:600}
+.back{display:block;text-align:center;background:#451a03;color:#fcd34d;text-decoration:none;padding:12px;font-size:16px;font-weight:600}
 .wrap{max-width:640px;margin:0 auto;padding:16px 14px 40px}
-.hud{display:flex;justify-content:space-around;background:#292524;border-radius:12px;padding:12px;margin-bottom:14px;font-size:15px;font-weight:700}
+.hud{display:flex;justify-content:space-around;background:#451a03;border-radius:12px;padding:12px;margin-bottom:14px;font-size:15px;font-weight:700}
 .hud span{color:#fbbf24}
-.qcard{background:#292524;border-radius:16px;padding:22px 18px;margin-bottom:14px}
-.qlabel{font-size:14px;color:#a8a29e;margin-bottom:8px}
-.qsent{font-size:19px;line-height:1.8;margin-bottom:4px}
-.qsent .blank{color:#fbbf24;border-bottom:3px solid #fbbf24;padding:0 10px;font-weight:800}
-.qzh{font-size:14px;color:#a8a29e;margin-top:8px}
-.opts{display:grid;gap:10px}
-.opt{min-height:56px;font-size:18px;font-weight:700;border-radius:12px;border:2px solid #44403c;background:#171717;color:#e7e5e4;cursor:pointer;padding:10px 14px;text-align:left}
-.opt:active{transform:scale(.98)}
-.opt.correct{background:#166534;border-color:#4ade80;color:#fff}
-.opt.wrong{background:#7f1d1d;border-color:#f87171;color:#fff}
-.opt:disabled{opacity:.9;cursor:default}
-.feedback{min-height:48px;font-size:15px;font-weight:700;text-align:center;margin-top:10px;line-height:1.5}
+.stage{font-size:15px;font-weight:700;color:#fcd34d;text-align:center;margin-bottom:10px}
+.passage{background:#451a03;border-radius:14px;padding:20px 16px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;line-height:2.2}
+.wchip{font-size:19px;font-weight:600;background:#78350f;color:#fef3c7;border:2px solid transparent;border-radius:10px;padding:8px 12px;cursor:pointer;min-height:48px}
+.wchip:active{transform:scale(.95)}
+.wchip.found{background:#166534;border-color:#4ade80;color:#fff}
+.wchip.miss{animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.fixbox{display:none;background:#451a03;border-radius:14px;padding:20px 16px;margin-bottom:14px;text-align:center}
+.fixbox.show{display:block}
+.fixbox h3{margin:0 0 14px;font-size:18px;color:#fcd34d}
+.fixopts{display:grid;gap:10px}
+.fixopt{min-height:60px;font-size:20px;font-weight:800;border-radius:12px;border:2px solid #f59e0b;background:#78350f;color:#fff;cursor:pointer}
+.fixopt:active{transform:scale(.98)}
+.feedback{min-height:48px;font-size:16px;font-weight:700;text-align:center;margin-top:10px}
 .feedback.good{color:#4ade80}
 .feedback.bad{color:#f87171}
-.progress{height:8px;background:#44403c;border-radius:4px;margin-bottom:14px;overflow:hidden}
-.progress .bar{height:100%;background:#ca8a04;width:0%;transition:width .3s}
-.overlay{position:fixed;inset:0;background:rgba(23,23,23,.96);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;overflow-y:auto}
-.card{background:#292524;border-radius:20px;padding:28px 24px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto}
+.hintbox{background:#451a03;border-radius:12px;padding:12px 14px;font-size:15px;margin-bottom:12px;text-align:center}
+.overlay{position:fixed;inset:0;background:rgba(30,27,14,.96);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;overflow-y:auto}
+.card{background:#451a03;border-radius:20px;padding:28px 24px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto}
 .card h2{margin:0 0 12px;font-size:24px;color:#fcd34d}
 .card p,.card li{font-size:15px;line-height:1.7}
 .card ul{padding-left:20px}
-.concept{background:#171717;border-radius:12px;padding:14px;margin:14px 0;font-size:15px}
+.concept{background:#1e1b0e;border-radius:12px;padding:14px;margin:14px 0;font-size:15px}
 .concept b{color:#4ade80}
-.card button{width:100%;min-height:56px;font-size:18px;font-weight:700;background:#ca8a04;color:#422006;border:none;border-radius:14px;margin-top:10px;cursor:pointer}
+.card button{width:100%;min-height:56px;font-size:18px;font-weight:700;background:#f59e0b;color:#451a03;border:none;border-radius:14px;margin-top:10px;cursor:pointer}
+.progress{height:8px;background:#78350f;border-radius:4px;margin-bottom:14px;overflow:hidden}
+.progress .bar{height:100%;background:#f59e0b;width:0%;transition:width .3s}
 </style>
 </head>
 <body>
-<header><h1>📚 詞彙語境挑戰</h1><p>易混淆詞彙 · 睇語境揀啱字</p></header>
+<header><h1>🔍 詞彙偵探</h1><p>搵出用錯嘅詞 · 再改正佢</p></header>
 <a class="back" href="games.html">← 返回遊戲列表</a>
 <div class="wrap">
-<div class="hud"><div>📝 第 <span id="qnum">1</span>/10 題</div><div>⭐ <span id="score">0</span> 分</div></div>
+<div class="hud"><div>🔍 第 <span id="rnum">1</span>/8 宗</div><div>⭐ <span id="score">0</span> 分</div><div>🔥 連擊 <span id="streak">0</span></div></div>
 <div class="progress"><div class="bar" id="pbar"></div></div>
-<div class="qcard">
-<div class="qlabel">睇住成句，揀啱嘅詞：</div>
-<div class="qsent" id="qsent"></div>
-<div class="qzh" id="qzh"></div>
+<div class="stage" id="stage">第一步：撳出句子入面用錯咗嘅詞</div>
+<div class="hintbox" id="hint">有個詞係易混淆詞，用錯咗！做偵探搵佢出嚟</div>
+<div class="passage" id="passage"></div>
+<div class="fixbox" id="fixbox">
+<h3>第二步：揀正確嘅改正</h3>
+<div class="fixopts" id="fixopts"></div>
 </div>
-<div class="opts" id="opts"></div>
 <div class="feedback" id="fb"></div>
 </div>
 <div class="overlay" id="intro"><div class="card">
-<h2>📚 詞彙語境挑戰</h2>
-<p><b>玩法：</b>每題一句英文，中間有個空格，撳出最啱語境嘅詞。10 題，答啱 +10 分！</p>
+<h2>🔍 詞彙偵探</h2>
+<p><b>玩法（兩步）：</b><br>
+<b>第一步 — 搵錯：</b>句子入面有個易混淆詞用錯咗，撳出佢（+10 分）。<br>
+<b>第二步 — 改錯：</b>由兩個選項揀出正確嘅詞（+10 分）。<br>
+8 宗案件，連擊有加成！</p>
 <div class="concept">💡 <b>文法概念 — 易混淆詞：</b><br>
-好多英文詞串法似、讀音似，但意思同用法完全唔同：<br>
-• <b>affect</b>（影響，動詞）vs <b>effect</b>（效果，名詞）<br>
+• <b>affect</b>（動詞，影響）vs <b>effect</b>（名詞，效果）<br>
 • <b>borrow</b>（借入）vs <b>lend</b>（借出）<br>
 • <b>fewer</b>（可數）vs <b>less</b>（不可數）<br>
-• <b>advice</b>（建議，名詞）vs <b>advise</b>（勸告，動詞）<br>
-秘訣：唔好齋背，要睇成句語境！</div>
-<button onclick="startGame()">開始挑戰！</button>
+• <b>lose</b>（失去）vs <b>loose</b>（鬆嘅）</div>
+<button onclick="startGame()">開始查案！</button>
 </div></div>
 <div class="overlay" id="gameover" style="display:none"><div class="card">
-<h2>🏁 完成！</h2>
+<h2>🏁 結案！</h2>
 <p id="finalScore" style="font-size:19px"></p>
 <button onclick="resetGame()">🔁 再玩一次</button>
 </div></div>
 <script>
 (function(){
 "use strict";
-var QS=[
-{s:"The rainy weather ___ our picnic plans.",zh:"（場雨影響咗我哋嘅野餐計劃）",a:"affected",opts:["affected","effected","affects","effects"],tip:"affect 係動詞 = 影響"},
-{s:"Smoking has a bad ___ on health.",zh:"（食煙對健康有壞影響）",a:"effect",opts:["affect","effect","affects","effective"],tip:"effect 係名詞 = 效果"},
-{s:"Can I ___ your pen for a moment?",zh:"（可唔可以借你支筆用一陣？）",a:"borrow",opts:["borrow","lend","lent","borrows"],tip:"borrow = 借入（我問你借）"},
-{s:"She ___ me ten dollars yesterday.",zh:"（佢尋日借咗十蚊畀我）",a:"lent",opts:["borrowed","lent","lends","borrows"],tip:"lend 嘅過去式係 lent = 借出"},
-{s:"There are ___ students in this class than last year.",zh:"（呢班今年嘅學生比舊年少）",a:"fewer",opts:["fewer","less","least","few"],tip:"students 可數，用 fewer"},
-{s:"You should drink ___ sugar if you want to lose weight.",zh:"（想減重要飲少啲糖）",a:"less",opts:["fewer","less","few","lesser"],tip:"sugar 不可數，用 less"},
-{s:"Thank you for your ___.",zh:"（多謝你嘅建議）",a:"advice",opts:["advice","advise","advices","advises"],tip:"advice 係名詞 = 建議"},
-{s:"The teacher ___ us to study hard.",zh:"（老師勸我哋努力讀書）",a:"advised",opts:["adviced","advised","advice","advises"],tip:"advise 係動詞 = 勸告"},
-{s:"I ___ my keys yesterday. I can't find them.",zh:"（我尋日唔見咗條鎖匙）",a:"lost",opts:["lost","loose","losed","loss"],tip:"lose 嘅過去式係 lost = 唔見咗"},
-{s:"These shoes are too ___. I need a smaller size.",zh:"（對鞋太鬆，我要細碼啲）",a:"loose",opts:["lose","loose","lost","loses"],tip:"loose = 鬆嘅（形容詞）"},
-{s:"She ___ down to rest after running.",zh:"（跑完步佢瞓低休息）",a:"lay",opts:["lay","laid","lied","lain"],tip:"lie-lay-lain（瞓低）嘅過去式係 lay"},
-{s:"He ___ the book on the table.",zh:"（佢將本書放喺檯面）",a:"laid",opts:["lay","laid","lied","lain"],tip:"lay-laid-laid（放置）嘅過去式係 laid"}
+var CASES=[
+{s:"The medicine had a strong affect on him.",wrong:"affect",right:"effect",tip:"affect 是動詞（影響），effect 是名詞（效果）：a strong effect"},
+{s:"Can you borrow me your pen?",wrong:"borrow",right:"lend",tip:"borrow = 借入（自己攞），lend = 借出（畀人）：lend me"},
+{s:"There are less students in class today.",wrong:"less",right:"fewer",tip:"students 可數，用 fewer；不可數先用 less"},
+{s:"He gave me some good advices.",wrong:"advices",right:"advice",tip:"advice 不可數，唔加 s：some good advice"},
+{s:"I loose my keys yesterday.",wrong:"loose",right:"lost",tip:"loose 是形容詞（鬆），失去用 lose/lost：lost my keys"},
+{s:"Please lay down and have a rest.",wrong:"lay",right:"lie",tip:"lie down = 躺下（不及物）；lay 是放置（及物）：lie down"},
+{s:"The principal of the story is honesty.",wrong:"principal",right:"principle",tip:"principal = 校長／主要，principle = 原則"},
+{s:"She is very confidence in English.",wrong:"confidence",right:"confident",tip:"confidence 是名詞，be + 形容詞：be confident"},
+{s:"The weather will effect our picnic.",wrong:"effect",right:"affect",tip:"will 後面要動詞：will affect（影響）"},
+{s:"I have fewer money than you.",wrong:"fewer",right:"less",tip:"money 不可數，用 less"}
 ];
-var qi=0,score=0,answered=false,order=[];
+var ri=0,score=0,streak=0,order=[],misses=0,foundIt=false;
 function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
-function newQ(){
-  answered=false;
-  var fb=document.getElementById('fb');fb.textContent='';fb.className='feedback';
-  var q=QS[order[qi]];
-  document.getElementById('qnum').textContent=qi+1;
-  document.getElementById('pbar').style.width=(qi/10*100)+'%';
-  document.getElementById('qsent').innerHTML=q.s.replace('___','<span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;</span>');
-  document.getElementById('qzh').textContent=q.zh;
-  var box=document.getElementById('opts');box.innerHTML='';
-  shuffle(q.opts.slice()).forEach(function(o){
+function newRound(){
+  foundIt=false;misses=0;
+  document.getElementById('fb').textContent='';
+  document.getElementById('fb').className='feedback';
+  document.getElementById('stage').textContent='第一步：撳出句子入面用錯咗嘅詞';
+  document.getElementById('fixbox').classList.remove('show');
+  var c=CASES[order[ri]];
+  document.getElementById('rnum').textContent=ri+1;
+  document.getElementById('pbar').style.width=(ri/8*100)+'%';
+  var pg=document.getElementById('passage');pg.innerHTML='';
+  c.s.split(' ').forEach(function(w){
+    var clean=w.replace(/[.,?!]/g,'');
     var b=document.createElement('button');
-    b.className='opt';b.textContent=o;
-    b.addEventListener('click',function(){answer(b,o,q);});
-    box.appendChild(b);
+    b.className='wchip';b.textContent=w;b.dataset.w=clean;
+    b.addEventListener('click',function(){tapWord(b,c);});
+    pg.appendChild(b);
   });
 }
-function answer(btn,choice,q){
-  if(answered)return;answered=true;
-  var btns=document.getElementById('opts').children;
-  for(var i=0;i<btns.length;i++){
-    btns[i].disabled=true;
-    if(btns[i].textContent===q.a)btns[i].classList.add('correct');
-  }
+function tapWord(btn,c){
+  if(foundIt)return;
   var fb=document.getElementById('fb');
-  if(choice===q.a){
-    score+=10;
-    fb.textContent='✅ 啱！+10 分（'+q.tip+'）';fb.className='feedback good';
+  if(btn.dataset.w===c.wrong){
+    foundIt=true;btn.classList.add('found');
+    streak++;
+    var pts=10+Math.min(streak-1,5)*2;score+=pts;
+    document.getElementById('score').textContent=score;
+    document.getElementById('streak').textContent=streak;
+    fb.textContent='✅ 搵到！「'+c.wrong+'」用錯咗，+'+pts+' 分';fb.className='feedback good';
+    setTimeout(showFix,900,c);
   }else{
-    btn.classList.add('wrong');
-    fb.textContent='❌ 答案係「'+q.a+'」（'+q.tip+'）';fb.className='feedback bad';
+    btn.classList.add('miss');
+    setTimeout(function(){btn.classList.remove('miss');},360);
+    misses++;
+    streak=0;document.getElementById('streak').textContent='0';
+    fb.textContent=misses>=2?'❌ 唔係呢個！提示：留意易混淆詞（'+c.wrong.length+' 個字母）':'❌ 唔係呢個，再睇清楚！';
+    fb.className='feedback bad';
   }
-  document.getElementById('score').textContent=score;
-  setTimeout(function(){qi++;if(qi>=10)endGame();else newQ();},1800);
+}
+function showFix(c){
+  document.getElementById('stage').textContent='第二步：揀正確嘅改正';
+  var box=document.getElementById('fixbox');box.classList.add('show');
+  var fo=document.getElementById('fixopts');fo.innerHTML='';
+  shuffle([c.wrong,c.right]).forEach(function(o){
+    var b=document.createElement('button');
+    b.className='fixopt';b.textContent=o;
+    b.addEventListener('click',function(){fixIt(b,o,c);});
+    fo.appendChild(b);
+  });
+}
+function fixIt(btn,choice,c){
+  var fb=document.getElementById('fb');
+  var btns=document.getElementById('fixopts').children;
+  for(var i=0;i<btns.length;i++)btns[i].disabled=true;
+  if(choice===c.right){
+    score+=10;
+    document.getElementById('score').textContent=score;
+    fb.textContent='✅ 改啱！+10 分（'+c.tip+'）';fb.className='feedback good';
+  }else{
+    fb.textContent='❌ 應該係「'+c.right+'」（'+c.tip+'）';fb.className='feedback bad';
+  }
+  setTimeout(function(){ri++;if(ri>=8)endGame();else newRound();},2000);
 }
 function endGame(){
   document.getElementById('pbar').style.width='100%';
-  var msg='總分：<b style="color:#fbbf24">'+score+'</b> / 100<br>';
-  msg+=score>=90?'🌟 詞彙大師！':score>=70?'👍 好叻！':'💪 睇語境，唔好齋背生字！';
+  var msg='破咗 8 宗案！總分：<b style="color:#fbbf24">'+score+'</b><br>';
+  msg+=score>=140?'🌟 神探！易混淆詞難唔到你！':score>=100?'👍 好叻！':'💪 記熟 affect/effect、borrow/lend 呢啲孖生詞！';
   document.getElementById('finalScore').innerHTML=msg;
   document.getElementById('gameover').style.display='flex';
 }
 function resetGame(){
-  qi=0;score=0;
+  ri=0;score=0;streak=0;
   document.getElementById('score').textContent='0';
+  document.getElementById('streak').textContent='0';
   document.getElementById('gameover').style.display='none';
-  order=shuffle(QS.map(function(_,i){return i;})).slice(0,10);
-  newQ();
+  order=shuffle(CASES.map(function(_,i){return i;})).slice(0,8);
+  newRound();
 }
-function startGame(){
-  document.getElementById('intro').style.display='none';
-  resetGame();
-}
-window.startGame=startGame;
-window.resetGame=resetGame;
+function startGame(){document.getElementById('intro').style.display='none';resetGame();}
+window.startGame=startGame;window.resetGame=resetGame;
 })();
 </script>
 </body>

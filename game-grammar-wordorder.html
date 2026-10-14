@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-<title>詞序排列</title>
+<title>句子建築師</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#082f2e;color:#ccfbf1;min-height:100vh;touch-action:manipulation}
@@ -14,6 +14,7 @@ header p{margin:4px 0 0;font-size:14px;opacity:.85}
 .wrap{max-width:640px;margin:0 auto;padding:16px 14px 40px}
 .hud{display:flex;justify-content:space-around;background:#134e4a;border-radius:12px;padding:12px;margin-bottom:14px;font-size:15px;font-weight:700}
 .hud span{color:#fbbf24}
+.stage{font-size:14px;font-weight:700;color:#5eead4;text-align:center;margin-bottom:8px}
 .sentence{min-height:84px;background:#134e4a;border-radius:14px;padding:14px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;font-size:18px;font-weight:700}
 .sentence .ph{color:#5eead4;font-size:15px;font-weight:400}
 .wbank{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:14px}
@@ -21,6 +22,10 @@ header p{margin:4px 0 0;font-size:14px;opacity:.85}
 .wbtn:active{transform:scale(.95)}
 .wbtn.used{opacity:.25;pointer-events:none}
 .chosen{background:#0d9488;border-color:#5eead4;color:#fff;border-radius:10px;padding:6px 12px;font-size:18px;font-weight:700;cursor:pointer}
+.puncts{display:none;gap:12px;justify-content:center;margin-bottom:14px}
+.puncts.show{display:flex}
+.pbtn{width:80px;height:80px;font-size:40px;font-weight:800;border-radius:16px;border:3px solid #fbbf24;background:#134e4a;color:#fbbf24;cursor:pointer}
+.pbtn:active{transform:scale(.94)}
 .btnrow{display:flex;gap:10px;margin-top:6px}
 button.big{flex:1;min-height:56px;font-size:18px;font-weight:800;border:none;border-radius:14px;cursor:pointer}
 #checkBtn{background:#10b981;color:#022c22}
@@ -40,13 +45,19 @@ button.big{flex:1;min-height:56px;font-size:18px;font-weight:800;border:none;bor
 </style>
 </head>
 <body>
-<header><h1>🔤 詞序排列</h1><p>英文句子詞序 · SVO</p></header>
+<header><h1>🏗️ 句子建築師</h1><p>砌句子 + 揀標點 · 兩步挑戰</p></header>
 <a class="back" href="games.html">← 返回遊戲列表</a>
 <div class="wrap">
 <div class="hud"><div>📝 第 <span id="rnum">1</span>/8 句</div><div>⭐ <span id="score">0</span> 分</div></div>
+<div class="stage" id="stage">第一步：撳單詞砌句子</div>
 <div class="hintbox" id="hint">撳下面嘅單詞，按正確次序砌成句子</div>
 <div class="sentence" id="sent"><span class="ph">撳單詞砌句子…</span></div>
 <div class="wbank" id="bank"></div>
+<div class="puncts" id="puncts">
+<button class="pbtn" data-p=".">.</button>
+<button class="pbtn" data-p="?">?</button>
+<button class="pbtn" data-p="!">!</button>
+</div>
 <div class="btnrow">
 <button class="big" id="clearBtn">🧹 清除</button>
 <button class="big" id="checkBtn">✅ 檢查</button>
@@ -54,13 +65,16 @@ button.big{flex:1;min-height:56px;font-size:18px;font-weight:800;border:none;bor
 <div class="feedback" id="fb"></div>
 </div>
 <div class="overlay" id="intro"><div class="card">
-<h2>🔤 詞序排列</h2>
-<p><b>玩法：</b>單詞打散咗，按正確英文詞序撳佢哋砌成句子。撳錯咗可以撳返個詞拎走，或者撳「清除」重嚟。8 句，砌啱 +10 分！</p>
-<div class="concept">💡 <b>文法概念 — 英文詞序：</b><br>
-• 基本：<b>主語 + 動詞 + 受詞 (SVO)</b>：I <b>like</b> apples.<br>
-• 時間地點放句尾，次序：<b>地點 → 時間</b>：We met <b>at school yesterday</b>.<br>
-• 頻率副詞（always/usually/often）放 be 動詞後、實義動詞前：She <b>is always</b> late. / He <b>often plays</b> football.</div>
-<button onclick="startGame()">開始砌句子！</button>
+<h2>🏗️ 句子建築師</h2>
+<p><b>玩法（兩步）：</b><br>
+<b>第一步</b> — 撳單詞砌成正確句子（撳錯可撳返拎走）。<br>
+<b>第二步</b> — 砌啱之後，揀正確嘅標點符號放喺句尾（. / ? / !）。<br>
+8 句，兩步都啱先有滿分！</p>
+<div class="concept">💡 <b>文法概念 — 標點三兄弟：</b><br>
+• <b>.</b> 句號 — 陳述句：I like apples<b>.</b><br>
+• <b>?</b> 問號 — 問句：Where are you<b>?</b><br>
+• <b>!</b> 感嘆號 — 強烈感情／命令：What a nice day<b>!</b> / Sit down<b>!</b></div>
+<button onclick="startGame()">開始起樓！</button>
 </div></div>
 <div class="overlay" id="gameover" style="display:none"><div class="card">
 <h2>🏁 完成！</h2>
@@ -71,26 +85,29 @@ button.big{flex:1;min-height:56px;font-size:18px;font-weight:800;border:none;bor
 (function(){
 "use strict";
 var SS=[
-{w:["I","like","apples","."],t:"基本 SVO"},
-{w:["She","is","always","late","."],t:"頻率副詞放 be 動詞後"},
-{w:["He","often","plays","football","."],t:"頻率副詞放實義動詞前"},
-{w:["We","met","at","school","yesterday","."],t:"地點 → 時間"},
-{w:["They","went","to","the","park","last","Sunday","."],t:"地點 → 時間"},
-{w:["My","mother","cooks","dinner","every","day","."],t:"SVO + 時間"},
-{w:["The","cat","is","sleeping","on","the","sofa","."],t:"be + V-ing， 地點句尾"},
-{w:["Can","you","help","me","please","?"],t:"問句：情態動詞開頭"},
-{w:["There","is","a","book","on","the","desk","."],t:"There is 句型"},
-{w:["He","did","not","go","to","school","."],t:"否定句：did not + 原形"}
+{w:["I","like","apples"],p:".",t:"陳述句用句號"},
+{w:["Where","are","you","going"],p:"?",t:"Where 開頭係問句"},
+{w:["What","a","beautiful","day"],p:"!",t:"What a...! 感嘆句"},
+{w:["She","is","always","late"],p:".",t:"陳述句用句號"},
+{w:["Can","you","help","me"],p:"?",t:"Can 開頭係問句"},
+{w:["Sit","down","please"],p:"!",t:"命令句可用感嘆號"},
+{w:["They","went","to","the","park","yesterday"],p:".",t:"陳述句用句號"},
+{w:["How","old","are","you"],p:"?",t:"How old...? 問年齡"},
+{w:["He","is","so","tall"],p:"!",t:"so...! 感嘆"},
+{w:["There","is","a","cat","on","the","roof"],p:".",t:"There is 陳述句"}
 ];
-var ri=0,score=0,chosen=[],order=[];
+var ri=0,score=0,chosen=[],order=[],stage=1;
 function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
 function newRound(){
-  chosen=[];
+  chosen=[];stage=1;
   document.getElementById('fb').textContent='';
   document.getElementById('fb').className='feedback';
+  document.getElementById('stage').textContent='第一步：撳單詞砌句子';
+  document.getElementById('puncts').classList.remove('show');
+  document.getElementById('checkBtn').style.display='';
   var s=SS[order[ri]];
   document.getElementById('rnum').textContent=ri+1;
-  document.getElementById('hint').textContent='💡 提示：'+s.t;
+  document.getElementById('hint').textContent='💡 提示：'+s.t.replace(/陳述句用句號|係問句|感嘆.*/,'砌好先諗標點');
   renderSent();renderBank(s);
 }
 function renderSent(){
@@ -99,9 +116,15 @@ function renderSent(){
   chosen.forEach(function(c,idx){
     var sp=document.createElement('span');
     sp.className='chosen';sp.textContent=c.w;
-    sp.addEventListener('click',function(){unpick(idx);});
+    if(stage===1)sp.addEventListener('click',function(){unpick(idx);});
     el.appendChild(sp);
   });
+  if(stage===2){
+    var s=SS[order[ri]];
+    var tail=document.createElement('span');
+    tail.className='chosen';tail.style.borderColor='#fbbf24';tail.textContent='＿';
+    el.appendChild(tail);
+  }
 }
 function renderBank(s){
   var el=document.getElementById('bank');el.innerHTML='';
@@ -120,8 +143,7 @@ function pickWord(s,i,btn){
   renderSent();
 }
 function unpick(idx){
-  var c=chosen[idx];
-  chosen.splice(idx,1);
+  var c=chosen[idx];chosen.splice(idx,1);
   var btns=document.getElementById('bank').children;
   for(var i=0;i<btns.length;i++){
     if(btns[i].dataset.i==String(c.i))btns[i].classList.remove('used');
@@ -129,37 +151,44 @@ function unpick(idx){
   renderSent();
 }
 document.getElementById('clearBtn').addEventListener('click',function(){
-  chosen=[];
-  var s=SS[order[ri]];
-  renderSent();renderBank(s);
+  if(stage!==1)return;
+  chosen=[];var s=SS[order[ri]];renderSent();renderBank(s);
   document.getElementById('fb').textContent='';
 });
 document.getElementById('checkBtn').addEventListener('click',function(){
-  var s=SS[order[ri]];
-  var fb=document.getElementById('fb');
+  var s=SS[order[ri]],fb=document.getElementById('fb');
   if(chosen.length!==s.w.length){
-    fb.textContent='⚠️ 仲未砌完，仲差 '+(s.w.length-chosen.length)+' 個詞';fb.className='feedback bad';
-    return;
+    fb.textContent='⚠️ 仲未砌完，仲差 '+(s.w.length-chosen.length)+' 個詞';fb.className='feedback bad';return;
   }
   var ok=true;
-  for(var i=0;i<s.w.length;i++){
-    if(chosen[i].w!==s.w[i]){ok=false;break;}
-  }
+  for(var i=0;i<s.w.length;i++){if(chosen[i].w!==s.w[i]){ok=false;break;}}
   if(ok){
-    score+=10;
-    document.getElementById('score').textContent=score;
-    fb.textContent='✅ 啱！+10 分（'+s.t+'）';fb.className='feedback good';
-    setTimeout(function(){
-      ri++;
-      if(ri>=8)endGame();else newRound();
-    },1400);
+    stage=2;
+    document.getElementById('stage').textContent='第二步：揀正確標點放喺句尾';
+    document.getElementById('puncts').classList.add('show');
+    document.getElementById('checkBtn').style.display='none';
+    document.getElementById('bank').innerHTML='';
+    fb.textContent='✅ 句子啱！而家揀標點…';fb.className='feedback good';
+    renderSent();
   }else{
-    fb.textContent='❌ 詞序唔啱，再諗下！（'+s.t+'）';fb.className='feedback bad';
+    fb.textContent='❌ 詞序唔啱，再諗下！';fb.className='feedback bad';
+  }
+});
+document.getElementById('puncts').addEventListener('click',function(e){
+  var btn=e.target.closest('.pbtn');if(!btn)return;
+  var s=SS[order[ri]],fb=document.getElementById('fb');
+  if(btn.dataset.p===s.p){
+    score+=15;
+    document.getElementById('score').textContent=score;
+    fb.textContent='✅ 標點都啱！+15 分（'+s.t+'）';fb.className='feedback good';
+    setTimeout(function(){ri++;if(ri>=8)endGame();else newRound();},1500);
+  }else{
+    fb.textContent='❌ 標點唔啱！諗下呢句係陳述、疑問定感嘆？';fb.className='feedback bad';
   }
 });
 function endGame(){
-  var msg='砌啱 8 句！總分：<b style="color:#fbbf24">'+score+'</b> / 80<br>';
-  msg+=score>=70?'🌟 詞序大師！':score>=50?'👍 好叻！':'💪 記住 SVO 同時間地點次序！';
+  var msg='起好 8 句！總分：<b style="color:#fbbf24">'+score+'</b> / 120<br>';
+  msg+=score>=100?'🌟 金牌建築師！':score>=70?'👍 好叻！':'💪 記住：問句用 ?，感嘆用 !，其他用 .';
   document.getElementById('finalScore').innerHTML=msg;
   document.getElementById('gameover').style.display='flex';
 }
@@ -170,12 +199,8 @@ function resetGame(){
   order=shuffle(SS.map(function(_,i){return i;})).slice(0,8);
   newRound();
 }
-function startGame(){
-  document.getElementById('intro').style.display='none';
-  resetGame();
-}
-window.startGame=startGame;
-window.resetGame=resetGame;
+function startGame(){document.getElementById('intro').style.display='none';resetGame();}
+window.startGame=startGame;window.resetGame=resetGame;
 })();
 </script>
 </body>

@@ -3,34 +3,35 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-<title>時態大挑戰</title>
+<title>時態分類員</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;touch-action:pan-y}
 header{background:linear-gradient(135deg,#1e3a8a,#3b82f6);padding:16px;text-align:center}
 header h1{margin:0;font-size:22px}
 .back{display:block;text-align:center;background:#1e293b;color:#93c5fd;text-decoration:none;padding:12px;font-size:16px;font-weight:600}
 .wrap{max-width:640px;margin:0 auto;padding:14px 16px 40px}
 .hud{display:flex;justify-content:space-between;background:#1e293b;border-radius:12px;padding:10px 14px;font-size:15px;font-weight:700;margin-bottom:10px}
 .hud span{color:#fbbf24}
-.tbar{height:10px;background:#1e293b;border-radius:6px;overflow:hidden;margin-bottom:12px}
-.tbar>div{height:100%;background:#22c55e;width:100%;transition:width .2s linear}
-.tbar.low>div{background:#ef4444}
-.qcard{background:#1e293b;border-radius:14px;padding:18px;margin-bottom:12px}
-.qcard .qnum{font-size:14px;color:#94a3b8;margin-bottom:6px}
-.qcard .qsent{font-size:19px;line-height:1.7;font-weight:600}
-.qcard .qsent .blank{color:#fbbf24;border-bottom:3px solid #fbbf24;padding:0 6px;white-space:nowrap}
-.opts{display:grid;gap:10px}
-.opt{min-height:56px;font-size:17px;font-weight:700;border-radius:12px;border:2px solid #334155;background:#0f172a;color:#e2e8f0;cursor:pointer;padding:10px 14px;text-align:left;touch-action:manipulation}
-.opt:active{transform:scale(.98)}
-.opt.correct{background:#166534;border-color:#4ade80;color:#fff}
-.opt.wrong{background:#7f1d1d;border-color:#f87171;color:#fff}
-.opt:disabled{opacity:.85;cursor:default}
-.fb{min-height:60px;font-size:15px;line-height:1.6;margin-top:10px;padding:10px 14px;border-radius:10px;display:none}
-.fb.good{display:block;background:#14532d;color:#bbf7d0}
-.fb.bad{display:block;background:#450a0a;color:#fecaca}
-.fb b{color:#fde047}
-.nextbtn{width:100%;min-height:52px;font-size:17px;font-weight:800;border:none;border-radius:12px;background:#3b82f6;color:#fff;margin-top:8px;display:none;touch-action:manipulation}
+.stage{position:relative;min-height:170px;background:#1e293b;border-radius:14px;margin-bottom:12px;overflow:hidden}
+.fallcard{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:#3b82f6;color:#fff;font-size:18px;font-weight:700;line-height:1.5;padding:16px 20px;border-radius:14px;max-width:92%;text-align:center;cursor:grab;touch-action:none;box-shadow:0 6px 18px rgba(0,0,0,.4);user-select:none;-webkit-user-select:none;z-index:5}
+.fallcard.dragging{cursor:grabbing;box-shadow:0 12px 28px rgba(0,0,0,.55);z-index:10}
+.fallcard.selected{outline:4px solid #fbbf24}
+.hint{text-align:center;font-size:14px;color:#94a3b8;padding:8px}
+.boxes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.box{min-height:120px;border-radius:14px;border:3px dashed #475569;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;font-size:15px;font-weight:800;cursor:pointer;touch-action:manipulation;transition:transform .1s}
+.box .em{font-size:34px}
+.box small{font-weight:600;font-size:12px;color:#cbd5e1}
+.box.past{background:#7c2d12}.box.present{background:#14532d}.box.future{background:#4c1d95}
+.box.hi{transform:scale(1.05);border-style:solid;border-color:#fbbf24}
+.box.flash-ok{animation:ok .5s}
+.box.flash-bad{animation:bad .5s}
+@keyframes ok{0%{background:#166534}100%{}}
+@keyframes bad{0%{background:#7f1d1d}100%{}}
+.fallcard.shake{animation:shk .4s}
+@keyframes shk{0%,100%{transform:translateX(-50%)}25%{transform:translateX(calc(-50% - 10px))}75%{transform:translateX(calc(-50% + 10px))}}
+.fb{min-height:34px;text-align:center;font-size:16px;font-weight:700;margin-top:8px}
+.fb.good{color:#4ade80}.fb.bad{color:#f87171}
 .overlay{position:fixed;inset:0;background:rgba(2,6,23,.96);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;overflow-y:auto}
 .overlay.hide{display:none}
 .card{background:#1e293b;border-radius:18px;padding:26px 22px;max-width:540px;width:100%;max-height:92vh;overflow-y:auto}
@@ -41,30 +42,32 @@ header h1{margin:0;font-size:22px}
 .concept b{color:#4ade80}
 .card .go{width:100%;min-height:56px;font-size:18px;font-weight:800;background:#3b82f6;color:#fff;border:none;border-radius:14px;margin-top:10px;cursor:pointer;touch-action:manipulation}
 #finalScore{font-size:18px;line-height:1.8}
-.streak{color:#fb7185;font-weight:800}
 </style>
 </head>
 <body>
-<header><h1>⏰ 時態大挑戰</h1></header>
+<header><h1>⏰ 時態分類員</h1></header>
 <a class="back" href="games.html">← 返回遊戲列表</a>
 <div class="wrap">
-<div class="hud"><div>第 <span id="qnum">1</span>/10 題</div><div>⭐ <span id="score">0</span></div><div>🔥 <span id="streak">0</span></div></div>
-<div class="tbar" id="tbar"><div id="tfill"></div></div>
-<div class="qcard"><div class="qnum" id="tense"></div><div class="qsent" id="qsent"></div></div>
-<div class="opts" id="opts"></div>
+<div class="hud"><div>第 <span id="qnum">1</span>/10 句</div><div>⭐ <span id="score">0</span></div><div>✅ <span id="acc">-</span></div></div>
+<div class="stage" id="stage">
+<div class="hint" id="stagetip">👆 拖曳上面嘅句子去啱嘅盒子<br>（或者撳句子再撳盒子）</div>
+<div class="fallcard" id="card"></div>
+</div>
+<div class="boxes">
+<div class="box past" data-t="past"><div class="em">🕰️</div>過去<small>Past</small></div>
+<div class="box present" data-t="present"><div class="em">👀</div>現在<small>Present</small></div>
+<div class="box future" data-t="future"><div class="em">🔮</div>將來<small>Future</small></div>
+</div>
 <div class="fb" id="fb"></div>
-<button class="nextbtn" id="nextbtn">下一題 →</button>
 </div>
 <div class="overlay" id="intro"><div class="card">
-<h2>⏰ 時態大挑戰</h2>
-<p><b>玩法：</b>每題有一句英文，揀返正確嘅動詞時態填入空格。每題限時 <b>20 秒</b>，答得愈快分愈高，連續答啱有連擊加成！共 10 題。</p>
-<div class="concept">💡 <b>文法概念：</b>英文時態話你知動作幾時發生：
-<br>• <b>Present Simple</b>（習慣／事實）：She <i>goes</i> to school every day.
-<br>• <b>Present Continuous</b>（而家進行緊）：Look! He <i>is running</i>.
-<br>• <b>Past Simple</b>（過去完成）：I <i>visited</i> Japan last year.
-<br>• <b>Present Perfect</b>（過去→而家有影響）：I <i>have lost</i> my keys.
-<br>• <b>Past Perfect</b>（過去之前嘅過去）：By the time we arrived, it <i>had started</i>.</div>
-<button class="go" id="startbtn">開始挑戰！</button>
+<h2>⏰ 時態分類員</h2>
+<p><b>玩法：</b>句子會喺上面出現，<b>拖曳</b>佢去正確嘅時態盒子（過去／現在／將來）！唔想拖？撳一下句子，再撳盒子都得。共 10 句，拖錯扣 20 分，答啱 +100 分！</p>
+<div class="concept">💡 <b>文法概念：</b>睇時間標記就知時態：
+<br>• <b>過去</b>：yesterday、last week、ago
+<br>• <b>現在</b>：every day、now、Look!
+<br>• <b>將來</b>：tomorrow、next month、will</div>
+<button class="go" id="startbtn">開始分類！</button>
 </div></div>
 <div class="overlay hide" id="end"><div class="card">
 <h2>🏁 完成！</h2>
@@ -74,96 +77,127 @@ header h1{margin:0;font-size:22px}
 <script>
 (function(){
 "use strict";
-var Q=[
-{q:"She ___ to school by bus every day.",o:["go","goes","is going","has gone"],a:1,t:"Present Simple",e:"every day 表示習慣，用 Present Simple；主語 She 係第三人稱單數，動詞加 s。"},
-{q:"Look! The baby ___ loudly.",o:["cries","is crying","cried","has cried"],a:1,t:"Present Continuous",e:"Look! 表示而家發生緊嘅事，用 Present Continuous（am/is/are + V-ing）。"},
-{q:"I ___ my grandparents last weekend.",o:["visit","visits","visited","have visited"],a:2,t:"Past Simple",e:"last weekend 係過去時間，用 Past Simple（visited）。"},
-{q:"While I ___ dinner, the phone rang.",o:["cooked","was cooking","have cooked","cook"],a:1,t:"Past Continuous",e:"一個長動作（煮飯）被短動作（電話響）打斷，長動作用 Past Continuous。"},
-{q:"They ___ in Hong Kong since 2015.",o:["live","are living","have lived","lived"],a:2,t:"Present Perfect",e:"since 2015 表示由過去延續到而家，用 Present Perfect（have/has + 過去分詞）。"},
-{q:"Oh no! I ___ my wallet.",o:["lose","lost","have lost","am losing"],a:2,t:"Present Perfect",e:"唔見銀包係過去發生、而家有後果（冇錢用），用 Present Perfect 表結果。"},
-{q:"By the time we arrived, the concert ___.",o:["already started","had already started","has already started","starts"],a:1,t:"Past Perfect",e:"音樂會開始發生喺「我哋到達」之前（過去嘅過去），用 Past Perfect（had + 過去分詞）。"},
-{q:"Water ___ at 100°C.",o:["boils","is boiling","boiled","has boiled"],a:0,t:"Present Simple",e:"科學事實／真理永遠用 Present Simple。"},
-{q:"I ___ you tomorrow morning.",o:["call","will call","called","have called"],a:1,t:"Future (will)",e:"tomorrow morning 係將來，承諾／決定用 will + 原形動詞。"},
-{q:"She ___ for the exam all week. She looks exhausted.",o:["studies","studied","has been studying","had studied"],a:2,t:"Present Perfect Continuous",e:"由過去做到而家、強調持續過程同而家嘅結果（好攰），用 Present Perfect Continuous。"}
+var S=[
+{s:"I visited my grandma last Sunday.",t:"past",e:"last Sunday 係過去時間 → 過去式 visited。"},
+{s:"She finished her homework an hour ago.",t:"past",e:"ago（…之前）一定係過去式。"},
+{s:"They played basketball yesterday.",t:"past",e:"yesterday → 過去式 played。"},
+{s:"She goes to school by bus every day.",t:"present",e:"every day 表示習慣 → Present Simple；She 第三人稱單數加 s。"},
+{s:"Look! The baby is crying.",t:"present",e:"Look! 表示而家發生緊 → Present Continuous（is crying）。"},
+{s:"I am doing my homework now.",t:"present",e:"now → 而家進行緊 → Present Continuous。"},
+{s:"Dogs bark loudly.",t:"present",e:"講事實／習慣 → Present Simple。"},
+{s:"I will help you tomorrow.",t:"future",e:"will + tomorrow → 將來。"},
+{s:"We are going to travel next month.",t:"future",e:"be going to + next month → 將來。"},
+{s:"She will call you later.",t:"future",e:"will + later → 將來。"}
 ];
-var idx=0,score=0,streak=0,best=0,timeLeft=20,timer=null,locked=false,order=[];
-try{best=parseInt(localStorage.getItem('tenseBest')||'0',10)||0;}catch(e){}
+var idx=0,score=0,correct=0,best=0,locked=false,order=[],selected=false,cardShown=false;
+try{best=parseInt(localStorage.getItem('tenseSortBest')||'0',10)||0;}catch(e){}
 function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
 function $(id){return document.getElementById(id);}
-function startTimer(){
-  clearInterval(timer);timeLeft=20;$('tbar').classList.remove('low');paintBar();
-  timer=setInterval(function(){
-    timeLeft-=0.2;paintBar();
-    if(timeLeft<=0){clearInterval(timer);answer(-1);}
-  },200);
-}
-function paintBar(){
-  var p=Math.max(0,timeLeft/20*100);
-  $('tfill').style.width=p+'%';
-  if(timeLeft<=5)$('tbar').classList.add('low');
-}
-function showQ(){
-  locked=false;$('fb').className='fb';$('fb').style.display='none';$('nextbtn').style.display='none';
-  var item=Q[order[idx]];
+var card=$('card'),stage=$('stage');
+var drag=null;
+function showCard(){
+  locked=false;selected=false;
+  card.classList.remove('selected');
   $('qnum').textContent=idx+1;
-  $('tense').textContent='💡 考緊：'+item.t;
-  var parts=item.q.split('___');
-  $('qsent').innerHTML=escapeHtml(parts[0])+'<span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>'+escapeHtml(parts[1]||'');
-  var box=$('opts');box.innerHTML='';
-  item.o.forEach(function(opt,i){
-    var b=document.createElement('button');
-    b.className='opt';b.textContent=opt;
-    b.addEventListener('click',function(){answer(i);});
-    box.appendChild(b);
-  });
-  startTimer();
+  $('fb').className='fb';$('fb').textContent='';
+  var item=S[order[idx]];
+  card.textContent=item.s;
+  card.style.transform='translateX(-50%)';
+  card.style.left='50%';card.style.top='14px';
+  card.style.display='block';
+  cardShown=true;
 }
-function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function answer(pick){
-  if(locked)return;locked=true;clearInterval(timer);
-  var item=Q[order[idx]];
-  var btns=$('opts').children;
-  for(var i=0;i<btns.length;i++){btns[i].disabled=true;}
-  var ok=(pick===item.a);
+function dropOn(box){
+  if(locked||!cardShown)return;
+  locked=true;
+  var item=S[order[idx]];
+  var ok=(box.getAttribute('data-t')===item.t);
   if(ok){
-    btns[item.a].classList.add('correct');
-    var gain=100+Math.round(Math.max(0,timeLeft)*5)+streak*20;
-    score+=gain;streak++;
+    box.classList.add('flash-ok');
+    score+=100;correct++;selected=false;
     $('fb').className='fb good';
-    $('fb').innerHTML='✅ 答啱！+'+gain+' 分<br><b>文法：</b>'+item.e;
+    $('fb').textContent='✅ 正確！+100 分｜'+item.e;
+    card.style.display='none';cardShown=false;
+    setTimeout(function(){box.classList.remove('flash-ok');next();},1100);
   }else{
-    if(pick>=0)btns[pick].classList.add('wrong');
-    btns[item.a].classList.add('correct');
-    streak=0;
+    box.classList.add('flash-bad');
+    card.classList.add('shake');
+    score=Math.max(0,score-20);selected=false;card.classList.remove('selected');
     $('fb').className='fb bad';
-    $('fb').innerHTML=(pick<0?'⏰ 時間到！':'❌ 答錯咗！')+'正確答案：<b>'+item.o[item.a]+'</b><br><b>文法：</b>'+item.e;
+    $('fb').textContent='❌ 唔啱！扣 20 分，再試過｜'+item.e;
+    setTimeout(function(){box.classList.remove('flash-bad');card.classList.remove('shake');locked=false;},600);
   }
-  $('score').textContent=score;$('streak').textContent=streak;
-  $('fb').style.display='block';$('nextbtn').style.display='block';
-  $('nextbtn').textContent=(idx>=Q.length-1)?'睇成績 →':'下一題 →';
+  $('score').textContent=score;
+  $('acc').textContent=Math.round(correct/(idx+1)*100)+'%';
 }
-function next(){
-  idx++;
-  if(idx>=Q.length){endGame();}else{showQ();}
-}
+function next(){idx++;if(idx>=S.length){endGame();}else{showCard();}}
 function endGame(){
   $('end').classList.remove('hide');
   var nb='';
-  if(score>best){try{localStorage.setItem('tenseBest',String(score));}catch(e){}best=score;nb=' 🏅 新紀錄！';}
-  var msg='總分：<b>'+score+'</b> 分'+nb+'<br>歷史最佳：'+best+' 分<br>';
-  msg+=score>=1200?'🌟 時態大師！':'💪 繼續努力，留意時間提示詞（every day / since / by the time）！';
-  $('finalScore').innerHTML=msg;
+  if(score>best){try{localStorage.setItem('tenseSortBest',String(score));}catch(e){}best=score;nb=' 🏅 新紀錄！';}
+  var acc=Math.round(correct/S.length*100);
+  $('finalScore').innerHTML='總分：<b>'+score+'</b> 分'+nb+'<br>準確率：'+acc+'%（'+correct+'/'+S.length+'）<br>歷史最佳：'+best+' 分<br>'+(acc===100?'🌟 完美分類員！':'💪 記住時間標記：ago/yesterday→過去，now/Look→現在，will/tomorrow→將來！');
 }
 function reset(){
-  clearInterval(timer);idx=0;score=0;streak=0;
-  order=shuffle(Q.map(function(_,i){return i;}));
-  $('score').textContent='0';$('streak').textContent='0';
-  $('end').classList.add('hide');
-  showQ();
+  idx=0;score=0;correct=0;
+  order=shuffle(S.map(function(_,i){return i;}));
+  $('score').textContent='0';$('acc').textContent='-';
+  $('end').classList.add('hide');showCard();
 }
-$('nextbtn').addEventListener('click',next);
+/* --- 拖曳（pointer events，mouse+touch 通用）--- */
+card.addEventListener('pointerdown',function(e){
+  if(locked)return;
+  e.preventDefault();
+  try{card.setPointerCapture(e.pointerId);}catch(err){}
+  var r=card.getBoundingClientRect(),sr=stage.getBoundingClientRect();
+  drag={dx:e.clientX-r.left,dy:e.clientY-r.top,sr:sr};
+  card.classList.add('dragging');
+});
+card.addEventListener('pointermove',function(e){
+  if(!drag||locked)return;
+  e.preventDefault();
+  var sr=drag.sr;
+  var x=e.clientX-sr.left-drag.dx, y=e.clientY-sr.top-drag.dy;
+  x=Math.max(-20,Math.min(sr.width-60,x));
+  y=Math.max(0,Math.min(sr.height-40,y));
+  card.style.left=x+'px';card.style.top=y+'px';card.style.transform='none';
+});
+function endDrag(e){
+  if(!drag)return;
+  card.classList.remove('dragging');
+  var cr=card.getBoundingClientRect();
+  var cx=cr.left+cr.width/2, cy=cr.top+cr.height/2;
+  drag=null;
+  var boxes=document.querySelectorAll('.box'),hit=null;
+  boxes.forEach(function(b){
+    var r=b.getBoundingClientRect();
+    b.classList.remove('hi');
+    if(cx>=r.left&&cx<=r.right&&cy>=r.top&&cy<=r.bottom)hit=b;
+  });
+  if(hit){dropOn(hit);}
+  else{
+    /* 冇掟中盒子：當係撳選 */
+    toggleSelect();
+    card.style.transform='translateX(-50%)';card.style.left='50%';card.style.top='14px';
+  }
+}
+card.addEventListener('pointerup',endDrag);
+card.addEventListener('pointercancel',function(){drag=null;card.classList.remove('dragging');card.style.transform='translateX(-50%)';card.style.left='50%';card.style.top='14px';});
+function toggleSelect(){
+  if(locked)return;
+  selected=!selected;
+  card.classList.toggle('selected',selected);
+  $('fb').className='fb';$('fb').textContent=selected?'👆 已選取，再撳一個盒子':'';
+}
+document.querySelectorAll('.box').forEach(function(b){
+  b.addEventListener('click',function(){
+    if(selected){dropOn(b);}
+  });
+});
 $('startbtn').addEventListener('click',function(){$('intro').classList.add('hide');reset();});
 $('againbtn').addEventListener('click',reset);
+reset();
+$('intro').classList.remove('hide');
 })();
 </script>
 </body>

@@ -3,69 +3,69 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-<title>關係子句挑戰</title>
+<title>關係代詞填空</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;background:#172554;color:#e0e7ff;min-height:100vh}
-header{background:linear-gradient(135deg,#1e40af,#60a5fa);padding:16px;text-align:center}
+header{background:linear-gradient(135deg,#1e3a8a,#6366f1);padding:16px;text-align:center}
 header h1{margin:0;font-size:22px}
-.back{display:block;text-align:center;background:#1e3a8a;color:#bfdbfe;text-decoration:none;padding:12px;font-size:16px;font-weight:600}
+.back{display:block;text-align:center;background:#1e1b4b;color:#a5b4fc;text-decoration:none;padding:12px;font-size:16px;font-weight:600}
 .wrap{max-width:640px;margin:0 auto;padding:14px 16px 40px}
-.hud{display:flex;justify-content:space-between;background:#1e3a8a;border-radius:12px;padding:10px 14px;font-size:15px;font-weight:700;margin-bottom:12px}
+.hud{display:flex;justify-content:space-between;background:#1e1b4b;border-radius:12px;padding:10px 14px;font-size:15px;font-weight:700;margin-bottom:12px}
 .hud span{color:#fbbf24}
-.qcard{background:#1e3a8a;border-radius:14px;padding:18px;margin-bottom:12px}
-.qcard .qnum{font-size:14px;color:#93c5fd;margin-bottom:6px}
-.qcard .qsent{font-size:19px;line-height:1.7;font-weight:600}
-.qcard .qsent .blank{color:#fbbf24;border-bottom:3px solid #fbbf24;padding:0 6px;white-space:nowrap}
-.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.opt{min-height:60px;font-size:19px;font-weight:800;border-radius:12px;border:2px solid #3b82f6;background:#172554;color:#e0e7ff;cursor:pointer;padding:10px;touch-action:manipulation}
-.opt:active{transform:scale(.97)}
-.opt.correct{background:#166534;border-color:#4ade80;color:#fff}
-.opt.wrong{background:#7f1d1d;border-color:#f87171;color:#fff}
-.opt:disabled{opacity:.9;cursor:default}
-.fb{min-height:60px;font-size:15px;line-height:1.6;margin-top:10px;padding:10px 14px;border-radius:10px;display:none}
+.qcard{background:#1e1b4b;border-radius:14px;padding:22px 18px;margin-bottom:12px;text-align:center}
+.qcard .hintline{font-size:14px;color:#a5b4fc;margin-bottom:10px}
+.qcard .sent{font-size:21px;line-height:2;font-weight:600}
+.qcard .blank{display:inline-block;min-width:110px;border-bottom:4px solid #fbbf24;color:#fbbf24;font-weight:800;padding:0 8px;margin:0 4px}
+.qcard .blank.filled{border-bottom-color:#4ade80;color:#4ade80}
+.chips{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:12px}
+.chip{min-width:76px;min-height:60px;font-size:20px;font-weight:800;border-radius:14px;border:2px solid #6366f1;background:#312e81;color:#e0e7ff;cursor:pointer;padding:10px 18px;touch-action:manipulation}
+.chip:active{transform:scale(.94)}
+.chip.shake{animation:shk .4s;border-color:#f87171}
+@keyframes shk{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.fb{min-height:60px;font-size:15px;line-height:1.7;margin-top:6px;padding:10px 14px;border-radius:10px;display:none}
 .fb.good{display:block;background:#14532d;color:#bbf7d0}
 .fb.bad{display:block;background:#450a0a;color:#fecaca}
 .fb b{color:#fde047}
-.nextbtn{width:100%;min-height:52px;font-size:17px;font-weight:800;border:none;border-radius:12px;background:#3b82f6;color:#fff;margin-top:8px;display:none;touch-action:manipulation}
+.nextbtn{width:100%;min-height:52px;font-size:17px;font-weight:800;border:none;border-radius:12px;background:#6366f1;color:#fff;margin-top:8px;display:none;touch-action:manipulation}
 .overlay{position:fixed;inset:0;background:rgba(23,37,84,.97);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;overflow-y:auto}
 .overlay.hide{display:none}
-.card{background:#1e3a8a;border-radius:18px;padding:26px 22px;max-width:540px;width:100%;max-height:92vh;overflow-y:auto}
-.card h2{margin:0 0 10px;font-size:24px;color:#bfdbfe}
+.card{background:#1e1b4b;border-radius:18px;padding:26px 22px;max-width:540px;width:100%;max-height:92vh;overflow-y:auto}
+.card h2{margin:0 0 10px;font-size:24px;color:#a5b4fc}
 .card p,.card li{font-size:15px;line-height:1.7}
 .card ul{padding-left:20px}
 .concept{background:#172554;border-radius:12px;padding:14px;margin:14px 0;font-size:14px;line-height:1.8}
 .concept b{color:#4ade80}
-.card .go{width:100%;min-height:56px;font-size:18px;font-weight:800;background:#3b82f6;color:#fff;border:none;border-radius:14px;margin-top:10px;cursor:pointer;touch-action:manipulation}
+.card .go{width:100%;min-height:56px;font-size:18px;font-weight:800;background:#6366f1;color:#fff;border:none;border-radius:14px;margin-top:10px;cursor:pointer;touch-action:manipulation}
 #finalScore{font-size:18px;line-height:1.8}
-table.rt{width:100%;border-collapse:collapse;margin:10px 0;font-size:14px}
-table.rt td,table.rt th{border:1px solid #3b82f6;padding:6px 8px;text-align:left}
-table.rt th{background:#3b82f6;color:#fff}
+table.rt{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+table.rt td,table.rt th{border:1px solid #4338ca;padding:6px 8px;text-align:left}
+table.rt th{background:#312e81;color:#a5b4fc}
 </style>
 </head>
 <body>
-<header><h1>🔗 關係子句挑戰</h1></header>
+<header><h1>🔗 關係代詞填空</h1></header>
 <a class="back" href="games.html">← 返回遊戲列表</a>
 <div class="wrap">
 <div class="hud"><div>第 <span id="qnum">1</span>/10 題</div><div>⭐ <span id="score">0</span></div><div>✅ <span id="acc">-</span></div></div>
-<div class="qcard"><div class="qnum" id="rnote"></div><div class="qsent" id="qsent"></div></div>
-<div class="opts" id="opts"></div>
+<div class="qcard"><div class="hintline" id="hintline"></div><div class="sent" id="sent"></div></div>
+<div class="chips" id="chips"></div>
 <div class="fb" id="fb"></div>
 <button class="nextbtn" id="nextbtn">下一題 →</button>
 </div>
 <div class="overlay" id="intro"><div class="card">
-<h2>🔗 關係子句挑戰</h2>
-<p><b>玩法：</b>每句有個空格，要揀返正確嘅<b>關係代詞</b>（relative pronoun）。共 10 題，答啱 +100 分，連擊有加成。</p>
-<div class="concept">💡 <b>文法概念：</b>
-<table class="rt"><tr><th>代詞</th><th>指</th><th>例</th></tr>
-<tr><td><b>who</b></td><td>人（主語）</td><td>The man <b>who</b> came…</td></tr>
-<tr><td><b>whom</b></td><td>人（受詞，正式）</td><td>…the person <b>whom</b> I met</td></tr>
-<tr><td><b>which</b></td><td>物／動物</td><td>The book <b>which</b>…</td></tr>
-<tr><td><b>that</b></td><td>人或物（只用於限定性）</td><td>The car <b>that</b>…</td></tr>
-<tr><td><b>whose</b></td><td>「…的」（所屬）</td><td>The girl <b>whose</b> hair…</td></tr>
-<tr><td><b>where / when / why</b></td><td>地方／時間／原因</td><td>…the house <b>where</b>…</td></tr></table>
-⚠️ <b>非限定性子句</b>（有逗號隔開，補充資料）<b>唔可以用 that</b>，要用 who / which：My teacher<b>, who</b> is kind<b>,</b> helped me.</div>
-<button class="go" id="startbtn">開始挑戰！</button>
+<h2>🔗 關係代詞填空</h2>
+<p><b>玩法：</b>句子中間有個<b>空位</b>，下面有 7 粒關係代詞。諗清楚先<b>撳一粒</b>放入空位！撳錯扣 20 分，撳啱 +100 分。共 10 題。</p>
+<div class="concept">💡 <b>關係代詞速查：</b>
+<table class="rt"><tr><th>代詞</th><th>用法</th></tr>
+<tr><td><b>who</b></td><td>指人</td></tr>
+<tr><td><b>which</b></td><td>指物</td></tr>
+<tr><td><b>that</b></td><td>指人／物（有逗號唔用得！）</td></tr>
+<tr><td><b>whose</b></td><td>…的（表示所屬）</td></tr>
+<tr><td><b>where</b></td><td>指地方</td></tr>
+<tr><td><b>when</b></td><td>指時間</td></tr>
+<tr><td><b>why</b></td><td>指原因（reason）</td></tr></table></div>
+<button class="go" id="startbtn">開始填空！</button>
 </div></div>
 <div class="overlay hide" id="end"><div class="card">
 <h2>🏁 完成！</h2>
@@ -75,52 +75,57 @@ table.rt th{background:#3b82f6;color:#fff}
 <script>
 (function(){
 "use strict";
+var WORDS=["who","which","that","whose","where","when","why"];
 var Q=[
-{q:"The man ___ lives next door is a doctor.",o:["who","which","whose","where"],a:0,n:"指人（做主語）",e:"先行詞係人（the man），喺子句做主語（lives），用 who。"},
-{q:"The book ___ I bought yesterday is very interesting.",o:["who","which","whose","where"],a:1,n:"指物",e:"先行詞係物（the book），用 which（that 都啱，但選項冇）。"},
-{q:"The girl ___ hair is long is my sister.",o:["who","which","whose","whom"],a:2,n:"表示所屬",e:"「頭髮」係屬於個女仔，用 whose（…的）。"},
-{q:"This is the house ___ I grew up.",o:["which","where","who","whose"],a:1,n:"指地方",e:"先行詞係地方（the house），子句講「喺嗰度大」，用 where。"},
-{q:"My teacher, ___ is very kind, helped me a lot.",o:["who","that","which","whose"],a:0,n:"非限定性（有逗號）",e:"有逗號隔開係非限定性子句，唔可以用 that！指人用 who。"},
-{q:"The car, ___ was made in Japan, is quite expensive.",o:["that","who","which","whose"],a:2,n:"非限定性（有逗號）",e:"有逗號 → 唔可以用 that；指物用 which。"},
-{q:"Do you know the reason ___ she was absent?",o:["which","why","who","whose"],a:1,n:"指原因",e:"先行詞係 reason（原因），用 why（that 都可以，但 why 最自然）。"},
-{q:"Anyone ___ wants to join the club must sign up.",o:["who","which","whose","where"],a:0,n:"指人（做主語）",e:"先行詞係人（anyone），喺子句做主語（wants），用 who。"},
-{q:"The movie ___ we watched was fantastic.",o:["who","whose","which","where"],a:2,n:"指物",e:"先行詞係物（the movie），用 which（that 都啱）。注意：受詞嘅關係代詞有時可以省略！"},
-{q:"2003, ___ SARS broke out, was a difficult year.",o:["which","when","where","that"],a:1,n:"非限定性＋指時間",e:"先行詞係時間（2003），用 when；有逗號更加唔可以用 that。"}
+{q:["The book "," I bought yesterday is very interesting."],a:"which",n:"先行詞係物",e:"先行詞係物（the book），用 which（that 都啱）。"},
+{q:["The girl "," hair is long is my sister."],a:"whose",n:"表示所屬",e:"「頭髮」屬於個女仔 → whose（…的）。"},
+{q:["This is the house "," I grew up."],a:"where",n:"先行詞係地方",e:"地方（the house）+「喺嗰度」→ where。"},
+{q:["My teacher, "," is very kind, helped me a lot."],a:"who",n:"有逗號＋指人",e:"有逗號係非限定性，唔可以用 that；指人用 who。"},
+{q:["The car, "," was made in Japan, is quite expensive."],a:"which",n:"有逗號＋指物",e:"有逗號唔用 that；指物用 which。"},
+{q:["Do you know the reason "," she was absent?"],a:"why",n:"先行詞係原因",e:"reason（原因）→ why 最自然。"},
+{q:["Anyone "," wants to join the club must sign up."],a:"who",n:"指人（做主語）",e:"anyone 係人，喺子句做主語（wants）→ who。"},
+{q:["The movie "," we watched was fantastic."],a:"which",n:"先行詞係物",e:"the movie 係物 → which（受詞關係代詞有時可省略）。"},
+{q:["2003, "," SARS broke out, was a difficult year."],a:"when",n:"有逗號＋指時間",e:"時間（2003）→ when；有逗號唔用 that。"},
+{q:["The man "," lives next door is a doctor."],a:"who",n:"指人（做主語）",e:"the man 係人，做主語（lives）→ who。"}
 ];
-var idx=0,score=0,streak=0,correct=0,best=0,locked=false,order=[];
-try{best=parseInt(localStorage.getItem('relBest')||'0',10)||0;}catch(e){}
+var idx=0,score=0,correct=0,best=0,locked=false,order=[];
+try{best=parseInt(localStorage.getItem('relFillBest')||'0',10)||0;}catch(e){}
 function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
 function $(id){return document.getElementById(id);}
 function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function showQ(){
-  locked=false;$('fb').className='fb';$('fb').style.display='none';$('nextbtn').style.display='none';
+  locked=false;
+  $('fb').className='fb';$('fb').style.display='none';$('nextbtn').style.display='none';
   var item=Q[order[idx]];
-  $('qnum').textContent=idx+1;$('rnote').textContent='💡 提示：'+item.n;
-  var parts=item.q.split('___');
-  $('qsent').innerHTML=escapeHtml(parts[0])+'<span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;</span>'+escapeHtml(parts[1]||'');
-  var box=$('opts');box.innerHTML='';
-  item.o.forEach(function(opt,i){
+  $('qnum').textContent=idx+1;
+  $('hintline').textContent='💡 提示：'+item.n;
+  $('sent').innerHTML=escapeHtml(item.q[0])+'<span class="blank" id="blank">&nbsp;?&nbsp;</span>'+escapeHtml(item.q[1]);
+  var box=$('chips');box.innerHTML='';
+  WORDS.forEach(function(w){
     var b=document.createElement('button');
-    b.className='opt';b.textContent=opt;
-    b.addEventListener('click',function(){answer(i);});
+    b.className='chip';b.textContent=w;
+    b.addEventListener('click',function(){fill(w,b);});
     box.appendChild(b);
   });
 }
-function answer(pick){
+function fill(w,btn){
   if(locked)return;locked=true;
   var item=Q[order[idx]];
-  var btns=$('opts').children;
-  for(var i=0;i<btns.length;i++){btns[i].disabled=true;}
-  var ok=(pick===item.a);
+  var ok=(w===item.a);
+  var blank=$('blank');
   if(ok){
-    btns[item.a].classList.add('correct');
-    var gain=100+streak*25;score+=gain;streak++;correct++;
+    blank.textContent=w;blank.classList.add('filled');
+    score+=100;correct++;
     $('fb').className='fb good';
-    $('fb').innerHTML='✅ 答啱！+'+gain+' 分<br><b>文法：</b>'+item.e;
+    $('fb').innerHTML='✅ 啱！+100 分<br><b>文法：</b>'+item.e;
   }else{
-    btns[pick].classList.add('wrong');btns[item.a].classList.add('correct');streak=0;
+    btn.classList.add('shake');
+    score=Math.max(0,score-20);
     $('fb').className='fb bad';
-    $('fb').innerHTML='❌ 答錯咗！正確答案：<b>'+item.o[item.a]+'</b><br><b>文法：</b>'+item.e;
+    $('fb').innerHTML='❌ 「'+w+'」唔啱，扣 20 分，再諗下！<br><b>文法：</b>'+item.e;
+    setTimeout(function(){btn.classList.remove('shake');locked=false;},500);
+    $('score').textContent=score;
+    return;
   }
   $('score').textContent=score;
   $('acc').textContent=Math.round(correct/(idx+1)*100)+'%';
@@ -128,24 +133,24 @@ function answer(pick){
   $('nextbtn').textContent=(idx>=Q.length-1)?'睇成績 →':'下一題 →';
 }
 function next(){idx++;if(idx>=Q.length){endGame();}else{showQ();}}
+$('nextbtn').addEventListener('click',next);
 function endGame(){
   $('end').classList.remove('hide');
   var nb='';
-  if(score>best){try{localStorage.setItem('relBest',String(score));}catch(e){}best=score;nb=' 🏅 新紀錄！';}
+  if(score>best){try{localStorage.setItem('relFillBest',String(score));}catch(e){}best=score;nb=' 🏅 新紀錄！';}
   var acc=Math.round(correct/Q.length*100);
-  var msg='總分：<b>'+score+'</b> 分'+nb+'<br>準確率：'+acc+'%（'+correct+'/'+Q.length+'）<br>歷史最佳：'+best+' 分<br>';
-  msg+=acc===100?'🌟 完美！你係關係子句大師！':'💪 記住：人用 who、物用 which、所屬用 whose、有逗號唔用 that！';
-  $('finalScore').innerHTML=msg;
+  $('finalScore').innerHTML='總分：<b>'+score+'</b> 分'+nb+'<br>準確率：'+acc+'%（'+correct+'/'+Q.length+'）<br>歷史最佳：'+best+' 分<br>'+(acc===100?'🌟 完美！你係關係代詞大師！':'💪 記住：人→who、物→which、所屬→whose、有逗號唔用 that！');
 }
 function reset(){
-  idx=0;score=0;streak=0;correct=0;
+  idx=0;score=0;correct=0;
   order=shuffle(Q.map(function(_,i){return i;}));
   $('score').textContent='0';$('acc').textContent='-';
   $('end').classList.add('hide');showQ();
 }
-$('nextbtn').addEventListener('click',next);
 $('startbtn').addEventListener('click',function(){$('intro').classList.add('hide');reset();});
 $('againbtn').addEventListener('click',reset);
+reset();
+$('intro').classList.remove('hide');
 })();
 </script>
 </body>
