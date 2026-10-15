@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>3D Vector 投影落平面 — 互動動畫</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{
+  --blue:#2563eb; --red:#ef4444; --green:#059669; --purple:#7c3aed;
+  --amber:#d97706; --ink:#1f2937; --muted:#6b7280; --bg:#eef2f7; --card:#ffffff;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;
+  background:var(--bg);color:var(--ink);line-height:1.5}
+header{background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#fff;padding:20px 24px}
+header h1{margin:0 0 6px;font-size:22px}
+header p{margin:0;opacity:.92;font-size:13.5px;max-width:900px}
+#controls{background:#fff;border-bottom:1px solid #e5e7eb;padding:12px 20px;
+  display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end}
+.ctl{display:flex;flex-direction:column;gap:2px;min-width:140px}
+.ctl label{font-size:12px;color:var(--muted);font-weight:600}
+.ctl label span{color:var(--ink);font-size:15px;font-weight:700}
+.ctl input[type=range]{width:160px}
+.ctl input[type=range].sx{accent-color:#ef4444}
+.ctl input[type=range].sy{accent-color:#059669}
+.ctl input[type=range].sz{accent-color:#2563eb}
+.axlabel{font-weight:700;font-size:13px;padding:0 4px;border-radius:4px}
+.axlabel.x{color:#ef4444}.axlabel.y{color:#059669}.axlabel.z{color:#2563eb}
+.btnrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button{border:1px solid #d1d5db;background:#fff;border-radius:8px;padding:8px 14px;font-size:14px;cursor:pointer;min-height:40px}
+button:hover{background:#f3f4f6}
+button.primary{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700}
+#formula{background:#fff;border-bottom:1px solid #e5e7eb;padding:12px 24px;font-size:15px}
+#formula .tag{display:inline-block;background:#eef2ff;color:#3730a3;font-weight:700;border-radius:6px;padding:2px 8px;margin-right:8px;font-size:12px}
+main{max-width:1100px;margin:0 auto;padding:20px 16px 40px;display:flex;flex-direction:column;gap:18px}
+.card{background:var(--card);border-radius:14px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.card h2{margin:0 0 8px;font-size:18px}
+#scene{width:100%;height:480px;border:1px solid #e5e7eb;border-radius:10px;background:#f8fafc;touch-action:none}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:13.5px}
+.legend span{display:flex;align-items:center;gap:6px}
+.swatch{width:18px;height:4px;border-radius:2px;display:inline-block}
+.steps{font-size:15px;line-height:2}
+.steps .step{background:#f8fafc;border-left:4px solid var(--blue);padding:8px 14px;margin:8px 0;border-radius:0 8px 8px 0}
+.steps .step b{color:#1e3a8a}
+.formula-box{background:#eef2ff;border-radius:10px;padding:14px 18px;font-size:16px;margin:12px 0;text-align:center}
+@media(max-width:640px){
+  #scene{height:360px}
+  .ctl input[type=range]{width:120px}
+  header h1{font-size:19px}
+}
+</style>
+</head>
+<body>
+<header>
+<h1>📐 3D Vector 投影落平面 — 互動動畫</h1>
+<p>拖拉滑桿改變 vector <b>v</b> 同平面法線 <b>n</b>，即時睇投影計法。可用手指／滑鼠旋轉 3D 視角。</p>
+</header>
+
+<div id="controls">
+  <div class="ctl">
+    <label>Vector v = ( <span id="vxVal">3</span>, <span id="vyVal">2</span>, <span id="vzVal">4</span> )</label>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <div><span class="axlabel x">x</span><input type="range" id="vx" class="sx" min="-5" max="5" step="0.5" value="3" style="width:90px"></div>
+      <div><span class="axlabel y">y</span><input type="range" id="vy" class="sy" min="-5" max="5" step="0.5" value="2" style="width:90px"></div>
+      <div><span class="axlabel z">z</span><input type="range" id="vz" class="sz" min="-5" max="5" step="0.5" value="4" style="width:90px"></div>
+    </div>
+  </div>
+  <div class="ctl">
+    <label>法線 n = ( <span id="nxVal">0</span>, <span id="nyVal">0</span>, <span id="nzVal">1</span> )</label>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <div><span class="axlabel x">x</span><input type="range" id="nx" class="sx" min="-3" max="3" step="1" value="0" style="width:90px"></div>
+      <div><span class="axlabel y">y</span><input type="range" id="ny" class="sy" min="-3" max="3" step="1" value="0" style="width:90px"></div>
+      <div><span class="axlabel z">z</span><input type="range" id="nz" class="sz" min="-3" max="3" step="1" value="1" style="width:90px"></div>
+    </div>
+  </div>
+  <div class="btnrow">
+    <button class="primary" id="animateBtn">▶ 播放投影動畫</button>
+    <button id="resetView">重設視角</button>
+  </div>
+</div>
+
+<div id="formula">
+  <span class="tag">公式</span>
+  proj<sub>平面</sub>(<b>v</b>) = <b>v</b> − <span style="white-space:nowrap">(<b>v</b>·<b>n</b> / |<b>n</b>|²)</span><b>n</b>
+  &nbsp;&nbsp;|&nbsp;&nbsp;先求 <b>v</b> 沿法線方向嘅分量，再用 <b>v</b> 減走佢
+</div>
+
+<main>
+<div class="card">
+  <h2>🌐 3D 視圖</h2>
+  <div id="scene"></div>
+  <div class="legend">
+    <span><span class="swatch" style="background:#2563eb"></span> <b>v</b>（原 vector，藍色）</span>
+    <span><span class="swatch" style="background:#ef4444"></span> 法線 <b>n</b>（紅色）</span>
+    <span><span class="swatch" style="background:#059669"></span> 投影 proj(<b>v</b>)（綠色，喺平面上）</span>
+    <span><span class="swatch" style="background:#d97706"></span> 法線分量（橙色虛線）</span>
+    <span><span class="swatch" style="background:#9ca3af"></span> 平面（灰色半透明）</span>
+  </div>
+</div>
+
+<div class="card">
+  <h2>📝 逐步計算</h2>
+  <div class="formula-box" id="formulaDisplay"></div>
+  <div class="steps" id="stepsDisplay"></div>
+</div>
+
+<div class="card">
+  <h2>💡 教學要點</h2>
+  <ul style="font-size:14.5px;line-height:1.9;margin:0;padding-left:20px">
+    <li><b>概念：</b>任何 3D vector <b>v</b> 都可以分解做兩部分：平行平面嘅分量（即投影）＋垂直平面嘅分量（沿法線方向）。</li>
+    <li><b>點解咁計：</b>(<b>v</b>·<b>n</b> / |<b>n</b>|²)<b>n</b> 就係 <b>v</b> 投影落 <b>n</b> 方向嘅 vector（scalar projection × 單位方向）。</li>
+    <li><b>驗算：</b>投影結果同 <b>n</b> 嘅 dot product 應該 = 0（垂直），可以即場驗證。</li>
+    <li><b>特例：</b>如果 <b>n</b> = (0,0,1)（xy-plane），投影就係直接將 z-coordinate 變做 0。</li>
+  </ul>
+</div>
+</main>
+
+<script>
+// ===== 3D Scene Setup =====
+const container = document.getElementById('scene');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xf8fafc);
+const camera = new THREE.PerspectiveCamera(50, container.clientWidth/container.clientHeight, 0.1, 100);
+camera.position.set(8, 6, 10);
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(container.clientWidth, container.clientHeight);
+container.appendChild(renderer.domElement);
+
+// OrbitControls (simple manual implementation for r128 without examples)
+let isDragging = false, prevX = 0, prevY = 0;
+let theta = 0.7, phi = 1.0, radius = 14;
+function updateCamera(){
+  camera.position.x = radius * Math.sin(phi) * Math.cos(theta);
+  camera.position.y = radius * Math.cos(phi);
+  camera.position.z = radius * Math.sin(phi) * Math.sin(theta);
+  camera.lookAt(0, 0, 0);
+}
+container.addEventListener('pointerdown', e => { isDragging = true; prevX = e.clientX; prevY = e.clientY; });
+window.addEventListener('pointerup', () => isDragging = false);
+window.addEventListener('pointermove', e => {
+  if(!isDragging) return;
+  theta -= (e.clientX - prevX) * 0.01;
+  phi = Math.max(0.1, Math.min(Math.PI - 0.1, phi - (e.clientY - prevY) * 0.01));
+  prevX = e.clientX; prevY = e.clientY;
+  updateCamera();
+});
+container.addEventListener('wheel', e => {
+  radius = Math.max(6, Math.min(30, radius + e.deltaY * 0.02));
+  updateCamera();
+});
+document.getElementById('resetView').onclick = () => { theta=0.7; phi=1.0; radius=14; updateCamera(); };
+
+// Lights
+scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
+dirLight.position.set(5, 10, 7);
+scene.add(dirLight);
+
+// Axes
+function makeAxis(dir, color, label){
+  const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), dir.clone().multiplyScalar(6)]);
+  const line = new THREE.Line(g, new THREE.LineBasicMaterial({color}));
+  scene.add(line);
+  // Label sprite
+  const canvas = document.createElement('canvas');
+  canvas.width = 64; canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  ctx.font = 'bold 44px Arial';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#' + color.toString(16).padStart(6, '0');
+  ctx.fillText(label, 32, 32);
+  const tex = new THREE.CanvasTexture(canvas);
+  const spr = new THREE.Sprite(new THREE.SpriteMaterial({map: tex, depthTest: false}));
+  spr.scale.set(0.9, 0.9, 1);
+  spr.position.copy(dir.clone().multiplyScalar(6.5));
+  scene.add(spr);
+}
+makeAxis(new THREE.Vector3(1,0,0), 0xef4444, 'x');
+makeAxis(new THREE.Vector3(0,1,0), 0x059669, 'y');
+makeAxis(new THREE.Vector3(0,0,1), 0x2563eb, 'z');
+
+// Grid
+const grid = new THREE.GridHelper(12, 12, 0xd1d5db, 0xe5e7eb);
+grid.position.y = -0.01;
+scene.add(grid);
+
+// Dynamic objects
+let planeMesh, vArrow, nArrow, projArrow, normalCompLine, dropLine;
+
+function makeArrow(color, headLen=0.4, headW=0.25){
+  const group = new THREE.Group();
+  const mat = new THREE.MeshBasicMaterial({color});
+  const lineGeo = new THREE.BufferGeometry();
+  const line = new THREE.Line(lineGeo, new THREE.LineBasicMaterial({color, linewidth:3}));
+  const cone = new THREE.Mesh(new THREE.ConeGeometry(headW, headLen, 12), mat);
+  group.add(line); group.add(cone);
+  group.userData = {line, cone, headLen};
+  return group;
+}
+function setArrow(group, vec){
+  const len = vec.length();
+  const {line, cone, headLen} = group.userData;
+  if(len < 0.01){ group.visible = false; return; }
+  group.visible = true;
+  const dir = vec.clone().normalize();
+  const lineLen = Math.max(0.01, len - headLen);
+  line.geometry.setFromPoints([new THREE.Vector3(0,0,0), dir.clone().multiplyScalar(lineLen)]);
+  cone.position.copy(dir.clone().multiplyScalar(len - headLen/2));
+  cone.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir);
+}
+
+vArrow = makeArrow(0x2563eb); scene.add(vArrow);
+nArrow = makeArrow(0xef4444); scene.add(nArrow);
+projArrow = makeArrow(0x059669); scene.add(projArrow);
+
+// Dashed line for normal component
+function makeDashed(color){
+  const g = new THREE.BufferGeometry();
+  const l = new THREE.Line(g, new THREE.LineDashedMaterial({color, dashSize:0.25, gapSize:0.15}));
+  scene.add(l); return l;
+}
+normalCompLine = makeDashed(0xd97706);
+dropLine = makeDashed(0x9ca3af);
+
+// Plane
+const planeGeo = new THREE.PlaneGeometry(9, 9);
+const planeMat = new THREE.MeshBasicMaterial({color:0x9ca3af, transparent:true, opacity:0.28, side:THREE.DoubleSide});
+planeMesh = new THREE.Mesh(planeGeo, planeMat);
+scene.add(planeMesh);
+// Plane border
+const borderGeo = new THREE.EdgesGeometry(planeGeo);
+const border = new THREE.LineSegments(borderGeo, new THREE.LineBasicMaterial({color:0x6b7280}));
+planeMesh.add(border);
+
+// Animation state
+let animT = 0, animating = false;
+document.getElementById('animateBtn').onclick = () => {
+  animating = true; animT = 0;
+  document.getElementById('animateBtn').textContent = '⏸ 播放緊…';
+};
+
+function getInputs(){
+  return {
+    v: new THREE.Vector3(
+      parseFloat(document.getElementById('vx').value),
+      parseFloat(document.getElementById('vy').value),
+      parseFloat(document.getElementById('vz').value)),
+    n: new THREE.Vector3(
+      parseFloat(document.getElementById('nx').value),
+      parseFloat(document.getElementById('ny').value),
+      parseFloat(document.getElementById('nz').value))
+  };
+}
+
+function update(){
+  const {v, n} = getInputs();
+  // Update labels
+  document.getElementById('vxVal').textContent = v.x;
+  document.getElementById('vyVal').textContent = v.y;
+  document.getElementById('vzVal').textContent = v.z;
+  document.getElementById('nxVal').textContent = n.x;
+  document.getElementById('nyVal').textContent = n.y;
+  document.getElementById('nzVal').textContent = n.z;
+
+  const nLen2 = n.lengthSq();
+  let proj, normalComp;
+  if(nLen2 < 0.001 || v.lengthSq() < 0.001){
+    proj = new THREE.Vector3(); normalComp = new THREE.Vector3();
+  } else {
+    const scale = v.dot(n) / nLen2;
+    normalComp = n.clone().multiplyScalar(scale);
+    proj = v.clone().sub(normalComp);
+  }
+
+  // Plane orientation: plane normal = n
+  if(nLen2 > 0.001){
+    planeMesh.visible = true;
+    const nNorm = n.clone().normalize();
+    planeMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1), nNorm);
+  } else {
+    planeMesh.visible = false;
+  }
+
+  // Animation: interpolate projection
+  let showProj = proj.clone();
+  let showNormal = normalComp.clone();
+  if(animating){
+    animT += 0.02;
+    if(animT >= 1){ animT = 1; animating = false; document.getElementById('animateBtn').textContent = '▶ 播放投影動畫'; }
+    const e = animT < 0.5 ? 2*animT*animT : 1-Math.pow(-2*animT+2,2)/2; // easeInOut
+    // Animate: normal component shrinks, projection grows from origin
+    showNormal = normalComp.clone().multiplyScalar(1-e);
+    showProj = v.clone().sub(normalComp.clone().multiplyScalar(1-e));
+  }
+
+  setArrow(vArrow, v);
+  setArrow(nArrow, n.clone().normalize().multiplyScalar(2.5));
+  // n arrow starts at origin
+  setArrow(projArrow, showProj);
+
+  // Dashed: from tip of v down to tip of projection (the normal component)
+  const vTip = v.clone();
+  const projTip = showProj.clone();
+  normalCompLine.geometry.setFromPoints([vTip, projTip]);
+  normalCompLine.computeLineDistances();
+  normalCompLine.visible = v.lengthSq() > 0.001 && normalComp.lengthSq() > 0.001;
+
+  // Update calculation display
+  updateCalc(v, n, proj, normalComp);
+
+  renderer.render(scene, camera);
+  requestAnimationFrame(update);
+}
+
+function fmt(num){
+  const r = Math.round(num * 100) / 100;
+  return (r === 0 ? 0 : r).toString();
+}
+function vecStr(v){
+  return `(${fmt(v.x)}, ${fmt(v.y)}, ${fmt(v.z)})`;
+}
+
+function updateCalc(v, n, proj, normalComp){
+  const dot = v.dot(n);
+  const n2 = n.lengthSq();
+  const scale = n2 > 0.001 ? dot / n2 : 0;
+
+  document.getElementById('formulaDisplay').innerHTML =
+    `<b>v</b> = ${vecStr(v)} &nbsp;&nbsp; <b>n</b> = ${vecStr(n)}`;
+
+  let html = '';
+  html += `<div class="step"><b>Step 1：</b>計 <b>v</b>·<b>n</b> = (${fmt(v.x)})(${fmt(n.x)}) + (${fmt(v.y)})(${fmt(n.y)}) + (${fmt(v.z)})(${fmt(n.z)}) = <b>${fmt(dot)}</b></div>`;
+  html += `<div class="step"><b>Step 2：</b>計 |<b>n</b>|² = ${fmt(n.x)}² + ${fmt(n.y)}² + ${fmt(n.z)}² = <b>${fmt(n2)}</b></div>`;
+  html += `<div class="step"><b>Step 3：</b>法線分量 = (<b>v</b>·<b>n</b> / |<b>n</b>|²)<b>n</b> = (${fmt(scale)}) × ${vecStr(n)} = <b>${vecStr(normalComp)}</b> <span style="color:#d97706">（橙色虛線）</span></div>`;
+  html += `<div class="step"><b>Step 4：</b>投影 = <b>v</b> − 法線分量 = ${vecStr(v)} − ${vecStr(normalComp)} = <b style="color:#059669">${vecStr(proj)}</b> <span style="color:#059669">（綠色）</span></div>`;
+
+  // Verification
+  const check = proj.dot(n);
+  const ok = Math.abs(check) < 0.01;
+  html += `<div class="step"><b>✅ 驗算：</b>投影 · <b>n</b> = ${fmt(check)} ${ok ? '≈ 0，的確垂直於法線，啱！' : '⚠️ 唔係 0，檢查下輸入' }</div>`;
+
+  document.getElementById('stepsDisplay').innerHTML = html;
+}
+
+// Input listeners
+['vx','vy','vz','nx','ny','nz'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => { animating = false; document.getElementById('animateBtn').textContent = '▶ 播放投影動畫'; });
+});
+
+// Resize
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+updateCamera();
+update();
+</script>
+</body>
+</html>

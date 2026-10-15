@@ -54,35 +54,18 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px}
 <footer>教學資源共享 · 歡迎老師同學生使用</footer>
 
 <script>
-const SHEET_ID = '1_u6osVsOnWNNcvHqmv15nc0HZ6wSd4CWGiwHBCYkxfg';
-const SHEET_NAME = '數學資源';
-// 後備資料（Sheet 讀唔到嗰陣用）
+// 所有資料寫死喺下面，唔用 Google Sheet
 const FALLBACK = [
-  {cat:'互動工具',title:'三元一次方程 Cramer\'s Rule',desc:'輸入係數即時睇 D、Dx、Dy、Dz，Sarrus 展開，支援字母參數',link:'',tag:'方程'},
-  {cat:'互動工具',title:'3D 向量投影到平面',desc:'拖動向量睇投影動畫，逐步計算',link:'',tag:'向量'},
-  {cat:'互動工具',title:'2×2 矩陣特徵分解',desc:'A=PDP⁻¹ 五步計算＋幾何變換動畫',link:'',tag:'矩陣'},
-  {cat:'互動工具',title:'Linear Programming',desc:'畫可行域，掃描動畫搵 max/min',link:'',tag:'不等式'},
+  {cat:'互動工具',title:'三元一次方程 Cramer\'s Rule',desc:'輸入係數即時睇 D、Dx、Dy、Dz，Sarrus 展開，支援字母參數',link:'cramer-3x3-system.html',tag:'方程'},
+  {cat:'互動工具',title:'3D 向量投影到平面',desc:'拖動向量睇投影動畫，逐步計算',link:'vector-3d-projection.html',tag:'向量'},
+  {cat:'互動工具',title:'2×2 矩陣特徵分解',desc:'A=PDP⁻¹ 五步計算＋幾何變換動畫',link:'matrix-eigendecomposition-2x2.html',tag:'矩陣'},
+  {cat:'互動工具',title:'Linear Programming',desc:'畫可行域，掃描動畫搵 max/min',link:'linear-programming-2d.html',tag:'不等式'},
   {cat:'互動工具',title:'DSE M2 出題機',desc:'16 個課題隨機出題，附詳細步驟',link:'',tag:'DSE'},
 ];
 let allItems = [];
 let activeFilter = '全部';
 
-async function loadData(){
-  try{
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
-    const res = await fetch(url);
-    const text = await res.text();
-    const json = JSON.parse(text.substring(47).slice(0,-2));
-    const rows = json.table.rows || [];
-    const items = [];
-    for(let i=1;i<rows.length;i++){
-      const c = rows[i].c || [];
-      const v = k => c[k] && c[k].v ? String(c[k].v) : '';
-      if(v(5).toUpperCase() !== 'TRUE') continue;
-      items.push({cat:v(0),title:v(1),desc:v(2),link:v(3),tag:v(4)});
-    }
-    if(items.length) { allItems = items; render(); return; }
-  }catch(e){ /* fallback */ }
+function loadData(){
   allItems = FALLBACK;
   render();
 }

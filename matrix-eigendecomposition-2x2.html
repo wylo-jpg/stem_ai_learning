@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>2×2 Matrix Eigendecomposition — 互動教學</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<style>
+:root{
+  --blue:#2563eb; --red:#ef4444; --green:#059669; --purple:#7c3aed;
+  --amber:#d97706; --ink:#1f2937; --muted:#6b7280; --bg:#eef2f7; --card:#ffffff;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;
+  background:var(--bg);color:var(--ink);line-height:1.6}
+header{background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#fff;padding:20px 24px}
+header h1{margin:0 0 6px;font-size:22px}
+header p{margin:0;opacity:.92;font-size:13.5px;max-width:920px}
+#controls{background:#fff;border-bottom:1px solid #e5e7eb;padding:14px 20px;
+  display:flex;flex-wrap:wrap;gap:16px 28px;align-items:center}
+.mat-input{display:grid;grid-template-columns:repeat(2,70px);gap:6px}
+.mat-input input{width:70px;height:44px;font-size:18px;text-align:center;border:2px solid #d1d5db;border-radius:8px}
+.mat-input input:focus{border-color:var(--blue);outline:none}
+.bracket{display:flex;align-items:center;gap:8px}
+.bracket .b{font-size:40px;color:var(--muted);font-weight:300}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+button{border:1px solid #d1d5db;background:#fff;border-radius:8px;padding:9px 16px;font-size:14px;cursor:pointer;min-height:42px}
+button:hover{background:#f3f4f6}
+button.primary{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700}
+button.preset{background:#eff6ff;border-color:#bfdbfe;font-size:13px;padding:6px 12px}
+main{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:flex;flex-direction:column;gap:18px}
+.card{background:var(--card);border-radius:14px;padding:20px 22px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.card h2{margin:0 0 10px;font-size:18px}
+.decomp{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;
+  font-size:20px;padding:16px;background:#f8fafc;border-radius:10px;margin:12px 0}
+.decomp .eq{font-size:28px;color:var(--muted)}
+.mat{display:inline-block;vertical-align:middle}
+.steps .step{background:#f8fafc;border-left:4px solid var(--blue);padding:10px 16px;margin:10px 0;border-radius:0 8px 8px 0}
+.steps .step.green{border-color:var(--green)}
+.steps .step.amber{border-color:var(--amber)}
+.steps .step.purple{border-color:var(--purple)}
+#canvas{width:100%;height:420px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;touch-action:none}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:13.5px}
+.legend span{display:flex;align-items:center;gap:6px}
+.swatch{width:20px;height:4px;border-radius:2px;display:inline-block}
+.note{background:#fefce8;border:1px solid #fde68a;border-radius:10px;padding:12px 16px;font-size:14px;margin:10px 0}
+.warn{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;font-size:14px;margin:10px 0}
+.katex{font-size:1.05em}
+@media(max-width:640px){
+  #canvas{height:320px}
+  .decomp{font-size:16px;gap:8px}
+  .mat-input{grid-template-columns:repeat(2,60px)}
+  .mat-input input{width:60px;height:40px;font-size:16px}
+}
+</style>
+</head>
+<body>
+<header>
+<h1>🔢 2×2 Matrix Eigendecomposition — 互動教學</h1>
+<p>輸入一個 2×2 matrix <b>A</b>，即時睇佢點樣分解做 <b>A = PDP⁻¹</b>（P = eigenvectors，D = eigenvalues 對角陣）。拖拉下面嘅動畫睇幾何意義。</p>
+</header>
+
+<div id="controls">
+  <div class="bracket">
+    <span class="b">A = ⎡</span>
+    <div class="mat-input">
+      <input type="text" id="a11" value="4">
+      <input type="text" id="a12" value="1">
+      <input type="text" id="a21" value="2">
+      <input type="text" id="a22" value="3">
+    </div>
+    <span class="b">⎤</span>
+  </div>
+  <div class="btnrow">
+    <button class="primary" id="calcBtn">🧮 計算分解</button>
+  </div>
+  <div class="btnrow">
+    <span style="font-size:12px;color:var(--muted);font-weight:600">預設：</span>
+    <button class="preset" data-m="4,1,2,3">基本例</button>
+    <button class="preset" data-m="2,0,0,3">對角陣</button>
+    <button class="preset" data-m="0,-1,1,0">旋轉90°</button>
+    <button class="preset" data-m="5,4,1,2">重特徵值?</button>
+    <button class="preset" data-m="1,2,3,4">一般例</button>
+  </div>
+</div>
+
+<main>
+<div class="card">
+  <h2>📐 分解結果：A = PDP⁻¹</h2>
+  <div class="decomp" id="decompDisplay"></div>
+  <div id="decompNote"></div>
+</div>
+
+<div class="card">
+  <h2>📝 逐步計算</h2>
+  <div class="steps" id="stepsDisplay"></div>
+</div>
+
+<div class="card">
+  <h2>🌐 幾何意義：A 嘅作用 = P⁻¹ → D → P</h2>
+  <p style="font-size:14px;color:var(--muted);margin:0 0 10px">下面顯示 unit square（灰色）經 <b>A</b> 變換後（藍色）嘅樣，同埋兩條 eigenvector 方向（紅／綠）。拖拉滑桿睇插值動畫。</p>
+  <canvas id="canvas"></canvas>
+  <div style="margin-top:10px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+    <label style="font-size:13px">動畫：<input type="range" id="animSlider" min="0" max="100" value="100" style="width:200px;accent-color:#2563eb"></label>
+    <button id="playBtn">▶ 播放</button>
+    <span id="animLabel" style="font-size:13px;color:var(--muted)">完整變換 A</span>
+  </div>
+  <div class="legend">
+    <span><span class="swatch" style="background:#d1d5db"></span> 原圖（unit square）</span>
+    <span><span class="swatch" style="background:#2563eb"></span> 經 A 變換後</span>
+    <span><span class="swatch" style="background:#ef4444"></span> Eigenvector v₁</span>
+    <span><span class="swatch" style="background:#059669"></span> Eigenvector v₂</span>
+  </div>
+</div>
+
+<div class="card">
+  <h2>💡 教學要點</h2>
+  <ul style="font-size:14.5px;line-height:1.9;margin:0;padding-left:20px">
+    <li><b>點解叫 decomposition：</b>A 嘅作用可以拆做三步：先用 P⁻¹ 轉去 eigenvector basis，再用 D 沿 eigenvector 方向拉長／縮短（就係乘 eigenvalue），最後用 P 轉返原本 basis。</li>
+    <li><b>Eigenvector 嘅特別之處：</b>沿 eigenvector 方向嘅 vector 經 A 變換後方向不變，只係長度乘咗 λ 倍。喺動畫入面，紅綠兩條線方向唔會轉，只會伸長縮短。</li>
+    <li><b>幾時分唔到：</b>如果兩個 eigenvalue 相同但得一條獨立 eigenvector（defective），或者 eigenvalue 係複數，實數範圍內就做唔到 PDP⁻¹。上面個「旋轉90°」預設就係複數 eigenvalue 嘅例子。</li>
+    <li><b>用途：</b>Aⁿ = PDⁿP⁻¹（Dⁿ 好易計，對角線各自 n 次方），所以 decomposition 係計 matrix powers 嘅快捷方法。</li>
+  </ul>
+</div>
+</main>
+
+<script>
+// ===== State =====
+let A = [[4,1],[2,3]];
+let eig = null; // {l1,l2, v1:[x,y], v2:[x,y], P, D, Pinv, complex:bool}
+let animating = false, animT = 1;
+
+// ===== Math helpers =====
+function calcEigendecomp(a,b,c,d){
+  const tr = a + d, det = a*d - b*c;
+  const disc = tr*tr - 4*det;
+  if(disc < -1e-9){
+    const re = tr/2, im = Math.sqrt(-disc)/2;
+    const [rn,rd] = toFrac(re), [in_,id_] = toFrac(im);
+    const reS = rd===1? rn.toString() : `\\frac{${rn}}{${rd}}`;
+    const imS = id_===1? in_.toString() : `\\frac{${in_}}{${id_}}`;
+    return {complex:true, l1:`${reS}+${imS}i`, l2:`${reS}-${imS}i`, tr, det, disc};
+  }
+  const sq = Math.sqrt(Math.max(0,disc));
+  const l1 = (tr+sq)/2, l2 = (tr-sq)/2;
+  // eigenvector for λ: solve (A-λI)v=0 → use (b, λ-a) or (λ-d, c)
+  function evec(lam){
+    // (a-λ)x + by = 0
+    let x, y;
+    if(Math.abs(b) > 1e-9){ x = b; y = lam - a; }
+    else if(Math.abs(c) > 1e-9){ x = lam - d; y = c; }
+    else if(Math.abs(a-lam) < 1e-9){ x = 1; y = 0; }
+    else { x = 0; y = 1; }
+    const n = Math.hypot(x,y) || 1;
+    return [x/n, y/n];
+  }
+  const v1 = evec(l1), v2 = evec(l2);
+  // P = [v1 v2], Pinv = adj/det
+  const pdet = v1[0]*v2[1] - v1[1]*v2[0];
+  let Pinv = null;
+  if(Math.abs(pdet) > 1e-9){
+    Pinv = [[v2[1]/pdet, -v1[1]/pdet],[-v2[0]/pdet, v1[0]/pdet]];
+  }
+  return {complex:false, l1, l2, v1, v2, tr, det, disc, Pinv, pdet};
+}
+function r2(x){ return Math.round(x*100)/100; }
+function fmt(x){
+  const r = r2(x);
+  return (Object.is(r,-0)?0:r).toString();
+}
+// Fraction helpers — Leo: 要分數唔要小數，LaTeX form
+function toFrac(x, maxDen=100){
+  if(!isFinite(x)) return [x,1];
+  const neg = x < 0; x = Math.abs(x);
+  let bestN=0, bestD=1, bestErr=Infinity;
+  for(let d=1; d<=maxDen; d++){
+    const n = Math.round(x*d);
+    const err = Math.abs(x - n/d);
+    if(err < bestErr){ bestErr=err; bestN=n; bestD=d; }
+    if(err < 1e-9) break;
+  }
+  // reduce
+  const g = gcd(bestN,bestD);
+  return [(neg?-1:1)*bestN/g, bestD/g];
+}
+function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ [a,b]=[b,a%b]; } return a||1; }
+function fracLatex(x){
+  const [n,d] = toFrac(x);
+  if(d===1) return n.toString();
+  if(n===0) return "0";
+  return `\\frac{${n}}{${d}}`;
+}
+
+// ===== KaTeX rendering (分數 LaTeX) =====
+function mat2(m){
+  return `\\begin{pmatrix}${fracLatex(m[0][0])} & ${fracLatex(m[0][1])} \\\\ ${fracLatex(m[1][0])} & ${fracLatex(m[1][1])} \\end{pmatrix}`;
+}
+function vec2(v){
+  return `\\begin{pmatrix}${fracLatex(v[0])} \\\\ ${fracLatex(v[1])} \\end{pmatrix}`;
+}
+
+// ===== Main calculation =====
+function calculate(){
+  const a = parseFloat(document.getElementById('a11').value)||0;
+  const b = parseFloat(document.getElementById('a12').value)||0;
+  const c = parseFloat(document.getElementById('a21').value)||0;
+  const d = parseFloat(document.getElementById('a22').value)||0;
+  A = [[a,b],[c,d]];
+  eig = calcEigendecomp(a,b,c,d);
+  renderDecomp(); renderSteps(); drawCanvas();
+}
+
+function renderDecomp(){
+  const el = document.getElementById('decompDisplay');
+  const note = document.getElementById('decompNote');
+  if(eig.complex){
+    el.innerHTML = `<span style="font-size:16px">λ = ${eig.l1}，${eig.l2}（複數）</span>`;
+    note.innerHTML = `<div class="warn">⚠️ Eigenvalue 係複數，喺實數範圍內做唔到 PDP⁻¹ 分解（要去到複數先得）。下面嘅幾何動畫會顯示旋轉效果。</div>`;
+    katex.render("A = \\text{（複數 eigenvalue，無實數 PDP}^{-1}\\text{）}", el, {throwOnError:false});
+    return;
+  }
+  note.innerHTML = '';
+  const P = [[eig.v1[0], eig.v2[0]],[eig.v1[1], eig.v2[1]]];
+  const D = [[eig.l1,0],[0,eig.l2]];
+  let html = `<span class="mat" id="kA"></span><span class="eq">=</span>`;
+  html += `<span class="mat" id="kP"></span><span class="eq">·</span>`;
+  html += `<span class="mat" id="kD"></span><span class="eq">·</span>`;
+  html += `<span class="mat" id="kPinv"></span>`;
+  el.innerHTML = html;
+  katex.render(mat2(A), document.getElementById('kA'), {throwOnError:false});
+  katex.render("P="+mat2(P), document.getElementById('kP'), {throwOnError:false});
+  katex.render("D="+mat2(D), document.getElementById('kD'), {throwOnError:false});
+  if(eig.Pinv){
+    katex.render("P^{-1}="+mat2(eig.Pinv), document.getElementById('kPinv'), {throwOnError:false});
+  } else {
+    document.getElementById('kPinv').innerHTML = `<span style="color:red">P 不可逆（defective！）</span>`;
+    note.innerHTML = `<div class="warn">⚠️ 兩個 eigenvector 線性相關（或重合），P 唔可逆，做唔到分解。呢個叫 defective matrix。</div>`;
+  }
+}
+
+function renderSteps(){
+  const el = document.getElementById('stepsDisplay');
+  const [a,b,c,d] = [A[0][0],A[0][1],A[1][0],A[1][1]];
+  let html = '';
+  html += `<div class="step"><b>Step 1：寫 characteristic equation</b><br><span id="s1"></span></div>`;
+  html += `<div class="step"><b>Step 2：解 eigenvalue</b><br><span id="s2"></span></div>`;
+  if(!eig.complex){
+    html += `<div class="step green"><b>Step 3：搵 eigenvector</b><br><span id="s3"></span></div>`;
+    html += `<div class="step amber"><b>Step 4：砌 P 同 D</b><br><span id="s4"></span></div>`;
+    html += `<div class="step purple"><b>Step 5：驗算 PDP⁻¹ = A</b><br><span id="s5"></span></div>`;
+  }
+  el.innerHTML = html;
+  katex.render(`\\det(A-\\lambda I)=\\begin{vmatrix}${fracLatex(a)}-\\lambda & ${fracLatex(b)} \\\\ ${fracLatex(c)} & ${fracLatex(d)}-\\lambda\\end{vmatrix}=\\lambda^2-(${fracLatex(eig.tr)})\\lambda+(${fracLatex(eig.det)})=0`, document.getElementById('s1'), {throwOnError:false});
+  if(eig.complex){
+    katex.render(`\\Delta=${fracLatex(eig.tr)}^2-4(${fracLatex(eig.det)})=${fracLatex(eig.disc)}<0 \\Rightarrow \\lambda=${eig.l1},\\;${eig.l2}`, document.getElementById('s2'), {throwOnError:false});
+  } else {
+    katex.render(`\\lambda=\\frac{${fracLatex(eig.tr)}\\pm\\sqrt{${fracLatex(eig.disc)}}}{2} \\Rightarrow \\lambda_1=${fracLatex(eig.l1)},\\; \\lambda_2=${fracLatex(eig.l2)}`, document.getElementById('s2'), {throwOnError:false});
+    katex.render(`\\mathbf{v}_1=${vec2(eig.v1)}\\;(A\\mathbf{v}_1=${fracLatex(eig.l1)}\\mathbf{v}_1),\\quad \\mathbf{v}_2=${vec2(eig.v2)}\\;(A\\mathbf{v}_2=${fracLatex(eig.l2)}\\mathbf{v}_2)`, document.getElementById('s3'), {throwOnError:false});
+    const P = [[eig.v1[0],eig.v2[0]],[eig.v1[1],eig.v2[1]]];
+    katex.render(`P=[\\mathbf{v}_1\\;\\mathbf{v}_2]=${mat2(P)},\\quad D=\\begin{pmatrix}${fracLatex(eig.l1)}&0\\\\0&${fracLatex(eig.l2)}\\end{pmatrix}`, document.getElementById('s4'), {throwOnError:false});
+    // Verify: compute P*D*Pinv
+    if(eig.Pinv){
+      const D = [[eig.l1,0],[0,eig.l2]];
+      const PD = [[P[0][0]*D[0][0], P[0][1]*D[1][1]],[P[1][0]*D[0][0], P[1][1]*D[1][1]]];
+      const R = [
+        [PD[0][0]*eig.Pinv[0][0]+PD[0][1]*eig.Pinv[1][0], PD[0][0]*eig.Pinv[0][1]+PD[0][1]*eig.Pinv[1][1]],
+        [PD[1][0]*eig.Pinv[0][0]+PD[1][1]*eig.Pinv[1][0], PD[1][0]*eig.Pinv[0][1]+PD[1][1]*eig.Pinv[1][1]]
+      ];
+      katex.render(`PD=${mat2(PD)},\\quad PDP^{-1}=${mat2(R)}\\approx A \\;\\checkmark`, document.getElementById('s5'), {throwOnError:false});
+    } else {
+      document.getElementById('s5').textContent = 'P 不可逆，無法驗算。';
+    }
+  }
+}
+
+// ===== Canvas visualization =====
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+function drawCanvas(){
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  canvas.width = W * 2; canvas.height = H * 2;
+  ctx.scale(2,2);
+  const cx = W/2, cy = H/2;
+  const S = Math.min(W,H) / 7; // scale
+
+  ctx.clearRect(0,0,W,H);
+  // Grid
+  ctx.strokeStyle = '#f0f0f0'; ctx.lineWidth = 1;
+  for(let i=-6;i<=6;i++){
+    ctx.beginPath(); ctx.moveTo(cx+i*S, 0); ctx.lineTo(cx+i*S, H); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, cy+i*S); ctx.lineTo(W, cy+i*S); ctx.stroke();
+  }
+  // Axes
+  ctx.strokeStyle = '#9ca3af'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(W,cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,H); ctx.stroke();
+
+  const t = animT; // 0=original, 1=full A
+  // Interpolated matrix: I + t*(A-I)
+  const M = [
+    [1+t*(A[0][0]-1), t*A[0][1]],
+    [t*A[1][0], 1+t*(A[1][1]-1)]
+  ];
+  function px(p){ return [cx + p[0]*S, cy - p[1]*S]; }
+
+  // Unit square transformed
+  const sq = [[0,0],[1,0],[1,1],[0,1]];
+  const tsq = sq.map(p => [M[0][0]*p[0]+M[0][1]*p[1], M[1][0]*p[0]+M[1][1]*p[1]]);
+
+  // Original (faint)
+  ctx.fillStyle = 'rgba(209,213,219,0.4)';
+  ctx.beginPath();
+  sq.forEach((p,i)=>{ const [x,y]=px(p); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+  ctx.closePath(); ctx.fill();
+
+  // Transformed
+  ctx.fillStyle = 'rgba(37,99,235,0.25)';
+  ctx.strokeStyle = '#2563eb'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  tsq.forEach((p,i)=>{ const [x,y]=px(p); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+
+  // Eigenvectors (if real)
+  if(eig && !eig.complex){
+    const cols = ['#ef4444','#059669'];
+    [eig.v1, eig.v2].forEach((v,i)=>{
+      const tip = [v[0]*3, v[1]*3];
+      const [x1,y1] = px([0,0]), [x2,y2] = px(tip);
+      // Also show transformed direction
+      const tv = [M[0][0]*v[0]+M[0][1]*v[1], M[1][0]*v[0]+M[1][1]*v[1]];
+      const [tx,ty] = px([tv[0]*3/Math.hypot(tv[0],tv[1])*Math.hypot(v[0],v[1]), tv[1]*3/Math.hypot(tv[0],tv[1])*Math.hypot(v[0],v[1])]);
+      ctx.strokeStyle = cols[i]; ctx.lineWidth = 2.5;
+      ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+      // arrowhead
+      const ang = Math.atan2(y2-y1, x2-x1);
+      ctx.beginPath();
+      ctx.moveTo(x2,y2);
+      ctx.lineTo(x2-12*Math.cos(ang-0.4), y2-12*Math.sin(ang-0.4));
+      ctx.lineTo(x2-12*Math.cos(ang+0.4), y2-12*Math.sin(ang+0.4));
+      ctx.closePath(); ctx.fillStyle = cols[i]; ctx.fill();
+      // label — 用分數顯示 λ
+      ctx.fillStyle = cols[i]; ctx.font = 'bold 14px sans-serif';
+      const lamFrac = toFrac(i==0?eig.l1:eig.l2);
+      const lamStr = lamFrac[1]===1 ? lamFrac[0].toString() : lamFrac[0]+'/'+lamFrac[1];
+      ctx.fillText(`v${i+1} (λ=${lamStr})`, x2+6, y2-6);
+    });
+  }
+
+  // Labels
+  ctx.fillStyle = '#6b7280'; ctx.font = '13px sans-serif';
+  const labels = t < 0.5 ? '原圖 → 變緊…' : (t < 1 ? '變換緊…' : 'A 嘅完整作用');
+  document.getElementById('animLabel').textContent = labels;
+}
+
+// Animation
+document.getElementById('animSlider').addEventListener('input', e => {
+  animT = e.target.value / 100; animating = false;
+  document.getElementById('playBtn').textContent = '▶ 播放';
+  drawCanvas();
+});
+document.getElementById('playBtn').onclick = () => {
+  if(animating){ animating = false; document.getElementById('playBtn').textContent = '▶ 播放'; return; }
+  animating = true; animT = 0;
+  document.getElementById('playBtn').textContent = '⏸ 暫停';
+  (function tick(){
+    if(!animating) return;
+    animT += 0.015;
+    if(animT >= 1){ animT = 1; animating = false; document.getElementById('playBtn').textContent = '▶ 播放'; }
+    document.getElementById('animSlider').value = animT * 100;
+    drawCanvas();
+    if(animating) requestAnimationFrame(tick);
+  })();
+};
+
+// Events
+document.getElementById('calcBtn').onclick = calculate;
+document.querySelectorAll('.preset').forEach(b => {
+  b.onclick = () => {
+    const m = b.dataset.m.split(',').map(Number);
+    document.getElementById('a11').value = m[0];
+    document.getElementById('a12').value = m[1];
+    document.getElementById('a21').value = m[2];
+    document.getElementById('a22').value = m[3];
+    calculate();
+  };
+});
+['a11','a12','a21','a22'].forEach(id => {
+  document.getElementById(id).addEventListener('change', calculate);
+});
+window.addEventListener('resize', drawCanvas);
+
+// Init
+calculate();
+</script>
+</body>
+</html>

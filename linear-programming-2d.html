@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Linear Inequality & Linear Programming — 互動教學</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<style>
+:root{
+  --blue:#2563eb; --red:#ef4444; --green:#059669; --purple:#7c3aed;
+  --orange:#ea580c; --amber:#d97706; --ink:#1f2937; --muted:#6b7280; --bg:#eef2f7; --card:#ffffff;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;
+  background:var(--bg);color:var(--ink);line-height:1.6}
+header{background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#fff;padding:20px 24px}
+header h1{margin:0 0 6px;font-size:22px}
+header p{margin:0;opacity:.92;font-size:13.5px;max-width:920px}
+#controls{background:#fff;border-bottom:1px solid #e5e7eb;padding:14px 20px}
+.ineq-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:16px;margin:8px 0}
+.ineq-row input{width:56px;height:40px;font-size:16px;text-align:center;border:2px solid #d1d5db;border-radius:8px}
+.ineq-row input:focus{border-color:var(--blue);outline:none}
+.ineq-row select{height:40px;font-size:18px;border:2px solid #d1d5db;border-radius:8px;padding:0 6px}
+.var{font-weight:700;font-style:italic}
+.var.x{color:#ef4444}.var.y{color:#059669}
+.dot{width:12px;height:12px;border-radius:50%;display:inline-block;margin-right:4px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
+button{border:1px solid #d1d5db;background:#fff;border-radius:8px;padding:9px 16px;font-size:14px;cursor:pointer;min-height:42px}
+button:hover{background:#f3f4f6}
+button.primary{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700}
+button.preset{background:#eff6ff;border-color:#bfdbfe;font-size:13px;padding:6px 12px}
+.obj-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:16px;margin:8px 0}
+.obj-row input{width:56px;height:40px;font-size:16px;text-align:center;border:2px solid #d1d5db;border-radius:8px}
+main{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:flex;flex-direction:column;gap:18px}
+.card{background:var(--card);border-radius:14px;padding:20px 22px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.card h2{margin:0 0 10px;font-size:18px}
+#canvas{width:100%;height:440px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;touch-action:none}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:13.5px}
+.legend span{display:flex;align-items:center;gap:6px}
+.swatch{width:20px;height:4px;border-radius:2px;display:inline-block}
+.steps .step{background:#f8fafc;border-left:4px solid var(--blue);padding:10px 16px;margin:10px 0;border-radius:0 8px 8px 0;overflow-x:auto}
+.steps .step.green{border-color:var(--green)}
+.steps .step.amber{border-color:var(--amber)}
+.steps .step.purple{border-color:var(--purple)}
+.result-box{background:#eef2ff;border-radius:10px;padding:16px 20px;font-size:16px;margin:12px 0;overflow-x:auto}
+.mm-row{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.mm-card{flex:1 1 240px;max-width:340px;border-radius:10px;padding:14px 18px;font-size:15px;text-align:center}
+.mm-card.max{background:#dcfce7;border:2px solid #16a34a}
+.mm-card.min{background:#fee2e2;border:2px solid #dc2626}
+.warn{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;font-size:14px;margin:10px 0}
+.note{background:#fefce8;border:1px solid #fde68a;border-radius:10px;padding:12px 16px;font-size:14px;margin:10px 0}
+table.corners{border-collapse:collapse;margin:10px auto;font-size:15px}
+table.corners th,table.corners td{border:1px solid #d1d5db;padding:8px 14px;text-align:center}
+table.corners th{background:#eef2ff}
+table.corners tr.max{background:#dcfce7;font-weight:700}
+table.corners tr.min{background:#fee2e2;font-weight:700}
+.katex{font-size:1.05em}
+@media(max-width:640px){
+  #canvas{height:340px}
+  .ineq-row,.obj-row{font-size:14px}
+  .ineq-row input,.obj-row input{width:48px;height:38px;font-size:14px}
+}
+</style>
+</head>
+<body>
+<header>
+<h1>📐 Linear Inequality & Linear Programming — 互動教學</h1>
+<p>輸入不等式（<span class="tex">ax+by+c \le 0</span> 形式，最多四條），即時睇 shaded feasible region。再設定 objective function，用動畫睇住條線掃過去，同時搵出 maximum 同 minimum。</p>
+</header>
+
+<div id="controls">
+  <div style="font-weight:700;margin-bottom:4px">不等式（constraints，<span class="tex">ax+by+c \le 0</span> 形式）：</div>
+  <div id="ineqList">
+    <div class="ineq-row" data-i="0">
+      <span class="dot" style="background:#ef4444"></span>
+      <input type="text" id="a0" value="1"><span><span class="var x">x</span> +</span>
+      <input type="text" id="b0" value="1"><span><span class="var y">y</span> +</span>
+      <input type="text" id="c0" value="-6">
+      <select id="s0"><option value="<=">≤</option><option value=">=">≥</option><option value="<">&lt;</option><option value=">">&gt;</option></select>
+      <span>0</span>
+      <button class="preset" onclick="toggleIneq(0)" id="t0" style="font-size:12px">啟用中</button>
+    </div>
+    <div class="ineq-row" data-i="1">
+      <span class="dot" style="background:#059669"></span>
+      <input type="text" id="a1" value="2"><span><span class="var x">x</span> +</span>
+      <input type="text" id="b1" value="-1"><span><span class="var y">y</span> +</span>
+      <input type="text" id="c1" value="0">
+      <select id="s1"><option value="<=">≤</option><option value=">=" selected>≥</option><option value="<">&lt;</option><option value=">">&gt;</option></select>
+      <span>0</span>
+      <button class="preset" onclick="toggleIneq(1)" id="t1" style="font-size:12px">啟用中</button>
+    </div>
+    <div class="ineq-row" data-i="2">
+      <span class="dot" style="background:#7c3aed"></span>
+      <input type="text" id="a2" value="1"><span><span class="var x">x</span> +</span>
+      <input type="text" id="b2" value="0"><span><span class="var y">y</span> +</span>
+      <input type="text" id="c2" value="0">
+      <select id="s2"><option value="<=">≤</option><option value=">=" selected>≥</option><option value="<">&lt;</option><option value=">">&gt;</option></select>
+      <span>0</span>
+      <button class="preset" onclick="toggleIneq(2)" id="t2" style="font-size:12px">啟用中</button>
+    </div>
+    <div class="ineq-row" data-i="3">
+      <span class="dot" style="background:#ea580c"></span>
+      <input type="text" id="a3" value="0"><span><span class="var x">x</span> +</span>
+      <input type="text" id="b3" value="1"><span><span class="var y">y</span> +</span>
+      <input type="text" id="c3" value="0">
+      <select id="s3"><option value="<=">≤</option><option value=">=" selected>≥</option><option value="<">&lt;</option><option value=">">&gt;</option></select>
+      <span>0</span>
+      <button class="preset" onclick="toggleIneq(3)" id="t3" style="font-size:12px">啟用中</button>
+    </div>
+  </div>
+  <div style="font-weight:700;margin:12px 0 4px">Objective function（目標函數）：</div>
+  <div class="obj-row">
+    <span><b>P</b> =</span>
+    <input type="text" id="px" value="3"><span><span class="var x">x</span> +</span>
+    <input type="text" id="py" value="2"><span><span class="var y">y</span> +</span>
+    <input type="text" id="pr" value="0">
+  </div>
+  <div class="btnrow">
+    <button class="primary" id="calcBtn">🧮 畫圖＋求 Max / Min</button>
+    <button id="playBtn">▶ 播放目標線掃描動畫</button>
+    <span style="font-size:12px;color:var(--muted);font-weight:600">預設：</span>
+    <button class="preset" data-p="1,1,-6,<=,2,-1,0,>=,1,0,0,>=,0,1,0,>=,3,2,0">課本例</button>
+    <button class="preset" data-p="1,2,-8,<=,3,1,-9,<=,1,0,0,>=,0,1,0,>=,4,3,0">四邊形</button>
+  </div>
+</div>
+
+<main>
+<div class="card">
+  <h2>🌐 Shaded Feasible Region（可行域）</h2>
+  <canvas id="canvas"></canvas>
+  <div style="margin-top:10px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+    <label style="font-size:13px">掃描：<input type="range" id="animSlider" min="0" max="100" value="100" style="width:200px;accent-color:#2563eb"></label>
+    <span id="animLabel" style="font-size:13px;color:var(--muted)"></span>
+  </div>
+  <div class="legend" id="legendDiv"></div>
+</div>
+
+<div class="card">
+  <h2>🏆 Maximum & Minimum of P</h2>
+  <div class="mm-row" id="mmDisplay"></div>
+  <div id="cornerTable"></div>
+</div>
+
+<div class="card">
+  <h2>📝 逐步解說</h2>
+  <div class="steps" id="stepsDisplay"></div>
+</div>
+
+<div class="card">
+  <h2>💡 教學要點</h2>
+  <ul style="font-size:14.5px;line-height:1.9;margin:0;padding-left:20px">
+    <li><b>Linear inequality 嘅意思：</b><span class="tex">ax+by+c \le 0</span> 唔係一條線，而係一個半平面。先畫條界線 <span class="tex">ax+by+c=0</span>，再用 test point（通常 <span class="tex">(0,0)</span>）決定邊一邊係解。</li>
+    <li><b>Feasible region：</b>所有 constraints 同時滿足嘅重疊區域（圖中藍色陰影）。每一點 <span class="tex">(x,y)</span> 都係一組可行嘅方案。</li>
+    <li><b>Linear programming 嘅意思：</b>喺 feasible region 入面，搵令 <span class="tex">P=mx+ny+r</span> 最大同最小嘅兩點。<span class="tex">P</span> 可以係利潤（求 max）或成本（求 min）。</li>
+    <li><b>Corner point theorem：</b>最大同最小值一定喺可行域嘅頂點（corner point）出現。所以唔使試無限咁多點，逐隻角計 <span class="tex">P</span> 就得。</li>
+    <li><b>動畫解說：</b>將 <span class="tex">P=mx+ny+r</span> 寫成 <span class="tex">y=-\dfrac{m}{n}x+\dfrac{P-r}{n}</span>，斜率固定，<span class="tex">P</span> 改變即係條線上下平移。由細掃到大：第一隻掂到嘅角係 minimum，最後離開嘅角係 maximum。</li>
+    <li><b>Strict inequality（<span class="tex">></span> / <span class="tex"><</span>）點處理：</b>界線畫虛線，唔包在內。角點如果喺條 strict 界線上，會畫空心圓 ○——意思係 <span class="tex">P</span> 可以無限趨近嗰個值，但取唔到，所以只有 supremum／infimum，無真正 max／min。</li>
+    <li><b>無界 (unbounded) 情況：</b>如果可行域伸延到無限遠，<span class="tex">P</span> 可能無 maximum（<span class="tex">\to +\infty</span>）或無 minimum（<span class="tex">\to -\infty</span>），圖會標示 ⚠️。</li>
+  </ul>
+</div>
+</main>
+
+<script>
+// ===== Fraction helpers =====
+function gcd(a,b){ a=Math.abs(Math.round(a)); b=Math.abs(Math.round(b)); while(b){ [a,b]=[b,a%b]; } return a||1; }
+function toFrac(x, maxDen=100){
+  if(!isFinite(x)) return [x,1];
+  const neg = x<0; x=Math.abs(x);
+  let bn=0,bd=1,be=Infinity;
+  for(let d=1;d<=maxDen;d++){ const n=Math.round(x*d), e=Math.abs(x-n/d); if(e<be){be=e;bn=n;bd=d;} if(e<1e-9)break; }
+  const g=gcd(bn,bd); return [(neg?-1:1)*bn/g, bd/g];
+}
+function fracLatex(x){
+  if(typeof x!=='number'||!isFinite(x)) return '?';
+  const [n,d]=toFrac(x);
+  if(d===1) return n.toString();
+  if(n===0) return '0';
+  return `\\frac{${n}}{${d}}`;
+}
+// Render all .tex spans inside an element (or whole document) with KaTeX
+function renderTex(root){
+  (root||document).querySelectorAll('.tex').forEach(el=>{
+    if(el.dataset.rendered) return;
+    try{ katex.render(el.textContent, el, {throwOnError:false}); el.dataset.rendered='1'; }
+    catch(e){ /* leave as text */ }
+  });
+}
+
+function fracText(x){
+  const [n,d]=toFrac(x);
+  if(d===1) return String(n);
+  return n+'/'+d;
+}
+// P = mx + ny + r as LaTeX (skips zero terms nicely)
+function pFormulaLatex(p){
+  const [m,n,r] = p;
+  let s = `${fracLatex(m)}x+${fracLatex(n)}y`;
+  if(Math.abs(r) > 1e-9) s += (r<0?'':'+') + fracLatex(r);
+  return 'P=' + s;
+}
+function pFormulaText(p){
+  const [m,n,r] = p;
+  let s = `${fracText(m)}x + ${fracText(n)}y`;
+  if(Math.abs(r) > 1e-9) s += (r<0?' - ':' + ') + fracText(Math.abs(r));
+  return 'P = ' + s;
+}
+function parseNum(id){ const v=parseFloat(document.getElementById(id).value); return isNaN(v)?0:v; }
+
+// ===== State =====
+const ineqEnabled = [true, true, true, true];
+const ineqColors = ['#ef4444','#059669','#7c3aed','#ea580c'];
+let animT = 1, animating = false;
+let solution = null;
+
+function toggleIneq(i){
+  ineqEnabled[i] = !ineqEnabled[i];
+  document.getElementById('t'+i).textContent = ineqEnabled[i] ? '啟用中' : '已停用';
+  document.getElementById('t'+i).style.opacity = ineqEnabled[i] ? '1' : '0.5';
+  calculate();
+}
+
+function getIneqs(){
+  const list = [];
+  for(let i=0;i<4;i++){
+    if(!ineqEnabled[i]) continue;
+    // ax + by + c [sign] 0  →  ax + by = -c on boundary
+    list.push({
+      a: parseNum('a'+i), b: parseNum('b'+i), c: parseNum('c'+i),
+      sign: document.getElementById('s'+i).value,
+      color: ineqColors[i]
+    });
+  }
+  return list;
+}
+
+function satisfies(q, x, y){
+  const v = q.a*x + q.b*y + q.c;
+  const e = 1e-9;
+  switch(q.sign){
+    case '<=': return v <= 0 + e;
+    case '>=': return v >= 0 - e;
+    case '<': return v < 0 - e;
+    case '>': return v > 0 + e;
+  }
+  return false;
+}
+
+// Non-strict version: for finding closure corners (boundary of strict ineq. counts)
+function satisfiesClosure(q, x, y){
+  const v = q.a*x + q.b*y + q.c;
+  const e = 1e-9;
+  switch(q.sign){
+    case '<=': case '<': return v <= 0 + e;
+    case '>=': case '>': return v >= 0 - e;
+  }
+  return false;
+}
+// Is this corner actually inside the region (not just on a strict boundary)?
+function cornerAttained(ineqs, x, y){
+  return ineqs.every(q=>satisfies(q,x,y));
+}
+
+function intersect(l1, l2){
+  const det = l1.a*l2.b - l2.a*l1.b;
+  if(Math.abs(det)<1e-9) return null;
+  // a1x+b1y+c1=0, a2x+b2y+c2=0
+  return [(l1.b*l2.c - l2.b*l1.c)/det, (l2.a*l1.c - l1.a*l2.c)/det];
+}
+
+// Heuristic: is the feasible region bounded?
+function isBounded(ineqs){
+  const R = 60;
+  for(let k=0;k<24;k++){
+    const ang = k/24*2*Math.PI;
+    if(ineqs.every(q=>satisfies(q, R*Math.cos(ang), R*Math.sin(ang)))) return false;
+  }
+  return true;
+}
+// Heuristic: can P go to +inf (dir='max') or -inf (dir='min') along a feasible direction?
+function objectiveBounded(ineqs, p, dir){
+  const R = 60;
+  for(let k=0;k<36;k++){
+    const ang = k/36*2*Math.PI;
+    const dx = Math.cos(ang), dy = Math.sin(ang);
+    const feas1 = ineqs.every(q=>satisfies(q, R*dx, R*dy));
+    const feas2 = ineqs.every(q=>satisfies(q, 2*R*dx, 2*R*dy));
+    if(feas1 && feas2){
+      const dot = p[0]*dx + p[1]*dy;
+      if(dir==='max' && dot > 1e-9) return false;
+      if(dir==='min' && dot < -1e-9) return false;
+    }
+  }
+  return true;
+}
+
+function calculate(){
+  const ineqs = getIneqs();
+  const px = parseNum('px'), py = parseNum('py'), pr = parseNum('pr');
+
+  const pts = [];
+  for(let i=0;i<ineqs.length;i++)
+    for(let j=i+1;j<ineqs.length;j++){
+      const p = intersect(ineqs[i], ineqs[j]);
+      if(p) pts.push(p);
+    }
+  // Corners of the CLOSURE (boundary lines count, even for strict ineq.)
+  const allUniq = [];
+  pts.forEach(p=>{
+    if(!allUniq.some(q=>Math.hypot(p[0]-q[0],p[1]-q[1])<1e-6)) allUniq.push(p);
+  });
+  const corners = allUniq.filter(([x,y])=>ineqs.every(q=>satisfiesClosure(q,x,y)));
+  const uniq = corners; // already deduped
+  // Which corners are actually attained (strictly inside)?
+  const attained = uniq.map(([x,y])=>cornerAttained(ineqs,x,y));
+
+  const values = uniq.map(([x,y])=>px*x+py*y+pr);
+  let maxIdx=-1, minIdx=-1;
+  if(values.length){
+    maxIdx=0; minIdx=0;
+    for(let i=1;i<values.length;i++){
+      if(values[i]>values[maxIdx]+1e-9) maxIdx=i;
+      if(values[i]<values[minIdx]-1e-9) minIdx=i;
+    }
+  }
+  solution = {corners:uniq, values, maxIdx, minIdx, attained, allPts:allUniq, p:[px,py,pr], ineqs,
+    bounded: isBounded(ineqs),
+    maxBounded: objectiveBounded(ineqs,[px,py],'max'),
+    minBounded: objectiveBounded(ineqs,[px,py],'min')};
+  renderSteps(); renderResult(); drawCanvas();
+  animating=false; document.getElementById('playBtn').textContent='▶ 播放目標線掃描動畫';
+}
+
+function ineqLatex(q){
+  const signMap = {'<=':'\\le','>=':'\\ge','<':'<','>':'>'};
+  const cStr = q.c<0 ? `-${fracLatex(-q.c)}` : `+${fracLatex(q.c)}`;
+  return `${fracLatex(q.a)}x+${fracLatex(q.b)}y${cStr} ${signMap[q.sign]} 0`;
+}
+
+function renderResult(){
+  const mm = document.getElementById('mmDisplay');
+  const ct = document.getElementById('cornerTable');
+  const {corners, values, maxIdx, minIdx, attained, p, maxBounded, minBounded, bounded} = solution;
+  if(!corners.length){
+    mm.innerHTML = '<div class="warn">無可行角（feasible region 可能係空集或退化）。</div>';
+    ct.innerHTML = '';
+    return;
+  }
+  const strictUsed = solution.ineqs.some(q=>q.sign==='<'||q.sign==='>');
+  let notes = '';
+  if(!bounded) notes += '<div class="note">⚠️ 可行域無界 (unbounded)：下表只列出角點嘅 P 值，真正嘅 max/min 可能係無限。</div>';
+  if(strictUsed) notes += '<div class="note">ℹ️ 有 strict inequality（&gt; / &lt;）：界線唔包在內，空心圓嘅角係「趨近但取唔到」，嗰邊只有 supremum / infimum，無真正 max / min。</div>';
+  mm.innerHTML = notes + `
+    <div class="mm-card max"><div style="font-size:13px;color:#166534">📈 MAXIMUM</div><div id="maxK"></div></div>
+    <div class="mm-card min"><div style="font-size:13px;color:#991b1b">📉 MINIMUM</div><div id="minK"></div></div>`;
+  // Max
+  if(!maxBounded){
+    katex.render(`P_{\\max} \\to +\\infty\\\\\\text{(無上界)}`, document.getElementById('maxK'), {throwOnError:false});
+  } else if(attained[maxIdx]){
+    katex.render(`P_{\\max}=${fracLatex(values[maxIdx])}\\\\(${fracLatex(corners[maxIdx][0])},${fracLatex(corners[maxIdx][1])})`, document.getElementById('maxK'), {throwOnError:false});
+  } else {
+    katex.render(`\\text{無 maximum}\\\\P<${fracLatex(values[maxIdx])}\\text{, supremum}=${fracLatex(values[maxIdx])}`, document.getElementById('maxK'), {throwOnError:false});
+  }
+  // Min
+  if(!minBounded){
+    katex.render(`P_{\\min} \\to -\\infty\\\\\\text{(無下界)}`, document.getElementById('minK'), {throwOnError:false});
+  } else if(attained[minIdx]){
+    katex.render(`P_{\\min}=${fracLatex(values[minIdx])}\\\\(${fracLatex(corners[minIdx][0])},${fracLatex(corners[minIdx][1])})`, document.getElementById('minK'), {throwOnError:false});
+  } else {
+    katex.render(`\\text{無 minimum}\\\\P>${fracLatex(values[minIdx])}\\text{, infimum}=${fracLatex(values[minIdx])}`, document.getElementById('minK'), {throwOnError:false});
+  }
+
+  let th = `<table class="corners"><tr><th>Corner <span class="tex">(x,y)</span></th><th><span class="tex">${pFormulaLatex(p)}</span></th></tr>`;
+  corners.forEach((c,i)=>{
+    const cls = i===maxIdx ? 'max' : (i===minIdx ? 'min' : '');
+    let tag = i===maxIdx ? (attained[i]?' 📈max':' 📈sup') : (i===minIdx ? (attained[i]?' 📉min':' 📉inf') : '');
+    if(!attained[i]) tag += ' ○';
+    th += `<tr class="${cls}"><td><span class="tex">(${fracLatex(c[0])}, ${fracLatex(c[1])})</span></td><td><span class="tex">${fracLatex(values[i])}</span>${tag}</td></tr>`;
+  });
+  ct.innerHTML = th + '</table>';
+  renderTex(ct);
+}
+
+function renderSteps(){
+  const el = document.getElementById('stepsDisplay');
+  const {ineqs} = solution;
+  let html = '';
+  html += `<div class="step"><b>Step 1：畫每條不等式嘅界線同半平面</b><br>`;
+  ineqs.forEach((q,i)=>{ html += `<span style="color:${q.color}">▮</span> <span id="st1_${i}"></span><br>`; });
+  html += `<div style="font-size:13px;color:var(--muted)">每條先畫 <span class="tex">ax+by+c=0</span> 條線，再用 test point <span class="tex">(0,0)</span> 睇邊一邊滿足不等式，嗰邊就係解。</div></div>`;
+  html += `<div class="step green"><b>Step 2：Shade 出可行域（feasible region），搵角</b><br><span id="st2"></span></div>`;
+  html += `<div class="step amber"><b>Step 3：逐隻角計 <span class="tex">P</span> 值</b><br><span id="st3"></span></div>`;
+  html += `<div class="step purple"><b>Step 4：搵最大同最小</b><br><span id="st4"></span></div>`;
+  el.innerHTML = html;
+  renderTex(el);
+  ineqs.forEach((q,i)=>{ katex.render(ineqLatex(q), document.getElementById('st1_'+i), {throwOnError:false}); });
+  const {corners, values, maxIdx, minIdx, p} = solution;
+  if(!corners.length){
+    document.getElementById('st2').textContent = '無可行角（可行域可能係空集或無界）。';
+    document.getElementById('st3').textContent = '—';
+    document.getElementById('st4').textContent = '—';
+    return;
+  }
+  katex.render(corners.map(c=>`(${fracLatex(c[0])},${fracLatex(c[1])})`).join(',\\; '), document.getElementById('st2'), {throwOnError:false});
+  katex.render(pFormulaLatex(p), document.getElementById('st3'), {throwOnError:false});
+  katex.render(`P_{\\max}=${fracLatex(values[maxIdx])} \\text{ 喺 } (${fracLatex(corners[maxIdx][0])},${fracLatex(corners[maxIdx][1])})；P_{\\min}=${fracLatex(values[minIdx])} \\text{ 喺 } (${fracLatex(corners[minIdx][0])},${fracLatex(corners[minIdx][1])})`, document.getElementById('st4'), {throwOnError:false});
+}
+
+// Auto-scale: fit all intersections + origin, with padding and a minimum span
+function computeView(){
+  let pts = [];
+  if(solution && solution.allPts) pts = solution.allPts.slice();
+  pts.push([0,0]);
+  let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+  pts.forEach(([x,y])=>{
+    if(!isFinite(x)||!isFinite(y)) return;
+    if(Math.abs(x)>1e6||Math.abs(y)>1e6) return;
+    if(x<minX)minX=x; if(x>maxX)maxX=x;
+    if(y<minY)minY=y; if(y>maxY)maxY=y;
+  });
+  if(!isFinite(minX)){ minX=-7;maxX=7;minY=-7;maxY=7; }
+  const padX = Math.max((maxX-minX)*0.15, 0.5);
+  const padY = Math.max((maxY-minY)*0.15, 0.5);
+  minX-=padX; maxX+=padX; minY-=padY; maxY+=padY;
+  if(maxX-minX < 14){ const m=(minX+maxX)/2; minX=m-7; maxX=m+7; }
+  if(maxY-minY < 14){ const m=(minY+maxY)/2; minY=m-7; maxY=m+7; }
+  return {minX,maxX,minY,maxY};
+}
+// Nice grid step so lines are >= ~30px apart
+function niceStep(target){
+  const mag = Math.pow(10, Math.floor(Math.log10(target)));
+  const norm = target/mag;
+  return (norm<=1?1:norm<=2?2:norm<=5?5:10)*mag;
+}
+function tickLabel(v){
+  const r = Math.round(v*100)/100;
+  return String(r);
+}
+// ===== Canvas =====
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+function drawCanvas(){
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  canvas.width = W*2; canvas.height = H*2; ctx.scale(2,2);
+  // Auto-scale to fit
+  const view = computeView();
+  const spanX = view.maxX-view.minX, spanY = view.maxY-view.minY;
+  const S = Math.min(W/spanX, H/spanY);
+  const midX = (view.minX+view.maxX)/2, midY = (view.minY+view.maxY)/2;
+  const cx = W/2 - midX*S, cy = H/2 + midY*S;
+  ctx.clearRect(0,0,W,H);
+  // Adaptive grid
+  const gs = niceStep(32/S);
+  const xL = (0-cx)/S, xR = (W-cx)/S, yB = (cy-H)/S, yT = cy/S;
+  ctx.strokeStyle='#e8e8e8'; ctx.lineWidth=1;
+  for(let i=Math.ceil(xL/gs)*gs; i<=xR; i+=gs){
+    const X = cx+i*S;
+    ctx.beginPath();ctx.moveTo(X,0);ctx.lineTo(X,H);ctx.stroke();
+  }
+  for(let j=Math.ceil(yB/gs)*gs; j<=yT; j+=gs){
+    const Y = cy-j*S;
+    ctx.beginPath();ctx.moveTo(0,Y);ctx.lineTo(W,Y);ctx.stroke();
+  }
+  // Axes
+  ctx.strokeStyle='#9ca3af';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(W,cy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx,0);ctx.lineTo(cx,H);ctx.stroke();
+  // Tick labels
+  ctx.fillStyle='#9ca3af';ctx.font='10px sans-serif';
+  for(let i=Math.ceil(xL/gs)*gs; i<=xR; i+=gs){
+    if(Math.abs(i)<gs*1e-9) continue;
+    ctx.fillText(tickLabel(i), cx+i*S+3, cy+12);
+  }
+  for(let j=Math.ceil(yB/gs)*gs; j<=yT; j+=gs){
+    if(Math.abs(j)<gs*1e-9) continue;
+    ctx.fillText(tickLabel(j), cx+4, cy-j*S-3);
+  }
+  ctx.fillStyle='#6b7280';ctx.font='12px sans-serif';
+  ctx.fillText('x', W-14, cy-6); ctx.fillText('y', cx+6, 14);
+  const px2 = p => [cx+p[0]*S, cy-p[1]*S];
+
+  if(!solution) return;
+  const {ineqs, corners, maxIdx, minIdx, p} = solution;
+  const [ppx, ppy, ppr] = p;
+
+  // Shade feasible region by grid sampling — works for bounded AND unbounded regions
+  const step = 5;
+  ctx.fillStyle = 'rgba(37,99,235,0.20)';
+  for(let X=0; X<W; X+=step){
+    for(let Y=0; Y<H; Y+=step){
+      const mx = (X+step/2-cx)/S, my = (cy-(Y+step/2))/S;
+      if(ineqs.every(q=>satisfies(q,mx,my))) ctx.fillRect(X, Y, step, step);
+    }
+  }
+  // Outline the bounded polygon if there is one
+  if(corners.length>=3){
+    const ox = corners.reduce((s,c)=>s+c[0],0)/corners.length;
+    const oy = corners.reduce((s,c)=>s+c[1],0)/corners.length;
+    const ordered = [...corners].sort((a,b)=>Math.atan2(a[1]-oy,a[0]-ox)-Math.atan2(b[1]-oy,b[0]-ox));
+    ctx.strokeStyle='#1d4ed8'; ctx.lineWidth=2.5;
+    ctx.beginPath();
+    ordered.forEach((c,i)=>{ const [X,Y]=px2(c); i?ctx.lineTo(X,Y):ctx.moveTo(X,Y); });
+    // close the polygon only if bounded (check: region bounded = polygon covers all corners as a closed loop)
+    const bounded = isBounded(ineqs);
+    if(bounded){ ctx.closePath(); }
+    ctx.stroke();
+  } else if(corners.length===2){
+    ctx.strokeStyle='#1d4ed8'; ctx.lineWidth=4;
+    const [X1,Y1]=px2(corners[0]),[X2,Y2]=px2(corners[1]);
+    ctx.beginPath();ctx.moveTo(X1,Y1);ctx.lineTo(X2,Y2);ctx.stroke();
+  }
+  // Unbounded notice
+  if(!isBounded(ineqs) && corners.length){
+    ctx.fillStyle='#92400e'; ctx.font='bold 13px sans-serif';
+    ctx.fillText('⚠ 可行域無界 (unbounded)', 10, H-12);
+  }
+
+  // Boundary lines
+  ineqs.forEach(q=>{
+    ctx.strokeStyle=q.color; ctx.lineWidth=1.5;
+    ctx.setLineDash(q.sign==='<='||q.sign==='>=' ? [] : [6,4]);
+    let p1,p2;
+    if(Math.abs(q.b)>1e-9){
+      p1=[xL,(-q.c-q.a*xL)/q.b]; p2=[xR,(-q.c-q.a*xR)/q.b];
+    } else if(Math.abs(q.a)>1e-9){
+      p1=[-q.c/q.a,yB]; p2=[-q.c/q.a,yT];
+    } else return;
+    const [X1,Y1]=px2(p1),[X2,Y2]=px2(p2);
+    ctx.beginPath();ctx.moveTo(X1,Y1);ctx.lineTo(X2,Y2);ctx.stroke();
+    ctx.setLineDash([]);
+  });
+
+  // Coordinate label with white halo (stays inside canvas)
+  function drawCoordLabel(c, X, Y, color, fontSize){
+    const txt = `(${fracText(c[0])}, ${fracText(c[1])})`;
+    ctx.font = (fontSize||12)+'px sans-serif';
+    const w = ctx.measureText(txt).width;
+    let lx = X + 11, ly = Y - 9;
+    if(lx + w > W - 4) lx = X - 11 - w;
+    if(ly < 14) ly = Y + 20;
+    if(ly > H - 6) ly = Y - 9;
+    ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,255,255,0.92)';
+    ctx.strokeText(txt, lx, ly);
+    ctx.fillStyle = color; ctx.fillText(txt, lx, ly);
+  }
+
+  // Corner points: solid = attained, hollow = on strict boundary (not attained)
+  const {attained} = solution;
+  corners.forEach((c,i)=>{
+    const [X,Y]=px2(c);
+    let fill='#374151', r=5, label=String(i+1);
+    if(i===maxIdx){ fill='#16a34a'; r=8; label='▲'; }
+    else if(i===minIdx){ fill='#dc2626'; r=8; label='▼'; }
+    ctx.beginPath();ctx.arc(X,Y,r,0,7);
+    if(attained[i]){ ctx.fillStyle=fill; ctx.fill(); }
+    else { ctx.fillStyle='#fff'; ctx.fill(); ctx.strokeStyle=fill; ctx.lineWidth=2.5; ctx.stroke(); }
+    ctx.fillStyle=attained[i]?'#fff':fill; ctx.font='bold 10px sans-serif';ctx.textAlign='center';
+    ctx.fillText(label, X, Y+3.5); ctx.textAlign='left';
+    drawCoordLabel(c, X, Y, '#1f2937', 12);
+  });
+
+  // Infeasible intersections (line crossings outside the region): small grey dots + grey labels
+  const {allPts} = solution;
+  (allPts||[]).forEach(pt=>{
+    if(corners.some(c=>Math.hypot(c[0]-pt[0],c[1]-pt[1])<1e-6)) return;
+    const [X,Y]=px2(pt);
+    if(X<-30||X>W+30||Y<-30||Y>H+30) return;
+    ctx.fillStyle='#9ca3af';
+    ctx.beginPath();ctx.arc(X,Y,3.5,0,7);ctx.fill();
+    drawCoordLabel(pt, X, Y, '#9ca3af', 11);
+  });
+
+  // Objective line sweep
+  if(corners.length && Math.abs(ppy)>1e-9){
+    const vals = solution.values;
+    const lo = Math.min(...vals), hi = Math.max(...vals);
+    const t = animT;
+    const curP = lo + t*(hi-lo);
+    const yAt = x => (curP - ppx*x - ppr)/ppy;
+    const [X1,Y1]=px2([xL,yAt(xL)]),[X2,Y2]=px2([xR,yAt(xR)]);
+    ctx.strokeStyle='#d97706'; ctx.lineWidth=2.5; ctx.setLineDash([8,4]);
+    ctx.beginPath();ctx.moveTo(X1,Y1);ctx.lineTo(X2,Y2);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#d97706';ctx.font='bold 13px sans-serif';
+    ctx.fillText(pFormulaText(p), 10, 20);
+    document.getElementById('animLabel').textContent =
+      t<=0.001 ? '第一隻掂到嘅角 = minimum（紅色▼）' :
+      t>=0.999 ? '最後離開嘅角 = maximum（綠色▲）' : '掃緊…由 min 掃向 max';
+  }
+
+  // Legend
+  const lg = document.getElementById('legendDiv');
+  lg.innerHTML = ineqs.map(q=>`<span><span class="swatch" style="background:${q.color}"></span> ${q.a}x+${q.b}y${q.c<0?'':'+'}${q.c} ${q.sign} 0</span>`).join('')
+    + `<span><span class="swatch" style="background:#d97706"></span> 目標線 ${pFormulaText(p)}（橙色虛線）</span>`
+    + `<span>▲ max　▼ min　○ 取唔到（strict 界線）　<span style="color:#9ca3af">●</span> 界線交點（非可行）</span>`;
+}
+
+// Animation
+document.getElementById('animSlider').addEventListener('input', e=>{
+  animT = e.target.value/100; animating=false;
+  document.getElementById('playBtn').textContent='▶ 播放目標線掃描動畫';
+  drawCanvas();
+});
+document.getElementById('playBtn').onclick = ()=>{
+  if(animating){ animating=false; document.getElementById('playBtn').textContent='▶ 播放目標線掃描動畫'; return; }
+  animating=true; animT=0;
+  document.getElementById('playBtn').textContent='⏸ 暫停';
+  (function tick(){
+    if(!animating) return;
+    animT += 0.012;
+    if(animT>=1){ animT=1; animating=false; document.getElementById('playBtn').textContent='▶ 播放目標線掃描動畫'; }
+    document.getElementById('animSlider').value = animT*100;
+    drawCanvas();
+    if(animating) requestAnimationFrame(tick);
+  })();
+};
+
+document.getElementById('calcBtn').onclick = calculate;
+document.querySelectorAll('.preset[data-p]').forEach(btn=>{
+  btn.onclick = ()=>{
+    const v = btn.dataset.p.split(',');
+    for(let i=0;i<4;i++){
+      document.getElementById('a'+i).value = v[i*4];
+      document.getElementById('b'+i).value = v[i*4+1];
+      document.getElementById('c'+i).value = v[i*4+2];
+      document.getElementById('s'+i).value = v[i*4+3];
+      if(!ineqEnabled[i]) toggleIneq(i);
+    }
+    document.getElementById('px').value=v[16];
+    document.getElementById('py').value=v[17];
+    document.getElementById('pr').value=v[18]!==undefined?v[18]:0;
+    calculate();
+  };
+});
+document.querySelectorAll('#controls input, #controls select').forEach(el=>{
+  el.addEventListener('change', ()=>{ if(el.id!=='animSlider') calculate(); });
+});
+window.addEventListener('resize', drawCanvas);
+
+renderTex(document);
+calculate();
+</script>
+</body>
+</html>

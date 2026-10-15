@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>3×3 System — Cramer's Rule 互動教學</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<style>
+:root{
+  --blue:#2563eb; --red:#ef4444; --green:#059669; --purple:#7c3aed;
+  --amber:#d97706; --ink:#1f2937; --muted:#6b7280; --bg:#eef2f7; --card:#ffffff;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;
+  background:var(--bg);color:var(--ink);line-height:1.6}
+header{background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#fff;padding:20px 24px}
+header h1{margin:0 0 6px;font-size:22px}
+header p{margin:0;opacity:.92;font-size:13.5px;max-width:920px}
+#controls{background:#fff;border-bottom:1px solid #e5e7eb;padding:14px 20px}
+.eq-input{display:flex;flex-direction:column;gap:10px;max-width:640px}
+.eq-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:17px}
+.eq-row input{width:58px;height:42px;font-size:17px;text-align:center;border:2px solid #d1d5db;border-radius:8px}
+.eq-row input:focus{border-color:var(--blue);outline:none}
+.eq-row input.const{border-color:#fbbf24;background:#fffbeb;width:66px}
+.var{font-weight:700;font-style:italic}
+.var.x{color:#ef4444}.var.y{color:#059669}.var.z{color:#2563eb}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
+button{border:1px solid #d1d5db;background:#fff;border-radius:8px;padding:9px 16px;font-size:14px;cursor:pointer;min-height:42px}
+button:hover{background:#f3f4f6}
+button.primary{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700}
+button.preset{background:#eff6ff;border-color:#bfdbfe;font-size:13px;padding:6px 12px}
+main{max-width:1080px;margin:0 auto;padding:20px 16px 40px;display:flex;flex-direction:column;gap:18px}
+.card{background:var(--card);border-radius:14px;padding:20px 22px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.card h2{margin:0 0 10px;font-size:18px}
+.steps .step{background:#f8fafc;border-left:4px solid var(--blue);padding:10px 16px;margin:10px 0;border-radius:0 8px 8px 0;overflow-x:auto}
+.steps .step.green{border-color:var(--green)}
+.steps .step.amber{border-color:var(--amber)}
+.steps .step.purple{border-color:var(--purple)}
+.steps .step.red{border-color:var(--red)}
+.result-box{background:#eef2ff;border-radius:10px;padding:16px 20px;font-size:17px;margin:12px 0;text-align:center}
+.warn{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;font-size:14px;margin:10px 0}
+.note{background:#fefce8;border:1px solid #fde68a;border-radius:10px;padding:12px 16px;font-size:14px;margin:10px 0}
+.katex{font-size:1.05em}
+.det-steps{font-size:14px;color:var(--muted);margin-top:6px}
+@media(max-width:640px){
+  .eq-row{font-size:15px;gap:4px}
+  .eq-row input{width:48px;height:40px;font-size:15px}
+  .eq-row input.const{width:56px}
+}
+</style>
+</head>
+<body>
+<header>
+<h1>📐 3×3 System of Linear Equations — Cramer's Rule</h1>
+<p>輸入三條方程嘅係數（x、y、z 係數同常數項全部可改，<b>支援字母常數</b>如 a、b、c、k、h），即時用 Cramer's rule 逐步求解。答案用分數 LaTeX 顯示。</p>
+</header>
+
+<div id="controls">
+  <div class="eq-input" id="eqInput">
+    <div class="eq-row">
+      <input type="text" id="a11" value="2"><span><span class="var x">x</span> +</span>
+      <input type="text" id="a12" value="1"><span><span class="var y">y</span> +</span>
+      <input type="text" id="a13" value="-1"><span><span class="var z">z</span> =</span>
+      <input type="text" class="const" id="b1" value="8">
+    </div>
+    <div class="eq-row">
+      <input type="text" id="a21" value="-3"><span><span class="var x">x</span> +</span>
+      <input type="text" id="a22" value="-1"><span><span class="var y">y</span> +</span>
+      <input type="text" id="a23" value="2"><span><span class="var z">z</span> =</span>
+      <input type="text" class="const" id="b2" value="-11">
+    </div>
+    <div class="eq-row">
+      <input type="text" id="a31" value="-2"><span><span class="var x">x</span> +</span>
+      <input type="text" id="a32" value="1"><span><span class="var y">y</span> +</span>
+      <input type="text" id="a33" value="2"><span><span class="var z">z</span> =</span>
+      <input type="text" class="const" id="b3" value="-3">
+    </div>
+  </div>
+  <div class="btnrow">
+    <button class="primary" id="calcBtn">🧮 用 Cramer's Rule 求解</button>
+    <span style="font-size:12px;color:var(--muted);font-weight:600">預設：</span>
+    <button class="preset" data-m="2,1,-1,8,-3,-1,2,-11,-2,1,2,-3">課本例</button>
+    <button class="preset" data-m="1,1,1,6,1,2,3,14,2,1,1,7">簡單整數</button>
+    <button class="preset" data-m="1,2,3,14,2,1,1,7,3,1,2,11">另一例</button>
+    <button class="preset" data-m="1,1,1,3,2,2,2,6,1,2,3,8">無唯一解</button>
+  </div>
+</div>
+
+<main>
+<div class="card">
+  <h2>📝 逐步求解（Cramer's Rule）</h2>
+  <div class="steps" id="stepsDisplay"></div>
+</div>
+
+<div class="card">
+  <h2>✅ 答案</h2>
+  <div class="result-box" id="resultDisplay"></div>
+  <div id="verifyDisplay"></div>
+</div>
+
+<div class="card">
+  <h2>💡 教學要點</h2>
+  <ul style="font-size:14.5px;line-height:1.9;margin:0;padding-left:20px">
+    <li><b>Cramer's rule：</b>對於 Ax = b，若 det(A) ≠ 0，則 xᵢ = Dᵢ / D，其中 Dᵢ 係將 A 嘅第 i 欄換成 b 嗰條 column 之後嘅 determinant。</li>
+    <li><b>3×3 determinant 計法（Sarrus）：</b>將頭兩欄抄去右邊，順斜三條乘埋相加、倒斜三條乘埋相減。上面 Step 1 有詳細展開。</li>
+    <li><b>幾時用唔到：</b>D = 0 即係三個平面唔交於唯一一點（平行／交成線／重合），Cramer's rule 無唯一解，要用其他方法分析。</li>
+    <li><b>分數答案：</b>Dᵢ 同 D 都係整數（係數係整數嗰陣），所以答案一定係分數形式，唔使撳計數機出小數。</li>
+  </ul>
+</div>
+</main>
+
+<script>
+// ===== Fraction helpers =====
+function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ [a,b]=[b,a%b]; } return a||1; }
+function toFrac(x, maxDen=1000){
+  if(!isFinite(x)) return [x,1];
+  const neg = x < 0; x = Math.abs(x);
+  let bestN=0, bestD=1, bestErr=Infinity;
+  for(let d=1; d<=maxDen; d++){
+    const n = Math.round(x*d);
+    const err = Math.abs(x - n/d);
+    if(err < bestErr){ bestErr=err; bestN=n; bestD=d; }
+    if(err < 1e-9) break;
+  }
+  const g = gcd(bestN,bestD);
+  return [(neg?-1:1)*bestN/g, bestD/g];
+}
+function fracLatex(x){
+  if(typeof x !== 'number' || isNaN(x) || !isFinite(x)) return '?';
+  const [n,d] = toFrac(x);
+  if(d===1) return n.toString();
+  if(n===0) return "0";
+  return `\\frac{${n}}{${d}}`;
+}
+
+// ===== Symbolic entry parsing (Leo: 容許 a,b,c,k,h 等 unknown constants) =====
+// Entry → {coef:number, sym:string}. e.g. "2a"→{2,"a"}, "-k"→{-1,"k"}, "5"→{5,""}, "a"→{1,"a"}
+function parseEntry(s){
+  s = (s||'').toString().trim();
+  if(s==='') return {coef:0, sym:''};
+  // pure number?
+  if(/^[-+]?(\d+\.?\d*|\.\d+)$/.test(s)) return {coef:parseFloat(s), sym:''};
+  // form like [-]digits letters, e.g. "2a", "-3k", "a", "-b"
+  const m = s.match(/^([-+]?)(\d*\.?\d*)?([a-zA-Z]+)$/);
+  if(m){
+    const sign = m[1]==='-' ? -1 : 1;
+    const numPart = m[2];
+    const coef = (!numPart) ? 1 : parseFloat(numPart);
+    return {coef: sign*coef, sym: m[3]};
+  }
+  // opaque symbol (e.g. "a+b") — treat coef 1, whole string as symbol
+  return {coef:1, sym:s};
+}
+function isNumericEntry(e){ return e.sym==='' ; }
+function entryLatex(e){
+  // defensive: e must be {coef:number, sym:string}
+  if(!e || typeof e.coef !== 'number' || isNaN(e.coef)) return '?';
+  const symNorm = normalizeSym(e.sym||'');
+  if(!symNorm) return fracLatex(e.coef);
+  if(e.coef===1) return symNorm;
+  if(e.coef===-1) return '-'+symNorm;
+  return fracLatex(e.coef)+symNorm;
+}
+// multiply three entries → {coef, sym}
+function mulEntries(e1,e2,e3){
+  return {coef: e1.coef*e2.coef, sym: (e1.sym+e2.sym+e3.sym)};
+}
+function termLatex(t){
+  if(!t || typeof t.coef !== 'number' || isNaN(t.coef)) return '?';
+  const symNorm = normalizeSym(t.sym||'');
+  if(t.coef===0) return '0';
+  if(!symNorm) return fracLatex(t.coef);
+  if(t.coef===1) return symNorm;
+  if(t.coef===-1) return '-'+symNorm;
+  return fracLatex(t.coef)+symNorm;
+}
+
+// ===== 3x3 determinant (numeric) =====
+function det3(m){
+  const [[a,b,c],[d,e,f],[g,h,i]] = m;
+  return a*(e*i-f*h) - b*(d*i-f*g) + c*(d*h-e*g);
+}
+// Sarrus expansion terms for numeric display
+function sarrusTerms(m){
+  const [[a,b,c],[d,e,f],[g,h,i]] = m;
+  const pos = [[a,e,i,"aei"],[b,f,g,"bfg"],[c,d,h,"cdh"]];
+  const neg = [[c,e,g,"ceg"],[a,f,h,"afh"],[b,d,i,"bdi"]];
+  return {pos, neg};
+}
+// Sarrus expansion as LaTeX (numeric)
+function symExpLatex(m, label){
+  const [[a,b,c],[d,e,f],[g,h,i]] = m;
+  const pos = [[a,e,i],[b,f,g],[c,d,h]];
+  const neg = [[c,e,g],[a,f,h],[b,d,i]];
+  const fmtT = t => `(${fracLatex(t[0])})(${fracLatex(t[1])})(${fracLatex(t[2])})`;
+  const posStr = pos.map(fmtT).join('+');
+  const negStr = neg.map(fmtT).join('+');
+  const posVal = pos.reduce((s,t)=>s+t[0]*t[1]*t[2],0);
+  const negVal = neg.reduce((s,t)=>s+t[0]*t[1]*t[2],0);
+  const val = det3(m);
+  return `=${posStr}-(${negStr})=${fracLatex(posVal)}-(${fracLatex(negVal)})=\\mathbf{${fracLatex(val)}}`;
+}
+// Normalize symbolic string: "kk" → "k^2", "khk" → "hk^2" (sorted, with exponents)
+function normalizeSym(s){
+  if(!s) return '';
+  const counts = {};
+  s.split('').forEach(ch=>{
+    if(/[a-zA-Z]/.test(ch)) counts[ch] = (counts[ch]||0)+1;
+  });
+  return Object.keys(counts).sort().map(ch=>{
+    const n = counts[ch];
+    return n===1 ? ch : `${ch}^{${n}}`;
+  }).join('');
+}
+// For combineLikeTerms key: use normalized form
+function symKey(s){
+  if(!s) return '';
+  const counts = {};
+  s.split('').forEach(ch=>{
+    if(/[a-zA-Z]/.test(ch)) counts[ch] = (counts[ch]||0)+1;
+  });
+  return Object.keys(counts).sort().map(ch=>`${ch}:${counts[ch]}`).join(',');
+}
+function combineLikeTerms(terms){
+  const map = new Map();
+  const keyToSym = new Map();
+  terms.forEach(t => {
+    if(!t || typeof t.coef !== 'number' || isNaN(t.coef) || t.coef===0) return;
+    const key = symKey(t.sym||'');
+    map.set(key, (map.get(key)||0) + t.coef);
+    if(!keyToSym.has(key)) keyToSym.set(key, t.sym||'');
+  });
+  const result = [];
+  map.forEach((coef, key) => {
+    if(Math.abs(coef) > 1e-9) result.push({coef, sym: keyToSym.get(key)});
+  });
+  // sort: symbolic terms first (by sym), then constants
+  result.sort((a,b)=>{
+    if(a.sym==='' && b.sym!=='') return 1;
+    if(a.sym!=='' && b.sym==='') return -1;
+    return a.sym.localeCompare(b.sym);
+  });
+  return result;
+}
+// Simplify fraction of single terms: (c1*s1)/(c2*s2) → simplified LaTeX
+// e.g. 5k/10 → k/2, 6hk/4 → 3hk/2
+function simpFracTerm(num, den){
+  // num, den are {coef, sym} single terms
+  if(!num || !den || den.coef===0) return null;
+  // Cancel common symbolic parts (simple: if syms equal, cancel)
+  let nSym = num.sym || '', dSym = den.sym || '';
+  let nCoef = num.coef, dCoef = den.coef;
+  // If syms are equal, cancel them
+  if(nSym && nSym===dSym){ nSym=''; dSym=''; }
+  // Simplify numeric fraction nCoef/dCoef
+  const g = gcd(Math.round(nCoef*1000), Math.round(dCoef*1000));
+  // Actually use exact gcd for integers, approximate for decimals
+  let sn = nCoef, sd = dCoef;
+  if(Number.isInteger(nCoef) && Number.isInteger(dCoef)){
+    const gg = gcd(Math.abs(nCoef), Math.abs(dCoef));
+    sn = nCoef/gg; sd = dCoef/gg;
+  }
+  // Build LaTeX
+  const numLatex = termLatex({coef:sn, sym:nSym});
+  const denLatex = termLatex({coef:sd, sym:dSym});
+  if(sd===1 && !dSym) return numLatex;
+  if(sd===-1 && !dSym) return '-' + numLatex;
+  return `\\frac{${numLatex}}{${denLatex}}`;
+}
+function termsToLatex(terms){
+  if(!terms.length) return '0';
+  let s = '';
+  terms.forEach((t, idx)=>{
+    const tl = termLatex(t);
+    if(idx===0){ s += tl; }
+    else {
+      if(t.coef < 0) s += ' - ' + termLatex({coef:-t.coef, sym:t.sym});
+      else s += ' + ' + tl;
+    }
+  });
+  return s;
+}
+// Symbolic determinant as LaTeX expression (Sarrus expanded + simplified)
+function symDetExpr(m){
+  const [[a,b,c],[d,e,f],[g,h,i]] = m;
+  const posTerms = [mulEntries(a,e,i), mulEntries(b,f,g), mulEntries(c,d,h)];
+  const negTerms = [mulEntries(c,e,g), mulEntries(a,f,h), mulEntries(b,d,i)];
+  // unsimplified for step display
+  function joinTerms(terms){
+    let s = '';
+    terms.forEach((t,idx)=>{
+      const tl = termLatex(t);
+      if(tl==='0') return;
+      if(idx===0){ s += tl; }
+      else {
+        if(t.coef < 0){ s += ' - ' + termLatex({coef:-t.coef, sym:t.sym}); }
+        else { s += ' + ' + tl; }
+      }
+    });
+    return s || '0';
+  }
+  const posStr = joinTerms(posTerms);
+  const negStr = joinTerms(negTerms);
+  // simplified: combine all with signs
+  const allTerms = posTerms.concat(negTerms.map(t=>({coef:-t.coef, sym:t.sym})));
+  const simplified = combineLikeTerms(allTerms);
+  const simpStr = termsToLatex(simplified);
+  return {expr: `(${posStr}) - (${negStr})`, simplified, simpStr,
+          posTerms, negTerms};
+}
+
+function mat3(m){
+  return `\\begin{pmatrix}${entryLatex(m[0][0])}&${entryLatex(m[0][1])}&${entryLatex(m[0][2])}\\\\${entryLatex(m[1][0])}&${entryLatex(m[1][1])}&${entryLatex(m[1][2])}\\\\${entryLatex(m[2][0])}&${entryLatex(m[2][1])}&${entryLatex(m[2][2])}\\end{pmatrix}`;
+}
+function detLatex(m){
+  return `\\begin{vmatrix}${entryLatex(m[0][0])}&${entryLatex(m[0][1])}&${entryLatex(m[0][2])}\\\\${entryLatex(m[1][0])}&${entryLatex(m[1][1])}&${entryLatex(m[1][2])}\\\\${entryLatex(m[2][0])}&${entryLatex(m[2][1])}&${entryLatex(m[2][2])}\\end{vmatrix}`;
+}
+
+function getInputs(){
+  const v = id => parseEntry(document.getElementById(id).value);
+  return {
+    A: [[v('a11'),v('a12'),v('a13')],[v('a21'),v('a22'),v('a23')],[v('a31'),v('a32'),v('a33')]],
+    b: [v('b1'), v('b2'), v('b3')]
+  };
+}
+function allNumeric(A,b){
+  return A.flat().concat(b).every(isNumericEntry);
+}
+function toNumMatrix(A){ return A.map(row=>row.map(e=>e.coef)); }
+// Collect unique symbolic letters from entries
+function collectSymbols(A, b){
+  const set = new Set();
+  A.flat().concat(b).forEach(e => {
+    if(e.sym){
+      e.sym.split('').forEach(ch => { if(/[a-zA-Z]/.test(ch)) set.add(ch); });
+    }
+  });
+  return [...set].sort();
+}
+function whereClause(symbols){
+  if(!symbols.length) return '';
+  if(symbols.length===1) return `, \\text{ where } ${symbols[0]} \\text{ is real}`;
+  return `, \\text{ where } ${symbols.join(', ')} \\text{ are real}`;
+}
+// Substitute a numeric value for a symbolic variable in entries
+function substEntry(e, varName, val){
+  if(!e.sym) return e.coef;
+  // Simple: if sym is exactly varName, replace; if sym contains varName with coef, handle
+  // For now: only handle single-letter sym matching varName
+  if(e.sym === varName) return e.coef * val;
+  // If sym is like "ab" and varName is "a", can't substitute simply — return NaN to indicate
+  return NaN;
+}
+function substMatrix(A, b, varName, val){
+  const An = A.map(row => row.map(e => {
+    if(!e.sym) return e.coef;
+    if(e.sym === varName) return e.coef * val;
+    return NaN; // can't handle multi-letter
+  }));
+  const bn = b.map(e => {
+    if(!e.sym) return e.coef;
+    if(e.sym === varName) return e.coef * val;
+    return NaN;
+  });
+  if(An.flat().concat(bn).some(isNaN)) return null;
+  return {A: An, b: bn};
+}
+// Gaussian elimination: returns {type: 'unique'|'infinite'|'none', solution}
+// solution for infinite: {particular, basis} or parametric expressions
+function rowReduce(A, b){
+  const n = 3;
+  // Augmented matrix
+  let M = A.map((row,i)=>[...row, b[i]]);
+  const pivots = [];
+  let r = 0;
+  for(let c=0; c<n && r<n; c++){
+    // Find pivot
+    let pr = -1;
+    for(let i=r; i<n; i++) if(Math.abs(M[i][c])>1e-9){ pr=i; break; }
+    if(pr===-1) continue;
+    [M[r], M[pr]] = [M[pr], M[r]];
+    // Normalize
+    const div = M[r][c];
+    for(let j=c; j<=n; j++) M[r][j] /= div;
+    // Eliminate other rows
+    for(let i=0; i<n; i++){
+      if(i!==r && Math.abs(M[i][c])>1e-9){
+        const f = M[i][c];
+        for(let j=c; j<=n; j++) M[i][j] -= f*M[r][j];
+      }
+    }
+    pivots.push(c);
+    r++;
+  }
+  // Check inconsistency: 0 = non-zero
+  for(let i=0; i<n; i++){
+    if(M[i].slice(0,n).every(v=>Math.abs(v)<1e-9) && Math.abs(M[i][n])>1e-9)
+      return {type:'none'};
+  }
+  if(pivots.length===n) {
+    // Unique: read solution
+    const sol = [0,0,0];
+    pivots.forEach((c,i)=>{ sol[c]=M[i][n]; });
+    return {type:'unique', solution:sol};
+  }
+  // Infinite: parametric
+  const freeVars = [0,1,2].filter(c=>!pivots.includes(c));
+  return {type:'infinite', rref:M, pivots, freeVars};
+}
+// Returns LaTeX string like "k \\neq \\frac{7}{3}" or null if can't determine
+function uniqueCondition(simplified){
+  // Case: single variable linear, e.g. [{-3,'k'},{7,''}] → -3k+7 ≠ 0 → k ≠ 7/3
+  if(simplified.length===2){
+    const varTerm = simplified.find(t=>t.sym!=='');
+    const constTerm = simplified.find(t=>t.sym==='');
+    if(varTerm && constTerm && /^[a-zA-Z]$/.test(varTerm.sym)){
+      // ak + b ≠ 0 → k ≠ -b/a
+      const a = varTerm.coef, b = constTerm.coef, v = varTerm.sym;
+      const val = -b/a;
+      return `${v} \\neq ${fracLatex(val)}`;
+    }
+  }
+  // Case: single term, e.g. [{5,'k'}] → 5k ≠ 0 → k ≠ 0
+  if(simplified.length===1 && simplified[0].sym && /^[a-zA-Z]$/.test(simplified[0].sym)){
+    return `${simplified[0].sym} \\neq 0`;
+  }
+  return null;
+}
+
+function detStepHtml(m, label, numeric){
+  if(numeric){
+    const val = det3(m);
+    return `<b>${label} = </b><span id="${label}det"></span><br><span id="${label}exp"></span>
+      <div class="det-steps">Sarrus：順斜 aei、bfg、cdh 相加；倒斜 ceg、afh、bdi 相減</div>`;
+  } else {
+    // Symbolic Sarrus expansion — 用 KaTeX render
+    return `<b>${label} = </b><span id="${label}det"></span><br><span id="${label}exp"></span>
+      <div class="det-steps">Sarrus 展開（symbolic）：每項係三個 entry 相乘</div>
+      ${label==='D' ? '<div class="note" style="margin-top:8px"><b>📌 唯一解條件：</b><span id="uniqueCond"></span></div><div id="dZeroAnalysis"></div>' : ''}`;
+  }
+}
+
+function calculate(){
+  const {A, b} = getInputs();
+  const el = document.getElementById('stepsDisplay');
+  const numeric = allNumeric(A, b);
+
+  let html = '';
+  // Step 1: D — numeric 用數字矩陣，symbolic 用 entry objects
+  const A_for_det = numeric ? toNumMatrix(A) : A;
+  html += `<div class="step"><b>Step 1：計 D = det(A)</b><br>${detStepHtml(A_for_det,'D',numeric)}</div>`;
+
+  if(numeric){
+    const An = toNumMatrix(A);
+    const D = det3(An);
+    if(Math.abs(D) < 1e-9){
+      const bn0 = b.map(e=>e.coef);
+      const rr = rowReduce(An, bn0);
+      html += `<div class="step red"><b>⛔ D = 0</b> — Cramer's rule 用唔到，無唯一解。</div>`;
+      if(rr.type==='none'){
+        html += `<div class="step red"><b>無解</b>（inconsistent）：row reduction 出現 $0 = c \\neq 0$，三個平面無公共交點。<br><span id="d0detail"></span></div>`;
+      } else if(rr.type==='infinite'){
+        html += `<div class="step green"><b>♾️ 無限多解</b>：有 free variables，解係一條線或一個平面。<br><span id="d0detail"></span></div>`;
+      }
+      el.innerHTML = html;
+      katex.render(`D=${detLatex(A)}=0`, document.getElementById('Ddet'), {throwOnError:false});
+      katex.render(symExpLatex(An,'D'), document.getElementById('Dexp'), {throwOnError:false});
+      if(rr.type==='none'){
+        katex.render(`\\text{Row echelon form gives } 0 = c \\neq 0 \\Rightarrow \\text{ no solution.}`, document.getElementById('d0detail'), {throwOnError:false});
+        document.getElementById('resultDisplay').innerHTML = '⛔ 無解（inconsistent system）';
+      } else if(rr.type==='infinite'){
+        // Parametric solution with s, t, u
+        const varNames = ['x','y','z'];
+        const paramNames = ['s','t','u'];
+        const freeVars = rr.freeVars, pivots = rr.pivots, M = rr.rref;
+        let solLatex = '\\begin{aligned}';
+        pivots.forEach((c, i)=>{
+          const row = M[i];
+          let expr = fracLatex(row[3]);
+          freeVars.forEach(f=>{
+            const coef = -row[f];
+            if(Math.abs(coef)>1e-9){
+              const t = freeVars.indexOf(f);
+              const param = paramNames[t]||`t_${t+1}`;
+              if(coef>0) expr += `+${fracLatex(coef)}${param}`;
+              else expr += `-${fracLatex(-coef)}${param}`;
+            }
+          });
+          solLatex += `${varNames[c]}&=${expr}\\\\`;
+        });
+        freeVars.forEach((f,i)=>{
+          solLatex += `${varNames[f]}&=${paramNames[i]||`t_${i+1}`}\\\\`;
+        });
+        solLatex += '\\end{aligned}';
+        const tDesc = freeVars.map((f,i)=>`${paramNames[i]||`t_${i+1}`} \\in \\mathbb{R}`).join(',\\; ');
+        katex.render(`${solLatex}\\text{where } ${tDesc}`, document.getElementById('d0detail'), {throwOnError:false});
+        document.getElementById('resultDisplay').innerHTML = `<span id="resK0"></span>`;
+        katex.render(`\\boxed{${solLatex.slice(15,-11)}\\text{, } ${tDesc}}`, document.getElementById('resK0'), {throwOnError:false});
+      }
+      document.getElementById('verifyDisplay').innerHTML = '';
+      return;
+    }
+    const bn = b.map(e=>e.coef);
+    const Ax = [[bn[0],An[0][1],An[0][2]],[bn[1],An[1][1],An[1][2]],[bn[2],An[2][1],An[2][2]]];
+    const Ay = [[An[0][0],bn[0],An[0][2]],[An[1][0],bn[1],An[1][2]],[An[2][0],bn[2],An[2][2]]];
+    const Az = [[An[0][0],An[0][1],bn[0]],[An[1][0],An[1][1],bn[1]],[An[2][0],An[2][1],bn[2]]];
+    const Dx = det3(Ax), Dy = det3(Ay), Dz = det3(Az);
+
+    html += `<div class="step green"><b>Step 2：計 D<sub>x</sub></b>（第 1 欄換成常數項）<br>${detStepHtml(Ax,'Dx',true)}</div>`;
+    html += `<div class="step green"><b>Step 3：計 D<sub>y</sub></b>（第 2 欄換成常數項）<br>${detStepHtml(Ay,'Dy',true)}</div>`;
+    html += `<div class="step green"><b>Step 4：計 D<sub>z</sub></b>（第 3 欄換成常數項）<br>${detStepHtml(Az,'Dz',true)}</div>`;
+
+    const x = Dx/D, y = Dy/D, z = Dz/D;
+    html += `<div class="step amber"><b>Step 5：x = D<sub>x</sub>/D，y = D<sub>y</sub>/D，z = D<sub>z</sub>/D</b><br><span id="s5"></span></div>`;
+
+    el.innerHTML = html;
+    katex.render(`D=${detLatex(A)}`, document.getElementById('Ddet'), {throwOnError:false});
+    katex.render(`D_x=${detLatex(Ax.map(r=>r.map(v=>({coef:v,sym:''}))))}`, document.getElementById('Dxdet'), {throwOnError:false});
+    katex.render(`D_y=${detLatex(Ay.map(r=>r.map(v=>({coef:v,sym:''}))))}`, document.getElementById('Dydet'), {throwOnError:false});
+    katex.render(`D_z=${detLatex(Az.map(r=>r.map(v=>({coef:v,sym:''}))))}`, document.getElementById('Dzdet'), {throwOnError:false});
+    // Render Sarrus expansions in LaTeX
+    katex.render(symExpLatex(An,'D'), document.getElementById('Dexp'), {throwOnError:false});
+    katex.render(symExpLatex(Ax,'D_x'), document.getElementById('Dxexp'), {throwOnError:false});
+    katex.render(symExpLatex(Ay,'D_y'), document.getElementById('Dyexp'), {throwOnError:false});
+    katex.render(symExpLatex(Az,'D_z'), document.getElementById('Dzexp'), {throwOnError:false});
+    katex.render(`\\begin{aligned}x&=\\frac{D_x}{D}=\\frac{${fracLatex(Dx)}}{${fracLatex(D)}}=\\mathbf{${fracLatex(x)}}\\\\y&=\\frac{D_y}{D}=\\frac{${fracLatex(Dy)}}{${fracLatex(D)}}=\\mathbf{${fracLatex(y)}}\\\\z&=\\frac{D_z}{D}=\\frac{${fracLatex(Dz)}}{${fracLatex(D)}}=\\mathbf{${fracLatex(z)}}\\end{aligned}`, document.getElementById('s5'), {throwOnError:false});
+
+    const res = document.getElementById('resultDisplay');
+    res.innerHTML = `<span id="resK"></span>`;
+    katex.render(`\\boxed{\\begin{aligned}x&=${fracLatex(x)}\\\\y&=${fracLatex(y)}\\\\z&=${fracLatex(z)}\\end{aligned}}`, document.getElementById('resK'), {throwOnError:false});
+
+    const v = document.getElementById('verifyDisplay');
+    v.innerHTML = `<div class="note"><b>✅ 驗算</b>（代返入三條方程）：<br><span id="vK"></span></div>`;
+    const chk = [0,1,2].map(i => An[i][0]*x + An[i][1]*y + An[i][2]*z);
+    katex.render(
+      `\\begin{aligned}` +
+      `(${fracLatex(An[0][0])})(${fracLatex(x)})+(${fracLatex(An[0][1])})(${fracLatex(y)})+(${fracLatex(An[0][2])})(${fracLatex(z)})&=${fracLatex(chk[0])}\\checkmark\\\\` +
+      `(${fracLatex(An[1][0])})(${fracLatex(x)})+(${fracLatex(An[1][1])})(${fracLatex(y)})+(${fracLatex(An[1][2])})(${fracLatex(z)})&=${fracLatex(chk[1])}\\checkmark\\\\` +
+      `(${fracLatex(An[2][0])})(${fracLatex(x)})+(${fracLatex(An[2][1])})(${fracLatex(y)})+(${fracLatex(An[2][2])})(${fracLatex(z)})&=${fracLatex(chk[2])}\\checkmark` +
+      `\\end{aligned}`,
+      document.getElementById('vK'), {throwOnError:false});
+  } else {
+    // Symbolic mode: show expansion, answer as Dx/D symbolic
+    const Ax = [[b[0],A[0][1],A[0][2]],[b[1],A[1][1],A[1][2]],[b[2],A[2][1],A[2][2]]];
+    const Ay = [[A[0][0],b[0],A[0][2]],[A[1][0],b[1],A[1][2]],[A[2][0],b[2],A[2][2]]];
+    const Az = [[A[0][0],A[0][1],b[0]],[A[1][0],A[1][1],b[1]],[A[2][0],A[2][1],b[2]]];
+
+    html += `<div class="step green"><b>Step 2：計 D<sub>x</sub></b>（第 1 欄換成常數項）<br>${detStepHtml(Ax,'Dx',false)}</div>`;
+    html += `<div class="step green"><b>Step 3：計 D<sub>y</sub></b>（第 2 欄換成常數項）<br>${detStepHtml(Ay,'Dy',false)}</div>`;
+    html += `<div class="step green"><b>Step 4：計 D<sub>z</sub></b>（第 3 欄換成常數項）<br>${detStepHtml(Az,'Dz',false)}</div>`;
+    html += `<div class="step amber"><b>Step 5：x = D<sub>x</sub>/D，y = D<sub>y</sub>/D，z = D<sub>z</sub>/D</b><br><span id="s5"></span><div class="det-steps">有 symbolic constants 嗰陣，答案保持分數形式，唔化簡。</div></div>`;
+
+    el.innerHTML = html;
+    katex.render(`D=${detLatex(A)}`, document.getElementById('Ddet'), {throwOnError:false});
+    katex.render(`D_x=${detLatex(Ax)}`, document.getElementById('Dxdet'), {throwOnError:false});
+    katex.render(`D_y=${detLatex(Ay)}`, document.getElementById('Dydet'), {throwOnError:false});
+    katex.render(`D_z=${detLatex(Az)}`, document.getElementById('Dzdet'), {throwOnError:false});
+    // Symbolic expansions in LaTeX (with simplified result)
+    const dInfoS = symDetExpr(A), dxInfoS = symDetExpr(Ax);
+    const dyInfoS = symDetExpr(Ay), dzInfoS = symDetExpr(Az);
+    katex.render(`=${dInfoS.expr}=\\mathbf{${dInfoS.simpStr}}`, document.getElementById('Dexp'), {throwOnError:false});
+    katex.render(`=${dxInfoS.expr}=\\mathbf{${dxInfoS.simpStr}}`, document.getElementById('Dxexp'), {throwOnError:false});
+    katex.render(`=${dyInfoS.expr}=\\mathbf{${dyInfoS.simpStr}}`, document.getElementById('Dyexp'), {throwOnError:false});
+    katex.render(`=${dzInfoS.expr}=\\mathbf{${dzInfoS.simpStr}}`, document.getElementById('Dzexp'), {throwOnError:false});
+    // Unique solution condition
+    const cond = uniqueCondition(dInfoS.simplified);
+    if(cond){
+      katex.render(`\\text{System has unique solution } \\iff D \\neq 0 \\iff ${cond}`, document.getElementById('uniqueCond'), {throwOnError:false});
+    } else {
+      katex.render(`\\text{System has unique solution } \\iff D \\neq 0`, document.getElementById('uniqueCond'), {throwOnError:false});
+    }
+    // D = 0 case analysis: find critical value and analyze
+    const simp = dInfoS.simplified;
+    let dZeroHtml = '';
+    if(simp.length===2){
+      const varTerm = simp.find(t=>t.sym!=='');
+      const constTerm = simp.find(t=>t.sym==='');
+      if(varTerm && constTerm && /^[a-zA-Z]$/.test(varTerm.sym)){
+        const a = varTerm.coef, bb = constTerm.coef, v = varTerm.sym;
+        const k0 = -bb/a;
+        const sub = substMatrix(A, b, v, k0);
+        if(sub){
+          const rr = rowReduce(sub.A, sub.b);
+          const k0Latex = fracLatex(k0);
+          if(rr.type==='none'){
+            dZeroHtml = `<div class="warn" style="margin-top:8px"><b>⛔ 當 $${v} = ${k0Latex}$（D = 0）：無解</b>（inconsistent system）<br><span id="dZeroDetail"></span></div>`;
+            window._dZeroType = 'none';
+          } else if(rr.type==='infinite'){
+            dZeroHtml = `<div class="note" style="margin-top:8px"><b>♾️ 當 $${v} = ${k0Latex}$（D = 0）：無限多解</b><br><span id="dZeroDetail"></span></div>`;
+            window._dZeroType = 'infinite';
+            window._dZeroRR = rr;
+          }
+          window._dZeroK0 = k0Latex; window._dZeroVar = v;
+        }
+      }
+    }
+    document.getElementById('dZeroAnalysis').innerHTML = dZeroHtml;
+    // Render D=0 details
+    if(window._dZeroType==='none'){
+      katex.render(`\\text{Row reduction gives } 0 = c \\neq 0 \\text{ — inconsistent, no solution.}`, document.getElementById('dZeroDetail'), {throwOnError:false});
+    } else if(window._dZeroType==='infinite' && window._dZeroRR){
+      const rr = window._dZeroRR;
+      const varNames = ['x','y','z'];
+      // Build parametric solution from RREF (using s, t, u)
+      let solLatex = '\\begin{aligned}';
+      const freeVars = rr.freeVars;
+      const pivots = rr.pivots;
+      const M = rr.rref;
+      const paramNames = ['s','t','u'];
+      // For each pivot var, express in terms of free vars
+      pivots.forEach((c, i)=>{
+        const row = M[i];
+        let expr = fracLatex(row[3]); // constant
+        freeVars.forEach(f=>{
+          const coef = -row[f];
+          if(Math.abs(coef)>1e-9){
+            const t = freeVars.indexOf(f);
+            const param = paramNames[t] || `t_${t+1}`;
+            if(coef>0) expr += `+${fracLatex(coef)}${param}`;
+            else expr += `-${fracLatex(-coef)}${param}`;
+          }
+        });
+        solLatex += `${varNames[c]}&=${expr}\\\\`;
+      });
+      freeVars.forEach((f,i)=>{
+        solLatex += `${varNames[f]}&=${paramNames[i]||`t_${i+1}`}\\\\`;
+      });
+      solLatex += `\\end{aligned}`;
+      const tDesc = freeVars.map((f,i)=>`${paramNames[i]||`t_${i+1}`} \\in \\mathbb{R}`).join(',\\; ');
+      katex.render(`${solLatex}\\text{where } ${tDesc}`, document.getElementById('dZeroDetail'), {throwOnError:false});
+    }
+
+    // Build LaTeX answers: x = Dx/D, y = Dy/D, z = Dz/D (3 lines, simplified)
+    // Try single-term fraction simplification first (e.g. 5k/10 → k/2)
+    function ansLatex(numInfo, denInfo){
+      if(numInfo.simplified.length===1 && denInfo.simplified.length===1){
+        const s = simpFracTerm(numInfo.simplified[0], denInfo.simplified[0]);
+        if(s) return s;
+      }
+      return `\\frac{${termsToLatex(numInfo.simplified)}}{${termsToLatex(denInfo.simplified)}}`;
+    }
+    const dInfo = symDetExpr(A);
+    const dxInfo = symDetExpr(Ax);
+    const dyInfo = symDetExpr(Ay);
+    const dzInfo = symDetExpr(Az);
+    const xAns = ansLatex(dxInfo, dInfo);
+    const yAns = ansLatex(dyInfo, dInfo);
+    const zAns = ansLatex(dzInfo, dInfo);
+    katex.render(`\\begin{aligned}x&=\\frac{D_x}{D}=${xAns}\\\\y&=\\frac{D_y}{D}=${yAns}\\\\z&=\\frac{D_z}{D}=${zAns}\\end{aligned}`, document.getElementById('s5'), {throwOnError:false});
+
+    document.getElementById('resultDisplay').innerHTML =
+      `<div class="note">🔤 <b>Symbolic mode</b>：係數含字母，答案用 LaTeX 分數顯示：<br><span id="resK"></span></div>`;
+    const symbols = collectSymbols(A, b);
+    const where = whereClause(symbols);
+    katex.render(`\\boxed{\\begin{aligned}x&=${xAns}\\\\y&=${yAns}\\\\z&=${zAns}\\end{aligned}${where}}`, document.getElementById('resK'), {throwOnError:false});
+    document.getElementById('verifyDisplay').innerHTML = '';
+  }
+}
+
+// Events
+document.getElementById('calcBtn').onclick = calculate;
+document.querySelectorAll('.preset').forEach(btn => {
+  btn.onclick = () => {
+    const m = btn.dataset.m.split(',').map(Number);
+    const ids = ['a11','a12','a13','b1','a21','a22','a23','b2','a31','a32','a33','b3'];
+    ids.forEach((id,i) => document.getElementById(id).value = m[i]);
+    calculate();
+  };
+});
+document.querySelectorAll('#eqInput input').forEach(inp => {
+  inp.addEventListener('change', calculate);
+});
+
+// Init
+calculate();
+</script>
+</body>
+</html>
