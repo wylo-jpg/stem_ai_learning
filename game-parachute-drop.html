@@ -147,7 +147,7 @@ function draw(){
   ctx.fillRect(zoneX,gy,zoneW,H-gy);
   ctx.fillStyle='rgba(255,255,255,.9)'; ctx.font='bold 14px sans-serif'; ctx.textAlign='center';
   ctx.fillText('目標區',zoneX+zoneW/2,gy+18);
-  var y=gy-(py/HH)*(gy-20);
+  var y=20+(py/HH)*(gy-20);
   ctx.strokeStyle='#e0f2fe'; ctx.lineWidth=2;
   ctx.beginPath(); ctx.moveTo(px-24,y-26); ctx.lineTo(px-8,y-6);
   ctx.moveTo(px+24,y-26); ctx.lineTo(px+8,y-6); ctx.stroke();
