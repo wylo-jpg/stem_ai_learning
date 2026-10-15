@@ -1,555 +1,279 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-<title>三角神射手 · Trigonometric Slingshot</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>三角神射手 · 先計後射</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;padding:0}
-body{
-  font-family:-apple-system,BlinkMacSystemFont,"PingFang HK","Microsoft JhengHei","Noto Sans HK",sans-serif;
-  font-size:16px;color:#fff;min-height:100vh;
-  background:linear-gradient(180deg,#1b1040 0%,#4a2a6e 35%,#b34a6e 65%,#e8805a 88%,#f7b267 100%);
-  background-attachment:fixed;
-  touch-action:manipulation;user-select:none;-webkit-user-select:none;overflow-x:hidden;
-}
-header{text-align:center;padding:14px 10px 6px}
-header h1{margin:0;font-size:26px;font-weight:900;letter-spacing:2px;
-  background:linear-gradient(90deg,#ffe259,#ffb703,#ff6b9d,#ffe259);background-size:300% 100%;
-  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
-  animation:shimmer 5s linear infinite;filter:drop-shadow(0 2px 6px rgba(0,0,0,.45))}
-@keyframes shimmer{to{background-position:300% 0}}
-header p{margin:4px 0 0;font-size:13px;color:#ffe9c9;opacity:.9;letter-spacing:4px}
-.back{display:block;text-align:center;color:#fff;text-decoration:none;padding:12px;font-size:16px;font-weight:700;
-  background:rgba(255,255,255,.12);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-  border-top:1px solid rgba(255,255,255,.25);border-bottom:1px solid rgba(255,255,255,.25)}
-.back:active{background:rgba(255,255,255,.25)}
-.wrap{max-width:600px;margin:0 auto;padding:10px 10px 26px}
-.hud{display:flex;gap:6px;margin-bottom:8px}
-.pill{flex:1;text-align:center;background:rgba(255,255,255,.14);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-  border:1px solid rgba(255,255,255,.3);border-radius:14px;padding:8px 4px;font-size:16px;font-weight:800;
-  box-shadow:0 4px 14px rgba(0,0,0,.25)}
-.pill small{display:block;font-size:11px;font-weight:500;opacity:.75;margin-top:2px}
-.qpanel{background:rgba(20,10,40,.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-  border:1px solid rgba(255,255,255,.28);border-radius:18px;padding:12px 14px;margin-bottom:8px;
-  box-shadow:0 8px 26px rgba(0,0,0,.35)}
-.qtext{font-size:16px;line-height:1.8;color:#fff8e7;margin-bottom:8px}
-.qtext b{color:#ffe259}
-.qrow{display:flex;gap:10px;align-items:center}
-.trisvg{flex:1.2;min-width:0}
-.aimbox{flex:1;text-align:center;background:rgba(255,225,89,.10);border:2px dashed #ffe259;border-radius:14px;
-  padding:10px 6px;min-width:110px}
-.aimbox .al{font-size:13px;color:#ffeeb0;font-weight:700}
-.aimbox .ad{font-size:44px;font-weight:900;color:#ffe259;line-height:1.1;text-shadow:0 2px 10px rgba(255,180,60,.6)}
-.aimbox .ah{font-size:12px;opacity:.75;margin-top:2px}
-.concept{background:rgba(95,251,200,.10);border:1px solid rgba(95,251,200,.45);border-radius:12px;
-  padding:9px 12px;margin-top:10px;font-size:13.5px;color:#d8fff1;line-height:1.7}
-.sol{margin-top:10px;background:rgba(255,225,89,.12);border:2px solid #ffe259;border-radius:14px;padding:12px 14px;
-  animation:pop .3s cubic-bezier(.2,1.4,.4,1)}
-@keyframes pop{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
-.sol h3{margin:0 0 6px;font-size:18px}
-.sol ol{margin:6px 0 10px;padding-left:22px;font-size:14.5px;line-height:1.9;color:#fff3d6}
-.sol .ansline{font-size:17px;font-weight:900;color:#ffe259;margin-bottom:4px}
-.nextbtn{width:100%;min-height:56px;font-size:19px;font-weight:900;font-family:inherit;color:#4a2500;
-  background:linear-gradient(160deg,#ffe259,#ffa751);border:none;border-radius:14px;cursor:pointer;letter-spacing:2px;
-  box-shadow:0 6px 18px rgba(255,180,60,.5)}
-.nextbtn:active{transform:scale(.97)}
-.hide{display:none!important}
-canvas{width:100%;display:block;border-radius:18px;border:1px solid rgba(255,255,255,.35);
-  box-shadow:0 8px 30px rgba(0,0,0,.4);touch-action:none;background:#2b1055}
-.hint{text-align:center;font-size:13.5px;color:#ffe9c9;opacity:.9;margin-top:8px;line-height:1.7}
-/* overlays */
-.overlay{position:fixed;inset:0;background:rgba(20,8,40,.74);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
-  display:flex;align-items:center;justify-content:center;z-index:50;padding:14px;animation:fadeIn .25s ease;overflow-y:auto}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-.card{background:linear-gradient(165deg,rgba(58,28,113,.97),rgba(150,60,90,.97));
-  border:1px solid rgba(255,255,255,.35);border-radius:22px;padding:20px;max-width:480px;width:100%;text-align:center;
-  max-height:92vh;overflow-y:auto;box-shadow:0 12px 44px rgba(0,0,0,.5);animation:pop .3s cubic-bezier(.2,1.4,.4,1)}
-.card h2{margin:0 0 8px;font-size:24px}
-.card p{font-size:15px;line-height:1.8;color:#f5e9ff;margin:8px 0}
-.card .how b{color:#ffe259}
-.pick{font-size:16px;font-weight:800;color:#ffe259;margin:10px 0 4px}
-.diffrow{display:flex;gap:8px;margin:8px 0 4px}
-.diff{flex:1;border:2px solid rgba(255,255,255,.3);border-radius:14px;padding:10px 4px;background:rgba(255,255,255,.08);
-  cursor:pointer;color:#fff;font-family:inherit;font-size:14px;line-height:1.55;min-height:92px;transition:all .15s}
-.diff .ic{font-size:26px;display:block}
-.diff b{font-size:16px}
-.diff.sel{border-color:#ffe259;background:rgba(255,225,89,.18);box-shadow:0 0 16px rgba(255,225,89,.45);transform:translateY(-2px)}
-.bigbtn{width:100%;min-height:60px;font-size:20px;font-weight:900;font-family:inherit;color:#4a2500;
-  background:linear-gradient(160deg,#ffe259,#ffa751);border:none;border-radius:16px;margin-top:10px;cursor:pointer;letter-spacing:2px;
-  box-shadow:0 6px 20px rgba(255,180,60,.5)}
-.bigbtn:active{transform:scale(.96)}
-.ghostbtn{width:100%;min-height:48px;font-size:16px;font-weight:700;font-family:inherit;color:#fff;
-  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.4);border-radius:14px;margin-top:8px;cursor:pointer}
-.ghostbtn:active{background:rgba(255,255,255,.25)}
-.stat{font-size:18px;margin:6px 0}
-.stat b{color:#ffe259}
-@media (min-width:700px){header h1{font-size:32px}.aimbox .ad{font-size:52px}}
+body{margin:0;font-family:-apple-system,"PingFang HK","Noto Sans TC","Microsoft JhengHei",sans-serif;background:linear-gradient(160deg,#0f2027,#203a43,#2c5364);color:#fff;min-height:100vh;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.wrap{max-width:560px;margin:0 auto;padding:10px 12px 20px}
+h1{font-size:20px;text-align:center;margin:8px 0 2px;text-shadow:0 2px 8px rgba(0,0,0,.4)}
+.sub{text-align:center;font-size:13px;color:#aee9ff;margin-bottom:8px}
+.hud{display:flex;gap:8px;justify-content:center;margin-bottom:8px;flex-wrap:wrap}
+.pill{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:6px 14px;font-size:14px}
+.diffbar{display:flex;gap:8px;justify-content:center;margin-bottom:10px}
+.diffbar button{flex:1;max-width:150px;padding:10px 4px;font-size:14px;border-radius:12px;border:2px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;min-height:48px}
+.diffbar button.on{background:#f59e0b;border-color:#fbbf24;color:#1a1a1a;font-weight:700}
+#qcard{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);border-radius:16px;padding:12px;margin-bottom:10px}
+#qtext{font-size:16px;line-height:1.6;margin-bottom:6px}
+#qtext b{color:#fde68a}
+.step{font-size:13px;color:#aee9ff;margin-top:4px}
+canvas{width:100%;display:block;border-radius:16px;background:linear-gradient(180deg,#1a2f4b 0%,#0d1b2e 100%);border:1px solid rgba(255,255,255,.15);touch-action:none}
+#panel{display:flex;gap:8px;margin-top:10px}
+#panel button{flex:1;padding:14px;font-size:16px;border-radius:14px;border:none;min-height:52px;font-weight:700}
+#shootBtn{background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff}
+#newBtn{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)}
+#feedback{min-height:60px;margin-top:10px;font-size:14px;line-height:1.6;background:rgba(0,0,0,.25);border-radius:12px;padding:10px;display:none}
+#feedback.show{display:block}
+#feedback .ok{color:#4ade80;font-weight:700}
+#feedback .no{color:#f87171;font-weight:700}
+#feedback .sol{color:#fde68a;margin-top:6px}
+.angleread{font-size:15px;text-align:center;margin-top:6px;color:#aee9ff}
+.angleread b{font-size:22px;color:#fde68a}
 </style>
 </head>
 <body>
-<header>
-  <h1>🏹 三角神射手</h1>
-  <p>TRIG SLINGSHOT</p>
-</header>
-<a class="back" href="games.html">← 返回遊戲列表</a>
-
 <div class="wrap">
-  <div class="hud">
-    <div class="pill">⭐ <span id="score">0</span><small>分數</small></div>
-    <div class="pill">🚩 <span id="round">1</span>/8<small>關卡</small></div>
-    <div class="pill">🐦 <span id="birds">–</span><small>雀仔</small></div>
-    <div class="pill">🏆 <span id="best">0</span><small>最佳</small></div>
-  </div>
-
-  <div class="qpanel">
-    <div class="qtext" id="qtext">揀難度開始遊戲</div>
-    <div class="qrow">
-      <div class="trisvg" id="trisvg"></div>
-      <div class="aimbox">
-        <div class="al">🎯 瞄準角度</div>
-        <div class="ad"><span id="aimDeg">45</span>°</div>
-        <div class="ah">拖曳畫面調整</div>
-      </div>
-    </div>
-    <div class="concept">💡 <b>數學概念：</b><span id="conceptMini">揀難度後開始，用三角比計出發射角！</span></div>
-    <div class="sol hide" id="solbox"></div>
-  </div>
-
-  <canvas id="cv" width="480" height="340"></canvas>
-  <div class="hint">👆 按住畫面<b>拖曳瞄準</b>，角度會實時顯示，<b>放手發射</b>！<br>每關 3 隻雀 · 命中容差 ±2° · 唔好靠估，個靶好細㗎！</div>
+<h1>🎯 三角神射手</h1>
+<div class="sub">先用三角比計出發射角 θ，再拖曳彈弓瞄準發射（±2° 命中）</div>
+<div class="hud">
+<span class="pill">第 <b id="qnum">1</b>/8 題</span>
+<span class="pill">分數 <b id="score">0</b></span>
+<span class="pill">最高 <b id="best">0</b></span>
 </div>
-
-<div class="overlay" id="startOv"><div class="card">
-  <h2>🏹 三角神射手</h2>
-  <p class="how"><b>玩法：</b>睇住直角三角形嘅已知資料，<b>計出發射角 θ</b>。<br>按住畫面<b>拖曳瞄準</b>（右邊實時顯示角度），<b>放手</b>將雀仔射出去！<br>🎯 命中容差 ±2° · 每關 3 隻雀<br>😅 射唔中會話你知正確角度＋<b>兩步詳解</b>，學識先再嚟！</p>
-  <p class="pick">揀一個難度開始：</p>
-  <div class="diffrow">
-    <button class="diff sel" data-d="easy"><span class="ic">🌱</span><b>初階</b><br>中一至中二<br>特殊角</button>
-    <button class="diff" data-d="mid"><span class="ic">🌿</span><b>中階</b><br>中三至中四<br>SOHCAHTOA</button>
-    <button class="diff" data-d="hard"><span class="ic">🌳</span><b>高階</b><br>中五至中六<br>兩步題</button>
-  </div>
-  <div class="concept">💡 <b>數學概念：</b><span id="conceptTxt"></span></div>
-  <button class="bigbtn" id="startBtn">▶ 開始遊戲</button>
-</div></div>
-
-<div class="overlay hide" id="endOv"><div class="card">
-  <h2 id="endTitle">🏆 完成！</h2>
-  <p class="stat" id="endText"></p>
-  <p class="stat">🏆 最高分：<b id="endBest"></b></p>
-  <button class="bigbtn" id="againBtn">🔁 再玩一次</button>
-  <button class="ghostbtn" id="diffBtn">🎚️ 換難度</button>
-</div></div>
-
+<div class="diffbar">
+<button data-d="easy" class="on">🌱 初階<br><small>特殊角</small></button>
+<button data-d="mid">🌿 中階<br><small>SOHCAHTOA</small></button>
+<button data-d="hard">🌳 高階<br><small>兩步計算</small></button>
+</div>
+<div id="qcard">
+<div id="qtext"></div>
+<div class="step">① 睇三角形，用三角比計出 θ　② 拖曳下面彈弓，瞄到你計出嘅角度　③ 放手發射！</div>
+</div>
+<canvas id="cv" width="520" height="380"></canvas>
+<div class="angleread">瞄準角度：<b id="aimAng">—</b>°</div>
+<div id="panel">
+<button id="shootBtn">🚀 發射</button>
+<button id="newBtn">↺ 新一局</button>
+</div>
+<div id="feedback"></div>
+</div>
 <script>
-(function(){
 "use strict";
-/* ================= 工具 ================= */
-function ri(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
-function pick(a){return a[ri(0,a.length-1)];}
-function $(id){return document.getElementById(id);}
-var RAD=Math.PI/180, DEG=180/Math.PI;
+var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+var W=cv.width,H=cv.height;
+var diff='easy',qnum=0,score=0,best=+(localStorage.getItem('trig_shooter_best')||0);
+var Q=null,aimAngle=null,bird=null,target=null,sling=null,state='aim';
+document.getElementById('best').textContent=best;
+function rnd(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t;}return a;}
 
-/* ================= 出題（零多項選擇，答案係角度） ================= */
+/* ---------- 出題 ---------- */
 function genEasy(){
-  var bank=[
-    {t:'tan θ = 1',deg:45,opp:'對邊 = 1',adj:'鄰邊 = 1',hyp:null,
-     s1:'tan θ = 對邊 ÷ 鄰邊 = 1 ÷ 1 = 1',s2:'特殊角：tan 45° = 1，所以 θ = 45°',cop:'tan',cx:1,cy:1},
-    {t:'tan θ = 1/√3',deg:30,opp:'對邊 = 1',adj:'鄰邊 = √3',hyp:null,
-     s1:'tan θ = 對邊 ÷ 鄰邊 = 1 ÷ √3',s2:'特殊角：tan 30° = 1/√3，所以 θ = 30°',cop:'tan',cx:1,cy:1.7320508075688772},
-    {t:'tan θ = √3',deg:60,opp:'對邊 = √3',adj:'鄰邊 = 1',hyp:null,
-     s1:'tan θ = 對邊 ÷ 鄰邊 = √3 ÷ 1 = √3',s2:'特殊角：tan 60° = √3，所以 θ = 60°',cop:'tan',cx:1.7320508075688772,cy:1},
-    {t:'sin θ = 1/2',deg:30,opp:'對邊 = 1',adj:null,hyp:'斜邊 = 2',
-     s1:'sin θ = 對邊 ÷ 斜邊 = 1 ÷ 2',s2:'特殊角：sin 30° = 1/2，所以 θ = 30°',cop:'sin',cx:1,cy:2},
-    {t:'sin θ = √2/2',deg:45,opp:'對邊 = √2',adj:null,hyp:'斜邊 = 2',
-     s1:'sin θ = 對邊 ÷ 斜邊 = √2 ÷ 2',s2:'特殊角：sin 45° = √2/2，所以 θ = 45°',cop:'sin',cx:1.4142135623730951,cy:2},
-    {t:'sin θ = √3/2',deg:60,opp:'對邊 = √3',adj:null,hyp:'斜邊 = 2',
-     s1:'sin θ = 對邊 ÷ 斜邊 = √3 ÷ 2',s2:'特殊角：sin 60° = √3/2，所以 θ = 60°',cop:'sin',cx:1.7320508075688772,cy:2},
-    {t:'cos θ = 1/2',deg:60,opp:null,adj:'鄰邊 = 1',hyp:'斜邊 = 2',
-     s1:'cos θ = 鄰邊 ÷ 斜邊 = 1 ÷ 2',s2:'特殊角：cos 60° = 1/2，所以 θ = 60°',cop:'cos',cx:1,cy:2},
-    {t:'cos θ = √2/2',deg:45,opp:null,adj:'鄰邊 = √2',hyp:'斜邊 = 2',
-     s1:'cos θ = 鄰邊 ÷ 斜邊 = √2 ÷ 2',s2:'特殊角：cos 45° = √2/2，所以 θ = 45°',cop:'cos',cx:1.4142135623730951,cy:2},
-    {t:'cos θ = √3/2',deg:30,opp:null,adj:'鄰邊 = √3',hyp:'斜邊 = 2',
-     s1:'cos θ = 鄰邊 ÷ 斜邊 = √3 ÷ 2',s2:'特殊角：cos 30° = √3/2，所以 θ = 30°',cop:'cos',cx:1.7320508075688772,cy:2}
-  ];
-  var b=pick(bank);
-  return {text:'直角三角形中，<b>'+b.t+'</b>，求發射角 θ。',
-    tri:{opp:b.opp,adj:b.adj,hyp:b.hyp},deg:b.deg,exact:b.deg,
-    steps:['第一步：'+b.s1,'第二步：'+b.s2],
-    chk:{op:b.cop,x:b.cx,y:b.cy,deg:b.deg}};
+  var t=rnd(0,2),tri,ans,explain;
+  if(t===0){
+    var hyp=rnd(4,10)*2,adj=hyp/2,opp=Math.round(hyp*Math.sqrt(3)/2);
+    tri={a:adj,b:opp,c:hyp};
+    ans=30;
+    explain='cos θ = 鄰邊/斜邊 = '+adj+'/'+hyp+' = 1/2，∴ θ = 30°（特殊角）';
+  }else if(t===1){
+    var leg=rnd(3,9);
+    tri={a:leg,b:leg,c:Math.round(leg*Math.sqrt(2)*10)/10};
+    ans=45;
+    explain='tan θ = 對邊/鄰邊 = '+leg+'/'+leg+' = 1，∴ θ = 45°（等腰直角三角形）';
+  }else{
+    var hyp2=rnd(4,10)*2,opp2=Math.round(hyp2*Math.sqrt(3)/2),adj2=hyp2/2;
+    tri={a:adj2,b:opp2,c:hyp2};
+    ans=60;
+    explain='sin θ = 對邊/斜邊 = '+opp2+'/'+hyp2+' = √3/2，∴ θ = 60°（特殊角）';
+  }
+  return {tri:tri,ans:ans,explain:explain,
+    q:'下圖係直角三角形，已知兩邊長。用三角比求 <b>θ</b>（特殊角）。'};
 }
 function genMid(){
-  var kind=ri(0,2);
-  if(kind===0){
-    var o=ri(3,15),a=ri(3,15),ex=Math.atan(o/a)*DEG,dg=Math.round(ex);
-    if(dg<15||dg>75)return genMid();
-    return {text:'直角三角形，<b>對邊 = '+o+'，鄰邊 = '+a+'</b>，求發射角 θ（準確至一度）。',
-      tri:{opp:'對邊 = '+o,adj:'鄰邊 = '+a,hyp:null},deg:dg,exact:ex,
-      steps:['第一步：tan θ = 對邊 ÷ 鄰邊 = '+o+' ÷ '+a+' = '+(o/a).toFixed(3),
-             '第二步：θ = arctan('+(o/a).toFixed(3)+') ≈ '+ex.toFixed(1)+'°，準確至一度得 <b>'+dg+'°</b>'],
-      chk:{op:'atan',x:o,y:a}};
+  var t=rnd(0,2),a,b,ans,formula,explain,tri;
+  if(t===0){a=rnd(3,12);b=rnd(3,12);
+    ans=Math.round(Math.atan(b/a)*180/Math.PI);
+    formula='tan θ = 對邊/鄰邊 = '+b+'/'+a;
+    tri={a:a,b:b,c:'?'};
+  }else if(t===1){var hyp=rnd(8,20);a=rnd(3,hyp-2);
+    ans=Math.round(Math.asin(a/hyp)*180/Math.PI);
+    formula='sin θ = 對邊/斜邊 = '+a+'/'+hyp;
+    tri={a:'?',b:a,c:hyp};
+  }else{var hyp2=rnd(8,20);b=rnd(3,hyp2-2);
+    ans=Math.round(Math.acos(b/hyp2)*180/Math.PI);
+    formula='cos θ = 鄰邊/斜邊 = '+b+'/'+hyp2;
+    tri={a:b,b:'?',c:hyp2};
   }
-  if(kind===1){
-    var o2=ri(3,12),h2=o2+ri(2,10),ex2=Math.asin(o2/h2)*DEG,dg2=Math.round(ex2);
-    if(dg2<15||dg2>75)return genMid();
-    return {text:'直角三角形，<b>對邊 = '+o2+'，斜邊 = '+h2+'</b>，求發射角 θ（準確至一度）。',
-      tri:{opp:'對邊 = '+o2,adj:null,hyp:'斜邊 = '+h2},deg:dg2,exact:ex2,
-      steps:['第一步：sin θ = 對邊 ÷ 斜邊 = '+o2+' ÷ '+h2+' = '+(o2/h2).toFixed(3),
-             '第二步：θ = arcsin('+(o2/h2).toFixed(3)+') ≈ '+ex2.toFixed(1)+'°，準確至一度得 <b>'+dg2+'°</b>'],
-      chk:{op:'asin',x:o2,y:h2}};
-  }
-  var a3=ri(3,12),h3=a3+ri(2,10),ex3=Math.acos(a3/h3)*DEG,dg3=Math.round(ex3);
-  if(dg3<15||dg3>75)return genMid();
-  return {text:'直角三角形，<b>鄰邊 = '+a3+'，斜邊 = '+h3+'</b>，求發射角 θ（準確至一度）。',
-    tri:{opp:null,adj:'鄰邊 = '+a3,hyp:'斜邊 = '+h3},deg:dg3,exact:ex3,
-    steps:['第一步：cos θ = 鄰邊 ÷ 斜邊 = '+a3+' ÷ '+h3+' = '+(a3/h3).toFixed(3),
-           '第二步：θ = arccos('+(a3/h3).toFixed(3)+') ≈ '+ex3.toFixed(1)+'°，準確至一度得 <b>'+dg3+'°</b>'],
-    chk:{op:'acos',x:a3,y:h3}};
+  explain=formula+'<br>θ = '+ans+'°（準確至最接近的度數）';
+  return {tri:tri,ans:ans,explain:explain,
+    q:'已知兩邊長，用 <b>SOHCAHTOA</b> 求 <b>θ</b>（準確至最接近的度數）。'};
 }
 function genHard(){
-  if(Math.random()<0.5){
-    var triples=[[5,12,13],[6,8,10],[8,15,17],[7,24,25],[9,12,15],[20,21,29],[9,40,41],[12,35,37]];
-    var t=pick(triples),k=ri(1,2),A=t[0]*k,B=t[1]*k,C=t[2]*k;
-    if(ri(0,1)===0){
-      var ex=Math.atan(A/B)*DEG,dg=Math.round(ex);
-      return {text:'直角三角形，<b>斜邊 = '+C+'，對邊 = '+A+'</b>。<br>第一步：先用畢氏定理求鄰邊；第二步：再求發射角 θ（準確至一度）。',
-        tri:{opp:'對邊 = '+A,adj:'鄰邊 = ?',hyp:'斜邊 = '+C},deg:dg,exact:ex,
-        steps:['第一步（畢氏定理）：鄰邊 = √('+C+'² − '+A+'²) = √'+(C*C-A*A)+' = '+B,
-               '第二步：tan θ = '+A+' ÷ '+B+' = '+(A/B).toFixed(3)+'，θ ≈ '+ex.toFixed(1)+'°，準確至一度得 <b>'+dg+'°</b>'],
-        chk:{op:'atan',x:A,y:B}};
-    }
-    var ex2=Math.asin(A/C)*DEG,dg2=Math.round(ex2);
-    return {text:'直角三角形，<b>對邊 = '+A+'，鄰邊 = '+B+'</b>。<br>第一步：先用畢氏定理求斜邊；第二步：再求發射角 θ（準確至一度）。',
-      tri:{opp:'對邊 = '+A,adj:'鄰邊 = '+B,hyp:'斜邊 = ?'},deg:dg2,exact:ex2,
-      steps:['第一步（畢氏定理）：斜邊 = √('+A+'² + '+B+'²) = √'+(C*C)+' = '+C,
-             '第二步：sin θ = '+A+' ÷ '+C+' = '+(A/C).toFixed(3)+'，θ ≈ '+ex2.toFixed(1)+'°，準確至一度得 <b>'+dg2+'°</b>'],
-      chk:{op:'asin',x:A,y:C}};
+  var t=rnd(0,1),tri,ans,explain;
+  if(t===0){
+    var adj=rnd(5,12),opp=rnd(5,12);
+    var hyp=Math.sqrt(adj*adj+opp*opp);
+    ans=Math.round(Math.atan(opp/adj)*180/Math.PI);
+    tri={a:adj,b:'?',c:Math.round(hyp*10)/10};
+    explain='第一步：畢氏定理求對邊 = √('+Math.round(hyp*10)/10+'² − '+adj+'²) = '+opp+'<br>第二步：tan θ = '+opp+'/'+adj+'，θ = '+ans+'°';
+  }else{
+    var dist=rnd(20,50),h=rnd(10,30);
+    ans=Math.round(Math.atan(h/dist)*180/Math.PI);
+    tri={a:dist,b:h,c:'?'};
+    explain='仰角 θ：tan θ = 高/水平距離 = '+h+'/'+dist+'<br>θ = '+ans+'°（準確至最接近的度數）';
   }
-  var wps=[
-    {story:'小明企喺離旗桿座 <b>12 米</b>嘅地方，用 <b>13 米</b>長嘅測繩拉直指向桿頂。',
-     tri:{opp:'旗桿 = ?',adj:'12 米',hyp:'13 米'},
-     s1:'第一步（畢氏定理）：旗桿高 = √(13² − 12²) = √25 = 5（米）',
-     op:'asin',x:5,y:13,pre:'第二步：sin θ = 5 ÷ 13 = '},
-    {story:'熱氣球喺 <b>20 米</b>高空，你企喺離氣球正下方 <b>21 米</b>嘅地方。',
-     tri:{opp:'20 米',adj:'21 米',hyp:'視線 = ?'},
-     s1:'第一步（畢氏定理）：視線距離 = √(20² + 21²) = √841 = 29（米）',
-     op:'asin',x:20,y:29,pre:'第二步：sin θ = 20 ÷ 29 = '},
-    {story:'你企喺 <b>40 米</b>高嘅懸崖頂，見到海面有隻船，視線距離 <b>50 米</b>。',
-     tri:{opp:'40 米',adj:'船距 = ?',hyp:'50 米'},
-     s1:'第一步（畢氏定理）：船離崖底 = √(50² − 40²) = √900 = 30（米）',
-     op:'asin',x:40,y:50,pre:'第二步：sin θ = 40 ÷ 50 = '},
-    {story:'一條 <b>10 米</b>長嘅梯靠喺牆上，梯腳離牆 <b>6 米</b>。',
-     tri:{opp:'梯頂 = ?',adj:'6 米',hyp:'10 米'},
-     s1:'第一步（畢氏定理）：梯頂高 = √(10² − 6²) = √64 = 8（米）',
-     op:'acos',x:6,y:10,pre:'第二步：cos θ = 6 ÷ 10 = '}
-  ];
-  var w=pick(wps);
-  var ex3=(w.op==='asin'?Math.asin(w.x/w.y):Math.acos(w.x/w.y))*DEG,dg3=Math.round(ex3);
-  return {text:w.story+'<br>第一步：先求未知嗰條邊；第二步：再求<b>仰角／俯角／夾角 θ</b>（準確至一度）。',
-    tri:w.tri,deg:dg3,exact:ex3,
-    steps:[w.s1,w.pre+(w.x/w.y).toFixed(3)+'，θ ≈ '+ex3.toFixed(1)+'°，準確至一度得 <b>'+dg3+'°</b>'],
-    chk:{op:w.op,x:w.x,y:w.y}};
+  return {tri:tri,ans:ans,explain:explain,
+    q:t===0?'兩步計算：先求未知邊長，再求 <b>θ</b>。':'應用題：由地面望向塔頂，求<b>仰角 θ</b>。'};
+}
+function genQ(){
+  if(diff==='easy')return genEasy();
+  if(diff==='mid')return genMid();
+  return genHard();
 }
 
-/* ================= 三角形示意圖 ================= */
-function triSVG(tri){
-  var s='<svg viewBox="0 0 260 152" style="width:100%;max-width:250px;display:block;margin:0 auto" aria-hidden="true">';
-  s+='<polygon points="20,126 170,126 170,36" fill="rgba(255,225,89,.10)" stroke="#ffe259" stroke-width="3" stroke-linejoin="round"/>';
-  s+='<rect x="156" y="112" width="14" height="14" fill="none" stroke="#ffffff" stroke-width="2"/>';
-  s+='<path d="M 44 126 A 24 24 0 0 0 40.6 113.6" fill="none" stroke="#5ffbc8" stroke-width="3"/>';
-  s+='<text x="50" y="118" font-size="16" fill="#5ffbc8" font-weight="bold">θ</text>';
-  if(tri.opp)s+='<text x="178" y="86" font-size="13.5" fill="#ffffff" font-weight="bold">'+tri.opp+'</text>';
-  if(tri.adj)s+='<text x="95" y="146" font-size="13.5" fill="#ffffff" font-weight="bold" text-anchor="middle">'+tri.adj+'</text>';
-  if(tri.hyp)s+='<text x="95" y="66" font-size="13.5" fill="#ffffff" font-weight="bold" text-anchor="middle">'+tri.hyp+'</text>';
-  s+='</svg>';
-  return s;
-}
-
-/* ================= 音效 ================= */
-var AC=null;
-function tone(f,d,type,g){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
-  var o=AC.createOscillator(),ga=AC.createGain();o.type=type||'sine';o.frequency.value=f;
-  ga.gain.setValueAtTime(g||0.1,AC.currentTime);ga.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+d);
-  o.connect(ga);ga.connect(AC.destination);o.start();o.stop(AC.currentTime+d);}catch(e){}}
-function sndLaunch(){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
-  var o=AC.createOscillator(),g=AC.createGain();o.type='triangle';
-  o.frequency.setValueAtTime(280,AC.currentTime);o.frequency.exponentialRampToValueAtTime(920,AC.currentTime+0.18);
-  g.gain.setValueAtTime(0.12,AC.currentTime);g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+0.25);
-  o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+0.25);}catch(e){}}
-function sndHit(){tone(660,0.12,'triangle');setTimeout(function(){tone(880,0.16,'triangle');},110);setTimeout(function(){tone(1320,0.22,'triangle');},220);}
-function sndMiss(){tone(170,0.3,'sawtooth',0.07);}
-
-/* ================= 遊戲狀態（開頭全部初始化） ================= */
-var cv=$('cv'),ctx=cv.getContext('2d');
-var W=480,H=340;
-var F={x:70,y:236};            /* 彈弓叉口：雀仔起點 */
-var R=235,TOL=2,TOTAL=8;
-var DIFFS={
-  easy:{key:'trigsling_best_easy'},
-  mid:{key:'trigsling_best_mid'},
-  hard:{key:'trigsling_best_hard'}
-};
-var diff='easy',started=false,phase='idle';
-var round=1,birds=3,score=0,best=0,q=null;
-var aimDeg=45,aiming=false;
-var bird=null,parts=[],floats=[],shakeT=0,targetGone=false;
-var lastT=0;
-
-/* ================= 流程 ================= */
-function loadBest(){try{best=parseInt(localStorage.getItem(DIFFS[diff].key)||'0',10)||0;}catch(e){best=0;}}
-function saveBest(){if(score>best){best=score;try{localStorage.setItem(DIFFS[diff].key,String(best));}catch(e){}}}
-function updHud(){
-  $('score').textContent=score;
-  $('round').textContent=Math.min(round,TOTAL);
-  $('birds').textContent=birds>0?'🐦'.repeat(birds):'–';
-  $('best').textContent=best;
-}
-function newGame(){
-  score=0;round=1;loadBest();
-  $('endOv').classList.add('hide');
-  $('startOv').classList.add('hide');
-  started=true;
-  newRound();
-}
-function newRound(){
-  q=diff==='easy'?genEasy():(diff==='mid'?genMid():genHard());
-  birds=3;phase='aim';aimDeg=45;aiming=false;
-  bird=null;parts=[];floats=[];targetGone=false;
-  $('qtext').innerHTML=q.text;
-  $('trisvg').innerHTML=triSVG(q.tri);
-  $('solbox').classList.add('hide');
-  $('aimDeg').textContent='45';
-  updHud();
-}
-function nextRound(){
-  round++;
-  if(round>TOTAL){gameOver();return;}
-  newRound();
-}
-function gameOver(){
-  phase='over';saveBest();
-  $('endTitle').textContent='🏆 完成 8 關！';
-  $('endText').innerHTML='總分 <b>'+score+'</b> 分';
-  $('endBest').textContent=best;
-  $('endOv').classList.remove('hide');
-  tone(523,0.15,'triangle');setTimeout(function(){tone(784,0.2,'triangle');},150);
-}
-function showSol(win){
-  var box=$('solbox');
-  var h=win
-    ?'<h3>🎯 命中！正確角度：'+q.deg+'°</h3>'
-    :'<h3>😅 3 隻雀用晒！正確角度：'+q.deg+'°</h3>';
-  h+='<div class="ansline">📐 兩步詳解：</div><ol><li>'+q.steps[0]+'</li><li>'+q.steps[1]+'</li></ol>';
-  h+='<button class="nextbtn" id="nextBtn">'+(round>=TOTAL?'睇成績 →':'下一關 →')+'</button>';
-  box.innerHTML=h;
-  box.classList.remove('hide');
-  $('nextBtn').addEventListener('click',function(){tone(660,0.08);nextRound();});
-}
-function doHit(){
-  targetGone=true;phase='done';
-  var tx=F.x+R*Math.cos(q.deg*RAD),ty=(F.y-52)-R*Math.sin(q.deg*RAD);
-  for(var i=0;i<26;i++){
-    var a=Math.random()*6.283,sp=60+Math.random()*220;
-    parts.push({x:tx,y:ty,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-60,life:0.9,max:0.9,
-      c:pick(['#ff6b6b','#ffe259','#ffffff','#ffa751','#5ffbc8'])});
-  }
-  var gain=[150,120,100][3-birds]||100;
-  score+=gain;
-  floats.push({x:tx,y:ty-24,txt:'+'+gain,life:1.1});
-  shakeT=7;
-  sndHit();saveBest();updHud();
-  showSol(true);
-}
-function doMiss(){
-  birds--;sndMiss();
-  if(birds<=0){phase='done';bird=null;showSol(false);}
-  else{phase='aim';bird=null;floats.push({x:F.x+60,y:F.y-70,txt:'😅 唔中！重有 '+birds+' 隻',life:1.2});}
-  updHud();
-}
-function fire(){
-  if(phase!=='aim'||!started||!q)return;
-  phase='fly';
-  var a=aimDeg*RAD;
-  bird={d:0,ang:a,hit:Math.abs(aimDeg-q.deg)<=TOL};
-  sndLaunch();
-}
-
-/* ================= 輸入：拖曳瞄準，放手發射 ================= */
-function toGame(e){var r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height};}
-function setAim(p){
-  var a=Math.atan2(-(p.y-(F.y-52)),p.x-F.x)*DEG;
-  aimDeg=Math.max(5,Math.min(85,Math.round(a)));
-  $('aimDeg').textContent=aimDeg;
-}
-cv.addEventListener('pointerdown',function(e){
-  if(!started||phase!=='aim')return;
-  e.preventDefault();aiming=true;setAim(toGame(e));
-  try{cv.setPointerCapture(e.pointerId);}catch(err){}
-});
-cv.addEventListener('pointermove',function(e){
-  if(!aiming||!started||phase!=='aim')return;
-  e.preventDefault();setAim(toGame(e));
-});
-cv.addEventListener('pointerup',function(){
-  if(!aiming)return;aiming=false;fire();
-});
-cv.addEventListener('pointercancel',function(){aiming=false;});
-cv.addEventListener('contextmenu',function(e){e.preventDefault();});
-
-/* ================= 繪圖 ================= */
-function circ(x,y,r){ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fill();}
-function drawBG(t){
-  var sky=ctx.createLinearGradient(0,0,0,H);
-  sky.addColorStop(0,'#1b1040');sky.addColorStop(0.38,'#4a2a6e');
-  sky.addColorStop(0.66,'#b34a6e');sky.addColorStop(0.88,'#e8805a');sky.addColorStop(1,'#f7b267');
-  ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
-  ctx.save();ctx.shadowColor='#ffdf9e';ctx.shadowBlur=60;
-  ctx.fillStyle='#ffe9a8';circ(392,232,30);ctx.restore();
-  ctx.fillStyle='rgba(255,233,168,.25)';circ(392,232,42);
-  ctx.fillStyle='rgba(255,255,255,.14)';
-  for(var i=0;i<3;i++){
-    var cx=((t*12+i*260)%(W+180))-90,cy=52+i*34;
-    ctx.beginPath();ctx.ellipse(cx,cy,40,11,0,0,6.2832);ctx.fill();
-    ctx.beginPath();ctx.ellipse(cx+26,cy+4,28,9,0,0,6.2832);ctx.fill();
-  }
-  ctx.fillStyle='#3a2358';
-  ctx.beginPath();ctx.moveTo(0,300);
-  for(var x=0;x<=W;x+=16)ctx.lineTo(x,300-34*Math.abs(Math.sin(x*0.018+1))-8*Math.sin(x*0.007));
-  ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill();
-  ctx.fillStyle='#2a1845';
-  ctx.beginPath();ctx.moveTo(0,322);
-  for(var x2=0;x2<=W;x2+=16)ctx.lineTo(x2,322-20*Math.abs(Math.sin(x2*0.026+3)));
-  ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill();
-  ctx.fillStyle='#241640';
-  ctx.beginPath();ctx.ellipse(F.x,F.y+52,58,20,0,0,6.2832);ctx.fill();
+/* ---------- 繪圖 ---------- */
+function drawTri(){
+  ctx.clearRect(0,0,W,H);
+  if(!Q)return;
+  var tri=Q.tri;
+  var ox=60,oy=40,w=200,h=160;
+  var Ax=ox,Ay=oy+h,Bx=ox+w,By=oy+h,Cx=ox,Cy=oy;
+  ctx.strokeStyle='#fde68a';ctx.lineWidth=4;ctx.lineJoin='round';
+  ctx.beginPath();ctx.moveTo(Ax,Ay);ctx.lineTo(Bx,By);ctx.lineTo(Cx,Cy);ctx.closePath();ctx.stroke();
+  ctx.fillStyle='rgba(253,230,138,.12)';ctx.fill();
+  ctx.strokeStyle='#fff';ctx.lineWidth=2;
+  ctx.strokeRect(Ax-12,Ay-12,12,12);
+  ctx.fillStyle='#fff';ctx.font='bold 18px sans-serif';ctx.textAlign='center';
+  function lab(v,x,y){ctx.fillStyle=v==='?'?'#f87171':'#aee9ff';ctx.fillText(String(v),x,y);}
+  lab(tri.a,(Ax+Bx)/2,(Ay+By)/2+24);
+  lab(tri.b,(Bx+Cx)/2+18,(By+Cy)/2);
+  lab(tri.c,(Cx+Ax)/2-22,(Cy+Ay)/2);
+  ctx.fillStyle='#f59e0b';ctx.font='bold 22px sans-serif';
+  ctx.fillText('θ',Ax+30,Ay-16);
+  ctx.strokeStyle='#f59e0b';ctx.lineWidth=3;
+  ctx.beginPath();ctx.arc(Ax,Ay,36,Math.PI*1.5,Math.PI*1.5+0.6);ctx.stroke();
 }
 function drawSling(){
-  ctx.lineCap='round';
-  ctx.strokeStyle='#6b4226';ctx.lineWidth=13;
-  ctx.beginPath();ctx.moveTo(F.x,F.y+50);ctx.lineTo(F.x,F.y);ctx.stroke();
-  ctx.strokeStyle='#7d5027';ctx.lineWidth=10;
-  ctx.beginPath();ctx.moveTo(F.x,F.y+6);ctx.lineTo(F.x-17,F.y-22);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(F.x,F.y+6);ctx.lineTo(F.x+17,F.y-22);ctx.stroke();
-  ctx.strokeStyle='rgba(60,30,10,.5)';ctx.lineWidth=3;
-  ctx.beginPath();ctx.moveTo(F.x,F.y+50);ctx.lineTo(F.x,F.y);ctx.stroke();
-}
-function drawBird(x,y,r){
-  ctx.save();ctx.shadowColor='rgba(255,80,80,.7)';ctx.shadowBlur=12;
-  var g=ctx.createLinearGradient(x-r,y-r,x+r,y+r);
-  g.addColorStop(0,'#ff8a8a');g.addColorStop(1,'#e03131');
-  ctx.fillStyle=g;circ(x,y,r);ctx.restore();
-  ctx.fillStyle='#ffd43b';
-  ctx.beginPath();ctx.moveTo(x+r*0.55,y-r*0.1);ctx.lineTo(x+r*1.25,y+r*0.15);ctx.lineTo(x+r*0.55,y+r*0.35);ctx.closePath();ctx.fill();
-  ctx.fillStyle='#fff';circ(x+r*0.25,y-r*0.3,r*0.32);
-  ctx.fillStyle='#212529';circ(x+r*0.33,y-r*0.3,r*0.15);
-  ctx.strokeStyle='#a61e1e';ctx.lineWidth=3;ctx.lineCap='round';
-  ctx.beginPath();ctx.moveTo(x-r*0.9,y-r*0.2);ctx.lineTo(x-r*1.35,y-r*0.55);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(x-r*0.9,y+r*0.1);ctx.lineTo(x-r*1.35,y+r*0.4);ctx.stroke();
-  ctx.fillStyle='#a61e1e';
-  ctx.beginPath();ctx.moveTo(x-r*0.15,y-r*0.95);ctx.lineTo(x+r*0.05,y-r*1.35);ctx.lineTo(x+r*0.2,y-r*0.95);ctx.closePath();ctx.fill();
-}
-function drawTarget(t){
-  if(!q||targetGone)return;
-  var tx=F.x+R*Math.cos(q.deg*RAD),ty=(F.y-52)-R*Math.sin(q.deg*RAD);
-  ty+=Math.sin(t*2.4)*3;
-  ctx.strokeStyle='#5b3a1e';ctx.lineWidth=8;ctx.lineCap='round';
-  ctx.beginPath();ctx.moveTo(tx,ty+26);ctx.lineTo(tx,ty+66);ctx.stroke();
-  ctx.fillStyle='#8a5a2b';ctx.beginPath();ctx.ellipse(tx,ty+68,20,7,0,0,6.2832);ctx.fill();
-  var cols=['#e03131','#ffffff','#e03131','#ffffff','#e03131'];
-  ctx.save();ctx.shadowColor='rgba(255,60,60,.55)';ctx.shadowBlur=14;
-  for(var i=0;i<5;i++){ctx.fillStyle=cols[i];circ(tx,ty,24-i*4.6);}
-  ctx.restore();
-  ctx.fillStyle='#ffd43b';circ(tx,ty,4.5);
-}
-function drawAimStub(){
-  if(!aiming||phase!=='aim')return;
-  var a=aimDeg*RAD,fx=F.x,fy=F.y-52;
-  var x2=fx+Math.cos(a)*66,y2=fy-Math.sin(a)*66;
-  ctx.save();ctx.strokeStyle='rgba(255,255,255,.8)';ctx.lineWidth=3;ctx.setLineDash([8,7]);
-  ctx.beginPath();ctx.moveTo(fx,fy);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore();
-}
-function drawParts(dt){
-  for(var i=parts.length-1;i>=0;i--){var p=parts[i];
-    p.life-=dt;if(p.life<=0){parts.splice(i,1);continue;}
-    p.vy+=520*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;
-    ctx.globalAlpha=Math.max(0,p.life/p.max);
-    ctx.fillStyle=p.c;circ(p.x,p.y,3.5);
-    ctx.globalAlpha=1;
+  var sx=W/2,sy=H-70;
+  sling={x:sx,y:sy};
+  ctx.strokeStyle='#8b5a2b';ctx.lineWidth=10;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(sx-22,sy+40);ctx.lineTo(sx,sy);ctx.lineTo(sx+22,sy+40);ctx.stroke();
+  ctx.font='28px sans-serif';ctx.textAlign='center';
+  ctx.fillText('🐦',sx,sy+10);
+  if(aimAngle!==null){
+    var rad=aimAngle*Math.PI/180;
+    var ex=sx+Math.cos(-rad)*130,ey=sy+Math.sin(-rad)*130;
+    ctx.strokeStyle='rgba(253,230,138,.6)';ctx.lineWidth=2;ctx.setLineDash([6,6]);
+    ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(ex,ey);ctx.stroke();
+    ctx.setLineDash([]);
   }
 }
-function drawFloats(dt){
-  ctx.textAlign='center';ctx.font='bold 22px sans-serif';
-  for(var i=floats.length-1;i>=0;i--){var f=floats[i];
-    f.life-=dt;f.y-=34*dt;if(f.life<=0){floats.splice(i,1);continue;}
-    ctx.globalAlpha=Math.min(1,f.life*2);
-    ctx.fillStyle='#ffe259';ctx.strokeStyle='rgba(0,0,0,.5)';ctx.lineWidth=4;
-    ctx.strokeText(f.txt,f.x,f.y);ctx.fillText(f.txt,f.x,f.y);
-    ctx.globalAlpha=1;
-  }
+function drawTarget(){
+  if(!target)return;
+  var tx=target.x,ty=target.y;
+  ctx.fillStyle='#ef4444';ctx.beginPath();ctx.arc(tx,ty,20,0,7);ctx.fill();
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(tx,ty,13,0,7);ctx.fill();
+  ctx.fillStyle='#ef4444';ctx.beginPath();ctx.arc(tx,ty,6,0,7);ctx.fill();
 }
-function draw(t,dt){
-  ctx.save();
-  if(shakeT>0)ctx.translate((Math.random()-0.5)*shakeT,(Math.random()-0.5)*shakeT);
-  drawBG(t);
-  drawSling();
-  ctx.strokeStyle='#3b2f2f';ctx.lineWidth=4;ctx.lineCap='round';
-  var bx=F.x,by=F.y-52;
-  if(bird){bx=bird.x;by=bird.y;}
-  ctx.beginPath();ctx.moveTo(F.x-17,F.y-22);ctx.lineTo(bx,by);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(F.x+17,F.y-22);ctx.lineTo(bx,by);ctx.stroke();
-  drawTarget(t);
-  drawAimStub();
-  if(phase==='aim'&&!bird)drawBird(F.x,F.y-52,15);
-  if(bird)drawBird(bird.x,bird.y,15);
-  drawParts(dt);
-  drawFloats(dt);
-  ctx.restore();
+function drawBird(){
+  if(!bird)return;
+  ctx.font='28px sans-serif';ctx.textAlign='center';
+  ctx.fillText('🐦',bird.x,bird.y);
+}
+function render(){drawTri();drawTarget();drawSling();drawBird();}
+
+/* ---------- 遊戲流程 ---------- */
+function newQ(){
+  qnum++;
+  if(qnum>8){endGame();return;}
+  document.getElementById('qnum').textContent=qnum;
+  Q=genQ();
+  document.getElementById('qtext').innerHTML=Q.q;
+  var fb=document.getElementById('feedback');
+  fb.style.display='none';fb.innerHTML='';
+  aimAngle=null;bird=null;state='aim';
+  document.getElementById('aimAng').textContent='—';
+  var rad=Q.ans*Math.PI/180;
+  var sx=W/2,sy=H-70,dist=170;
+  target={x:sx+Math.cos(-rad)*dist,y:sy+Math.sin(-rad)*dist};
+  target.x=Math.max(30,Math.min(W-30,target.x));
+  target.y=Math.max(30,Math.min(H-110,target.y));
+  render();
+}
+function shoot(){
+  if(state!=='aim'){return;}
+  if(aimAngle===null){alert('先拖曳彈弓瞄準！');return;}
+  state='fly';
+  var err=Math.abs(aimAngle-Q.ans);
+  var hit=err<=2;
+  var sx=W/2,sy=H-70;
+  var rad=aimAngle*Math.PI/180;
+  var dist=hit?Math.hypot(target.x-sx,target.y-sy):220;
+  bird={x:sx,y:sy,t:0,dx:Math.cos(-rad)*dist/40,dy:Math.sin(-rad)*dist/40};
+  var iv=setInterval(function(){
+    bird.t++;bird.x+=bird.dx;bird.y+=bird.dy;render();
+    if(bird.t>=40){clearInterval(iv);showResult(hit,err);}
+  },30);
+}
+function showResult(hit,err){
+  var fb=document.getElementById('feedback');
+  fb.style.display='block';
+  if(hit){
+    score+=10;
+    document.getElementById('score').textContent=score;
+    fb.innerHTML='<span class="ok">✅ 命中！</span> 你計出 '+aimAngle+'°，正確係 '+Q.ans+'°（誤差 '+err.toFixed(1)+'°）。<div class="sol">'+Q.explain+'</div>';
+  }else{
+    fb.innerHTML='<span class="no">❌ 唔中。</span> 你瞄咗 '+aimAngle+'°，正確係 '+Q.ans+'°，差 '+err.toFixed(1)+'°。<div class="sol">💡 正確計法：<br>'+Q.explain+'</div>';
+  }
+  if(score>best){best=score;try{localStorage.setItem('trig_shooter_best',best);}catch(e){}document.getElementById('best').textContent=best;}
+  state='done';
+  setTimeout(newQ,hit?2000:5000);
+}
+function endGame(){
+  var fb=document.getElementById('feedback');
+  fb.style.display='block';
+  fb.innerHTML='<span class="ok">🎉 完成 8 題！</span> 今次得分：'+score+'（最高 '+best+'）<br>撳「↺ 新一局」再玩過。';
+  document.getElementById('qtext').innerHTML='局完！';
+  Q=null;target=null;bird=null;render();
+}
+function resetGame(){
+  qnum=0;score=0;
+  document.getElementById('score').textContent='0';
+  newQ();
 }
 
-/* ================= 主迴圈 ================= */
-function loop(ts){
-  var t=ts/1000,dt=Math.min(0.05,(ts-lastT)/1000||0.016);lastT=ts;
-  if(started&&phase==='fly'&&bird){
-    bird.d+=560*dt;
-    bird.x=F.x+Math.cos(bird.ang)*bird.d;
-    bird.y=(F.y-52)-Math.sin(bird.ang)*bird.d;
-    if(bird.hit&&bird.d>=R){doHit();}
-    else if(!bird.hit&&(bird.x>W+24||bird.y<-24||bird.x<-24)){doMiss();}
-  }
-  if(shakeT>0)shakeT=Math.max(0,shakeT-dt*22);
-  draw(t,dt);
-  requestAnimationFrame(loop);
+/* ---------- 拖曳瞄準 ---------- */
+var dragging=false;
+function getPos(e){
+  var r=cv.getBoundingClientRect();
+  var cx=(e.touches?e.touches[0].clientX:e.clientX)-r.left;
+  var cy=(e.touches?e.touches[0].clientY:e.clientY)-r.top;
+  return {x:cx*(W/r.width),y:cy*(H/r.height)};
 }
-
-/* ================= 難度選擇 ================= */
-var CONCEPTS={
-  easy:'特殊角 —— 記住 30°、45°、60° 嘅三角比：sin30°=1/2、cos60°=1/2、tan45°=1。見到呢啲比例即刻認得角度！',
-  mid:'SOHCAHTOA —— sinθ=對邊/斜邊、cosθ=鄰邊/斜邊、tanθ=對邊/鄰邊。知道兩條邊，用 arctan／arcsin／arccos 計出角度（準確至一度）。',
-  hard:'兩步題 —— 先用畢氏定理（a²+b²=c²）求出第三條邊，再用三角比求角度。仰角俯角題：先畫直角三角形標出已知邊，再列式計算。'
-};
-$('conceptTxt').textContent=CONCEPTS.easy;
-$('conceptMini').textContent='揀難度後開始，用三角比計出發射角！';
-var dbtns=document.querySelectorAll('.diff');
-Array.prototype.forEach.call(dbtns,function(b){
+function updateAim(p){
+  if(state!=='aim'||!sling)return;
+  var dx=p.x-sling.x,dy=p.y-sling.y;
+  var ang=Math.atan2(-dy,dx)*180/Math.PI;
+  ang=Math.max(0,Math.min(90,Math.round(ang)));
+  aimAngle=ang;
+  document.getElementById('aimAng').textContent=ang;
+  render();
+}
+cv.addEventListener('pointerdown',function(e){dragging=true;updateAim(getPos(e));if(e.preventDefault)e.preventDefault();});
+cv.addEventListener('pointermove',function(e){if(dragging)updateAim(getPos(e));});
+window.addEventListener('pointerup',function(){dragging=false;});
+document.getElementById('shootBtn').addEventListener('click',shoot);
+document.getElementById('newBtn').addEventListener('click',resetGame);
+document.querySelectorAll('.diffbar button').forEach(function(b){
   b.addEventListener('click',function(){
-    Array.prototype.forEach.call(dbtns,function(x){x.classList.remove('sel');});
-    b.classList.add('sel');
-    diff=b.getAttribute('data-d');
-    $('conceptTxt').textContent=CONCEPTS[diff];
-    tone(660,0.08);
+    document.querySelectorAll('.diffbar button').forEach(function(x){x.classList.remove('on');});
+    b.classList.add('on');diff=b.dataset.d;resetGame();
   });
 });
-$('startBtn').addEventListener('click',function(){tone(660,0.1);newGame();});
-$('againBtn').addEventListener('click',function(){tone(660,0.1);newGame();});
-$('diffBtn').addEventListener('click',function(){
-  $('endOv').classList.add('hide');
-  $('startOv').classList.remove('hide');
-});
-
-loadBest();updHud();
-requestAnimationFrame(loop);
-})();
+resetGame();
 </script>
 </body>
 </html>
