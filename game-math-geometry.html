@@ -139,101 +139,239 @@ const ANG2=[25,30,35,40,45,50,55,60,65,70];
 const MINUS='\u2212';
 
 function gEasy(){
-  const t=rnd(3);
-  if(t===0){ // 對頂角
-    const a=pick(ANG.filter(x=>x!==90));
-    const up=a+20<=170?a+20:a-30, dn=a-20>=10?a-20:a+30;
-    return {type:'vert',draw:'vert',p:{a:a},
-      text:'兩條直線相交，其中一隻角係 '+a+'°，求佢嘅對頂角係幾多度？',
-      ans:a+'°',opts:makeOptions(a+'°',[(180-a)+'°','90°',up+'°',dn+'°'])};
+  const t=rnd(10);
+  if(t===0){ // 1. 三角形外角＋內角 → 第三內角（兩步：180−e，再內角和）
+    const e=pick([100,110,120,130,140,150]),b=pick([30,35,40,45,50,55,60]);
+    const A=180-e,C=e-b; // 驗算：A+b+C=(180−e)+b+(e−b)=180 ✓
+    return{type:'extri',draw:'ext',p:{e:e,b:b},
+      text:'三角形 ABC，∠A 嘅外角係 '+e+'°，∠B 係 '+b+'°。先求內角 ∠A（180°−'+e+'°），再用內角和求 ∠C 係幾多度？',
+      ans:C+'°',opts:makeOptions(C+'°',[(180-e)+'°',(180-b)+'°',(b+C)+'°',(C+10)+'°'])};
   }
-  if(t===1){ // 補角（鄰角）
-    const a=pick(ANG.filter(x=>x!==90));
-    const ans=180-a;
-    const up=ans+15<=175?ans+15:ans-25, dn=ans-25>=5?ans-25:ans+25;
-    return {type:'supp',draw:'supp',p:{a:a},
-      text:'一直線上有一個點，由呢點向上畫出一條線，形成一隻 '+a+'° 嘅角。求隔籬隻角（鄰角）係幾多度？',
-      ans:ans+'°',opts:makeOptions(ans+'°',[a+'°','90°',up+'°',dn+'°'])};
+  if(t===1){ // 2. 等腰三角形頂角 → 底角（兩步：180−v，再÷2）
+    const v=pick([40,50,60,70,80,100]),base=(180-v)/2;
+    return{type:'isoV',draw:'iso',p:{v:v,mark:'v'},
+      text:'等腰三角形，頂角係 '+v+'°（如圖）。先求兩底角之和（180°−'+v+'°），再求每隻底角（圖中「?」）係幾多度？',
+      ans:base+'°',opts:makeOptions(base+'°',[(180-v)+'°',(v/2)+'°',(90-v)+'°',(base+5)+'°'])};
   }
-  // 三角形內角和（保證畫出嚟唔出界）
-  let b=40,c=50,tries=0;
-  while(tries++<300){
-    b=pick(ANG2);c=pick(ANG2);
-    if(b===c)continue;
-    const br=b*Math.PI/180,cr=c*Math.PI/180,sn=Math.sin(br+cr);
-    const h=200*Math.sin(br)*Math.sin(cr)/sn;
-    const cx=80+200*Math.sin(cr)*Math.cos(br)/sn;
-    if(h<=175&&cx>=70&&cx<=290)break;
+  if(t===2){ // 3. 等腰三角形底角 → 頂角（兩步：2b，再180−2b）
+    const b=pick([30,35,40,45,50,55,60,65,70]),v=180-2*b;
+    return{type:'isoB',draw:'iso',p:{v:v,mark:'b',b:b},
+      text:'等腰三角形，底角係 '+b+'°（如圖）。先求兩底角之和（2×'+b+'°），再求頂角（圖中「?」）係幾多度？',
+      ans:v+'°',opts:makeOptions(v+'°',[(180-b)+'°',((180-b)/2)+'°',(2*b)+'°',(v+10)+'°'])};
   }
-  const ans=180-b-c;
-  return {type:'tri',draw:'tri',p:{b:b,c:c},
-    text:'一個三角形，其中兩隻角分別係 '+b+'° 同 '+c+'°，求第三隻角係幾多度？',
-    ans:ans+'°',opts:makeOptions(ans+'°',[(b+c)+'°',(180-b)+'°',(180-c)+'°','90°',(ans+10)+'°',(ans-10)+'°'])};
+  if(t===3){ // 4. 直角三角形外角（兩步：先求第三內角 90−a，再求外角）
+    const a=pick([25,30,35,40,45,50,55,60]),ans=90+a;
+    return{type:'rtExt',draw:'rt',p:{a:a},
+      text:'直角三角形 ABC，∠C = 90°，∠A = '+a+'°（如圖）。將 BC 延長到 D，先求 ∠ACB，再求外角 ∠ACD（圖中「?」）係幾多度？',
+      ans:ans+'°',opts:makeOptions(ans+'°',[(90-a)+'°','90°',a+'°',(ans-10)+'°'])};
+  }
+  if(t===4){ // 5. 等腰梯形：三內角 → 第四角 → 外角（兩步：360−和，再180−d）
+    const a=pick([80,85,90,95,100]),c=180-a,d=360-a-a-c,ans=180-d;
+    return{type:'trapExt',draw:'isotrap',p:{a:a},
+      text:'等腰梯形 ABCD，底角 ∠A = ∠B = '+a+'°，頂角 ∠C = '+c+'°（如圖）。先用四邊形內角和（360°）求第四隻內角 ∠D，再求 ∠D 嘅外角（圖中「?」）係幾多度？',
+      ans:ans+'°',opts:makeOptions(ans+'°',[d+'°',(2*a)+'°',(360-2*a)+'°',(ans+10)+'°'])};
+  }
+  if(t===5){ // 6. 同位角 → 補角（兩步：同位角相等，再求補角）
+    const a=pick([35,40,45,50,55,60,65,70]),ans=180-a;
+    return{type:'paraSupp',draw:'paraE',p:{a:a},
+      text:'兩條平行線被截線所截，如圖標示嘅同位角係 '+a+'°。先確認另一條平行線上嘅同位角都係 '+a+'°，再求佢嘅補角（圖中「?」）係幾多度？',
+      ans:ans+'°',opts:makeOptions(ans+'°',[a+'°','90°',(ans-10)+'°',(a+10)+'°'])};
+  }
+  if(t===6){ // 7. 三角形兩內角 → 第三內角嘅對頂角（兩步：內角和，再對頂角相等）
+    const b=pick(ANG2),c=pick(ANG2);
+    if(b===c)return gEasy();
+    const C=180-b-c;
+    if(C<20||C>120)return gEasy();
+    return{type:'triVert',draw:'tri',p:{b:b,c:c},
+      text:'三角形兩隻內角分別係 '+b+'° 同 '+c+'°（如圖）。先求第三隻內角 ∠C，再求 ∠C 嘅對頂角（將 C 嘅兩邊延長所得）係幾多度？',
+      ans:C+'°',opts:makeOptions(C+'°',[(b+c)+'°',(180-b)+'°',(180-c)+'°','90°'])};
+  }
+  if(t===7){ // 8. 直線上三連角（兩步：a+b，再180−(a+b)）
+    const a=pick([30,40,50,60,70]),b=pick([30,40,50,60,70]);
+    if(a+b>=150)return gEasy();
+    const ans=180-a-b;
+    return{type:'supp3',draw:'supp3',p:{a:a,b:b},
+      text:'一直線上由同一點引出兩條射線，形成連續三隻角，頭兩隻分別係 '+a+'° 同 '+b+'°（如圖）。先求頭兩隻角之和，再求第三隻角（圖中「?」）係幾多度？',
+      ans:ans+'°',opts:makeOptions(ans+'°',[(a+b)+'°',(180-a)+'°',(180-b)+'°','90°'])};
+  }
+  if(t===8){ // 9. 正多邊形：內角 → 外角（兩步：先求每隻內角，再求外角）
+    const n=pick([5,6,8]),ans=360/n,inA=180-ans;
+    return{type:'hexExt',draw:'hex',p:{n:n},
+      text:'正'+n+'邊形（如圖）。先求每隻內角（('+n+'−2)×180°÷'+n+' = '+inA+'°），再求外角（圖中「?」）係幾多度？',
+      ans:ans+'°',opts:makeOptions(ans+'°',[inA+'°',(ans+10)+'°','90°',(2*ans)+'°'])};
+  }
+  // 10. 等腰三角形：底角＋頂角混合（兩步：先求頂角 180−2b，再求頂角嘅補角）
+  const b=pick([40,45,50,55,60]),v=180-2*b,ans=180-v; // = 2b
+  return{type:'isoSupp',draw:'iso',p:{v:v,mark:'b',b:b},
+    text:'等腰三角形，底角係 '+b+'°（如圖）。先求頂角（180°−2×'+b+'°），再求頂角嘅補角（將頂角一邊延長，圖中「?」）係幾多度？',
+    ans:ans+'°',opts:makeOptions(ans+'°',[v+'°',(180-b)+'°','90°',(ans+10)+'°'])};
 }
 
 function gMed(){
-  const t=rnd(2);
-  if(t===0){ // 平行線＋截線
-    const a=pick([30,40,50,60,70,80,100,110,120,130,140]);
-    const kind=rnd(3); // 0 同位角 1 內錯角 2 同旁內角
-    const names=['同位角','內錯角','同旁內角'];
-    const ans=kind===2?180-a:a;
-    const cands=kind===2
-      ?[a+'°','90°',(ans-15>0?ans-15:ans+15)+'°',(ans+20<=180?ans+20:ans-20)+'°']
-      :[(180-a)+'°','90°',(ans+15<=180?ans+15:ans-15)+'°',(ans-15>0?ans-15:ans+15)+'°'];
-    return {type:'parallel',draw:'parallel',p:{a:a,kind:kind},
-      text:'兩條平行線被一條截線所截，其中一隻角係 '+a+'°（如圖）。求圖中標示「?」嘅'+names[kind]+'係幾多度？',
-      ans:ans+'°',opts:makeOptions(ans+'°',cands)};
+  const t=rnd(10);
+  if(t===0){ // 1. 相似三角形面積比（兩步：先求邊比 k，再求面積比 k²）
+    const v=pick([[3,12,2,48],[4,12,3,108],[5,30,2,120],[12,30,2,120]]);
+    const s1=v[0],S=v[1],k=v[2],ans=v[3]; // 驗算：k²×S = ans ✓
+    return{type:'simArea',draw:'similar',p:{s1:s1,s2:4,s3:5,B1:s1*k,B2:4*k},
+      text:'如圖，兩個三角形相似。小三角形一邊長 '+s1+'，大三角形對應邊長 '+(s1*k)+'，小三角形面積係 '+S+'。先求相似比（大 : 小），再求大三角形面積係幾多？',
+      ans:String(ans),opts:makeOptions(String(ans),[String(S*k),String(S+k),String(2*ans)])};
   }
-  // 相似三角形
-  const tr=pick([[3,4,5],[6,8,10],[5,12,13]]),k=pick([2,3]);
-  const s1=tr[0],s2=tr[1],s3=tr[2],B1=s1*k,B2=s2*k,x=s3*k;
-  return {type:'similar',draw:'similar',p:{s1:s1,s2:s2,s3:s3,B1:B1,B2:B2},
-    text:'兩個三角形相似。小三角形三邊長係 '+s1+'、'+s2+'、'+s3+'；大三角形對應兩邊長係 '+B1+' 同 '+B2+'。求大三角形第三邊（圖中「?」）嘅長度。',
-    ans:String(x),opts:makeOptions(String(x),[String(s3),String(s3+(B1-s1)),String(x-1),String(x+1)])};
+  if(t===1){ // 2. 弦心距（兩步：先求半弦 L/2，再用畢氏定理）
+    const v=pick([[6,5,4],[8,5,3],[10,13,12],[14,25,24],[18,15,12]]);
+    const L=v[0],r=v[1],d=v[2]; // 驗算：√(r²−(L/2)²) = d ✓
+    return{type:'chordD',draw:'chord',p:{L:L,r:r,d:d},
+      text:'圓嘅半徑係 '+r+'，一條弦長 '+L+'（如圖）。先求半弦長，再用畢氏定理求弦心距（圓心到弦嘅垂直距離，圖中「?」）係幾多？',
+      ans:String(d),opts:makeOptions(String(d),[String(d+2),String(d-2),String(L/2)])};
+  }
+  if(t===2){ // 3. 圓周角 → 圓心角 → 補角（兩步：×2，再180−）
+    const g=pick([30,35,40,45,50,55,60]),ans=180-2*g;
+    return{type:'centSupp',draw:'central',p:{g:g},
+      text:'圓中，同弧所對嘅圓周角係 '+g+'°（如圖）。先求圓心角 ∠AOB（圖中「?」），再求呢隻圓心角嘅補角係幾多度？',
+      ans:ans+'°',opts:makeOptions(ans+'°',[(2*g)+'°',(180-g)+'°',g+'°',(ans+10)+'°'])};
+  }
+  if(t===3){ // 4. 梯形：先求高 h=2S/(a+b)，再求 h²（正方形面積）
+    const v=pick([[60,7,13,6,36],[84,9,15,7,49],[132,13,20,8,64],[150,11,19,10,100]]);
+    const S=v[0],a=v[1],b=v[2],h=v[3],ans=v[4]; // 驗算：2S/(a+b)=h，h²=ans ✓
+    return{type:'trapH',draw:'trap',p:{a:a,b:b},
+      text:'梯形面積係 '+S+'，上底 '+b+'、下底 '+a+'（如圖）。先求梯形嘅高（圖中「?」），再求以呢個高為邊長嘅正方形面積係幾多？',
+      ans:String(ans),opts:makeOptions(String(ans),[String(h),String(2*h),String(4*h)])};
+  }
+  if(t===4){ // 5. 畢氏定理 → 斜邊正方形面積（兩步）
+    const v=pick([[3,4,5,25],[6,8,10,100],[5,12,13,169],[9,12,15,225]]);
+    const l1=v[0],l2=v[1],hyp=v[2],ans=v[3]; // 驗算：hyp²=ans ✓
+    return{type:'pythSq',draw:'rt2',p:{l1:l1,l2:l2},
+      text:'直角三角形兩條直角邊分別係 '+l1+' 同 '+l2+'（如圖）。先用畢氏定理求斜邊長（圖中「?」），再求以斜邊為邊長嘅正方形面積係幾多？',
+      ans:String(ans),opts:makeOptions(String(ans),[String(hyp),String(l1*l2),String(l1+l2)])};
+  }
+  if(t===5){ // 6. 圓周界 → 半徑 → 面積（兩步）
+    const v=pick([[20,10,100],[12,6,36],[28,14,196],[8,4,16]]);
+    const C=v[0],r=v[1],ans=v[2]; // 驗算：r=C/2π，πr²=ans·π ✓
+    return{type:'circA',draw:'circR',p:{C:C+'π'},
+      text:'一個圓嘅周界係 '+C+'π（如圖）。先求半徑（圖中「?」），再求圓面積係幾多？（答案以 π 表示）',
+      ans:ans+'π',opts:makeOptions(ans+'π',[(C*C/4)+'π',r+'π',C+'π'])};
+  }
+  if(t===6){ // 7. 扇形：面積＋圓心角 → 半徑 → 弧長（兩步）
+    const v=pick([[36,90,12,6],[64,90,16,8],[12,120,6,4],[48,120,12,8]]);
+    const A=v[0],th=v[1],r=v[2],arc=v[3]; // 驗算：r²=A·360/(θπ)，弧=2πrθ/360 ✓
+    return{type:'sectR',draw:'sector',p:{r:r,area:A,th:th},
+      text:'扇形面積係 '+A+'π，圓心角係 '+th+'°（如圖）。先求半徑，再求弧長係幾多？（答案以 π 表示）',
+      ans:arc+'π',opts:makeOptions(arc+'π',[r+'π',(2*arc)+'π',''+(arc+2)+'π'])};
+  }
+  if(t===7){ // 8. 等腰直角 → 斜邊 → 以斜邊為直徑嘅圓面積（兩步）
+    const a=pick([2,4,6,8]),ans=(a*a/2); // 驗算：斜邊=a√2，直徑圓面積=π(a√2/2)²=a²π/2 ✓
+    return{type:'isoRtC',draw:'rt2',p:{l1:a,l2:a},
+      text:'等腰直角三角形，直角邊長 '+a+'（如圖）。先求斜邊長（圖中「?」），再求以斜邊為直徑嘅圓面積係幾多？（答案以 π 表示）',
+      ans:ans+'π',opts:makeOptions(ans+'π',[(a*a)+'π',(2*a*a)+'π',(a*a/4)+'π'])};
+  }
+  if(t===8){ // 9. 角平分線＋內角和（兩步：先2×角平分角，再180−和）
+    const bad=pick([20,25,30]),b=pick([50,60,70]),C=180-2*bad-b;
+    if(C<30)return gMed();
+    return{type:'bisTri',draw:'bisT',p:{bad:bad,b:b},
+      text:'三角形 ABC，AD 係 ∠A 嘅角平分線，∠BAD = '+bad+'°，∠B = '+b+'°（如圖）。先求 ∠BAC，再用內角和求 ∠C（圖中「?」）係幾多度？',
+      ans:C+'°',opts:makeOptions(C+'°',[(180-bad-b)+'°',(2*bad)+'°','90°',(C+10)+'°'])};
+  }
+  // 10. 坐標：中點 → 原點距離（兩步）
+  const v=pick([[0,6,8,0,4,3,5],[2,6,6,0,4,3,5],[-4,2,4,8,0,5,5],[3,0,-3,8,0,4,4],[0,-6,8,0,4,-3,5]]);
+  const x1=v[0],y1=v[1],x2=v[2],y2=v[3],mx=v[4],my=v[5],ans=v[6]; // 驗算：M=((x1+x2)/2,(y1+y2)/2)，OM=√(mx²+my²) ✓
+  return{type:'coordOM',draw:'coord',p:{x1:x1,y1:y1,x2:x2,y2:y2,mx:mx,my:my},
+    text:'坐標平面上 A('+x1+', '+y1+')、B('+x2+', '+y2+')（如圖）。先求 AB 嘅中點 M（圖中「?」），再求原點 O 到 M 嘅距離係幾多？',
+    ans:String(ans),opts:makeOptions(String(ans),[String(mx+my),String(ans+2),String(mx*my)])};
 }
 
 function gHard(){
-  const t=rnd(4);
-  if(t===0){ // 圓心角 = 2 × 圓周角
-    const g=pick([25,30,35,40,45,50]),ans=2*g;
-    return {type:'central',draw:'central',p:{g:g},
-      text:'圓中，同弧所對嘅圓周角係 '+g+'°（如圖）。求圓心角（圖中「?」）係幾多度？',
-      ans:ans+'°',opts:makeOptions(ans+'°',[g+'°',(180-ans)+'°','90°',(ans+10)+'°',(ans-10)+'°'])};
+  const t=rnd(10);
+  function gcd(a,b){return b?gcd(b,a%b):a;}
+  function dc4(ans,cands){ // 保證湊夠3個不重複干擾項（常見錯誤優先）
+    const s=String(ans),seen=new Set([s]),out=[];
+    for(const c of cands){const z=String(c);if(!seen.has(z)){seen.add(z);out.push(z);}}
+    const fb=['90°','45°','135°','60°','120°','30°','10','5','2','100','3:4','6:8'];
+    for(const f of fb){if(out.length>=3)break;if(!seen.has(f)){seen.add(f);out.push(f);}}
+    return out;
   }
-  if(t===1){ // 半圓上嘅圓周角
-    const a=pick([25,30,35,40,50,55,60]);
-    if(rnd(2)===0){
-      return {type:'semi',draw:'semi',p:{a:a,ask:'c'},
-        text:'AB 係圓嘅直徑，C 係圓周上一點。已知 ∠CAB = '+a+'°，求 ∠ACB（圖中「?」）係幾多度？',
-        ans:'90°',opts:makeOptions('90°',[a+'°','45°','180°',(90-a)+'°'])};
-    }
-    const ans=90-a;
-    return {type:'semi',draw:'semi',p:{a:a,ask:'b'},
-      text:'AB 係圓嘅直徑，C 係圓周上一點。已知 ∠CAB = '+a+'°，求 ∠CBA（圖中「?」）係幾多度？',
-      ans:ans+'°',opts:makeOptions(ans+'°',[a+'°','90°',(180-a)+'°',(ans+10)+'°'])};
+  if(t===0){ // 1. 圓內接四邊形：對角互補 → 外角
+    const cx=180,cy=155,r=92;
+    const P=[160,290,350,440].map(d0=>{const d=d0+rnd(25)-12,z=(d%360)*RAD;
+      return{x:cx+r*Math.cos(z),y:cy+r*Math.sin(z)};});
+    const ang=(Q,U,V)=>{const x1=Math.atan2(U.y-Q.y,U.x-Q.x),x2=Math.atan2(V.y-Q.y,V.x-Q.x);
+      let d=Math.abs(x2-x1);if(d>Math.PI)d=2*Math.PI-d;return d/RAD;};
+    const a=Math.round(ang(P[0],P[3],P[1]));
+    const vx=P[2].x-P[1].x,vy=P[2].y-P[1].y,L=Math.hypot(vx,vy);
+    const ex=P[2].x+vx/L*36,ey=P[2].y+vy/L*36;
+    return{type:'cyc',draw:'cyc',p:{cx:cx,cy:cy,r:r,pts:P,ex:ex,ey:ey,a:a,
+      ad1:Math.atan2(P[3].y-P[0].y,P[3].x-P[0].x),ad2:Math.atan2(P[1].y-P[0].y,P[1].x-P[0].x),
+      cd1:Math.atan2(ey-P[2].y,ex-P[2].x),cd2:Math.atan2(P[3].y-P[2].y,P[3].x-P[2].x)},
+      text:'圓內接四邊形 ABCD，已知 ∠A = '+a+'°（如圖）。先求對角 ∠C（圓內接四邊形對角互補），再求 ∠C 嘅外角（圖中「?」）係幾多度？',
+      ans:a+'°',opts:makeOptions(a+'°',dc4(a+'°',[(180-a)+'°','90°',(a+15)+'°',(a-15)+'°']))};
   }
-  if(t===2){ // 切線 ⊥ 半徑
-    const a=pick([30,35,40,50,55,60]),ans=90-a;
-    return {type:'tangent',draw:'tangent',p:{a:a},
-      text:'如圖，PT 係圓喺 T 點嘅切線，OT 係半徑。已知 ∠OPT = '+a+'°，求 ∠POT（圖中「?」）係幾多度？',
-      ans:ans+'°',opts:makeOptions(ans+'°',[a+'°','90°',(180-a)+'°','45°'])};
+  if(t===1){ // 2. 交替弓形角 → 圓周角 → 另一段弧圓周角
+    const a=pick([30,35,40,45,50,55]),ar=a*RAD,tl=170*Math.sin(ar);
+    const T={x:170,y:255},A={x:170-tl*Math.cos(ar),y:255-tl*Math.sin(ar)};
+    const C={x:170+85*Math.cos(20*RAD),y:170+85*Math.sin(20*RAD)};
+    const D={x:170+85*Math.cos(130*RAD),y:170+85*Math.sin(130*RAD)};
+    const P={x:95,y:255},ans=180-a;
+    return{type:'altseg',draw:'altseg',p:{T:T,A:A,C:C,D:D,P:P,a:a,
+      ta:Math.atan2(A.y-T.y,A.x-T.x),
+      dd1:Math.atan2(T.y-D.y,T.x-D.x),dd2:Math.atan2(A.y-D.y,A.x-D.x)},
+      text:'如圖，PT 係圓喺 T 點嘅切線，TA 係弦。已知切弦角 ∠PTA = '+a+'°。先求對應嘅圓周角 ∠TCA（交替弓形角定理），再求同弦 TA 在另一段弧上嘅圓周角 ∠TDA（圖中「?」）係幾多度？',
+      ans:ans+'°',opts:makeOptions(ans+'°',dc4(ans+'°',[a+'°',(2*a)+'°','90°']))};
   }
-  const v=rnd(3); // 陰影面積
-  if(v===0){
-    return {type:'area',draw:'area1',p:{v:0},
-      text:'如圖，正方形邊長係 10，入面有一個半圓（半徑 4）。求陰影部分（正方形減去半圓）嘅面積。',
-      ans:'100 '+MINUS+' 8π',opts:makeOptions('100 '+MINUS+' 8π',['100 + 8π','100 '+MINUS+' 16π','100 '+MINUS+' 4π'])};
+  if(t===2){ // 3. 相交弦定理 → 最簡比
+    const v=pick([[6,4,3,8],[4,9,6,6],[8,6,4,12],[5,6,3,10],[9,6,2,27]]);
+    const ae=v[0],eb=v[1],ce=v[2],ed=v[3],g=gcd(ae,ed),ans=(ae/g)+':'+(ed/g);
+    const pt=d=>({x:180+95*Math.cos(d*RAD),y:150+95*Math.sin(d*RAD)});
+    const A=pt(150),B=pt(330),C=pt(80),D=pt(260);
+    const d1x=B.x-A.x,d1y=B.y-A.y,d2x=D.x-C.x,d2y=D.y-C.y;
+    const s=((C.x-A.x)*d2y-(C.y-A.y)*d2x)/(d1x*d2y-d1y*d2x);
+    const E={x:A.x+s*d1x,y:A.y+s*d1y};
+    return{type:'chords',draw:'chords',p:{A:A,B:B,C:C,D:D,E:E,ae:ae,eb:eb,ce:ce},
+      text:'圓入面兩條弦 AB 同 CD 相交於 E（如圖）。已知 AE = '+ae+'、EB = '+eb+'、CE = '+ce+'。先用相交弦定理（AE × EB = CE × ED）求 ED，再求 AE : ED 嘅最簡整數比。',
+      ans:ans,opts:makeOptions(ans,dc4(ans,[ae+':'+ed,(ed/g)+':'+(ae/g),ce+':'+ed]))};
   }
-  if(v===1){
-    return {type:'area',draw:'area2',p:{v:1},
-      text:'如圖，長方形長 12、闊 8，入面有一個三角形（底 6、高 4）。求陰影部分（長方形減去三角形）嘅面積。',
-      ans:'84',opts:makeOptions('84',['108','72','90'])};
+  if(t===3){ // 4. 圓環：大圓減小圓
+    const v=pick([[5,3],[5,4],[10,6],[4,2]]),R=v[0],r=v[1],ans=(R*R-r*r)+'π';
+    return{type:'ring',draw:'ring',p:{R:R,r:r},
+      text:'如圖，陰影部分係一個圓環：大圓半徑 '+R+'，小圓半徑 '+r+'。先分別求兩個圓嘅面積（答案留 π），再求圓環面積。',
+      ans:ans,opts:makeOptions(ans,dc4(ans,[(R-r)*(R-r)+'π',(R*R+r*r)+'π',String(R*R-r*r)]))};
   }
-  return {type:'area',draw:'area3',p:{v:2},
-    text:'如圖，大正方形邊長係 8，入面有一個小正方形（邊長 4）。求陰影部分（大正方形減去小正方形）嘅面積。',
-    ans:'48',opts:makeOptions('48',['80','60','32'])};
+  if(t===4){ // 5. 扇形：面積反求圓心角 → 弧長
+    const v=pick([[6,'12π',120,'4π'],[4,'4π',90,'2π'],[6,'6π',60,'2π']]);
+    return{type:'sector',draw:'sector',p:{r:v[0],area:v[1],th:v[2]},
+      text:'如圖，扇形面積係 '+v[1]+'，半徑係 '+v[0]+'。先求圓心角係幾多度，再求弧長（答案留 π）。',
+      ans:v[3],opts:makeOptions(v[3],dc4(v[3],['4π','6π','8π','12π','2π','π']))};
+  }
+  if(t===5){ // 6. 複合圖形周界：三直邊 ＋ 半圓弧
+    const v=pick([[10,6],[12,8],[8,4]]),w=v[0],h=v[1],ans=(w+2*h)+' + '+(w/2)+'π';
+    return{type:'comp',draw:'comp',p:{w:w,h:h},
+      text:'如圖，長方形（長 '+w+'、闊 '+h+'）嘅一條長邊上面加咗個半圓（直徑就係嗰條長邊）。先計三條直邊嘅總長度，再計半圓弧嘅長度，求成個圖形嘅周界（答案留 π）。',
+      ans:ans,opts:makeOptions(ans,dc4(ans,[(2*w+2*h)+' + '+(w/2)+'π',(w+2*h)+' + '+w+'π',String(w+2*h)]))};
+  }
+  if(t===6){ // 7. 兩圓：周界比 → 面積比
+    const v=pick([[6,4],[8,4],[9,3]]),r1=v[0],r2=v[1];
+    const g=gcd(r1*r1,r2*r2),ans=(r1*r1/g)+':'+(r2*r2/g);
+    const g2=gcd(r1,r2),pr=(r1/g2)+':'+(r2/g2);
+    return{type:'twoc',draw:'twoc',p:{r1:r1,r2:r2},
+      text:'大圓半徑 '+r1+'，小圓半徑 '+r2+'（如圖）。先求兩個圓嘅周界比（最簡整數比），再求面積比（最簡整數比）。',
+      ans:ans,opts:makeOptions(ans,dc4(ans,[pr,ans.split(':').reverse().join(':'),r1+':'+r2]))};
+  }
+  if(t===7){ // 8. 切線長定理 ＋ 畢氏定理
+    const v=pick([[6,10,8],[5,13,12],[8,10,6],[12,13,5],[9,15,12]]);
+    return{type:'twotan',draw:'twotan',p:{t:v[0],d:v[1]},
+      text:'P 係圓外一點，PT1、PT2 係由 P 出發嘅兩條切線（如圖）。已知 PT1 = '+v[0]+'，OP = '+v[1]+'。先用畢氏定理求圓嘅半徑（三角形 OT1P 係直角三角形），再求 PT2 嘅長度。',
+      ans:String(v[0]),opts:makeOptions(String(v[0]),dc4(String(v[0]),[String(v[2]),String(v[1]-v[0]),String(v[1])]))};
+  }
+  if(t===8){ // 9. 圓周角 → 圓心角 → 等腰三角形底角
+    const g=pick([20,25,30,35,40]),ans=90-g;
+    return{type:'iso',draw:'central',p:{g:g},
+      text:'圓中，同弧所對嘅圓周角係 '+g+'°（如圖）。先求圓心角 ∠AOB（圖中「?」），再求等腰三角形 OAB（OA = OB，都係半徑）嘅底角 ∠OAB 係幾多度？',
+      ans:ans+'°',opts:makeOptions(ans+'°',dc4(ans+'°',[(2*g)+'°',(180-2*g)+'°','90°']))};
+  }
+  // 10. 三角形面積 → 反求另一底對應嘅高
+  const v=pick([[12,5,10,6],[10,6,12,5],[8,6,12,4],[15,4,10,6],[20,6,15,8]]);
+  return{type:'triarea',draw:'triarea',p:{b1:v[0],h1:v[1],b2:v[2],h2:v[3]},
+    text:'三角形以 '+v[0]+' 為底、高係 '+v[1]+'（如圖）。先求三角形嘅面積，再求：如果以長 '+v[2]+' 嘅邊為底，對應嘅高係幾多？',
+    ans:String(v[3]),opts:makeOptions(String(v[3]),dc4(String(v[3]),[String(v[1]),String(v[0]),String(v[0]*v[1]/2/v[2])]))};
 }
+
 const GEN={easy:gEasy,med:gMed,hard:gHard};
 
 /* ==== DOM ==== */
@@ -424,8 +562,307 @@ area3(ctx){
   lab(ctx,180,250,'大正方形邊長 8','#fff',15);
   lab(ctx,180,152,'4','#fff',15);
   lab(ctx,180,34,'陰影面積 = ?','#22d3ee',18);
-}
-};
+},
+cyc(ctx,p){
+  circ(ctx,p.cx,p.cy,p.r,3.5);
+  const P=p.pts;
+  for(let i=0;i<4;i++)seg(ctx,P[i].x,P[i].y,P[(i+1)%4].x,P[(i+1)%4].y,3);
+  const L='ABCD';
+  P.forEach((q,i)=>{dot(ctx,q.x,q.y,4);lab(ctx,q.x+(q.x-p.cx)*0.24,q.y+(q.y-p.cy)*0.24,L[i],'#fff',15);});
+  seg(ctx,P[2].x,P[2].y,p.ex,p.ey,2.5,'rgba(255,255,255,.55)');
+  smallArc(ctx,P[0].x,P[0].y,26,p.ad1,p.ad2,3,'#fbbf24');
+  bisLab(ctx,P[0].x,P[0].y,50,p.ad1,p.ad2,p.a+'°','#fbbf24',17);
+  smallArc(ctx,P[2].x,P[2].y,26,p.cd1,p.cd2,3,'#22d3ee');
+  bisLab(ctx,P[2].x,P[2].y,50,p.cd1,p.cd2,'?','#22d3ee',24);
+},
+altseg(ctx,p){
+  circ(ctx,170,170,85,3.5);
+  seg(ctx,55,255,295,255,3.5);
+  const T=p.T,A=p.A,C=p.C,D=p.D;
+  seg(ctx,T.x,T.y,A.x,A.y,3.5);
+  [[T,C],[C,A],[T,D],[D,A]].forEach(z=>seg(ctx,z[0].x,z[0].y,z[1].x,z[1].y,2,'rgba(255,255,255,.45)'));
+  dot(ctx,p.P.x,p.P.y,4);lab(ctx,p.P.x-11,p.P.y-13,'P','#fff',14);
+  [['T',T,5,19],['A',A,-17,-8],['C',C,17,3],['D',D,-15,7]].forEach(z=>{dot(ctx,z[1].x,z[1].y,4);lab(ctx,z[1].x+z[2],z[1].y+z[3],z[0],'#fff',14);});
+  smallArc(ctx,T.x,T.y,28,Math.PI,p.ta,3,'#fbbf24');
+  bisLab(ctx,T.x,T.y,54,Math.PI,p.ta,p.a+'°','#fbbf24',17);
+  smallArc(ctx,D.x,D.y,24,p.dd1,p.dd2,3,'#22d3ee');
+  bisLab(ctx,D.x,D.y,48,p.dd1,p.dd2,'?','#22d3ee',24);
+},
+chords(ctx,p){
+  circ(ctx,180,150,95,3.5);
+  const A=p.A,B=p.B,C=p.C,D=p.D,E=p.E;
+  seg(ctx,A.x,A.y,B.x,B.y,3);seg(ctx,C.x,C.y,D.x,D.y,3);
+  [['A',A,-15,-5],['B',B,15,-5],['C',C,-5,-16],['D',D,-5,17],['E',E,13,11]].forEach(z=>{dot(ctx,z[1].x,z[1].y,4);lab(ctx,z[1].x+z[2],z[1].y+z[3],z[0],'#fff',14);});
+  lab(ctx,(A.x+E.x)/2,(A.y+E.y)/2-11,'AE='+p.ae,'#fbbf24',13);
+  lab(ctx,(E.x+B.x)/2,(E.y+B.y)/2-11,'EB='+p.eb,'#fbbf24',13);
+  lab(ctx,(C.x+E.x)/2,(C.y+E.y)/2-11,'CE='+p.ce,'#fbbf24',13);
+  lab(ctx,(E.x+D.x)/2,(E.y+D.y)/2+15,'?','#22d3ee',22);
+},
+ring(ctx,p){
+  const cx=180,cy=150,R=95,r=95*p.r/p.R;
+  ctx.fillStyle='rgba(251,191,36,.20)';ctx.beginPath();ctx.arc(cx,cy,R,0,7);ctx.fill();
+  ctx.fillStyle='#0e2c56';ctx.beginPath();ctx.arc(cx,cy,r,0,7);ctx.fill();
+  circ(ctx,cx,cy,R,3.5);circ(ctx,cx,cy,r,3);
+  seg(ctx,cx,cy,cx+R,cy,2.5,'#fbbf24');lab(ctx,cx+R/2,cy-13,'R='+p.R,'#fbbf24',15);
+  seg(ctx,cx,cy,cx+r*0.82,cy-r*0.57,2.5,'#fbbf24');lab(ctx,cx+r*0.34,cy-r*0.44,'r='+p.r,'#fbbf24',15);
+  lab(ctx,cx,36,'陰影面積 = ?','#22d3ee',18);
+},
+sector(ctx,p){
+  const cx=180,cy=162,r=92,th=p.th*RAD,a0=-Math.PI/2,a1=a0+th,am=a0+th/2;
+  ctx.fillStyle='rgba(251,191,36,.20)';ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,a0,a1);ctx.closePath();ctx.fill();
+  circ(ctx,cx,cy,r,3.5);
+  seg(ctx,cx,cy,cx+r*Math.cos(a0),cy+r*Math.sin(a0),3);
+  seg(ctx,cx,cy,cx+r*Math.cos(a1),cy+r*Math.sin(a1),3);
+  dot(ctx,cx,cy,5);
+  lab(ctx,cx+(r/2)*Math.cos(am),cy+(r/2)*Math.sin(am),p.area,'#fbbf24',15);
+  lab(ctx,cx+(r+18)*Math.cos(am),cy+(r+18)*Math.sin(am),'?','#22d3ee',24);
+  lab(ctx,cx+13,cy-r/2,'r='+p.r,'#fff',14);
+},
+comp(ctx,p){
+  const u=11,cx=180,base=228,w=p.w*u,h=p.h*u,x0=cx-w/2,y0=base-h;
+  ctx.fillStyle='rgba(251,191,36,.14)';ctx.fillRect(x0,y0,w,h);
+  ctx.beginPath();ctx.arc(cx,y0,w/2,Math.PI,0);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='#fff';ctx.lineWidth=3.5;ctx.strokeRect(x0,y0,w,h);
+  ctx.beginPath();ctx.arc(cx,y0,w/2,Math.PI,0);ctx.stroke();
+  ctx.setLineDash([6,5]);ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x0+w,y0);ctx.stroke();ctx.setLineDash([]);
+  lab(ctx,cx,base+19,'長 '+p.w,'#fff',14);
+  lab(ctx,x0-17,y0+h/2,'闊 '+p.h,'#fff',14);
+  lab(ctx,cx,46,'周界 = ?','#22d3ee',18);
+},
+twoc(ctx,p){
+  const r1=62,r2=62*p.r2/p.r1;
+  circ(ctx,108,158,r1,3.5);circ(ctx,262,158,r2,3.5);
+  lab(ctx,108,158+r1+17,'半徑 '+p.r1,'#fbbf24',14);
+  lab(ctx,262,158+r2+17,'半徑 '+p.r2,'#fbbf24',14);
+  lab(ctx,185,158,'~','#fff',24);
+  lab(ctx,180,46,'面積比 = ?','#22d3ee',18);
+},
+twotan(ctx,p){
+  const O={x:135,y:165},rp=52,P={x:305,y:165};
+  const d=P.x-O.x,b=rp*rp/d,h=rp*Math.sqrt(d*d-rp*rp)/d;
+  const Mx=O.x+b,T1={x:Mx,y:O.y+h},T2={x:Mx,y:O.y-h};
+  circ(ctx,O.x,O.y,rp,3.5);
+  seg(ctx,P.x,P.y,T1.x,T1.y,3.5);seg(ctx,P.x,P.y,T2.x,T2.y,3.5);
+  seg(ctx,O.x,O.y,P.x,P.y,2,'rgba(255,255,255,.5)');
+  const sq=T=>{const s=10,vx=(T.x-O.x)/rp,vy=(T.y-O.y)/rp,wx=P.x-T.x,wy=P.y-T.y,W=Math.hypot(wx,wy);
+    ctx.strokeStyle='#4ade80';ctx.lineWidth=2.5;ctx.beginPath();
+    ctx.moveTo(T.x+vx*s,T.y+vy*s);ctx.lineTo(T.x+vx*s+wx/W*s,T.y+vy*s+wy/W*s);ctx.lineTo(T.x+wx/W*s,T.y+wy/W*s);ctx.stroke();};
+  sq(T1);sq(T2);
+  dot(ctx,O.x,O.y,5);dot(ctx,P.x,P.y,4);dot(ctx,T1.x,T1.y,4);dot(ctx,T2.x,T2.y,4);
+  lab(ctx,O.x-15,O.y+17,'O','#fff',14);lab(ctx,P.x+15,P.y,'P','#fff',14);
+  lab(ctx,T1.x-19,T1.y+9,'T1','#fff',13);lab(ctx,T2.x-19,T2.y-9,'T2','#fff',13);
+  lab(ctx,(P.x+T1.x)/2+11,(P.y+T1.y)/2+5,'PT1='+p.t,'#fbbf24',14);
+  lab(ctx,(O.x+P.x)/2,(O.y+P.y)/2-11,'OP='+p.d,'#fff',13);
+  lab(ctx,(P.x+T2.x)/2+11,(P.y+T2.y)/2-5,'?','#22d3ee',22);
+},
+triarea(ctx,p){
+  const u=200/p.b1,A={x:80,y:240},B={x:280,y:240},C={x:150,y:240-p.h1*u},F={x:150,y:240};
+  seg(ctx,A.x,A.y,B.x,B.y,3.5);seg(ctx,B.x,B.y,C.x,C.y,3.5);seg(ctx,C.x,C.y,A.x,A.y,3.5);
+  ctx.setLineDash([6,5]);seg(ctx,C.x,C.y,F.x,F.y,2.5,'#fbbf24');ctx.setLineDash([]);
+  dot(ctx,A.x,A.y,4);dot(ctx,B.x,B.y,4);dot(ctx,C.x,C.y,4);
+  lab(ctx,180,263,'底 '+p.b1,'#fff',14);
+  lab(ctx,166,(C.y+F.y)/2,'高 '+p.h1,'#fbbf24',14);
+  lab(ctx,228,196,'另一邊 '+p.b2,'#fff',13);
+  lab(ctx,180,40,'對應嘅高 = ?','#22d3ee',18);
+},
+
+ext(ctx,p){
+  const e=p.e,b=p.b,ai=(180-e)*RAD,br=b*RAD,C=e-b;
+  const Ax=110,Ay=240,Bx=290,By=240;
+  const s=180*Math.sin(br)/Math.sin(C*RAD);
+  const Cx=Ax+s*Math.cos(ai),Cy=Ay-s*Math.sin(ai);
+  seg(ctx,Ax-62,Ay,Bx,By,3.5);
+  seg(ctx,Bx,By,Cx,Cy,3.5);seg(ctx,Cx,Cy,Ax,Ay,3.5);
+  dot(ctx,Ax,Ay,4);dot(ctx,Bx,By,4);dot(ctx,Cx,Cy,4);
+  lab(ctx,Ax-8,Ay+18,'A','#fff',13);lab(ctx,Bx+8,By+18,'B','#fff',13);lab(ctx,Cx,Cy-16,'C','#fff',13);
+  smallArc(ctx,Ax,Ay,30,Math.PI,-ai,3,'#fbbf24');
+  bisLab(ctx,Ax,Ay,56,Math.PI,-ai,e+'°','#fbbf24',17);
+  const b1=Math.atan2(Ay-By,Ax-Bx),b2=Math.atan2(Cy-By,Cx-Bx);
+  smallArc(ctx,Bx,By,28,b1,b2,3,'#fbbf24');
+  bisLab(ctx,Bx,By,54,b1,b2,b+'°','#fbbf24',16);
+  const c1=Math.atan2(Ay-Cy,Ax-Cx),c2=Math.atan2(By-Cy,Bx-Cx);
+  smallArc(ctx,Cx,Cy,24,c1,c2,3,'#22d3ee');
+  bisLab(ctx,Cx,Cy,48,c1,c2,'?','#22d3ee',24);
+},
+iso(ctx,p){
+  const v=p.v*RAD,L=148,Vx=180,Vy=238-L*Math.cos(v/2);
+  const Bx=Vx-L*Math.sin(v/2),By=238,Cx=Vx+L*Math.sin(v/2),Cy=238;
+  seg(ctx,Vx,Vy,Bx,By,3.5);seg(ctx,Vx,Vy,Cx,Cy,3.5);seg(ctx,Bx,By,Cx,Cy,3.5);
+  dot(ctx,Vx,Vy,4);dot(ctx,Bx,By,4);dot(ctx,Cx,Cy,4);
+  lab(ctx,Vx,Vy-16,'V','#fff',13);lab(ctx,Bx-12,By+4,'B','#fff',13);lab(ctx,Cx+12,Cy+4,'C','#fff',13);
+  const va1=Math.atan2(By-Vy,Bx-Vx),va2=Math.atan2(Cy-Vy,Cx-Vx);
+  const bB2=Math.atan2(Vy-By,Vx-Bx);
+  if(p.mark==='v'){
+    smallArc(ctx,Vx,Vy,30,va1,va2,3,'#fbbf24');
+    bisLab(ctx,Vx,Vy,54,va1,va2,p.v+'°','#fbbf24',17);
+    smallArc(ctx,Bx,By,28,0,bB2,3,'#22d3ee');
+    bisLab(ctx,Bx,By,52,0,bB2,'?','#22d3ee',24);
+  }else if(p.mark==='b'){
+    smallArc(ctx,Bx,By,28,0,bB2,3,'#fbbf24');
+    bisLab(ctx,Bx,By,52,0,bB2,p.b+'°','#fbbf24',17);
+    smallArc(ctx,Vx,Vy,30,va1,va2,3,'#22d3ee');
+    bisLab(ctx,Vx,Vy,54,va1,va2,'?','#22d3ee',24);
+  }else{
+    const Ex=Vx+(Vx-Cx)*0.5,Ey=Vy+(Vy-Cy)*0.5;
+    seg(ctx,Vx,Vy,Ex,Ey,3.5);dot(ctx,Ex,Ey,3);
+    smallArc(ctx,Bx,By,28,0,bB2,3,'#fbbf24');
+    bisLab(ctx,Bx,By,52,0,bB2,p.b+'°','#fbbf24',17);
+    const e1=Math.atan2(Ey-Vy,Ex-Vx);
+    smallArc(ctx,Vx,Vy,32,e1,va2,3,'#22d3ee');
+    bisLab(ctx,Vx,Vy,58,e1,va2,'?','#22d3ee',24);
+  }
+},
+rt(ctx,p){
+  const a=p.a*RAD,h=120,Ax=90,Ay=235,Cx=Ax,Cy=Ay-h,Bx=Ax+h*Math.tan(a),By=235;
+  const Dx=Bx+62;
+  seg(ctx,Ax,Ay,Dx,By,3.5);
+  seg(ctx,Bx,By,Cx,Cy,3.5);seg(ctx,Cx,Cy,Ax,Ay,3.5);
+  seg(ctx,Cx+13,Cy,Cx+13,Cy+13,2.5,'#fbbf24');seg(ctx,Cx,Cy+13,Cx+13,Cy+13,2.5,'#fbbf24');
+  dot(ctx,Ax,Ay,4);dot(ctx,Bx,By,4);dot(ctx,Cx,Cy,4);
+  lab(ctx,Ax-13,Ay+4,'A','#fff',14);lab(ctx,Bx+4,By+16,'B','#fff',14);lab(ctx,Cx-13,Cy,'C','#fff',14);
+  smallArc(ctx,Ax,Ay,30,-a,0,3,'#fbbf24');
+  bisLab(ctx,Ax,Ay,54,-a,0,p.a+'°','#fbbf24',17);
+  smallArc(ctx,Bx,By,30,Math.PI,0,3,'#22d3ee');
+  bisLab(ctx,Bx,By,58,Math.PI,0,'?','#22d3ee',24);
+},
+isotrap(ctx,p){
+  const a=p.a*RAD,h=125,y0=235,y1=y0-h;
+  const off=h/Math.tan(a),Ax=180-125,Bx=180+125;
+  const Dx=Ax+off,Cx=Bx-off;
+  seg(ctx,Ax,y0,Bx,y0,3.5);seg(ctx,Dx,y1,Cx,y1,3.5);
+  seg(ctx,Ax,y0,Dx,y1,3.5);seg(ctx,Bx,y0,Cx,y1,3.5);
+  dot(ctx,Ax,y0,4);dot(ctx,Bx,y0,4);dot(ctx,Cx,y1,4);dot(ctx,Dx,y1,4);
+  lab(ctx,Ax-13,y0+4,'A','#fff',13);lab(ctx,Bx+13,y0+4,'B','#fff',13);
+  lab(ctx,Cx+13,y1,'C','#fff',13);lab(ctx,Dx-13,y1,'D','#fff',13);
+  const aAD=Math.atan2(y1-y0,Dx-Ax);
+  smallArc(ctx,Ax,y0,28,0,aAD,3,'#fbbf24');
+  bisLab(ctx,Ax,y0,52,0,aAD,p.a+'°','#fbbf24',16);
+  const aBC=Math.atan2(y1-y0,Cx-Bx);
+  smallArc(ctx,Bx,y0,28,Math.PI,aBC,3,'#fbbf24');
+  bisLab(ctx,Bx,y0,52,Math.PI,aBC,p.a+'°','#fbbf24',16);
+  const Ex=Dx+(Dx-Cx)*0.55,Ey=y1;
+  seg(ctx,Dx,y1,Ex,Ey,3.5);
+  const e1=Math.atan2(Ey-y1,Ex-Dx),e2=Math.atan2(y0-y1,Ax-Dx);
+  smallArc(ctx,Dx,y1,28,e1,e2,3,'#22d3ee');
+  bisLab(ctx,Dx,y1,54,e1,e2,'?','#22d3ee',24);
+},
+paraE(ctx,p){
+  const a=p.a,t=a*RAD,y1=95,y2=205;
+  seg(ctx,45,y1,315,y1,3.5);seg(ctx,45,y2,315,y2,3.5);
+  chev(ctx,80,y1);chev(ctx,280,y1);chev(ctx,80,y2);chev(ctx,280,y2);
+  const x1=180-50/Math.tan(t),x2=180+50/Math.tan(t);
+  const dx=Math.cos(t),dy=Math.sin(t);
+  seg(ctx,x1-75*dx,y1-75*dy,x2+75*dx,y2+75*dy,3.5);
+  dot(ctx,x1,y1,4);dot(ctx,x2,y2,4);
+  smallArc(ctx,x1,y1,30,0,t,3,'#fbbf24');
+  bisLab(ctx,x1,y1,54,0,t,a+'°','#fbbf24',17);
+  smallArc(ctx,x2,y2,30,t,Math.PI,3,'#22d3ee');
+  bisLab(ctx,x2,y2,58,t,Math.PI,'?','#22d3ee',24);
+},
+supp3(ctx,p){
+  const a=p.a*RAD,b=p.b*RAD,PX=180,PY=185;
+  seg(ctx,45,PY,315,PY,3.5);
+  const r1=-a,r2=-(a+b);
+  seg(ctx,PX,PY,PX+125*Math.cos(r1),PY+125*Math.sin(r1),3.5);
+  seg(ctx,PX,PY,PX+125*Math.cos(r2),PY+125*Math.sin(r2),3.5);
+  dot(ctx,PX,PY,5);
+  smallArc(ctx,PX,PY,34,0,r1,3,'#fbbf24');
+  bisLab(ctx,PX,PY,58,0,r1,p.a+'°','#fbbf24',16);
+  smallArc(ctx,PX,PY,34,r1,r2,3,'#fbbf24');
+  bisLab(ctx,PX,PY,58,r1,r2,p.b+'°','#fbbf24',16);
+  smallArc(ctx,PX,PY,34,r2,Math.PI,3,'#22d3ee');
+  bisLab(ctx,PX,PY,64,r2,Math.PI,'?','#22d3ee',24);
+},
+hex(ctx,p){
+  const n=p.n,cx=180,cy=155,R=95,rot=-Math.PI/2;
+  const P=[];
+  for(let i=0;i<n;i++){const z=rot+i*2*Math.PI/n;P.push({x:cx+R*Math.cos(z),y:cy+R*Math.sin(z)});}
+  for(let i=0;i<n;i++){const q=P[(i+1)%n];seg(ctx,P[i].x,P[i].y,q.x,q.y,3.5);}
+  P.forEach(z=>dot(ctx,z.x,z.y,4));
+  const i0=0,A=P[i0],B=P[(i0+1)%n],Pv=P[(i0-1+n)%n];
+  const ex=A.x+(A.x-B.x)*0.45,ey=A.y+(A.y-B.y)*0.45;
+  seg(ctx,A.x,A.y,ex,ey,3.5);
+  const e1=Math.atan2(ey-A.y,ex-A.x),e2=Math.atan2(Pv.y-A.y,Pv.x-A.x);
+  smallArc(ctx,A.x,A.y,30,e1,e2,3,'#22d3ee');
+  bisLab(ctx,A.x,A.y,56,e1,e2,'?','#22d3ee',24);
+  lab(ctx,cx,cy+8,'正'+n+'邊形','#fbbf24',16);
+},
+chord(ctx,p){
+  const cx=180,cy=148,r=95,L=p.L,d=p.d,hx=L/2,y=cy+d;
+  circ(ctx,cx,cy,r,3.5);
+  seg(ctx,cx-hx,y,cx+hx,y,3.5);
+  dot(ctx,cx-hx,y,4);dot(ctx,cx+hx,y,4);dot(ctx,cx,cy,5);
+  lab(ctx,cx,cy+18,'O','#fff',14);
+  ctx.setLineDash([6,5]);seg(ctx,cx,cy,cx,y,2.5,'#fbbf24');ctx.setLineDash([]);
+  seg(ctx,cx-9,y,cx-9,y-9,2.5,'#fbbf24');seg(ctx,cx-9,y-9,cx,y-9,2.5,'#fbbf24');
+  lab(ctx,cx,y+22,'弦長 '+L,'#fff',14);
+  lab(ctx,cx+20,(cy+y)/2,'?','#22d3ee',20);
+},
+trap(ctx,p){
+  const y0=240,y1=130,cx=180,Wa=220,Wb=220*p.b/p.a;
+  const Ax=cx-Wa/2,Bx=cx+Wa/2,Dx=cx-Wb/2,Cx=cx+Wb/2;
+  seg(ctx,Ax,y0,Bx,y0,3.5);seg(ctx,Dx,y1,Cx,y1,3.5);
+  seg(ctx,Ax,y0,Dx,y1,3.5);seg(ctx,Bx,y0,Cx,y1,3.5);
+  dot(ctx,Ax,y0,4);dot(ctx,Bx,y0,4);dot(ctx,Cx,y1,4);dot(ctx,Dx,y1,4);
+  ctx.setLineDash([6,5]);seg(ctx,cx,y0,cx,y1,2.5,'#fbbf24');ctx.setLineDash([]);
+  lab(ctx,cx,y0+22,'下底 '+p.a,'#fff',14);
+  lab(ctx,cx,y1-16,'上底 '+p.b,'#fff',14);
+  lab(ctx,cx+20,(y0+y1)/2,'?','#22d3ee',20);
+},
+rt2(ctx,p){
+  const Ax=90,Ay=235,Bx=250,By=235,Cx=90,Cy=115;
+  seg(ctx,Ax,Ay,Bx,By,3.5);seg(ctx,Bx,By,Cx,Cy,3.5);seg(ctx,Cx,Cy,Ax,Ay,3.5);
+  seg(ctx,Cx+13,Cy,Cx+13,Cy+13,2.5,'#fbbf24');seg(ctx,Cx,Cy+13,Cx+13,Cy+13,2.5,'#fbbf24');
+  dot(ctx,Ax,Ay,4);dot(ctx,Bx,By,4);dot(ctx,Cx,Cy,4);
+  lab(ctx,(Ax+Bx)/2,Ay+20,p.l1,'#fff',15);
+  lab(ctx,Ax-22,(Ay+Cy)/2,p.l2,'#fff',15);
+  lab(ctx,(Bx+Cx)/2+22,(By+Cy)/2,'?','#22d3ee',22);
+},
+circR(ctx,p){
+  const cx=180,cy=150,r=90;
+  circ(ctx,cx,cy,r,3.5);dot(ctx,cx,cy,5);
+  lab(ctx,cx,cy+20,'O','#fff',14);
+  seg(ctx,cx,cy,cx+r,cy,3,'#fbbf24');
+  lab(ctx,cx+r/2,cy-16,'?','#22d3ee',22);
+  lab(ctx,cx,cy+56,'周界 = '+p.C,'#fbbf24',16);
+},
+bisT(ctx,p){
+  const bad=p.bad*RAD,b=p.b*RAD,A={x:70,y:225},B={x:290,y:225},aTot=2*bad;
+  const d1x=Math.cos(-aTot),d1y=Math.sin(-aTot),d2x=Math.cos(b-Math.PI),d2y=Math.sin(b-Math.PI);
+  const t=((B.x-A.x)*d2y-(B.y-A.y)*d2x)/(d1x*d2y-d1y*d2x);
+  const C={x:A.x+t*d1x,y:A.y+t*d1y};
+  const AB=Math.hypot(B.x-A.x,B.y-A.y),AC=t,ratio=AB/AC;
+  const D={x:(C.x*ratio+B.x)/(ratio+1),y:(C.y*ratio+B.y)/(ratio+1)};
+  seg(ctx,A.x,A.y,B.x,B.y,3.5);seg(ctx,B.x,B.y,C.x,C.y,3.5);seg(ctx,C.x,C.y,A.x,A.y,3.5);
+  ctx.setLineDash([6,5]);seg(ctx,A.x,A.y,D.x,D.y,2.5,'#fbbf24');ctx.setLineDash([]);
+  dot(ctx,A.x,A.y,4);dot(ctx,B.x,B.y,4);dot(ctx,C.x,C.y,4);dot(ctx,D.x,D.y,4);
+  lab(ctx,A.x-13,A.y+4,'A','#fff',13);lab(ctx,B.x+13,B.y+4,'B','#fff',13);
+  lab(ctx,C.x,C.y-16,'C','#fff',13);lab(ctx,D.x+12,D.y+6,'D','#fff',12);
+  smallArc(ctx,A.x,A.y,30,-aTot,-bad,3,'#fbbf24');
+  bisLab(ctx,A.x,A.y,56,-aTot,-bad,p.bad+'°','#fbbf24',16);
+  const b1=Math.atan2(A.y-B.y,A.x-B.x),b2=Math.atan2(C.y-B.y,C.x-B.x);
+  smallArc(ctx,B.x,B.y,28,b1,b2,3,'#fbbf24');
+  bisLab(ctx,B.x,B.y,54,b1,b2,p.b+'°','#fbbf24',16);
+  const c1=Math.atan2(A.y-C.y,A.x-C.x),c2=Math.atan2(B.y-C.y,B.x-C.x);
+  smallArc(ctx,C.x,C.y,24,c1,c2,3,'#22d3ee');
+  bisLab(ctx,C.x,C.y,50,c1,c2,'?','#22d3ee',24);
+},
+coord(ctx,p){
+  const ox=180,oy=165,sc=15;
+  const X=x=>ox+x*sc,Y=y=>oy-y*sc;
+  seg(ctx,36,oy,324,oy,2,'#5b7fa6');seg(ctx,ox,30,ox,300,2,'#5b7fa6');
+  lab(ctx,ox-14,oy+18,'O','#fff',13);
+  const A={x:X(p.x1),y:Y(p.y1)},B={x:X(p.x2),y:Y(p.y2)},M={x:X(p.mx),y:Y(p.my)};
+  ctx.setLineDash([5,4]);
+  seg(ctx,A.x,A.y,M.x,M.y,2,'#fbbf24');seg(ctx,M.x,M.y,B.x,B.y,2,'#fbbf24');
+  seg(ctx,ox,oy,M.x,M.y,2,'#22d3ee');
+  ctx.setLineDash([]);
+  dot(ctx,A.x,A.y,5,'#fbbf24');dot(ctx,B.x,B.y,5,'#fbbf24');dot(ctx,M.x,M.y,5,'#22d3ee');
+  lab(ctx,A.x,A.y-16,'A('+p.x1+','+p.y1+')','#fbbf24',12);
+  lab(ctx,B.x,B.y+20,'B('+p.x2+','+p.y2+')','#fbbf24',12);
+  lab(ctx,M.x+30,M.y-12,'M?','#22d3ee',15);
+},};
 
 function drawQ(q){
   const dpr=window.devicePixelRatio||1,W=360,H=300;
@@ -461,8 +898,8 @@ let diff='easy',score=0,lives=3,built=0,answered=false,current=null;
 let high=0;
 try{high=parseInt(localStorage.getItem('geoarch_high')||'0',10)||0;}catch(e){}
 const CONCEPTS={
-easy:'💡 <b>數學概念（初階 · 中一至中二）：</b><br>• <b>對頂角相等</b>：兩條直線相交，相對嘅兩隻角角度相等。<br>• <b>三角形內角和</b>：三隻內角加埋 = 180°。<br>• <b>補角</b>：直線上一點兩旁嘅鄰角加埋 = 180°。',
-med:'💡 <b>數學概念（中階 · 中三至中四）：</b><br>• <b>平行線</b>被截線所截：同位角相等、內錯角相等、同旁內角互補（加埋 180°）。<br>• <b>相似三角形</b>：對應邊成比例，對應角相等。',
+easy:'💡 <b>數學概念（初階 · 中一至中二）：</b><br>• <b>對頂角相等</b>：兩條直線相交，相對嘅兩隻角角度相等。<br>• <b>三角形內角和</b>：三隻內角加埋 = 180°；外角 = 唔相鄰兩內角之和。<br>• <b>補角</b>：直線上一點兩旁嘅鄰角加埋 = 180°。<br>• <b>等腰三角形</b>：兩底角相等。<br>• <b>四邊形內角和</b> = 360°；<b>正 n 邊形</b>外角 = 360° ÷ n。',
+med:'💡 <b>數學概念（中階 · 中三至中四）：</b><br>• <b>平行線</b>被截線所截：同位角相等、內錯角相等、同旁內角互補（加埋 180°）。<br>• <b>相似三角形</b>：對應邊成比例；面積比 = 邊長比嘅平方。<br>• <b>畢氏定理</b>：a² + b² = c²（c 係斜邊）。<br>• <b>弦心距</b>：圓心到弦嘅垂線平分條弦。<br>• <b>扇形</b>：面積 = πr² × θ/360°，弧長 = 2πr × θ/360°。',
 hard:'💡 <b>數學概念（高階 · 中五至中六）：</b><br>• <b>圓心角 = 2 × 圓周角</b>（同弧所對）。<br>• <b>半圓上嘅圓周角 = 90°</b>（直徑所對嘅角）。<br>• <b>切線垂直於半徑</b>（喺切點成直角）。<br>• <b>陰影面積 = 大圖形面積 − 小圖形面積</b>。'
 };
 

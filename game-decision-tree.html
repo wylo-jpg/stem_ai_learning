@@ -95,14 +95,14 @@ const QUESTIONS = [
   {t:'有鱗片？', f:{fish:1,snake:1}},
   {t:'會生蛋？', f:{bird:1,fish:1,snake:1,frog:1,bfly:1,spider:1}},
   {t:'有毒？', f:{snake:1,spider:1}},
-  {t:'係昆蟲？', f:{bfly:1,spider:1}},
+  {t:'係昆蟲？', f:{bfly:1}},
   {t:'有 8 隻腳？', f:{spider:1}},
   {t:'識跳？', f:{frog:1}}
 ];
 const LEVELS = [
   {animals:['dog','cat','bird','fish'], qs:[0,3,5,7,4,2], par:2},
   {animals:['dog','bird','fish','snake','bfly','spider'], qs:[0,3,4,5,6,7,8,9,10,2], par:3},
-  {animals:['dog','cat','bird','fish','snake','frog','bfly','spider'], qs:[0,1,2,3,4,5,6,7,8,9,10,11], par:3}
+  {animals:['dog','cat','bird','fish','snake','frog','bfly','spider'], qs:[0,1,2,3,4,5,6,7,8,9,10,11], par:4}
 ];
 let lvl=0, groups=[], sel=-1, stars=0, maxDepth=0, advancing=false;
 

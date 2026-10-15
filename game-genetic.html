@@ -84,7 +84,7 @@ const W=480,H=440,TX=W/2,TY=56,POP=26,STEPS=260,MAXGEN=25,TARGET=95;
 let pop=[],gen=0,bestHist=[],running=false,won=false;
 
 function rand(a,b){return a+Math.random()*(b-a);}
-function newCreature(){return {x:rand(60,W-60),y:H-30,speed:rand(0.6,2.2),wob:rand(-1.4,1.4),ph:rand(0,6.28),fit:0,steps:0};}
+function newCreature(){return {x:rand(60,W-60),y:H-30,speed:rand(0.6,1.1),wob:rand(-1.4,1.4),ph:rand(0,6.28),fit:0,steps:0};}
 function init(){pop=[];for(let i=0;i<POP;i++)pop.push(newCreature());gen=0;bestHist=[];won=false;updateHUD(0,0);drawChart();}
 
 function simulate(){

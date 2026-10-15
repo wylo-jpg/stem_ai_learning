@@ -142,11 +142,13 @@ function nextRound(){
   const order=[0,1,2,3].sort(()=>r()-0.5);
   const grid=document.getElementById('grid');grid.innerHTML='';
   const aiArt=aistyle(mulberry(99+round*131),artifact);
+  const styleOrder=[0,1,2].sort(()=>r()-0.5); // 3 種非 AI 風格每輪各出一次，唔重複
+  let si=0;
   order.forEach((slot,i)=>{
     const div=document.createElement('div');div.className='art';div.dataset.slot=i;
     let svg,cap;
     if(i===aiPos){svg=aiArt.svg;cap='?';}
-    else{const st=STYLES[(i+aiPos)%3];svg=`<svg viewBox="0 0 300 300">${st.make(r)}</svg>`;cap='?';}
+    else{const st=STYLES[styleOrder[si++]];svg=`<svg viewBox="0 0 300 300">${st.make(r)}</svg>`;cap='?';}
     if(i===aiPos)div.innerHTML=`<svg viewBox="0 0 300 300">${svg}</svg><div class="cap">畫作 ${i+1}</div>`;
     else div.innerHTML=svg+`<div class="cap">畫作 ${i+1}</div>`;
     div.onclick=()=>pick(div,i===aiPos,aiArt.note);

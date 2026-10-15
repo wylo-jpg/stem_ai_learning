@@ -168,7 +168,8 @@ function genMid(){
 function genHard(){
   var t=ri(0,3);
   if(t===0){var m=ri(-4,4),c=ri(-6,6);if(m===0)m=3;
-    return Q('直線 y = '+m+'x + ('+c+') 的 y 截距是？',c,[c+1,c-1,m,-c]);}
+    var dc=(c===0)?2:-c;
+    return Q('直線 y = '+m+'x + ('+c+') 的 y 截距是？',c,[c+1,c-1,m,dc]);}
   if(t===1){var m2=ri(2,5),c2=ri(1,6);
     return Q('斜率為 '+m2+'、通過 (0, '+c2+') 的直線方程是？','y = '+m2+'x + '+c2,['y = '+c2+'x + '+m2,'y = '+m2+'x − '+c2,'y = '+(-m2)+'x + '+c2,'x = '+m2+'y + '+c2]);}
   if(t===2){var x1=ri(-4,4),y1=ri(-4,4),x2=x1+ri(1,4),m3=ri(-3,3);if(m3===0)m3=2;var y2=y1+m3*(x2-x1);

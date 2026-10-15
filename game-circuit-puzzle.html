@@ -29,6 +29,12 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 50px}
 .cell .wire{color:#fbbf24;line-height:1;pointer-events:none}
 .cell.lit{border-color:var(--amber);box-shadow:0 0 14px var(--amber);background:#451a03}
 .cell.lit .bulb{filter:drop-shadow(0 0 8px #fde047)}
+.cell.hot{border-color:#f59e0b}
+.cell.hot .wire{color:#fde047;text-shadow:0 0 10px #fbbf24;animation:flow 1.1s ease-in-out infinite}
+@keyframes flow{0%,100%{opacity:1}50%{opacity:.5}}
+.cell.warm .bulb{filter:drop-shadow(0 0 6px #fbbf24) brightness(.8)}
+.cell.hint{animation:hintPulse .55s ease-in-out 4;border-color:#22d3ee !important;box-shadow:0 0 18px #22d3ee !important}
+@keyframes hintPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
 .cell.fixed{cursor:default;border-style:dashed}
 .cell .tag{position:absolute;bottom:1px;font-size:11px;color:#94a3b8;pointer-events:none}
 .tip{background:#1e293b;border:1px solid #f59e0b55;border-radius:10px;padding:10px 14px;font-size:13.5px;margin-top:12px;color:#fde68a}
@@ -62,9 +68,10 @@ footer{text-align:center;color:#64748b;font-size:12px;padding:26px}
 <div class="stat"><small>步數</small><span id="hMoves">0</span></div>
 <div class="stat"><small>總分</small><span id="hScore">0</span></div>
 <button class="btn gray" onclick="restart()">↺ 重玩</button>
+<button class="btn" style="background:#0ea5e9" onclick="hint()">💡 提示</button>
 </div>
 <div class="board-wrap"><div id="board"></div></div>
-<div class="tip">💡 撳電線可以順時針轉 90°。電流要由電池 <b>+</b> 極出發，經過<b>所有燈泡</b>，返到 <b>−</b> 極，先至算駁通！著咗嘅燈泡會發光 ✨</div>
+<div class="tip">💡 撳電線可以順時針轉 90°。<b style="color:#fde047">發光閃爍嘅電線</b>表示電流已經流到嗰度！電流要由電池 <b>+</b> 極出發，經過<b>所有燈泡</b>，返到 <b>−</b> 極，先至算駁通！燈泡半光＝有電到但迴路未閉合，全光 ✨＝成功！唔知撳邊條？撳 <b>💡 提示</b>，會指出邊條電線轉一轉就駁得上！</div>
 </main>
 <footer>教學資源共享 · 歡迎老師同學生使用</footer>
 
@@ -75,7 +82,8 @@ footer{text-align:center;color:#64748b;font-size:12px;padding:26px}
 <li>撳任何一格電線，佢會<b>順時針轉 90°</b>。</li>
 <li>🔋 係電池（<b>+</b> 極向右，<b>−</b> 極向左），撳唔郁。</li>
 <li>目標：用電線將電流由 <b>+</b> 極帶到每一個 💡，再返去 <b>−</b> 極。</li>
-<li>燈泡著晒（發光）就過關！步數愈少分愈高。</li>
+<li><b style="color:#fde047">電線發光閃爍</b>＝電流已流到！跟住條光路駁落去就啱。</li>
+<li>燈泡半光＝有電但迴路未閂埋；燈泡著晒（發光）就過關！步數愈少分愈高。</li>
 </ul>
 <p>📐 背後嘅物理：電流只會喺<b>閉合迴路</b>流動。斷咗任何一忽，成個迴路都冇電，燈泡就唔會著。</p>
 <button class="btn" onclick="document.getElementById('helpOv').classList.add('hide')">開始駁線！</button>
@@ -201,32 +209,43 @@ function rotate(c){
 function conns(c){return CONN[c.t][c.r%CONN[c.t].length];}
 function at(ri,ci){if(ri<0||ri>=n||ci<0||ci>=n)return null;return cells[ri*n+ci];}
 const DR=[[-1,0],[0,1],[1,0],[0,-1]];
-function checkWin(silent){
- if(!batt)return false;
- const er=at(batt.ri,batt.ci+1),wr=at(batt.ri,batt.ci-1);
- if(!er||!wr||!conns(er).includes(3)||!conns(wr).includes(1))return false;
- // BFS
- const seen=new Set(),key=(r,c)=>r*n+c;
- const q=[[er.ri,er.ci]];seen.add(key(er.ri,er.ci));
- while(q.length){
-  const[ri,ci]=q.pop(),c=at(ri,ci);
-  for(const d of conns(c)){
-   const nr=ri+DR[d][0],nc=ci+DR[d][1],nb=at(nr,nc);
-   if(!nb)continue;
-   if(!conns(nb).includes((d+2)%4))continue;
-   const k=key(nr,nc);
-   if(!seen.has(k)){seen.add(k);q.push([nr,nc]);}
+function bfsNoBatt(start,seen){
+  const key=(r,c)=>r*n+c;
+  const q=[[start.ri,start.ci]];seen.add(key(start.ri,start.ci));
+  while(q.length){
+    const[ri,ci]=q.pop(),c=at(ri,ci);
+    for(const d of conns(c)){
+      const nr=ri+DR[d][0],nc=ci+DR[d][1],nb=at(nr,nc);
+      if(!nb||nb.t==='B')continue;
+      if(!conns(nb).includes((d+2)%4))continue;
+      const k=key(nr,nc);
+      if(!seen.has(k)){seen.add(k);q.push([nr,nc]);}
+    }
   }
- }
- let allLit=true;
- cells.forEach(c=>{
-  if(!c)return;
-  const lit=c.t==='o'&&seen.has(key(c.ri,c.ci))&&seen.has(key(wr.ri,wr.ci));
-  c.lit=lit;
-  if(c.t==='o'&&!lit)allLit=false;
- });
- if(!silent)render();
- return allLit;
+}
+function flow(){
+  const seenE=new Set(),seenW=new Set(),key=(r,c)=>r*n+c;
+  if(!batt)return{seenE,seenW};
+  const er=at(batt.ri,batt.ci+1),wr=at(batt.ri,batt.ci-1);
+  if(!er||!wr||!conns(er).includes(3)||!conns(wr).includes(1))return{seenE,seenW};
+  bfsNoBatt(er,seenE);
+  bfsNoBatt(wr,seenW);
+  return{seenE,seenW};
+}
+function checkWin(silent){
+  const{seenE,seenW}=flow();
+  let allLit=true;
+  cells.forEach(c=>{
+    if(!c)return;
+    const inE=seenE.has(c.ri*n+c.ci),inW=seenW.has(c.ri*n+c.ci);
+    c.hot=inE;
+    const lit=c.t==='o'&&inE&&inW;
+    const warm=c.t==='o'&&inE&&!inW;
+    c.lit=lit;c.warm=warm;
+    if(c.t==='o'&&!lit)allLit=false;
+  });
+  if(!silent)render();
+  return allLit;
 }
 function glyph(c){
  if(c.t==='B')return'🔋';
@@ -242,10 +261,12 @@ function render(){
   if(!c)return;
   const el=c.el;
   el.classList.toggle('lit',!!c.lit);
+  el.classList.toggle('hot',!!c.hot);
+  el.classList.toggle('warm',!!c.warm);
   el.classList.toggle('fixed',!!c.fixed);
   if(c.t==='B'){el.innerHTML='<span style="font-size:0.88em">🔋</span><span class="tag">+ →</span>';}
   else if(c.t==='o'){
-   el.innerHTML=`<span class="wire" style="position:absolute;font-size:0.88em">${c.r===0?'─':'│'}</span><span class="bulb ${c.lit?'':'bulb-off'}" style="font-size:0.82em;position:relative">💡</span>`;
+   el.innerHTML=`<span class="wire" style="position:absolute;font-size:0.88em">${c.r===0?'─':'│'}</span><span class="bulb ${c.lit?'':(c.warm?'':'bulb-off')}" style="font-size:0.82em;position:relative">💡</span>`;
   }
   else{el.innerHTML=`<span class="wire">${glyph(c)}</span>`;}
  });
@@ -254,6 +275,31 @@ function update(){
  document.getElementById('hLevel').textContent=(level+1)+' / '+LEVELS.length;
  document.getElementById('hMoves').textContent=moves;
  document.getElementById('hScore').textContent=score;
+}
+function hint(){
+  const{seenE}=flow(),key=(r,c)=>r*n+c;
+  const cands=[];
+  cells.forEach(c=>{
+    if(!c||c.fixed||seenE.has(key(c.ri,c.ci)))return;
+    for(let d=0;d<4;d++){
+      const nb=at(c.ri+DR[d][0],c.ci+DR[d][1]);
+      if(!nb||!seenE.has(key(nb.ri,nb.ci)))continue;
+      if(!conns(nb).includes((d+2)%4))continue;
+      for(let rr=0;rr<maxR(c.t);rr++){
+        if(CONN[c.t][rr].includes(d)){cands.push(c);break;}
+      }
+      break;
+    }
+  });
+  let target=cands.length?cands[Math.floor(Math.random()*cands.length)]:null;
+  if(!target){
+    const dark=cells.filter(c=>c&&c.t==='o'&&!c.lit);
+    if(dark.length)target=dark[0];
+  }
+  if(target){
+    target.el.classList.add('hint');
+    setTimeout(()=>target.el.classList.remove('hint'),2400);
+  }
 }
 function levelComplete(){
  const gain=Math.max(60,260-moves*6);score+=gain;update();

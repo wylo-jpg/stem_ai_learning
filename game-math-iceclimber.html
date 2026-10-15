@@ -149,8 +149,8 @@ function genEasy(){
 function genMid(){
   var t=ri(0,5);
   if(t===0){var m=ri(2,4),n=ri(2,4);return Q('x'+sup(m)+' × x'+sup(n)+' = ?','x'+sup(m+n),['x'+sup(m*n),'x'+sup(m+n+1),'x'+sup(Math.abs(m-n)),'x'+sup(m+n-1)]);}
-  if(t===1){var m2=ri(3,6),n2=ri(2,m2-1);return Q('x'+sup(m2)+' ÷ x'+sup(n2)+' = ?','x'+sup(m2-n2),['x'+sup(m2+n2),'x'+sup(m2-n2+1),'x'+sup(Math.floor(m2/n2)),'x'+sup(m2-n2-1)]);}
-  if(t===2){var m3=ri(2,3),n3=ri(2,3);return Q('(x'+sup(m3)+')'+sup(n3)+' = ?','x'+sup(m3*n3),['x'+sup(m3+n3),'x'+sup(m3*n3+1),'x'+sup(m3*n3-1),'x'+sup(m3+n3+2)]);}
+  if(t===1){var m2=ri(3,6),n2=ri(2,m2-1);return Q('x'+sup(m2)+' ÷ x'+sup(n2)+' = ?','x'+sup(m2-n2),['x'+sup(m2+n2),'x'+sup(m2-n2+1),'x'+sup(m2-n2+2),'x'+sup(m2-n2-1)]);}
+  if(t===2){var m3=ri(2,3),n3=ri(2,3);return Q('(x'+sup(m3)+')'+sup(n3)+' = ?','x'+sup(m3*n3),['x'+sup(m3*n3+1),'x'+sup(m3*n3-1),'x'+sup(m3*n3+2),'x'+sup(m3*n3-2)]);}
   if(t===3){var m4=ri(2,4),n4=ri(2,3),v=Math.pow(2,m4*n4);return Q('(2'+sup(m4)+')'+sup(n4)+' = ?',v,[v*2,v/2,Math.pow(2,m4+n4),v+2]);}
   if(t===4){var b=ri(2,9);return Q(b+sup(0)+' = ?',1,[0,b,b+sup(1),'1/'+b]);}
   var e=ri(1,3);

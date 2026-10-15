@@ -27,8 +27,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang HK","Microsoft Jheng
 .cell.block .q{font-size:15px;font-weight:900;color:#fef3c7;text-shadow:0 1px 3px rgba(0,0,0,.5)}
 .cell.blast{background:radial-gradient(circle,#fde68a,#f97316);animation:blast .45s ease;z-index:2}
 @keyframes blast{0%{transform:scale(.4);opacity:.4}60%{transform:scale(1.15);opacity:1}100%{transform:scale(1);opacity:.9}}
-.cell .p{animation:pop-in .25s ease}
-@keyframes pop-in{from{transform:scale(.4)}to{transform:scale(1)}}
 .bombicon{animation:bombpulse .5s ease-in-out infinite}
 @keyframes bombpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.25)}}
 .exitcell{background:radial-gradient(circle,rgba(52,211,153,.5),rgba(52,211,153,.12));box-shadow:0 0 14px rgba(52,211,153,.6)}
@@ -184,6 +182,7 @@ function sndWin(){[523,659,784,1047].forEach(function(f,i){setTimeout(function()
 var DIFFS={easy:{gen:genEasy,key:'bom_best_easy',label:'初階'},mid:{gen:genMid,key:'bom_best_mid',label:'中階'},hard:{gen:genHard,key:'bom_best_hard',label:'高階'}};
 var N=9,diff='easy',level=1,lives=3,score=0;
 var grid=[],player={x:1,y:1},enemies=[],bombs=[],paused=false,loopId=null,enemyId=null,qQueue=[],qBusy=false,blastFx=null;
+var cellEls=[];
 var MAXLV=3;
 (function(){var e=document.getElementById('embers');for(var i=0;i<24;i++){var d=document.createElement('div');d.className='ember';var sz=(3+Math.random()*6).toFixed(1);d.style.width=d.style.height=sz+'px';d.style.left=(Math.random()*100)+'vw';d.style.animationDuration=(5+Math.random()*7)+'s';d.style.animationDelay=(-Math.random()*9)+'s';e.appendChild(d);}})();
 function show(id){var ss=['menu','game','end'];for(var i=0;i<ss.length;i++)document.getElementById(ss[i]).classList.toggle('show',ss[i]===id);}
@@ -209,7 +208,14 @@ function buildLevel(){
   }}
   var ne=1+level;
   for(var i=0;i<ne;i++){var p=freeCellFar();if(p)enemies.push({x:p.x,y:p.y});}
-  render();updateHud();startLoops();
+  buildBoard();render();updateHud();startLoops();
+}
+function buildBoard(){
+  var bd=document.getElementById('board');bd.innerHTML='';cellEls=[];
+  for(var y=0;y<N;y++){cellEls.push([]);for(var x=0;x<N;x++){
+    var c=document.createElement('div');c.className='cell';
+    bd.appendChild(c);cellEls[y].push({el:c,html:null,cls:null});
+  }}
 }
 function freeCellFar(){
   for(var k=0;k<60;k++){var x=ri(3,N-2),y=ri(3,N-2);
@@ -225,27 +231,29 @@ function stopLoops(){clearInterval(loopId);clearInterval(enemyId);loopId=enemyId
 function tick(){
   if(paused)return;
   for(var i=bombs.length-1;i>=0;i--){bombs[i].fuse--;if(bombs[i].fuse<=0){explode(bombs[i]);bombs.splice(i,1);} }
-  render();
 }
 function render(){
-  var bd=document.getElementById('board');bd.innerHTML='';
   for(var y=0;y<N;y++)for(var x=0;x<N;x++){
-    var c=document.createElement('div');c.className='cell';c.dataset.x=x;c.dataset.y=y;
-    var v=grid[y][x];
-    if(v===1)c.classList.add('wall');
-    else if(v===2){c.classList.add('block');c.innerHTML='<span class="q">?</span>';}
-    if(x===N-2&&y===N-2&&v===0)c.classList.add('exitcell');
+    var s=cellEls[y][x];if(!s)continue;
+    var el=s.el,v=grid[y][x];
+    var cls='cell';
+    if(v===1)cls+=' wall';
+    else if(v===2)cls+=' block';
+    if(x===N-2&&y===N-2&&v===0)cls+=' exitcell';
     var isB=false;
     for(var i=0;i<bombs.length;i++)if(bombs[i].x===x&&bombs[i].y===y){isB=true;break;}
-    if(isB)c.innerHTML='<span class="bombicon">💣</span>';
-    else if(player.x===x&&player.y===y)c.innerHTML='<span class="p">🦸</span>';
-    else{for(var j=0;j<enemies.length;j++)if(enemies[j].x===x&&enemies[j].y===y){c.innerHTML='<span class="p">👾</span>';break;}}
-    if(x===N-2&&y===N-2&&v===0&&!(player.x===x&&player.y===y))c.innerHTML='<span class="p">🚪</span>';
+    var html='';
+    if(v===2)html='<span class="q">?</span>';
+    if(isB)html='<span class="bombicon">💣</span>';
+    else if(player.x===x&&player.y===y)html='<span class="p">🦸</span>';
+    else{for(var j=0;j<enemies.length;j++)if(enemies[j].x===x&&enemies[j].y===y){html='<span class="p">👾</span>';break;}}
+    if(x===N-2&&y===N-2&&v===0&&!(player.x===x&&player.y===y))html='<span class="p">🚪</span>';
     if(blastFx&&Date.now()<blastFx.until){
       for(var bi2=0;bi2<blastFx.cells.length;bi2++)
-        if(blastFx.cells[bi2].x===x&&blastFx.cells[bi2].y===y){c.classList.add('blast');break;}
+        if(blastFx.cells[bi2].x===x&&blastFx.cells[bi2].y===y){cls+=' blast';break;}
     }
-    bd.appendChild(c);
+    if(s.cls!==cls){s.cls=cls;el.className=cls;}
+    if(s.html!==html){s.html=html;el.innerHTML=html;}
   }
 }
 function updateHud(){document.getElementById('lives').textContent=lives;document.getElementById('score').textContent=score;document.getElementById('lvl').textContent=level;}
@@ -310,8 +318,8 @@ function explode(b){
     cells.push({x:x,y:y});
     if(grid[y][x]===2)break;
   }
-  var bd=document.getElementById('board');
-  blastFx={cells:cells,until:Date.now()+500};
+  blastFx={cells:cells,until:Date.now()+450};
+  render();
   var qCells=[];
   for(var j=0;j<cells.length;j++){
     var cx=cells[j].x,cy=cells[j].y;
@@ -323,6 +331,7 @@ function explode(b){
   }
   updateHud();
   setTimeout(function(){
+    blastFx=null;
     for(var n=0;n<qCells.length;n++)qQueue.push(qCells[n]);
     processQueue();
     render();

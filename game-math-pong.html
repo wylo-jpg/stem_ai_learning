@@ -104,10 +104,10 @@ var RULES_MID=[
 ];
 var RULES_HARD=[
  {name:'準確至整數是 12',gen:function(){var v=+(12+(Math.random()*1.6-0.8)).toFixed(2);return {v:v,ok:Math.round(v)===12,d:2};}},
- {name:'準確至一位小數是 3.7',gen:function(){var v=+(3.7+(Math.random()*0.16-0.08)).toFixed(3);return {v:v,ok:Math.abs(v-3.7)<0.05,d:3};}},
- {name:'3 位有效數字是 2.04',gen:function(){var v=+(2.04+(Math.random()*0.016-0.008)).toFixed(4);return {v:v,ok:Math.abs(v-2.04)<0.005,d:4};}},
+ {name:'準確至一位小數是 3.7',gen:function(){var v=+(3.7+(Math.random()*0.16-0.08)).toFixed(3);return {v:v,ok:Math.round(v*10)/10===3.7,d:3};}},
+ {name:'3 位有效數字是 2.04',gen:function(){var v=+(2.04+(Math.random()*0.016-0.008)).toFixed(4);return {v:v,ok:Math.round(v*100)/100===2.04,d:4};}},
  {name:'準確至整數是 7',gen:function(){var v=+(7+(Math.random()*1.6-0.8)).toFixed(2);return {v:v,ok:Math.round(v)===7,d:2};}},
- {name:'準確至一位小數是 9.2',gen:function(){var v=+(9.2+(Math.random()*0.16-0.08)).toFixed(3);return {v:v,ok:Math.abs(v-9.2)<0.05,d:3};}}
+ {name:'準確至一位小數是 9.2',gen:function(){var v=+(9.2+(Math.random()*0.16-0.08)).toFixed(3);return {v:v,ok:Math.round(v*10)/10===9.2,d:3};}}
 ];
 
 function beep(f,d,type){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();var o=AC.createOscillator(),g=AC.createGain();o.type=type||'sine';o.frequency.value=f;g.gain.value=0.08;o.connect(g);g.connect(AC.destination);o.start();g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+d);o.stop(AC.currentTime+d);}catch(e){}}

@@ -117,6 +117,7 @@ function renderSent(){
     }
   });
   $('qnum').textContent=qi+1;$('fb1').textContent='';
+  $('cutDone').disabled=false;
   $('phase1').style.display='block';$('phase2').style.display='none';
 }
 function trueCuts(q){
@@ -125,6 +126,8 @@ function trueCuts(q){
   return cuts;
 }
 $('cutDone').addEventListener('click',function(){
+  if($('cutDone').disabled)return;
+  $('cutDone').disabled=true;
   var q=QS[qi],userCuts=[];
   $('sent').querySelectorAll('.gap').forEach(function(g){if(g.classList.contains('cut'))userCuts.push(+g.dataset.i);});
   var tc=trueCuts(q);
@@ -139,6 +142,7 @@ $('cutDone').addEventListener('click',function(){
 function setupTagging(){
   var q=QS[qi];
   $('phase1').style.display='none';$('phase2').style.display='block';$('fb2').textContent='';selWord=-1;
+  $('tagDone').disabled=false;
   var wb=$('words');wb.innerHTML='';
   q.w.forEach(function(w,i){
     var d=document.createElement('div');d.className='wchip';d.dataset.i=i;
@@ -163,6 +167,8 @@ function setupTagging(){
   });
 }
 $('tagDone').addEventListener('click',function(){
+  if($('tagDone').disabled)return;
+  $('tagDone').disabled=true;
   var q=QS[qi],chips=$('words').children,ok=0;
   for(var i=0;i<chips.length;i++){
     var c=chips[i],mine=c.dataset.pos,trueP=q.w[i][1];

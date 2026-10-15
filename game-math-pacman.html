@@ -296,7 +296,7 @@ hard:{name:'🌳 高階',makers:[
   function(){ /* 等差數列 */
     var a=rnd(2,9),d=rnd(3,6);
     var terms=[];for(var i=0;i<12;i++)terms.push(a+i*d);
-    var inSeq={};terms.forEach(function(v){inSeq[v]=1;});
+    var inSeq={};for(var i=0;i<20;i++)inSeq[a+i*d]=1;
     var ok=shuffle(terms).slice(0,8),used={};
     ok.forEach(function(v){used[v]=1;});
     var bad=uniqNums(range(2,a+12*d),function(v){return !inSeq[v];},6,used);

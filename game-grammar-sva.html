@@ -88,7 +88,11 @@ function resetGame(){
   startRound();
 }
 function startRound(){
-  var pool=shuffle(PAIRS.slice()).slice(0,4);
+  /* 揀 4 對時確保動詞唔重複：否則兩個一樣嘅動詞掣（例如兩個 "is"）只會接受其中一個配對，玩家明明配啱文法都會被判錯 */
+  var shuffled=shuffle(PAIRS.slice()),pool=[],seen={};
+  for(var pi=0;pi<shuffled.length&&pool.length<4;pi++){
+    if(!seen[shuffled[pi].v]){seen[shuffled[pi].v]=1;pool.push(shuffled[pi]);}
+  }
   subs=shuffle(pool.slice());
   verbs=shuffle(pool.slice());
   matched=0;selS=-1;

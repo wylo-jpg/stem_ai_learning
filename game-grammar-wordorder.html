@@ -85,16 +85,16 @@ button.big{flex:1;min-height:56px;font-size:18px;font-weight:800;border:none;bor
 (function(){
 "use strict";
 var SS=[
-{w:["I","like","apples"],p:".",t:"陳述句用句號"},
-{w:["Where","are","you","going"],p:"?",t:"Where 開頭係問句"},
-{w:["What","a","beautiful","day"],p:"!",t:"What a...! 感嘆句"},
-{w:["She","is","always","late"],p:".",t:"陳述句用句號"},
-{w:["Can","you","help","me"],p:"?",t:"Can 開頭係問句"},
-{w:["Sit","down","please"],p:"!",t:"命令句可用感嘆號"},
-{w:["They","went","to","the","park","yesterday"],p:".",t:"陳述句用句號"},
-{w:["How","old","are","you"],p:"?",t:"How old...? 問年齡"},
-{w:["He","is","so","tall"],p:"!",t:"so...! 感嘆"},
-{w:["There","is","a","cat","on","the","roof"],p:".",t:"There is 陳述句"}
+{w:["I","like","apples"],p:".",t:"主語 + 動詞 + 受詞（SVO 順序）",pt:"陳述句用句號"},
+{w:["Where","are","you","going"],p:"?",t:"疑問詞放最前，之後係 be 動詞",pt:"Where 開頭係問句，用問號"},
+{w:["What","a","beautiful","day"],p:"!",t:"What a + 形容詞 + 名詞",pt:"What a…! 係感嘆句，用感嘆號"},
+{w:["She","is","always","late"],p:".",t:"頻率副詞 always 放喺 be 動詞後面",pt:"陳述句用句號"},
+{w:["Can","you","help","me"],p:"?",t:"助動詞 Can 放最前，之後係主語",pt:"Can 開頭係問句，用問號"},
+{w:["Sit","down","please"],p:"!",t:"please 放喺最後",pt:"命令句用感嘆號"},
+{w:["They","went","to","the","park","yesterday"],p:".",t:"時間詞 yesterday 放喺最後",pt:"陳述句用句號"},
+{w:["How","old","are","you"],p:"?",t:"How old 放最前，之後係 be 動詞",pt:"How old…? 問年齡，用問號"},
+{w:["He","is","so","tall"],p:"!",t:"so + 形容詞（so tall）放喺 be 動詞後面",pt:"so…! 表達強烈感情，用感嘆號"},
+{w:["There","is","a","cat","on","the","roof"],p:".",t:"There is 開頭，之後係名詞",pt:"There is 陳述句，用句號"}
 ];
 var ri=0,score=0,chosen=[],order=[],stage=1;
 function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
@@ -180,7 +180,7 @@ document.getElementById('puncts').addEventListener('click',function(e){
   if(btn.dataset.p===s.p){
     score+=15;
     document.getElementById('score').textContent=score;
-    fb.textContent='✅ 標點都啱！+15 分（'+s.t+'）';fb.className='feedback good';
+    fb.textContent='✅ 標點都啱！+15 分（'+s.pt+'）';fb.className='feedback good';
     setTimeout(function(){ri++;if(ri>=8)endGame();else newRound();},1500);
   }else{
     fb.textContent='❌ 標點唔啱！諗下呢句係陳述、疑問定感嘆？';fb.className='feedback bad';

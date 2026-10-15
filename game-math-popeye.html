@@ -97,7 +97,7 @@ var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
 var W=300,H=330,COLS=7,ROWS=8,CELL=36,OX=24,OY=21;
 var player={x:3,y:7},hearts=[],enemies=[];
 var score=0,lives=3,level=1,got=0,running=false,paused=false,DIFF='easy';
-var enemyT=0,lockT=0;
+var enemyT=0,lockT=0,lastT=0;
 var msgEl=document.getElementById('msg');
 var AC=null,bubbles=[];
 for(var bi=0;bi<24;bi++)bubbles.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*3+1,sp:Math.random()*18+8});

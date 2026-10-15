@@ -78,13 +78,13 @@ function drawAngle(showAnswer){
     const g=document.createElementNS('http://www.w3.org/2000/svg','g');
     for(let d=0;d<=180;d+=10){
       const a=d*Math.PI/180,r1=150,r2=d%30===0?128:138;
-      const x1=cx+r1*Math.cos(Math.PI-a),y1=cy-r1*Math.sin(Math.PI-a);
-      const x2=cx+r2*Math.cos(Math.PI-a),y2=cy-r2*Math.sin(Math.PI-a);
+      const x1=cx+r1*Math.cos(a),y1=cy-r1*Math.sin(a);
+      const x2=cx+r2*Math.cos(a),y2=cy-r2*Math.sin(a);
       const l=document.createElementNS('http://www.w3.org/2000/svg','line');
       l.setAttribute('x1',x1);l.setAttribute('y1',y1);l.setAttribute('x2',x2);l.setAttribute('y2',y2);
       l.setAttribute('stroke','#38bdf8');l.setAttribute('stroke-width',d%30===0?2:1);l.setAttribute('opacity','0.6');g.appendChild(l);
       if(d%30===0){const t=document.createElementNS('http://www.w3.org/2000/svg','text');
-        const tx=cx+112*Math.cos(Math.PI-a),ty=cy-112*Math.sin(Math.PI-a);
+        const tx=cx+112*Math.cos(a),ty=cy-112*Math.sin(a);
         t.setAttribute('x',tx);t.setAttribute('y',ty);t.setAttribute('fill','#38bdf8');t.setAttribute('font-size','13');
         t.setAttribute('text-anchor','middle');t.setAttribute('dominant-baseline','middle');t.textContent=d;g.appendChild(t);}
     }

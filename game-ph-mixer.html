@@ -74,7 +74,7 @@ button{font-family:inherit;border:none;border-radius:12px;cursor:pointer;touch-a
   <div class="vol">燒杯內溶液：<b id="vol">0</b> mL（酸 <span id="va">0</span> mL ＋ 鹼 <span id="vb">0</span> mL）</div>
   <div class="btns">
     <button class="pour acid" id="btnAcid">🧪 按住加入酸<br><span style="font-size:12px">pH 1 鹽酸</span></button>
-    <button class="pour base" id="btnBase">⚗️ 按住加入鹼<br><span style="font-size:12px">pH 14 氫氧化鈉</span></button>
+    <button class="pour base" id="btnBase">⚗️ 按住加入鹼<br><span style="font-size:12px">pH 13 氫氧化鈉</span></button>
   </div>
   <div class="hint">按住按鈕連續加入，放開即停（每次約 1 mL）</div>
   <div class="row">
@@ -96,7 +96,7 @@ button{font-family:inherit;border:none;border-radius:12px;cursor:pointer;touch-a
 <h2>🧪 點玩？</h2>
 <ul>
 <li>每關有一個<b>目標 pH 值</b>（誤差 ±0.3 過關）。</li>
-<li>按住紅色掣加<b>酸</b>（pH 1），藍色掣加<b>鹼</b>（pH 14）。</li>
+<li>按住紅色掣加<b>酸</b>（pH 1），藍色掣加<b>鹼</b>（pH 13）。</li>
 <li>留意 pH 計讀數，估下要加幾多先啱。</li>
 <li>撳「完成」交卷，過關得分，失敗可以清空重試。</li>
 </ul>
@@ -106,7 +106,7 @@ button{font-family:inherit;border:none;border-radius:12px;cursor:pointer;touch-a
 </div>
 
 <script>
-const targets=[7.0,3.0,11.0,5.5,9.0];
+const targets=[7.0,3.0,11.0,2.0,12.0];
 let round=0,score=0,va=0,vb=0,attempts=0,timer=null;
 
 const scale=document.getElementById('scale');

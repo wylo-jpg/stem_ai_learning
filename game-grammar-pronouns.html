@@ -81,14 +81,14 @@ table.grid th{color:#fbbf24}
 </div></div>
 <script>
 var ROUNDS=[
- {parts:[""," is my friend. I like ","."],ans:["She","her"],bank:["She","her","He","him","They","them"]},
- {parts:[""," car is broken. The car is ","."],ans:["His","his"],bank:["His","his","Her","hers","Their","theirs"]},
- {parts:[""," are classmates. The teacher knows ","."],ans:["They","them"],bank:["They","them","We","us","She","her"]},
- {parts:["This is "," book. Give it to ","."],ans:["my","me"],bank:["my","me","mine","I","your","you"]},
- {parts:[""," helped us. We thanked ","."],ans:["He","him"],bank:["He","him","His","She","her","Hers"]},
- {parts:[""," live in Hong Kong. "," city is beautiful."],ans:["We","Our"],bank:["We","Our","Ours","Us","They","Their"]},
- {parts:["Look at ",". "," are playing football."],ans:["them","They"],bank:["them","They","their","theirs","us","We"]},
- {parts:["Is this "," pen? Yes, it is ","."],ans:["your","mine"],bank:["your","mine","yours","my","me","I"]}
+ {parts:[""," is my friend. I like ","."],ans:["She","her"],bank:["She","her","His","My","Their","They"]},
+ {parts:[""," car is broken. The car is ","."],ans:["His","his"],bank:["His","his","She","He","Him","Them"]},
+ {parts:[""," are classmates. The teacher knows ","."],ans:["They","them"],bank:["They","them","She","He","His","My"]},
+ {parts:["This is "," book. Give it to ","."],ans:["my","me"],bank:["my","me","mine","I","He","She"]},
+ {parts:[""," helped us. We thanked ","."],ans:["He","him"],bank:["He","him","His","My","Our","Their"]},
+ {parts:[""," live in Hong Kong. "," city is beautiful."],ans:["We","Our"],bank:["We","Our","Us","Ours","Them","Me"]},
+ {parts:["Look at ",". "," are playing football."],ans:["them","They"],bank:["them","They","their","theirs","She","He"]},
+ {parts:["Is this "," pen? Yes, it is ","."],ans:["your","mine"],bank:["your","mine","I","She","He","They"]}
 ];
 var idx=0,score=0,best=0,selSlot=-1,filled=[],plock=false;
 try{best=parseInt(localStorage.getItem("pronBest")||"0");}catch(e){}

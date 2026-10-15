@@ -77,16 +77,16 @@ table.rt th{background:#312e81;color:#a5b4fc}
 "use strict";
 var WORDS=["who","which","that","whose","where","when","why"];
 var Q=[
-{q:["The book "," I bought yesterday is very interesting."],a:"which",n:"先行詞係物",e:"先行詞係物（the book），用 which（that 都啱）。"},
+{q:["The book "," I bought yesterday is very interesting."],a:["which","that"],n:"先行詞係物",e:"先行詞係物（the book），用 which（that 都啱）。"},
 {q:["The girl "," hair is long is my sister."],a:"whose",n:"表示所屬",e:"「頭髮」屬於個女仔 → whose（…的）。"},
 {q:["This is the house "," I grew up."],a:"where",n:"先行詞係地方",e:"地方（the house）+「喺嗰度」→ where。"},
 {q:["My teacher, "," is very kind, helped me a lot."],a:"who",n:"有逗號＋指人",e:"有逗號係非限定性，唔可以用 that；指人用 who。"},
 {q:["The car, "," was made in Japan, is quite expensive."],a:"which",n:"有逗號＋指物",e:"有逗號唔用 that；指物用 which。"},
-{q:["Do you know the reason "," she was absent?"],a:"why",n:"先行詞係原因",e:"reason（原因）→ why 最自然。"},
-{q:["Anyone "," wants to join the club must sign up."],a:"who",n:"指人（做主語）",e:"anyone 係人，喺子句做主語（wants）→ who。"},
-{q:["The movie "," we watched was fantastic."],a:"which",n:"先行詞係物",e:"the movie 係物 → which（受詞關係代詞有時可省略）。"},
+{q:["Do you know the reason "," she was absent?"],a:["why","that"],n:"先行詞係原因",e:"reason（原因）→ why 最自然（that 都啱）。"},
+{q:["Anyone "," wants to join the club must sign up."],a:["who","that"],n:"指人（做主語）",e:"anyone 係人，喺子句做主語（wants）→ who（that 都啱）。"},
+{q:["The movie "," we watched was fantastic."],a:["which","that"],n:"先行詞係物",e:"the movie 係物 → which（that 都啱；受詞關係代詞有時可省略）。"},
 {q:["2003, "," SARS broke out, was a difficult year."],a:"when",n:"有逗號＋指時間",e:"時間（2003）→ when；有逗號唔用 that。"},
-{q:["The man "," lives next door is a doctor."],a:"who",n:"指人（做主語）",e:"the man 係人，做主語（lives）→ who。"}
+{q:["The man "," lives next door is a doctor."],a:["who","that"],n:"指人（做主語）",e:"the man 係人，做主語（lives）→ who（that 都啱）。"}
 ];
 var idx=0,score=0,correct=0,best=0,locked=false,order=[];
 try{best=parseInt(localStorage.getItem('relFillBest')||'0',10)||0;}catch(e){}
@@ -111,7 +111,7 @@ function showQ(){
 function fill(w,btn){
   if(locked)return;locked=true;
   var item=Q[order[idx]];
-  var ok=(w===item.a);
+  var ok=(item.a.indexOf(w)>=0);
   var blank=$('blank');
   if(ok){
     blank.textContent=w;blank.classList.add('filled');
