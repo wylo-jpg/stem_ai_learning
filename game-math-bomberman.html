@@ -36,6 +36,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang HK","Microsoft Jheng
 .dpad button{border:none;border-radius:16px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:24px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.35);font-family:inherit}
 .dpad button:active{transform:scale(.92);background:rgba(255,255,255,.28)}
 .dpad .up{grid-column:2;grid-row:1}.dpad .left{grid-column:1;grid-row:2}.dpad .right{grid-column:3;grid-row:2}.dpad .down{grid-column:2;grid-row:3}
+.dpad button{touch-action:none;-webkit-user-select:none;user-select:none}
 .bombbtn{flex:1;min-height:96px;margin-left:8px;font-size:22px;font-weight:900;color:#fff;background:linear-gradient(135deg,#f97316,#ef4444);border:none;border-radius:20px;cursor:pointer;box-shadow:0 10px 28px rgba(239,68,68,.45);font-family:inherit}
 .bombbtn:active{transform:scale(.95)}
 .bombbtn:disabled{opacity:.4}
@@ -116,7 +117,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang HK","Microsoft Jheng
       </div>
       <button class="bombbtn" id="bombBtn">💣<br>放炸彈</button>
     </div>
-    <div class="hint">方向掣或滑動棋盤移動 · 炸彈 1.5 秒後十字爆炸<br>爆炸範圍內有你自己都會扣命，小心！</div>
+    <div class="hint">長按方向掣可連續行走 · 或滑動棋盤移動 · 炸彈 1.5 秒後十字爆炸<br>爆炸範圍內有你自己都會扣命，小心！</div>
   </div>
 
   <div id="end" class="screen">
@@ -368,8 +369,20 @@ function finish(won){
   document.getElementById('endScore').textContent=score;
   show('end');
 }
+/* Hold-to-walk: press = 1 step at once, then 1 step every 180ms while held. Works for touch, mouse and held keyboard arrows. */
+var holdDir=null,holdTimer=null,holdId=null;
+function startHold(dx,dy,id){if(holdTimer){clearInterval(holdTimer);holdTimer=null;}holdDir={dx:dx,dy:dy};holdId=(id===undefined?null:id);move(dx,dy);holdTimer=setInterval(function(){if(holdDir)move(holdDir.dx,holdDir.dy);},180);}
+function stopHold(id){if(id!==undefined&&holdId!==null&&id!==holdId)return;if(holdTimer){clearInterval(holdTimer);holdTimer=null;}holdDir=null;holdId=null;}
+function bindHoldBtn(b,dx,dy){
+  b.addEventListener('pointerdown',function(e){e.preventDefault();try{b.setPointerCapture(e.pointerId);}catch(err){}startHold(dx,dy,e.pointerId);});
+  ['pointerup','pointercancel','lostpointercapture'].forEach(function(ev){b.addEventListener(ev,function(e){stopHold(e.pointerId);});});
+  b.addEventListener('pointerleave',function(){stopHold();});
+  b.addEventListener('contextmenu',function(e){e.preventDefault();});
+  b.addEventListener('click',function(){if(Date.now()-(b._ptrT||0)>500)move(dx,dy);});
+  b.addEventListener('pointerdown',function(){b._ptrT=Date.now();});
+}
 var dp=document.querySelectorAll('.dpad button');
-for(var di=0;di<dp.length;di++)(function(b){var m=b.dataset.m.split(',');b.addEventListener('click',function(){move(parseInt(m[0],10),parseInt(m[1],10));});})(dp[di]);
+for(var di=0;di<dp.length;di++)(function(b){var m=b.dataset.m.split(',');bindHoldBtn(b,parseInt(m[0],10),parseInt(m[1],10));})(dp[di]);
 document.getElementById('bombBtn').addEventListener('click',placeBomb);
 (function(){
   var bd=document.getElementById('board'),sx=0,sy=0;
@@ -382,10 +395,16 @@ document.getElementById('bombBtn').addEventListener('click',placeBomb);
 })();
 document.addEventListener('keydown',function(e){
   if(document.getElementById('game').classList.contains('show')){
-    if(e.key==='ArrowUp')move(0,-1);else if(e.key==='ArrowDown')move(0,1);
-    else if(e.key==='ArrowLeft')move(-1,0);else if(e.key==='ArrowRight')move(1,0);
+    if(e.repeat)return;
+    if(e.key==='ArrowUp'){e.preventDefault();startHold(0,-1,'key');}
+    else if(e.key==='ArrowDown'){e.preventDefault();startHold(0,1,'key');}
+    else if(e.key==='ArrowLeft'){e.preventDefault();startHold(-1,0,'key');}
+    else if(e.key==='ArrowRight'){e.preventDefault();startHold(1,0,'key');}
     else if(e.key===' '){e.preventDefault();placeBomb();}
   }
+});
+document.addEventListener('keyup',function(e){
+  if(e.key==='ArrowUp'||e.key==='ArrowDown'||e.key==='ArrowLeft'||e.key==='ArrowRight')stopHold('key');
 });
 </script>
 </body>

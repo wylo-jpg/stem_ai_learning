@@ -130,15 +130,30 @@ function mkExprHard(){
   else{ans=2;expr='log₅ 25';}
   return {expr:expr,ans:ans};
 }
-function mkExpr(){
-  var e=DIFF==='easy'?mkExprEasy():DIFF==='mid'?mkExprMid():mkExprHard();
-  var set={},arr=[e.ans];
-  while(arr.length<4){var d=e.ans+rnd(-Math.max(3,Math.abs(e.ans>>2)),Math.max(3,Math.abs(e.ans>>2)+3));if(d!==e.ans&&d>=0&&!set[d]){set[d]=1;arr.push(d);}}
-  if(e.ans===0){while(arr.length<4){var d2=rnd(1,9);if(!set[d2]){set[d2]=1;arr.push(d2);}}}
-  return {expr:e.expr,ans:e.ans,opts:shuffle(arr)};
+function makeOpts(ans){
+  var set={},arr=[ans];
+  while(arr.length<4){var d=ans+rnd(-Math.max(3,Math.abs(ans>>2)),Math.max(3,Math.abs(ans>>2)+3));if(d!==ans&&d>=0&&!set[d]){set[d]=1;arr.push(d);}}
+  if(ans===0){while(arr.length<4){var d2=rnd(1,9);if(!set[d2]){set[d2]=1;arr.push(d2);}}}
+  return shuffle(arr);
+}
+/* Shuffled question bank: no repeats until the whole bank is exhausted, then it is reshuffled. Distractor options are still drawn fresh for each rock. */
+var qBank=[],qBankIdx=0;
+function buildBank(){
+  var seen={},bank=[],guard=0;
+  while(bank.length<30&&guard<800){
+    guard++;
+    var e=DIFF==='easy'?mkExprEasy():DIFF==='mid'?mkExprMid():mkExprHard();
+    if(!seen[e.expr]){seen[e.expr]=1;bank.push(e);}
+  }
+  qBank=shuffle(bank);qBankIdx=0;
+}
+function nextExpr(){
+  if(qBankIdx>=qBank.length)buildBank();
+  var e=qBank[qBankIdx++];
+  return {expr:e.expr,ans:e.ans,opts:makeOpts(e.ans)};
 }
 function spawn(){
-  var e=mkExpr();
+  var e=nextExpr();
   rocks.push({x:rnd(34,W-34),y:-20,vx:(Math.random()-0.5)*16,vy:26+level*4,r:rnd(24,30),expr:e.expr,ans:e.ans,opts:e.opts,rot:Math.random()*6.28,spin:(Math.random()-0.5)*1.4,seed:Math.random()});
 }
 function selectRock(r){
@@ -244,7 +259,7 @@ cv.addEventListener('pointerdown',function(e){
   for(var i=rocks.length-1;i>=0;i--){var rk=rocks[i];if(Math.hypot(x-rk.x,y-rk.y)<rk.r+10){selectRock(rk);return;}}
 });
 function resetGame(){
-  score=0;lives=3;level=1;kills=0;rocks=[];parts=[];sel=null;spawnT=0;clearSel();
+  score=0;lives=3;level=1;kills=0;rocks=[];parts=[];sel=null;spawnT=0;clearSel();buildBank();
   document.getElementById('over').style.display='none';
   document.getElementById('intro').style.display='none';
   flash('撳隕石鎖定，再答問題！');

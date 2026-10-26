@@ -472,8 +472,14 @@ function updateQCard(){
 }
 function setMsg(t){ msgEl.textContent=t; }
 
+/* Bug 6 fix: frog/ripple coordinates must be relative to the frog's own
+   offset parent (.water), not to #pond. The old code used pond's rect,
+   which sits one sky-height (~112px) above .water, so the frog landed
+   about two lanes below the pad it jumped to -- looking like a snap-back
+   to the previous pad / start. Using the parent rect makes placeFrog land
+   exactly on the tapped pad and stay there. */
 function centerOf(el){
-  var pr=pond.getBoundingClientRect(), r=el.getBoundingClientRect();
+  var pr=frogEl.parentElement.getBoundingClientRect(), r=el.getBoundingClientRect();
   return { x:r.left-pr.left+r.width/2, y:r.top-pr.top+r.height/2 };
 }
 function placeFrog(x,y){

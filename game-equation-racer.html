@@ -81,6 +81,7 @@
       <p><b>玩法：</b>同電腦車鬥快，跑 <b>3 圈</b>！<br>
       賽道上有 <b style="color:#b97b00;">？金色閘門</b>，衝過去會彈出一條<br><b>一元一次方程</b>，答啱即刻 <b style="color:#e8590c;">⚡ Turbo 加速 3 秒</b>！</p>
       <p>🖥️ <b>1人：</b><span class="kbd">W</span><span class="kbd">A</span><span class="kbd">S</span><span class="kbd">D</span> 或方向鍵<br>
+      ⏪ <b>後退：</b>按住 <span class="kbd">S</span>／<span class="kbd">↓</span> 或畫面 ▼ 後退掣，架車會真係向後行（最高後退速度 90）<br>
       👥 <b>2人對戰：</b>玩家一用 <span class="kbd">WASD</span>，玩家二用方向鍵<br>
       📱 手機：用畫面下方按鈕揸車（2人模式左右各一組）</p>
       <p style="font-size:13px;color:#666;">題目由淺入深：x + a = b → ax + b = c → 兩邊都有 x → 括號方程</p>
@@ -126,7 +127,7 @@
       <button class="tbtn" id="tRight">▶</button>
     </div>
     <div class="tcluster">
-      <button class="tbtn" id="tDown">▼</button>
+      <button class="tbtn" id="tDown" title="後退" aria-label="後退">▼<small style="display:block;font-size:14px;line-height:1.2;">後退</small></button>
       <button class="tbtn" id="tUp">▲</button>
     </div>
   </div>
@@ -136,14 +137,14 @@
       <button class="tbtn" data-p="1" data-k="left">◀</button>
       <button class="tbtn" data-p="1" data-k="right">▶</button>
       <button class="tbtn" data-p="1" data-k="up">▲</button>
-      <button class="tbtn" data-p="1" data-k="down">▼</button>
+      <button class="tbtn" data-p="1" data-k="down" title="後退" aria-label="後退">▼</button>
     </div>
     <div class="tcluster2p">
       <div class="tlabel">🟢</div>
       <button class="tbtn" data-p="2" data-k="left">◀</button>
       <button class="tbtn" data-p="2" data-k="right">▶</button>
       <button class="tbtn" data-p="2" data-k="up">▲</button>
-      <button class="tbtn" data-p="2" data-k="down">▼</button>
+      <button class="tbtn" data-p="2" data-k="down" title="後退" aria-label="後退">▼</button>
     </div>
   </div>
 </div>
@@ -438,16 +439,25 @@ function updateKart(k,dt){
     k.speed=clamp(k.speed,0,maxSp);
   }else{
     const inp=k.input||in1;
+    const maxRev=90; // Real reverse: top reverse speed (forward max is 235, 360 on boost)
     if(inp.up)k.speed+=acc*dt;
-    else if(inp.down)k.speed-=340*dt;
+    else if(inp.down){
+      // Brake to a stop first, then keep accelerating backwards (negative speed)
+      if(k.speed>0)k.speed-=340*dt;
+      else k.speed-=190*dt;
+    }
     else k.speed-=k.speed*0.7*dt;
-    k.speed=clamp(k.speed,0,maxSp);
+    k.speed=clamp(k.speed,-maxRev,maxSp);
     const steer=(inp.left?-1:0)+(inp.right?1:0);
-    if(steer&&k.speed>5)k.angle+=steer*2.4*dt*clamp(k.speed/120,0.35,1);
+    // Steering flips while reversing, so left still turns the car left from the driver's seat
+    const steerDir=k.speed<0?-1:1;
+    if(steer&&Math.abs(k.speed)>5)k.angle+=steerDir*steer*2.4*dt*clamp(Math.abs(k.speed)/120,0.35,1);
   }
   const nx2=k.x+Math.cos(k.angle)*k.speed*dt,
         ny2=k.y+Math.sin(k.angle)*k.speed*dt;
-  const fx=nx2+Math.cos(k.angle)*16,fy=ny2+Math.sin(k.angle)*16;
+  // Collision probe in the direction of travel, so reversing into a wall is blocked too
+  const dirSign=k.speed<0?-1:1;
+  const fx=nx2+Math.cos(k.angle)*16*dirSign,fy=ny2+Math.sin(k.angle)*16*dirSign;
   if(classify(fx,fy)==='wall'){k.speed*=0.35;}
   else{k.x=nx2;k.y=ny2;
     if(classify(nx2,ny2)==='grass')k.speed=Math.min(k.speed,80);}

@@ -162,7 +162,7 @@ function gEasy(){
   if(t===3){ // 4. 直角三角形外角（兩步：先求第三內角 90−a，再求外角）
     const a=pick([25,30,35,40,45,50,55,60]),ans=90+a;
     return{type:'rtExt',draw:'rt',p:{a:a},
-      text:'直角三角形 ABC，∠C = 90°，∠A = '+a+'°（如圖）。將 BC 延長到 D，先求 ∠ACB，再求外角 ∠ACD（圖中「?」）係幾多度？',
+      text:'直角三角形 ABC，∠C = 90°，∠A = '+a+'°（如圖）。將 CB 延長到 D，先求 ∠B（180°−90°−'+a+'°），再求外角 ∠ABD（圖中「?」）係幾多度？',
       ans:ans+'°',opts:makeOptions(ans+'°',[(90-a)+'°','90°',a+'°',(ans-10)+'°'])};
   }
   if(t===4){ // 5. 等腰梯形：三內角 → 第四角 → 外角（兩步：360−和，再180−d）
@@ -183,7 +183,7 @@ function gEasy(){
     const C=180-b-c;
     if(C<20||C>120)return gEasy();
     return{type:'triVert',draw:'tri',p:{b:b,c:c},
-      text:'三角形兩隻內角分別係 '+b+'° 同 '+c+'°（如圖）。先求第三隻內角 ∠C，再求 ∠C 嘅對頂角（將 C 嘅兩邊延長所得）係幾多度？',
+      text:'三角形兩隻內角分別係 '+b+'° 同 '+c+'°（如圖）。先求第三隻內角 ∠C，再求 ∠C 嘅對頂角（圖中「?」；將 C 嘅兩邊延長所得）係幾多度？',
       ans:C+'°',opts:makeOptions(C+'°',[(b+c)+'°',(180-b)+'°',(180-c)+'°','90°'])};
   }
   if(t===7){ // 8. 直線上三連角（兩步：a+b，再180−(a+b)）
@@ -203,7 +203,7 @@ function gEasy(){
   // 10. 等腰三角形：底角＋頂角混合（兩步：先求頂角 180−2b，再求頂角嘅補角）
   const b=pick([40,45,50,55,60]),v=180-2*b,ans=180-v; // = 2b
   return{type:'isoSupp',draw:'iso',p:{v:v,mark:'b',b:b},
-    text:'等腰三角形，底角係 '+b+'°（如圖）。先求頂角（180°−2×'+b+'°），再求頂角嘅補角（將頂角一邊延長，圖中「?」）係幾多度？',
+    text:'等腰三角形，底角係 '+b+'°（如圖）。先求頂角（180°−2×'+b+'°），再求頂角嘅補角（將 CV 延長過 V，圖中「?」）係幾多度？',
     ans:ans+'°',opts:makeOptions(ans+'°',[v+'°',(180-b)+'°','90°',(ans+10)+'°'])};
 }
 
@@ -225,8 +225,8 @@ function gMed(){
   }
   if(t===2){ // 3. 圓周角 → 圓心角 → 補角（兩步：×2，再180−）
     const g=pick([30,35,40,45,50,55,60]),ans=180-2*g;
-    return{type:'centSupp',draw:'central',p:{g:g},
-      text:'圓中，同弧所對嘅圓周角係 '+g+'°（如圖）。先求圓心角 ∠AOB（圖中「?」），再求呢隻圓心角嘅補角係幾多度？',
+    return{type:'centSupp',draw:'central',p:{g:g,supp:true},
+      text:'圓中，同弧所對嘅圓周角係 '+g+'°（如圖）。先求圓心角 ∠AOB，再求呢隻圓心角嘅補角（圖中「?」）係幾多度？',
       ans:ans+'°',opts:makeOptions(ans+'°',[(2*g)+'°',(180-g)+'°',g+'°',(ans+10)+'°'])};
   }
   if(t===3){ // 4. 梯形：先求高 h=2S/(a+b)，再求 h²（正方形面積）
@@ -253,7 +253,7 @@ function gMed(){
   if(t===6){ // 7. 扇形：面積＋圓心角 → 半徑 → 弧長（兩步）
     const v=pick([[36,90,12,6],[64,90,16,8],[12,120,6,4],[48,120,12,8]]);
     const A=v[0],th=v[1],r=v[2],arc=v[3]; // 驗算：r²=A·360/(θπ)，弧=2πrθ/360 ✓
-    return{type:'sectR',draw:'sector',p:{r:r,area:A,th:th},
+    return{type:'sectR',draw:'sector',p:{r:r,area:A,th:th,hideR:true},
       text:'扇形面積係 '+A+'π，圓心角係 '+th+'°（如圖）。先求半徑，再求弧長係幾多？（答案以 π 表示）',
       ans:arc+'π',opts:makeOptions(arc+'π',[r+'π',(2*arc)+'π',''+(arc+2)+'π'])};
   }
@@ -427,8 +427,13 @@ supp(ctx,p){
 },
 tri(ctx,p){
   const b=p.b,c=p.c,br=b*RAD,cr=c*RAD;
-  const Ax=80,Ay=240,Bx=280,By=240;
-  const s=200*Math.sin(cr)/Math.sin(br+cr);
+  // Scale the base down when the apex would otherwise run off the top of the canvas,
+  // so the vertical-angle extensions above C stay visible.
+  let base=200;
+  const h0=base*Math.sin(cr)*Math.sin(br)/Math.sin(br+cr);
+  if(240-h0<95)base=145*Math.sin(br+cr)/(Math.sin(br)*Math.sin(cr));
+  const Ax=180-base/2,Ay=240,Bx=180+base/2,By=240;
+  const s=base*Math.sin(cr)/Math.sin(br+cr);
   const Cx=Ax+s*Math.cos(br),Cy=Ay-s*Math.sin(br);
   seg(ctx,Ax,Ay,Bx,By,3.5);seg(ctx,Bx,By,Cx,Cy,3.5);seg(ctx,Cx,Cy,Ax,Ay,3.5);
   dot(ctx,Ax,Ay,4);dot(ctx,Bx,By,4);dot(ctx,Cx,Cy,4);
@@ -437,9 +442,19 @@ tri(ctx,p){
   const bcA=Math.atan2(Cy-By,Cx-Bx);
   smallArc(ctx,Bx,By,30,bcA,Math.PI,3,'#fbbf24');
   bisLab(ctx,Bx,By,52,bcA,Math.PI,c+'°','#fbbf24',16);
+  // Vertical angle at C: extend CA and CB beyond C (dashed) and mark the angle
+  // opposite the interior angle C. Its size equals the interior angle C.
   const caA=Math.atan2(Ay-Cy,Ax-Cx),cbA=Math.atan2(By-Cy,Bx-Cx);
-  smallArc(ctx,Cx,Cy,26,caA,cbA,3,'#22d3ee');
-  bisLab(ctx,Cx,Cy,50,caA,cbA,'?','#22d3ee',24);
+  const eCA=caA+Math.PI,eCB=cbA+Math.PI;
+  const E1x=Cx+48*Math.cos(eCA),E1y=Cy+48*Math.sin(eCA);
+  const E2x=Cx+48*Math.cos(eCB),E2y=Cy+48*Math.sin(eCB);
+  ctx.setLineDash([6,5]);
+  seg(ctx,Cx,Cy,E1x,E1y,2.5,'rgba(255,255,255,.55)');
+  seg(ctx,Cx,Cy,E2x,E2y,2.5,'rgba(255,255,255,.55)');
+  ctx.setLineDash([]);
+  smallArc(ctx,Cx,Cy,26,eCB,eCA,3,'#22d3ee');
+  bisLab(ctx,Cx,Cy,50,eCB,eCA,'?','#22d3ee',24);
+
 },
 parallel(ctx,p){
   const a=p.a,kind=p.kind,t=a*RAD,y1=95,y2=205;
@@ -473,7 +488,9 @@ similar(ctx,p){
     lab(ctx,mx-dy/len*20,my+dx/len*20,hypLab,hypC,16);
   }
   tri2(35,252,u1,s1,s2,String(s3),'#fff');
-  tri2(35+s1*u1+50,252,u2,B1,B2,'?', '#22d3ee');
+  const bigOx=35+s1*u1+50;
+  tri2(bigOx,252,u2,B1,B2,String(Math.round(s3*(B1/s1))),'#fff');
+  lab(ctx,bigOx+(B1*u2)/2,272,'面積 = ?','#22d3ee',16);
   lab(ctx,35+s1*u1+25,252,'~','#fbbf24',22);
 },
 central(ctx,p){
@@ -490,8 +507,16 @@ central(ctx,p){
   const ca1=Math.atan2(A.y-C.y,A.x-C.x),ca2=Math.atan2(B.y-C.y,B.x-C.x);
   smallArc(ctx,C.x,C.y,26,ca1,ca2,3,'#fbbf24');
   bisLab(ctx,C.x,C.y,48,ca1,ca2,g+'°','#fbbf24',17);
-  smallArc(ctx,O.x,O.y,28,aB,aA,3,'#22d3ee');
-  bisLab(ctx,O.x,O.y,52,aB,aA,'?','#22d3ee',24);
+  if(p.supp){
+    const eA=aA-Math.PI;
+    const Ex=O.x+58*Math.cos(eA),Ey=O.y+58*Math.sin(eA);
+    ctx.setLineDash([6,5]);seg(ctx,O.x,O.y,Ex,Ey,2.5,'rgba(255,255,255,.55)');ctx.setLineDash([]);
+    smallArc(ctx,O.x,O.y,28,eA,aB,3,'#22d3ee');
+    bisLab(ctx,O.x,O.y,52,eA,aB,'?','#22d3ee',24);
+  }else{
+    smallArc(ctx,O.x,O.y,28,aB,aA,3,'#22d3ee');
+    bisLab(ctx,O.x,O.y,52,aB,aA,'?','#22d3ee',24);
+  }
 },
 semi(ctx,p){
   const a=p.a,O={x:180,y:150},r=95;
@@ -616,7 +641,7 @@ sector(ctx,p){
   dot(ctx,cx,cy,5);
   lab(ctx,cx+(r/2)*Math.cos(am),cy+(r/2)*Math.sin(am),p.area,'#fbbf24',15);
   lab(ctx,cx+(r+18)*Math.cos(am),cy+(r+18)*Math.sin(am),'?','#22d3ee',24);
-  lab(ctx,cx+13,cy-r/2,'r='+p.r,'#fff',14);
+  if(!p.hideR)lab(ctx,cx+13,cy-r/2,'r='+p.r,'#fff',14);
 },
 comp(ctx,p){
   const u=11,cx=180,base=228,w=p.w*u,h=p.h*u,x0=cx-w/2,y0=base-h;
@@ -669,8 +694,11 @@ triarea(ctx,p){
 
 ext(ctx,p){
   const e=p.e,b=p.b,ai=(180-e)*RAD,br=b*RAD,C=e-b;
-  const Ax=110,Ay=240,Bx=290,By=240;
-  const s=180*Math.sin(br)/Math.sin(C*RAD);
+  let L=180;
+  const hNeed=L*Math.sin(br)*Math.sin(ai)/Math.sin(C*RAD);
+  if(hNeed>190)L=190*Math.sin(C*RAD)/(Math.sin(br)*Math.sin(ai));
+  const Ax=200-L/2,Ay=240,Bx=200+L/2,By=240;
+  const s=L*Math.sin(br)/Math.sin(C*RAD);
   const Cx=Ax+s*Math.cos(ai),Cy=Ay-s*Math.sin(ai);
   seg(ctx,Ax-62,Ay,Bx,By,3.5);
   seg(ctx,Bx,By,Cx,Cy,3.5);seg(ctx,Cx,Cy,Ax,Ay,3.5);
@@ -709,22 +737,27 @@ iso(ctx,p){
     smallArc(ctx,Bx,By,28,0,bB2,3,'#fbbf24');
     bisLab(ctx,Bx,By,52,0,bB2,p.b+'°','#fbbf24',17);
     const e1=Math.atan2(Ey-Vy,Ex-Vx);
-    smallArc(ctx,Vx,Vy,32,e1,va2,3,'#22d3ee');
-    bisLab(ctx,Vx,Vy,58,e1,va2,'?','#22d3ee',24);
+    smallArc(ctx,Vx,Vy,32,e1,va1,3,'#22d3ee');
+    bisLab(ctx,Vx,Vy,58,e1,va1,'?','#22d3ee',24);
   }
 },
 rt(ctx,p){
-  const a=p.a*RAD,h=120,Ax=90,Ay=235,Cx=Ax,Cy=Ay-h,Bx=Ax+h*Math.tan(a),By=235;
-  const Dx=Bx+62;
-  seg(ctx,Ax,Ay,Dx,By,3.5);
-  seg(ctx,Bx,By,Cx,Cy,3.5);seg(ctx,Cx,Cy,Ax,Ay,3.5);
-  seg(ctx,Cx+13,Cy,Cx+13,Cy+13,2.5,'#fbbf24');seg(ctx,Cx,Cy+13,Cx+13,Cy+13,2.5,'#fbbf24');
-  dot(ctx,Ax,Ay,4);dot(ctx,Bx,By,4);dot(ctx,Cx,Cy,4);
-  lab(ctx,Ax-13,Ay+4,'A','#fff',14);lab(ctx,Bx+4,By+16,'B','#fff',14);lab(ctx,Cx-13,Cy,'C','#fff',14);
-  smallArc(ctx,Ax,Ay,30,-a,0,3,'#fbbf24');
-  bisLab(ctx,Ax,Ay,54,-a,0,p.a+'°','#fbbf24',17);
-  smallArc(ctx,Bx,By,30,Math.PI,0,3,'#22d3ee');
-  bisLab(ctx,Bx,By,58,Math.PI,0,'?','#22d3ee',24);
+  // Correct layout: C=(90,235) bottom-left is the right angle (AC vertical, CB horizontal),
+  // A=(90,115) top-left has angle a, B is bottom-right with angle 90-a.
+  // CB is extended beyond B to D; the exterior angle at B is ABD = 180-(90-a) = 90+a.
+  const a=p.a*RAD,h=120;
+  const Cx=90,Cy=235,Ax=90,Ay=115,Bx=90+h*Math.tan(a),By=235,Dx=Bx+48;
+  seg(ctx,Cx,Cy,Dx,By,3.5);
+  seg(ctx,Bx,By,Ax,Ay,3.5);seg(ctx,Ax,Ay,Cx,Cy,3.5);
+  seg(ctx,Cx+13,Cy,Cx+13,Cy-13,2.5,'#fbbf24');seg(ctx,Cx,Cy-13,Cx+13,Cy-13,2.5,'#fbbf24');
+  dot(ctx,Ax,Ay,4);dot(ctx,Bx,By,4);dot(ctx,Cx,Cy,4);dot(ctx,Dx,By,4);
+  lab(ctx,Ax-13,Ay,'A','#fff',14);lab(ctx,Bx+4,By+16,'B','#fff',14);lab(ctx,Cx-13,Cy,'C','#fff',14);lab(ctx,Dx,By-16,'D','#fff',14);
+  smallArc(ctx,Ax,Ay,30,Math.PI/2-a,Math.PI/2,3,'#fbbf24');
+  bisLab(ctx,Ax,Ay,54,Math.PI/2-a,Math.PI/2,p.a+'°','#fbbf24',17);
+  const baA=Math.atan2(Ay-By,Ax-Bx);
+  smallArc(ctx,Bx,By,30,baA,0,3,'#22d3ee');
+  bisLab(ctx,Bx,By,58,baA,0,'?','#22d3ee',24);
+
 },
 isotrap(ctx,p){
   const a=p.a*RAD,h=125,y0=235,y1=y0-h;
@@ -789,7 +822,7 @@ hex(ctx,p){
   lab(ctx,cx,cy+8,'正'+n+'邊形','#fbbf24',16);
 },
 chord(ctx,p){
-  const cx=180,cy=148,r=95,L=p.L,d=p.d,hx=L/2,y=cy+d;
+  const cx=180,cy=148,r=95,L=p.L,d=p.d,sc=r/p.r,hx=(L/2)*sc,y=cy+d*sc;
   circ(ctx,cx,cy,r,3.5);
   seg(ctx,cx-hx,y,cx+hx,y,3.5);
   dot(ctx,cx-hx,y,4);dot(ctx,cx+hx,y,4);dot(ctx,cx,cy,5);
@@ -800,7 +833,7 @@ chord(ctx,p){
   lab(ctx,cx+20,(cy+y)/2,'?','#22d3ee',20);
 },
 trap(ctx,p){
-  const y0=240,y1=130,cx=180,Wa=220,Wb=220*p.b/p.a;
+  const y0=240,y1=130,cx=180,mx=Math.max(p.a,p.b),Wa=280*p.a/mx,Wb=280*p.b/mx;
   const Ax=cx-Wa/2,Bx=cx+Wa/2,Dx=cx-Wb/2,Cx=cx+Wb/2;
   seg(ctx,Ax,y0,Bx,y0,3.5);seg(ctx,Dx,y1,Cx,y1,3.5);
   seg(ctx,Ax,y0,Dx,y1,3.5);seg(ctx,Bx,y0,Cx,y1,3.5);
@@ -813,7 +846,7 @@ trap(ctx,p){
 rt2(ctx,p){
   const Ax=90,Ay=235,Bx=250,By=235,Cx=90,Cy=115;
   seg(ctx,Ax,Ay,Bx,By,3.5);seg(ctx,Bx,By,Cx,Cy,3.5);seg(ctx,Cx,Cy,Ax,Ay,3.5);
-  seg(ctx,Cx+13,Cy,Cx+13,Cy+13,2.5,'#fbbf24');seg(ctx,Cx,Cy+13,Cx+13,Cy+13,2.5,'#fbbf24');
+  seg(ctx,Ax+13,Ay,Ax+13,Ay-13,2.5,'#fbbf24');seg(ctx,Ax,Ay-13,Ax+13,Ay-13,2.5,'#fbbf24');
   dot(ctx,Ax,Ay,4);dot(ctx,Bx,By,4);dot(ctx,Cx,Cy,4);
   lab(ctx,(Ax+Bx)/2,Ay+20,p.l1,'#fff',15);
   lab(ctx,Ax-22,(Ay+Cy)/2,p.l2,'#fff',15);

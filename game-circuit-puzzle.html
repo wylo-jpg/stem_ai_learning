@@ -6,7 +6,7 @@
 <title>電路大作戰 Circuit Puzzle</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;font-family:-apple-system,"PingFang HK","Microsoft JhengHei",sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+body{margin:0;font-family:-apple-system,"PingFang HK","Microsoft JhengHei",sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;overflow-x:hidden}
 .topbar{background:linear-gradient(135deg,#b45309,#92400e);padding:.9rem;text-align:center;font-weight:700;font-size:1.05rem}
 .nav{display:flex;justify-content:center;gap:1.2rem;background:#1e293b;padding:.6rem;font-size:.95rem}
 .nav a{color:#94a3b8;text-decoration:none}
@@ -20,8 +20,17 @@ body{margin:0;font-family:-apple-system,"PingFang HK","Microsoft JhengHei",sans-
 .btn{border:none;border-radius:8px;padding:.6rem 1.1rem;font-size:1rem;font-weight:700;cursor:pointer;color:#fff}
 .btn-hint{background:#0ea5e9}
 .btn-restart{background:#475569}
-#board{display:grid;gap:6px;justify-content:center;margin:.5rem 0}
-.cell{width:58px;height:58px;background:#0f172a;border:2px solid #334155;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.7rem;cursor:pointer;position:relative;user-select:none}
+#board{display:grid;gap:6px;justify-content:center;margin:.5rem auto;width:100%;max-width:520px}
+.cell{width:100%;aspect-ratio:1/1;height:auto;min-width:0;background:#0f172a;border:2px solid #334155;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:clamp(1.2rem,6vw,1.7rem);cursor:pointer;position:relative;user-select:none}
+@media (max-width:640px){
+  .topbar{padding:.55rem}
+  .nav{padding:.4rem}
+  .wrap{padding:.5rem}
+  .panel{padding:.6rem;margin-bottom:.5rem}
+  /* Controls stay at the top and reachable with one hand while scrolling */
+  .wrap>.panel:first-child{position:sticky;top:0;z-index:10}
+  .btn{min-height:48px}
+}
 .cell.fixed{cursor:default;border-style:dashed}
 .cell.hot{border-color:#f59e0b;box-shadow:0 0 12px rgba(245,158,11,.7);animation:pulse 1s infinite}
 @keyframes pulse{50%{box-shadow:0 0 4px rgba(245,158,11,.3)}}
@@ -117,22 +126,29 @@ const at=(ri,ci)=>(ri<0||ci<0||ri>=n||ci>=n)?null:cells[ri*n+ci];
 function buildLevel(){
   const L=LEVELS[level];n=L.n;cells=[];batt=null;won=false;
   const bd=document.getElementById('board');
-  bd.style.gridTemplateColumns=`repeat(${n},58px)`;
+  // Trim empty outer rows/columns from the DISPLAY grid only (game logic still uses the full n x n cells).
+  // Cause of the gap: every level starts with 2-3 fully blank rows, and the old code rendered
+  // each blank cell as a hidden 58px cell, so 116-174px of empty space sat above the circuit.
+  // With no placeholder cells and 1fr columns, blank rows collapse and the board fits phone width.
+  const rows=L.grid.map(row=>row.split(' '));
+  let minR=n,minC=n,maxR=-1,maxC=-1;
+  rows.forEach((row,ri)=>row.forEach((s,ci)=>{
+    if(s!=='..'){if(ri<minR)minR=ri;if(ri>maxR)maxR=ri;if(ci<minC)minC=ci;if(ci>maxC)maxC=ci;}
+  }));
+  bd.style.gridTemplateColumns=`repeat(${maxC-minC+1},minmax(0,1fr))`;
   bd.innerHTML='';
-  L.grid.forEach((row,ri)=>{
-    row.split(' ').forEach((s,ci)=>{
+  rows.forEach((row,ri)=>{
+    row.forEach((s,ci)=>{
       const c=parseCell(s);
       const idx=ri*n+ci;
       if(c){c.ri=ri;c.ci=ci;cells[idx]=c;
         const d=document.createElement('div');
         d.className='cell'+(c.fixed?' fixed':'');c.el=d;
+        d.style.gridRow=String(ri-minR+1);d.style.gridColumn=String(ci-minC+1);
         if(c.t==='B')batt=c;
         d.onclick=()=>tap(c);
         bd.appendChild(d);
-      }else{cells[idx]=null;
-        const d=document.createElement('div');
-        d.className='cell';d.style.visibility='hidden';bd.appendChild(d);
-      }
+      }else{cells[idx]=null;}
     });
   });
   document.getElementById('hLevel').textContent=(level+1)+' / '+LEVELS.length;

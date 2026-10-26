@@ -179,8 +179,12 @@ function startGame(){
   lives=3;score=0;timeLeft=60;playing=true;
   document.getElementById('bestNum').textContent=getBest();
   document.getElementById('arena').innerHTML='';
-  show('game');updateHud();newRound();
+  /* Bug 8 fix: the old order called newRound() (which starts the 700ms
+     spawn interval) and then immediately clearInterval(spawnId), killing
+     that interval before any balloon could spawn -- so no balloons ever
+     appeared. Clear first, then start the round and the countdown. */
   clearInterval(timerId);clearInterval(spawnId);
+  show('game');updateHud();newRound();
   timerId=setInterval(function(){timeLeft--;updateHud();if(timeLeft<=0)endGame();},1000);
 }
 function updateHud(){document.getElementById('lives').textContent=lives;document.getElementById('score').textContent=score;document.getElementById('time').textContent=timeLeft;}

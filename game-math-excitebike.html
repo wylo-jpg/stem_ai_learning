@@ -66,6 +66,13 @@ canvas{display:block;width:100%;height:auto;border-radius:14px;
   background:rgba(125,211,252,.1);border-left:3px solid #7dd3fc;
   padding:8px 10px;border-radius:0 8px 8px 0}
 #msg{min-height:30px;text-align:center;font-size:16px;font-weight:700;margin-top:10px;color:#34f5a3}
+/* Reverse control: hold to actually move backwards */
+#revRow{display:flex;gap:10px;align-items:center;margin-top:10px}
+#revBtn{flex:1;min-height:56px;font-size:19px;font-weight:800;border-radius:12px;
+  border:1px solid rgba(160,220,255,.55);background:rgba(255,93,143,.16);color:#fff;
+  cursor:pointer;font-family:inherit;touch-action:none;user-select:none;-webkit-user-select:none}
+#revBtn:active,#revBtn.on{background:rgba(255,93,143,.45);transform:scale(.97)}
+#revHint{font-size:14px;color:#bfe3ff;line-height:1.5}
 /* 覆蓋層 */
 .overlay{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
   background:rgba(4,7,24,.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);padding:16px}
@@ -135,6 +142,11 @@ canvas{display:block;width:100%;height:auto;border-radius:14px;
 
   <div id="cvwrap"><canvas id="cv" width="800" height="450"></canvas></div>
 
+  <div id="revRow">
+    <button id="revBtn" type="button" title="後退" aria-label="按住後退">⏪ 按住後退</button>
+    <div id="revHint">鍵盤：按住 <b>↓</b> 或 <b>S</b> 後退<br>電單車會真係向後行</div>
+  </div>
+
   <div id="qcard" class="hidden">
     <div class="qtitle">🚦 算式閘門　<span id="qnum"></span></div>
     <div class="qq" id="qq"></div>
@@ -155,6 +167,7 @@ canvas{display:block;width:100%;height:auto;border-radius:14px;
         <li>🚦 接近<b>霓虹閘門</b>時會彈出題目，必須在通過閘門前點選答案。</li>
         <li>✅ 答啱 → <b>Turbo 加速</b>（速度線＋尾焰粒子）；❌ 答錯／嚟唔切答 → 減速 3 秒。</li>
         <li>⭐ 答啱每題 +100 分；名次獎勵 🥇+600 🥈+350 🥉+200，另有時間獎勵。</li>
+        <li>⏪ 後退：按住 <b>↓</b>／<b>S</b> 或「按住後退」掣，電單車會真係向後行（12 m/s），用嚟修正走過頭。</li>
       </ul>
     </div>
     <b>🎚️ 選擇難度</b>
@@ -281,7 +294,7 @@ const LEVELS={
 
 /* ================= 遊戲狀態 ================= */
 const G={state:'menu',level:'easy',dist:0,speed:0,boostT:0,slowT:0,
-  score:0,correct:0,wrong:0,gates:[],active:null,ai:[],parts:[],elapsed:0,qToken:0};
+  score:0,correct:0,wrong:0,gates:[],active:null,ai:[],parts:[],elapsed:0,qToken:0,reverse:false};
 const AI_DEFS=[
   {name:'疾風',col:'#ff5d8f',base:20.6},
   {name:'雷霆',col:'#ffd23f',base:21.8}
@@ -289,7 +302,7 @@ const AI_DEFS=[
 
 function reset(level){
   G.level=level;G.state='race';
-  G.dist=0;G.speed=14;G.boostT=0;G.slowT=0;
+  G.dist=0;G.speed=14;G.boostT=0;G.slowT=0;G.reverse=false;
   G.score=0;G.correct=0;G.wrong=0;G.active=null;G.parts=[];G.elapsed=0;G.qToken++;
   G.gates=[];
   for(let i=0;i<9;i++){
@@ -360,10 +373,16 @@ function update(dt){
   G.elapsed+=dt;
   if(G.boostT>0)G.boostT-=dt;
   if(G.slowT>0)G.slowT-=dt;
-  const tgt=G.boostT>0?36:(G.slowT>0?13:22);
-  G.speed+=(tgt-G.speed)*Math.min(1,dt*2.5);
-  G.dist+=G.speed*dt;
-  if(G.boostT>0)spawnExhaust();
+  if(G.reverse){
+    // Real reverse: negative speed, distance actually decreases (clamped at the start line)
+    G.speed=-12;
+    G.dist=Math.max(0,G.dist-12*dt);
+  }else{
+    const tgt=G.boostT>0?36:(G.slowT>0?13:22);
+    G.speed+=(tgt-G.speed)*Math.min(1,dt*2.5);
+    G.dist+=G.speed*dt;
+    if(G.boostT>0)spawnExhaust();
+  }
   for(const a of G.ai){
     if(a.boostT>0)a.boostT-=dt;
     if(a.slowT>0)a.slowT-=dt;
@@ -629,6 +648,20 @@ function init(){
     G.state='menu';G.qToken++;
     $('finish').classList.add('hidden');
     $('menu').classList.remove('hidden');
+  });
+  // Reverse: hold Down arrow or S, or hold the on-screen reverse button
+  const revBtn=$('revBtn');
+  const revOn=e=>{if(G.state==='race'){e.preventDefault();G.reverse=true;revBtn.classList.add('on');}};
+  const revOff=e=>{if(e)e.preventDefault();G.reverse=false;revBtn.classList.remove('on');};
+  revBtn.addEventListener('pointerdown',revOn);
+  revBtn.addEventListener('pointerup',revOff);
+  revBtn.addEventListener('pointercancel',revOff);
+  revBtn.addEventListener('pointerleave',revOff);
+  document.addEventListener('keydown',e=>{
+    if((e.code==='ArrowDown'||e.code==='KeyS')&&G.state==='race'){e.preventDefault();G.reverse=true;revBtn.classList.add('on');}
+  });
+  document.addEventListener('keyup',e=>{
+    if(e.code==='ArrowDown'||e.code==='KeyS'){G.reverse=false;revBtn.classList.remove('on');}
   });
   document.addEventListener('keydown',e=>{
     if(G.state!=='race'||!G.active)return;

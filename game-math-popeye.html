@@ -20,6 +20,7 @@ canvas{width:100%;display:block;touch-action:none}
 #dpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:300px;margin:12px auto}
 .dbtn{min-height:62px;font-size:28px;color:#fff;border:none;border-radius:18px;cursor:pointer;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.32);backdrop-filter:blur(10px);box-shadow:0 6px 18px rgba(0,0,0,.3);transition:transform .08s;font-weight:800}
 .dbtn:active{transform:scale(.92);background:rgba(255,255,255,.3)}
+.dbtn{touch-action:none;-webkit-user-select:none;user-select:none}
 .dbtn.up{grid-column:2}.dbtn.left{grid-column:1;grid-row:2}.dbtn.right{grid-column:3;grid-row:2}.dbtn.down{grid-column:2;grid-row:3}
 .tip{text-align:center;color:#d4f7f0;font-size:13px;opacity:.9}
 .overlay{position:fixed;inset:0;background:rgba(8,45,70,.72);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;z-index:60;padding:20px;overflow-y:auto}
@@ -72,7 +73,7 @@ canvas{width:100%;display:block;touch-action:none}
 
 <div class="overlay" id="intro" style="display:none"><div class="card">
 <h2>💪 玩法說明</h2>
-<p><b>玩法：</b>大力水手潛入深海尋找 8 顆愛心寶石！用方向掣（或滑動）行去愛心，每顆愛心有條數學題，<b>答啱先拎到</b>。小心水母怪，撞到扣一條命！集齊 8 顆就升級，怪會愈嚟愈快。</p>
+<p><b>玩法：</b>大力水手潛入深海尋找 8 顆愛心寶石！長按方向掣可連續行走（或滑動）行去愛心，每顆愛心有條數學題，<b>答啱先拎到</b>。小心水母怪，撞到扣一條命！集齊 8 顆就升級，怪會愈嚟愈快。</p>
 <div class="concept" id="conceptBox"></div>
 <button class="bigbtn" id="startBtn">▶ 開始遊戲</button>
 </div></div>
@@ -335,8 +336,29 @@ function loop(t){
   draw();
   requestAnimationFrame(loop);
 }
+/* Hold-to-walk: press = 1 step at once, then 1 step every 180ms while held. Works for touch, mouse and held keyboard arrows. */
+var holdDir=null,holdTimer=null,holdId=null;
+function startHold(dx,dy,id){if(holdTimer){clearInterval(holdTimer);holdTimer=null;}holdDir={dx:dx,dy:dy};holdId=(id===undefined?null:id);move(dx,dy);holdTimer=setInterval(function(){if(holdDir)move(holdDir.dx,holdDir.dy);},180);}
+function stopHold(id){if(id!==undefined&&holdId!==null&&id!==holdId)return;if(holdTimer){clearInterval(holdTimer);holdTimer=null;}holdDir=null;holdId=null;}
+function bindHoldBtn(b,dx,dy){
+  b.addEventListener('pointerdown',function(e){e.preventDefault();try{b.setPointerCapture(e.pointerId);}catch(err){}b._ptrT=Date.now();startHold(dx,dy,e.pointerId);});
+  ['pointerup','pointercancel','lostpointercapture'].forEach(function(ev){b.addEventListener(ev,function(e){stopHold(e.pointerId);});});
+  b.addEventListener('pointerleave',function(){stopHold();});
+  b.addEventListener('contextmenu',function(e){e.preventDefault();});
+  b.addEventListener('click',function(){if(Date.now()-(b._ptrT||0)>500)move(dx,dy);});
+}
 Array.prototype.forEach.call(document.querySelectorAll('.dbtn'),function(b){
-  b.addEventListener('pointerdown',function(e){e.preventDefault();move(parseInt(b.dataset.dx,10),parseInt(b.dataset.dy,10));});
+  bindHoldBtn(b,parseInt(b.dataset.dx,10),parseInt(b.dataset.dy,10));
+});
+document.addEventListener('keydown',function(e){
+  if(!running||e.repeat)return;
+  if(e.key==='ArrowUp'){e.preventDefault();startHold(0,-1,'key');}
+  else if(e.key==='ArrowDown'){e.preventDefault();startHold(0,1,'key');}
+  else if(e.key==='ArrowLeft'){e.preventDefault();startHold(-1,0,'key');}
+  else if(e.key==='ArrowRight'){e.preventDefault();startHold(1,0,'key');}
+});
+document.addEventListener('keyup',function(e){
+  if(e.key==='ArrowUp'||e.key==='ArrowDown'||e.key==='ArrowLeft'||e.key==='ArrowRight')stopHold('key');
 });
 var sx0=0,sy0=0;
 cv.addEventListener('pointerdown',function(e){sx0=e.clientX;sy0=e.clientY;});

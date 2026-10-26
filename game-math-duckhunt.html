@@ -241,8 +241,21 @@ function spawnDuck(){
     bob:Math.random()*6.2832,flap:Math.random()*6.2832,v:null};
   ducks.push(d);
   if(current){
-    var used={};for(var i=0;i<ducks.length;i++)if(ducks[i].v)used[ducks[i].v]=1;
-    d.v=pickDistractor(used);
+    /* Bug 7 fix: guarantee a correct-answer duck exists. A duck flying off
+       screen (or being shot) used to be replaced by a distractor-only duck,
+       leaving rounds with no correct duck at all. Now the replacement duck
+       itself carries the correct answer when no live duck does; otherwise
+       it gets a distinct wrong answer (correct answer excluded from the
+       used set, and pickDistractor already skips values already in use). */
+    var hasCorrect=false;
+    for(var i=0;i<ducks.length;i++)if(ducks[i].v===current.a)hasCorrect=true;
+    if(hasCorrect){
+      var used={};used[current.a]=1;
+      for(var j=0;j<ducks.length;j++)if(ducks[j].v)used[ducks[j].v]=1;
+      d.v=pickDistractor(used);
+    }else{
+      d.v=current.a;
+    }
   }
   return d;
 }

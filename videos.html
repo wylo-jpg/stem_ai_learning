@@ -34,11 +34,18 @@ main{max-width:1100px;margin:0 auto;padding:24px 16px 60px}
 .arch-item:hover{background:#fef2f2}
 .arch-title{font-size:14px;font-weight:600}
 .arch-count{font-size:12px;color:var(--muted);white-space:nowrap;margin-left:12px}
-.player-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:100;align-items:center;justify-content:center;padding:20px}
+.player-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:100;align-items:center;justify-content:center;padding:12px}
 .player-modal.open{display:flex}
-.player-wrap{width:100%;max-width:900px;aspect-ratio:16/9;background:#000;border-radius:8px;overflow:hidden;position:relative}
-.player-wrap iframe{width:100%;height:100%;border:0}
-.close-btn{position:absolute;top:-40px;right:0;color:#fff;font-size:28px;cursor:pointer;background:none;border:none}
+.player-box{width:100%;max-width:900px}
+.modal-top{display:flex;justify-content:flex-end;padding-bottom:8px}
+.player-wrap{width:100%;aspect-ratio:16/9;background:#000;border-radius:8px;overflow:hidden;position:relative}
+.player-wrap iframe{width:100%;height:100%;border:0;display:block}
+.player-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;background:#000;font-size:15px;padding:16px;text-align:center}
+.player-loading.hidden{display:none}
+.close-btn{width:44px;height:44px;line-height:1;color:#fff;font-size:26px;cursor:pointer;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4);border-radius:50%}
+.player-fallback{background:#fff;border-radius:8px;margin-top:10px;padding:12px 16px;text-align:center;font-size:14px;color:var(--ink)}
+.fallback-btn{display:inline-block;min-height:44px;line-height:44px;padding:0 20px;background:var(--red);color:#fff;border-radius:8px;text-decoration:none;font-weight:700}
+.player-note{font-size:12px;color:var(--muted);margin-top:6px}
 footer{text-align:center;color:var(--muted);font-size:12px;padding:30px}
 @media(max-width:640px){.grid{grid-template-columns:1fr}}
 </style>
@@ -754,19 +761,38 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px}
 </main>
 <footer>&#25945;&#23416;&#36039;&#28304;&#20849;&#20139; &#183; &#27489;&#36814;&#32769;&#24107;&#21516;&#23416;&#29983;&#20351;&#29992;</footer>
 <div class="player-modal" id="modal" onclick="if(event.target===this)closePlayer()">
+<div class="player-box">
+<div class="modal-top"><button class="close-btn" type="button" aria-label="關閉影片" onclick="closePlayer()">×</button></div>
 <div class="player-wrap">
-<button class="close-btn" onclick="closePlayer()">&#10005;</button>
-<iframe id="player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<div class="player-loading" id="player-loading">載入緊影片…如畫面長時間全黑，請用下面按鈕去 YouTube 睇。</div>
+<iframe id="player" title="教學影片" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+<div class="player-fallback"><a class="fallback-btn" id="player-fallback" href="https://www.youtube.com/" target="_blank" rel="noopener">播唔到？去 YouTube 睇</a><div class="player-note">如果內嵌影片播唔到，撳上面按鈕直接去 YouTube 睇返同一個播放清單。</div></div>
 </div>
 </div>
 <script>
+var playerTimer=null;
 function playPlaylist(pid){
-document.getElementById('player').src='https://www.youtube.com/embed/videoseries?list='+pid+'&autoplay=1';
+var player=document.getElementById('player');
+var loading=document.getElementById('player-loading');
+var fallback=document.getElementById('player-fallback');
+fallback.href='https://www.youtube.com/playlist?list='+encodeURIComponent(pid);
+loading.textContent='載入緊影片…如畫面長時間全黑，請用下面按鈕去 YouTube 睇。';
+loading.classList.remove('hidden');
+if(playerTimer){clearTimeout(playerTimer);}
+playerTimer=setTimeout(function(){loading.classList.add('hidden');},10000);
+player.onload=function(){loading.classList.add('hidden');};
+// No autoplay=1: mobile browsers block autoplay with sound, which can leave a black/paused player.
+// Load paused instead, so the user taps YouTube's own play button (a real gesture), which reliably starts playback.
+player.src='https://www.youtube.com/embed/videoseries?list='+encodeURIComponent(pid);
 document.getElementById('modal').classList.add('open');
 document.body.style.overflow='hidden';
 }
 function closePlayer(){
-document.getElementById('player').src='';
+if(playerTimer){clearTimeout(playerTimer);playerTimer=null;}
+var player=document.getElementById('player');
+player.onload=null;
+player.src='';
 document.getElementById('modal').classList.remove('open');
 document.body.style.overflow='';
 }

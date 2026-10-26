@@ -184,9 +184,35 @@ canvas{
 "use strict";
 var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
 var W=480,H=320;
-var PLATS=[{x0:0,x1:480,y:280},{x0:60,x1:480,y:215},{x0:0,x1:420,y:150},{x0:60,x1:480,y:85}];
-var LADDERS=[{x:400,top:215,bot:280},{x:100,top:150,bot:215},{x:380,top:85,bot:150}];
-var SEGS=[{x0:60,x1:480,y:85},{x0:0,x1:420,y:150},{x0:60,x1:480,y:215},{x0:0,x1:480,y:280}];
+/* Bug 5 fix: 4 distinct platform/ladder/barrel layouts. Same 4 heights
+   (85/150/215/280) and same win rule (top platform, x>400), so questions,
+   scoring, princess and monkey positions are unchanged. Every ladder x lies
+   inside both platforms it joins, and consecutive barrel segments overlap,
+   so every platform and ladder is reachable in every layout. */
+var LAYOUTS=[
+ {plats:[{x0:0,x1:480,y:280},{x0:60,x1:480,y:215},{x0:0,x1:420,y:150},{x0:60,x1:480,y:85}],
+  ladders:[{x:400,top:215,bot:280},{x:100,top:150,bot:215},{x:380,top:85,bot:150}],
+  segs:[{x0:60,x1:480,y:85},{x0:0,x1:420,y:150},{x0:60,x1:480,y:215},{x0:0,x1:480,y:280}]},
+ {plats:[{x0:0,x1:480,y:280},{x0:0,x1:420,y:215},{x0:60,x1:480,y:150},{x0:0,x1:480,y:85}],
+  ladders:[{x:120,top:215,bot:280},{x:300,top:150,bot:215},{x:200,top:85,bot:150}],
+  segs:[{x0:0,x1:480,y:85},{x0:60,x1:480,y:150},{x0:0,x1:420,y:215},{x0:0,x1:480,y:280}]},
+ {plats:[{x0:0,x1:480,y:280},{x0:120,x1:480,y:215},{x0:0,x1:360,y:150},{x0:60,x1:480,y:85}],
+  ladders:[{x:380,top:215,bot:280},{x:180,top:150,bot:215},{x:100,top:85,bot:150}],
+  segs:[{x0:60,x1:480,y:85},{x0:0,x1:360,y:150},{x0:120,x1:480,y:215},{x0:0,x1:480,y:280}]},
+ {plats:[{x0:0,x1:480,y:280},{x0:40,x1:480,y:215},{x0:0,x1:440,y:150},{x0:120,x1:480,y:85}],
+  ladders:[{x:200,top:215,bot:280},{x:360,top:150,bot:215},{x:300,top:85,bot:150}],
+  segs:[{x0:120,x1:480,y:85},{x0:0,x1:440,y:150},{x0:40,x1:480,y:215},{x0:0,x1:480,y:280}]}
+];
+var PLATS=LAYOUTS[0].plats;
+var LADDERS=LAYOUTS[0].ladders;
+var SEGS=LAYOUTS[0].segs;
+var layoutOrder=[],layoutCycle=-1;
+function pickLayoutForLevel(){
+  var cycle=Math.floor((level-1)/4);
+  if(cycle!==layoutCycle){layoutCycle=cycle;layoutOrder=shuffle([0,1,2,3]);}
+  var lay=LAYOUTS[layoutOrder[(level-1)%4]];
+  PLATS=lay.plats;LADDERS=lay.ladders;SEGS=lay.segs;
+}
 var player={x:30,y:280,vx:0,vy:0,ground:true,climb:false,face:1},barrels=[],coins=[];
 var q={txt:'揀難度開始遊戲',coins:[],barrelVals:['?']},gotKey=false,score=0,lives=3,level=1;
 var over=false,started=false,spawnT=1.4,msgT=0,msg='',throwAnim=0;
@@ -251,12 +277,13 @@ function saveBest(){
   updHud();
 }
 function buildLevel(){
+  pickLayoutForLevel();
   q=(diff==='mid')?genMid():((diff==='hard')?genHard():genEasy());
   gotKey=false;throwAnim=0;
   document.getElementById('qq').textContent=q.txt;
   player={x:30,y:280,vx:0,vy:0,ground:true,climb:false,face:1};
   barrels=[];spawnT=1.4;msg='';msgT=0;
-  var spots=[{x:245,y:150},{x:200,y:215},{x:300,y:85}];
+  var spots=PLATS.filter(function(pl){return pl.y<280;}).map(function(pl){return {x:Math.round((pl.x0+pl.x1)/2),y:pl.y};});
   coins=q.coins.map(function(c,i){return {x:spots[i].x,y:spots[i].y-18,label:c.label,ok:c.ok,got:false,ph:Math.random()*6.28};});
 }
 function newGame(){
@@ -271,7 +298,7 @@ function onLadder(){
 }
 function spawnBarrel(){
   var w=q.barrelVals[rnd(0,q.barrelVals.length-1)];
-  barrels.push({seg:0,x:60,dir:1,v:1.6+level*0.25,val:w});
+  barrels.push({seg:0,x:SEGS[0].x0+10,dir:1,v:1.6+level*0.25,val:w});
   throwAnim=1;
 }
 function loseLife(why){

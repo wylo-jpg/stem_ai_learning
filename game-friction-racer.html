@@ -60,7 +60,7 @@ th{background:#3f3f46}
 <div id="overlay"><div class="card">
 <h2>🏎️ 摩擦力賽車</h2>
 <p><b>玩法：</b>架車會自動向前行，睇準時機撳「剎車」，要令架車停喺綠色目標區內！唔同路面摩擦力唔同，冰面會滑好遠。</p>
-<p><b>🏆 計分：</b>共 3 回合，愈近目標中心分愈高。衝過頭或者停得太早都冇分！</p>
+<p><b>🏆 計分：</b>共 3 回合，愈近目標中心分愈高。衝過頭或者停得太早都冇分！第 1 回合係簡單模式（乾路、慢車速、目標區最闊），之後先逐漸變難。</p>
 <p><b>💡 物理原理：</b>剎車距離 = v² / (2μg)。車速愈快、摩擦係數 μ 愈細，剎車距離愈長。所以落雨天同冰面要預留更長距離！</p>
 <button class="go" onclick="document.getElementById('overlay').style.display='none'">開車！</button>
 </div></div>
@@ -77,11 +77,24 @@ var round=0, score=0, state='idle';
 var v0=0, mu=0, v=0, x=0, braking=false, zoneX=0, zoneW=10, surfName='';
 function bx(m){return 30+(m/TRACK)*(W-60);}
 function newRound(){
-  var s=surfs[Math.floor(Math.random()*3)];
+  // Gentler difficulty curve + easy mode on round 1 (was: random surface, random speed 16/20/24,
+  // random zone 18-62 m). Difficulty now rises through the surface (dry -> wet -> ice), not speed.
+  // Zone placement is now physics-based so it is always reachable: centre = braking distance
+  // + 8-14 m of rolling before braking. Old random zones were often unreachable on ice
+  // (braking alone needs 367 m at 24 m/s on ice, far beyond the 90 m track).
+  var plan=[
+    {s:surfs[2], v:12, w:20},  // Round 1, easy mode: dry road, mu 0.70, slowest-feeling, widest zone
+    {s:surfs[1], v:14, w:16},  // Round 2: wet road, mu 0.35
+    {s:surfs[0], v:10, w:14}   // Round 3: ice, mu 0.08, but slowest speed so ice stays stoppable
+  ][round];
+  var s=plan.s;
   mu=s.mu; surfName=s.n;
-  v0=[16,20,24][Math.floor(Math.random()*3)];
+  v0=plan.v;
   v=v0; x=0; braking=false; state='ready';
-  zoneW=10; zoneX=18+Math.random()*(TRACK-36-zoneW);
+  zoneW=plan.w;
+  var brakeDist=v0*v0/(2*mu*G);
+  var centre=brakeDist+8+Math.random()*6;
+  zoneX=Math.max(5,Math.min(TRACK-zoneW-2,centre-zoneW/2));
   document.getElementById('surfName').textContent=surfName+'（μ='+mu+'）';
   document.getElementById('hB').textContent=(v0*v0/(2*mu*G)).toFixed(1)+' m';
   document.getElementById('hV').textContent=(v0*3.6).toFixed(0)+' km/h';
@@ -89,7 +102,7 @@ function newRound(){
   document.getElementById('btnBrake').style.display='none';
   document.getElementById('btnGo').disabled=false;
   document.getElementById('score').textContent='第 '+(round+1)+' / 3 回合　總分：'+score;
-  document.getElementById('msg').textContent='第 '+(round+1)+' 回合：車速 '+(v0*3.6).toFixed(0)+' km/h，'+surfName+'。目標區在 '+zoneX.toFixed(0)+'–'+(zoneX+zoneW).toFixed(0)+' m';
+  document.getElementById('msg').textContent='第 '+(round+1)+' 回合'+(round===0?'（🌱 簡單模式）':'')+'：車速 '+(v0*3.6).toFixed(0)+' km/h，'+surfName+'。目標區在 '+zoneX.toFixed(0)+'–'+(zoneX+zoneW).toFixed(0)+' m';
   var box=document.getElementById('surfBtns');box.innerHTML='';
   surfs.forEach(function(q){
     var b=document.createElement('button');b.textContent=q.n+' μ='+q.mu;
@@ -97,7 +110,7 @@ function newRound(){
   });
 }
 document.getElementById('btnGo').addEventListener('click',function(){
-  if(round>=3){round=0;score=0;}
+  if(round>=3){round=0;score=0;newRound();return;}
   this.textContent='🏁 開車';
   state='run';
   document.getElementById('btnGo').style.display='none';
@@ -111,7 +124,7 @@ function finish(){
   var zc=zoneX+zoneW/2, dist=Math.abs(x-zc);
   var pts=0, txt='';
   if(dist<=zoneW/2){pts=Math.round(100*(1-dist/(zoneW/2)*0.5));txt='✅ 完美停入目標區！';}
-  else if(dist<=zoneW/2+8){pts=Math.round(50*(1-(dist-zoneW/2)/8));txt='😐 差少少，偏離 '+dist.toFixed(1)+' m';}
+  else if(dist<=zoneW/2+15){pts=Math.round(50*(1-(dist-zoneW/2)/15));txt='😐 差少少，偏離 '+dist.toFixed(1)+' m';}
   else{pts=0;txt=x<zc?'❌ 停得太早！':'❌ 衝過頭！';}
   score+=pts;
   document.getElementById('msg').textContent=txt+' 停車位置 '+x.toFixed(1)+' m（+'+pts+' 分）';
