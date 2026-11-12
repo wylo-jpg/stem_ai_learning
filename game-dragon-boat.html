@@ -1,0 +1,962 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>龍舟競渡遊戲</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet" />
+    <style>
+      button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]) { min-height: 2rem; }
+
+      :root {
+        --ink: #22303a;
+        --ink-soft: #4c5f6d;
+        --paper: #fdf6e9;
+        --paper-2: #f7ecd3;
+        --card: #fffdf6;
+        --line: #e3d3ae;
+        --red: #c0272d;
+        --red-dark: #8f1d22;
+        --teal: #0f766e;
+        --teal-dark: #0a5751;
+        --gold: #d9a441;
+        --water-1: #2aa7a0;
+        --water-2: #157f8c;
+        --water-3: #0d5f74;
+        --sky-1: #ffe9b8;
+        --sky-2: #ffd9a0;
+        --shadow: 0 10px 30px rgba(90, 60, 10, .18);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --ink: #f0e7d3;
+          --ink-soft: #c9bda3;
+          --paper: #1d2126;
+          --paper-2: #23282e;
+          --card: #262b31;
+          --line: #45403a;
+          --water-1: #1d7f88;
+          --water-2: #14616f;
+          --water-3: #0c485a;
+          --sky-1: #4a3b28;
+          --sky-2: #3a2f22;
+          --shadow: 0 10px 30px rgba(0,0,0,.45);
+        }
+      }
+
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        font-family: "Noto Sans TC", system-ui, -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+        background: var(--paper);
+        color: var(--ink);
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        overscroll-behavior: none;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      /* 比賽進行時鎖住畫面，避免 iPad 連撳時捲動或縮放（只限觸控裝置，桌面不受影響） */
+      @media (pointer: coarse) { body.racing { overflow: hidden; } }
+      .wrap {
+        max-width: 1080px; margin: 0 auto;
+        padding: 14px calc(14px + env(safe-area-inset-right, 0px)) calc(26px + env(safe-area-inset-bottom, 0px)) calc(14px + env(safe-area-inset-left, 0px));
+      }
+
+      /* ---------- Header ---------- */
+      header.top { text-align: center; padding: 6px 4px 2px; }
+      header.top h1 {
+        font-family: "Noto Serif TC", serif;
+        font-weight: 900;
+        font-size: clamp(1.7rem, 5.4vw, 2.6rem);
+        margin: 4px 0 2px;
+        letter-spacing: .06em;
+        color: var(--red-dark);
+      }
+      @media (prefers-color-scheme: dark) { header.top h1 { color: #f0b429; } }
+      header.top p.sub { margin: 0 0 6px; color: var(--ink-soft); font-size: .95rem; }
+      .drum-line { display: flex; justify-content: center; gap: 6px; margin: 2px 0 8px; }
+      .drum-line span { width: 9px; height: 9px; border-radius: 50%; background: var(--gold); opacity: .85; }
+      .drum-line span:nth-child(odd) { background: var(--red); }
+
+      /* ---------- Screens ---------- */
+      .screen { display: none; }
+      .screen.on { display: block; }
+
+      .card {
+        background: var(--card);
+        border: 1.5px solid var(--line);
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+        padding: 18px;
+      }
+
+      /* ---------- Start screen ---------- */
+      .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0 6px; }
+      @media (max-width: 560px) { .mode-grid { grid-template-columns: 1fr; } }
+      .mode-btn {
+        border: 2px solid var(--line);
+        background: var(--paper-2);
+        border-radius: 12px;
+        padding: 16px 14px;
+        cursor: pointer;
+        text-align: left;
+        color: var(--ink);
+        font: inherit;
+        transition: transform .08s ease, border-color .15s ease, background .15s ease;
+      }
+      .mode-btn:hover { border-color: var(--gold); }
+      .mode-btn:active { transform: scale(.98); }
+      .mode-btn.sel { border-color: var(--red); background: #fdf0e2; }
+      @media (prefers-color-scheme: dark) { .mode-btn.sel { background: #3a2f28; } }
+      .mode-btn .t { font-weight: 900; font-size: 1.12rem; display: block; margin-bottom: 4px; }
+      .mode-btn .d { color: var(--ink-soft); font-size: .9rem; line-height: 1.5; display: block; }
+
+      .howto { margin: 14px 0 4px; padding: 0; list-style: none; display: grid; gap: 8px; }
+      .howto li { display: flex; gap: 10px; align-items: flex-start; line-height: 1.55; font-size: .95rem; }
+      .howto .n {
+        flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%;
+        background: var(--red); color: #fff; font-weight: 900; font-size: .85rem;
+        display: grid; place-items: center; margin-top: 1px;
+      }
+      kbd {
+        font-family: inherit; font-weight: 700; background: var(--paper-2);
+        border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px;
+        padding: 0 6px; font-size: .85em; white-space: nowrap;
+      }
+      .big-start {
+        display: block; width: 100%; margin-top: 16px;
+        background: var(--red); color: #fff; border: none; border-radius: 12px;
+        font: inherit; font-weight: 900; font-size: 1.25rem; letter-spacing: .12em;
+        padding: 16px; cursor: pointer; box-shadow: 0 6px 0 var(--red-dark);
+        transition: transform .08s ease, box-shadow .08s ease;
+      }
+      .big-start:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--red-dark); }
+
+      /* ---------- Race scene ---------- */
+      .hud { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+      .hud .timer {
+        font-weight: 900; font-size: 1.15rem; font-variant-numeric: tabular-nums;
+        background: var(--card); border: 1.5px solid var(--line); border-radius: 999px; padding: 6px 16px;
+      }
+      .hud .status { font-weight: 700; color: var(--ink-soft); font-size: .95rem; }
+      .hud .quit {
+        background: none; border: 1.5px solid var(--line); color: var(--ink-soft);
+        border-radius: 999px; padding: 8px 14px; font: inherit; font-weight: 700; cursor: pointer; min-height: 40px;
+      }
+
+      .scene {
+        position: relative; border-radius: 16px; overflow: hidden;
+        border: 2px solid #0a4a5a;
+        background: linear-gradient(180deg, var(--sky-1) 0%, var(--sky-2) 16%, var(--water-1) 17%, var(--water-2) 55%, var(--water-3) 100%);
+        box-shadow: var(--shadow);
+      }
+      .bank {
+        position: absolute; left: 0; right: 0; top: 0; height: 16%;
+        display: flex; align-items: flex-end; justify-content: space-between; padding: 0 8px;
+        pointer-events: none;
+      }
+      .bank .crowd { font-size: clamp(14px, 3.4vw, 22px); letter-spacing: 2px; opacity: .9; filter: saturate(1.1); }
+      .lane { position: relative; height: clamp(92px, 17vw, 128px); }
+      .lane + .lane { border-top: 2px dashed rgba(255,255,255,.45); }
+      .lane .dist {
+        position: absolute; inset: 0; pointer-events: none;
+        background-image: repeating-linear-gradient(90deg, transparent 0, transparent calc(10% - 1px), rgba(255,255,255,.22) calc(10% - 1px), rgba(255,255,255,.22) 10%);
+      }
+      .finish {
+        position: absolute; top: 0; bottom: 0; right: 5.5%; width: 0;
+        border-right: 5px dotted #ffd94d; pointer-events: none; z-index: 3;
+      }
+      .finish .flag {
+        position: absolute; top: 4px; right: -8px; font-size: 20px; transform: rotate(6deg);
+      }
+      .boat {
+        position: absolute; bottom: 12px; left: 1%;
+        width: clamp(118px, 24%, 210px);
+        transition: none; z-index: 2;
+        will-change: transform, left;
+      }
+      .boat svg { display: block; width: 100%; height: auto; overflow: visible; }
+      .boat .bob { animation: bob 0.9s ease-in-out infinite; transform-origin: 50% 80%; }
+      .boat.fast .bob { animation-duration: 0.38s; }
+      @keyframes bob {
+        0%, 100% { transform: translateY(0) rotate(-1.1deg); }
+        50% { transform: translateY(-4px) rotate(1.1deg); }
+      }
+      .boat .paddle { transform-origin: 30px 6px; }
+      .boat.stroke1 .paddle { animation: stroke .34s ease-out; }
+      @keyframes stroke {
+        0% { transform: rotate(0deg); }
+        40% { transform: rotate(-24deg); }
+        100% { transform: rotate(0deg); }
+      }
+      .splash {
+        position: absolute; bottom: 8px; width: 8px; height: 8px; border-radius: 50%;
+        background: rgba(255,255,255,.9); pointer-events: none; z-index: 1;
+        animation: splash .5s ease-out forwards;
+      }
+      @keyframes splash {
+        0% { transform: translate(0,0) scale(1); opacity: .95; }
+        100% { transform: translate(var(--dx, -14px), -26px) scale(.3); opacity: 0; }
+      }
+      .lane-label {
+        position: absolute; top: 6px; left: 10px; z-index: 4;
+        font-weight: 900; font-size: .85rem; color: #fff;
+        text-shadow: 0 1px 3px rgba(0,0,0,.5);
+        background: rgba(0,0,0,.28); padding: 3px 10px; border-radius: 999px;
+      }
+      .lane-pct {
+        position: absolute; top: 6px; right: 10px; z-index: 4;
+        font-weight: 900; font-size: .85rem; color: #fff; font-variant-numeric: tabular-nums;
+        text-shadow: 0 1px 3px rgba(0,0,0,.5);
+        background: rgba(0,0,0,.28); padding: 3px 10px; border-radius: 999px;
+      }
+      .boost-tag {
+        position: absolute; z-index: 5; font-weight: 900; color: #ffe066;
+        text-shadow: 0 2px 6px rgba(0,0,0,.55); font-size: 1.05rem;
+        animation: rise 1s ease-out forwards; pointer-events: none; white-space: nowrap;
+      }
+      @keyframes rise { from { transform: translateY(6px); opacity: 0; } 25% { opacity: 1; } to { transform: translateY(-30px); opacity: 0; } }
+      .countdown {
+        position: absolute; inset: 0; display: none; place-items: center; z-index: 8;
+        background: rgba(10, 40, 50, .35); color: #fff;
+        font-family: "Noto Serif TC", serif; font-weight: 900;
+        font-size: clamp(3rem, 14vw, 5.5rem); text-shadow: 0 4px 18px rgba(0,0,0,.5);
+      }
+      .countdown.on { display: grid; }
+
+      /* ---------- Paddle controls ---------- */
+      .controls {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;
+        position: sticky; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); z-index: 6;
+      }
+      .controls.single { grid-template-columns: 1fr; }
+      .pad {
+        border: none; border-radius: 14px; cursor: pointer; color: #fff;
+        font: inherit; padding: 14px 10px 12px; min-height: 92px;
+        display: flex; flex-direction: column; align-items: center; gap: 2px;
+        transition: transform .05s ease, filter .1s ease;
+        /* 觸控關鍵：唔俾雙擊縮放／捲動／長按選單干擾連撳，兩隻手指同時撳各自計數 */
+        touch-action: none;
+        -webkit-touch-callout: none;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      /* iPad／觸控裝置：划槳掣再大啲，兩個人隔住枱對坐都撳得穩 */
+      @media (pointer: coarse) {
+        .pad { min-height: 124px; padding: 18px 10px 16px; }
+        .pad .act { font-size: 1.75rem; }
+        .pad .who { font-size: 1.15rem; }
+        .opt { min-height: 58px; }
+        .big-start, .again { min-height: 58px; }
+      }
+      /* iPad 直向：賽道稍矮，成個比賽畫面一屏睇晒唔使捲 */
+      @media (max-width: 860px) and (orientation: portrait) {
+        .lane { height: clamp(84px, 15vh, 110px); }
+      }
+      /* 桌面闊屏：賽道同龍舟用盡闊度 */
+      @media (min-width: 1200px) {
+        .lane { height: 136px; }
+      }
+      .pad:active, .pad.pressed { transform: scale(.965); filter: brightness(1.12); }
+      .pad:disabled { opacity: .55; cursor: default; }
+      .pad.red { background: linear-gradient(180deg, #d43a3a, var(--red-dark)); box-shadow: 0 6px 0 #6d1418; }
+      .pad.teal { background: linear-gradient(180deg, #14a396, var(--teal-dark)); box-shadow: 0 6px 0 #06423d; }
+      .pad .who { font-weight: 900; font-size: 1.05rem; letter-spacing: .05em; }
+      .pad .act { font-weight: 900; font-size: 1.45rem; letter-spacing: .2em; }
+      .pad .key { font-size: .78rem; opacity: .85; }
+      .pad .strokes { font-size: .8rem; opacity: .85; font-variant-numeric: tabular-nums; }
+
+      /* ---------- Quiz overlay ---------- */
+      .quiz-veil {
+        position: fixed; inset: 0; z-index: 50; display: none;
+        background: rgba(15, 30, 38, .62); backdrop-filter: blur(2px);
+        align-items: center; justify-content: center; padding: 14px;
+      }
+      .quiz-veil.on { display: flex; }
+      .quiz-card {
+        background: var(--card); color: var(--ink); border-radius: 16px;
+        border: 2px solid var(--gold); box-shadow: var(--shadow);
+        max-width: 640px; width: 100%; padding: 18px; max-height: 92vh; overflow: auto;
+        animation: pop .22s ease-out;
+      }
+      @keyframes pop { from { transform: scale(.92) translateY(10px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+      .quiz-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+      .quiz-head .tag {
+        background: var(--red); color: #fff; font-weight: 900; font-size: .82rem;
+        padding: 4px 12px; border-radius: 999px; letter-spacing: .08em;
+      }
+      .quiz-time { font-weight: 900; font-variant-numeric: tabular-nums; color: var(--red-dark); }
+      @media (prefers-color-scheme: dark) { .quiz-time { color: #f0b429; } }
+      .quiz-bar { height: 8px; background: var(--paper-2); border-radius: 99px; overflow: hidden; margin: 10px 0 4px; }
+      .quiz-bar i { display: block; height: 100%; background: var(--gold); width: 100%; transition: width .2s linear; }
+      .quiz-q { font-family: "Noto Serif TC", serif; font-weight: 700; font-size: clamp(1.08rem, 3.6vw, 1.35rem); line-height: 1.5; margin: 10px 0 4px; }
+      .quiz-hint { color: var(--ink-soft); font-size: .88rem; margin: 0 0 12px; }
+      .quiz-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      @media (max-width: 520px) { .quiz-cols { grid-template-columns: 1fr 1fr; gap: 8px; } }
+      .quiz-side h3 { margin: 0 0 8px; font-size: .95rem; display: flex; align-items: center; gap: 6px; }
+      .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+      .dot.r { background: var(--red); } .dot.t { background: var(--teal); }
+      .opt {
+        display: block; width: 100%; text-align: left; margin-bottom: 8px;
+        background: var(--paper-2); border: 2px solid var(--line); border-radius: 10px;
+        padding: 12px; font: inherit; font-weight: 700; color: var(--ink); cursor: pointer;
+        min-height: 52px; line-height: 1.4;
+      }
+      .opt:hover:not(:disabled) { border-color: var(--gold); }
+      .opt:disabled { cursor: default; opacity: .75; }
+      .opt.correct { background: #d9f2df; border-color: #2e9e4f; color: #14532d; }
+      .opt.wrong { background: #fbe3e3; border-color: var(--red); color: #7f1d1d; }
+      .opt.locked { opacity: .45; }
+      @media (prefers-color-scheme: dark) {
+        .opt.correct { background: #1d3a26; color: #b7ecc6; }
+        .opt.wrong { background: #3d2123; color: #f3c1c1; }
+      }
+      .quiz-msg { min-height: 1.6em; font-weight: 900; text-align: center; margin-top: 6px; font-size: 1.02rem; }
+
+      /* ---------- Result ---------- */
+      .result-card { text-align: center; }
+      .result-card .trophy { font-size: 3.2rem; line-height: 1; }
+      .result-card h2 { font-family: "Noto Serif TC", serif; font-weight: 900; font-size: clamp(1.5rem, 5vw, 2.1rem); margin: 8px 0 4px; }
+      .result-card p { color: var(--ink-soft); line-height: 1.6; margin: 4px 0; }
+      .result-stats { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 14px 0 4px; }
+      .stat { background: var(--paper-2); border: 1.5px solid var(--line); border-radius: 10px; padding: 10px 16px; min-width: 104px; }
+      .stat .v { font-weight: 900; font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+      .stat .l { font-size: .8rem; color: var(--ink-soft); }
+      .fact-box {
+        margin: 16px auto 4px; max-width: 520px; text-align: left;
+        background: var(--paper-2); border: 1.5px dashed var(--gold); border-radius: 12px; padding: 12px 14px;
+        font-size: .93rem; line-height: 1.65;
+      }
+      .fact-box b { color: var(--red-dark); }
+      @media (prefers-color-scheme: dark) { .fact-box b { color: #f0b429; } }
+      .again {
+        margin-top: 16px; background: var(--red); color: #fff; border: none; border-radius: 12px;
+        font: inherit; font-weight: 900; font-size: 1.1rem; letter-spacing: .1em;
+        padding: 14px 34px; cursor: pointer; box-shadow: 0 5px 0 var(--red-dark);
+      }
+      .again:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--red-dark); }
+      .confetti { position: fixed; inset: 0; pointer-events: none; z-index: 60; overflow: hidden; display: none; }
+      .confetti.on { display: block; }
+      .confetti i {
+        position: absolute; top: -14px; width: 10px; height: 16px; border-radius: 2px;
+        animation: fall linear forwards;
+      }
+      @keyframes fall { to { transform: translateY(105vh) rotate(560deg); } }
+
+      footer.note { text-align: center; color: var(--ink-soft); font-size: .8rem; margin-top: 16px; line-height: 1.6; }
+      @media (prefers-reduced-motion: reduce) {
+        .boat .bob, .boat.stroke1 .paddle { animation: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="top">
+        <div class="drum-line" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+        <h1>龍舟競渡</h1>
+        <p class="sub">齊心拍槳鬥快衝線，比賽中途有 2 條龍舟冷知識考考你！</p>
+      </header>
+
+      <!-- ======== Start screen ======== -->
+      <section id="screen-start" class="screen on">
+        <div class="card">
+          <div class="mode-grid" role="group" aria-label="選擇模式">
+            <button type="button" class="mode-btn sel" id="mode-2p">
+              <span class="t">雙人對戰</span>
+              <span class="d">兩位玩家同用一部裝置，各按自己一邊的划槳掣鬥快，睇吓邊個先衝線。</span>
+            </button>
+            <button type="button" class="mode-btn" id="mode-1p">
+              <span class="t">一人挑戰電腦</span>
+              <span class="d">你操控紅隊龍舟，與電腦操控的青隊比賽，答啱問題加速反超前！</span>
+            </button>
+          </div>
+          <ul class="howto">
+            <li><span class="n">1</span><span>不停按自己隊伍的「划槳」大掣，按得越快，龍舟划得越快。<b>iPad／平板：</b>建議打橫擺放，兩位玩家各坐一邊，用手指連撳自己嗰邊個大掣，可以同時撳、唔會互相干擾。<b>電腦：</b>用滑鼠連撳大掣，或者用鍵盤 <kbd>A</kbd> 鍵＝紅隊、<kbd>L</kbd> 鍵＝青隊，兩個人一齊用鍵盤對戰一樣得。</span></li>
+            <li><span class="n">2</span><span>比賽中途會彈出合共 <b>2 條</b>龍舟歷史、典故冷知識選擇題（賽程約三分之一及三分之二時各一條），賽事會暫停，兩隊鬥快搶答。</span></li>
+            <li><span class="n">3</span><span>最先答啱的一隊即刻獲得「鼓聲加速」，一口氣衝前一大段；答錯就會被鎖定該題，由對方繼續搶答。</span></li>
+            <li><span class="n">4</span><span>率先划到終點旗的一隊獲勝！</span></li>
+          </ul>
+          <button type="button" class="big-start" id="btn-start">擊鼓開賽</button>
+        </div>
+      </section>
+
+      <!-- ======== Race screen ======== -->
+      <section id="screen-race" class="screen">
+        <div class="hud">
+          <span class="timer" id="hud-timer">0.0 秒</span>
+          <span class="status" id="hud-status">準備……</span>
+          <button type="button" class="quit" id="btn-quit">放棄比賽</button>
+        </div>
+
+        <div class="scene" id="scene">
+          <div class="bank" aria-hidden="true">
+            <span class="crowd">🎉🥁📣</span><span class="crowd">🚩🎊🚩</span><span class="crowd">📣🥁🎉</span>
+          </div>
+          <div class="finish" aria-hidden="true"><span class="flag">🏁</span></div>
+
+          <div class="lane" id="lane-0">
+            <div class="dist"></div>
+            <span class="lane-label">紅隊</span>
+            <span class="lane-pct" id="pct-0">0%</span>
+            <div class="boat" id="boat-0"></div>
+          </div>
+          <div class="lane" id="lane-1">
+            <div class="dist"></div>
+            <span class="lane-label">青隊</span>
+            <span class="lane-pct" id="pct-1">0%</span>
+            <div class="boat" id="boat-1"></div>
+          </div>
+
+          <div class="countdown" id="countdown">3</div>
+        </div>
+
+        <div class="controls" id="controls">
+          <button type="button" class="pad red" id="pad-0">
+            <span class="who">紅隊</span>
+            <span class="act">划 槳</span>
+            <span class="strokes" id="strokes-0">0 槳</span>
+            <span class="key">連撳大掣 ／ 鍵盤 A 鍵</span>
+          </button>
+          <button type="button" class="pad teal" id="pad-1">
+            <span class="who">青隊</span>
+            <span class="act">划 槳</span>
+            <span class="strokes" id="strokes-1">0 槳</span>
+            <span class="key">連撳大掣 ／ 鍵盤 L 鍵</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ======== Result screen ======== -->
+      <section id="screen-result" class="screen">
+        <div class="card result-card">
+          <div class="trophy" aria-hidden="true">🏆</div>
+          <h2 id="result-title">紅隊獲勝！</h2>
+          <p id="result-desc"></p>
+          <div class="result-stats">
+            <div class="stat"><div class="v" id="stat-time">—</div><div class="l">比賽時間</div></div>
+            <div class="stat"><div class="v" id="stat-strokes">—</div><div class="l">勝方總槳數</div></div>
+            <div class="stat"><div class="v" id="stat-quiz">—</div><div class="l">冷知識答啱</div></div>
+          </div>
+          <div class="fact-box" id="fact-box"></div>
+          <button type="button" class="again" id="btn-again">再賽一場</button>
+        </div>
+      </section>
+
+      <footer class="note">小知識：傳統龍舟比賽全靠鼓手擊鼓統一槳頻，舵手掌舵、划手齊心協力，缺一不可。</footer>
+    </div>
+
+    <!-- ======== Quiz overlay ======== -->
+    <div class="quiz-veil" id="quiz-veil" role="dialog" aria-modal="true" aria-labelledby="quiz-q">
+      <div class="quiz-card">
+        <div class="quiz-head">
+          <span class="tag" id="quiz-tag">龍舟冷知識 · 搶答（第 1／2 題）</span>
+          <span class="quiz-time" id="quiz-time">10</span>
+        </div>
+        <div class="quiz-bar"><i id="quiz-bar-fill"></i></div>
+        <p class="quiz-q" id="quiz-q"></p>
+        <p class="quiz-hint">兩隊鬥快搶答：最先答啱獲得加速衝刺；答錯會被鎖定該題。</p>
+        <div class="quiz-cols">
+          <div class="quiz-side">
+            <h3><span class="dot r"></span>紅隊作答</h3>
+            <div id="quiz-opts-0"></div>
+          </div>
+          <div class="quiz-side">
+            <h3><span class="dot t"></span>青隊作答<span id="quiz-cpu-note" style="font-weight:400;font-size:.8rem;color:var(--ink-soft)"></span></h3>
+            <div id="quiz-opts-1"></div>
+          </div>
+        </div>
+        <p class="quiz-msg" id="quiz-msg"></p>
+      </div>
+    </div>
+
+    <div class="confetti" id="confetti" aria-hidden="true"></div>
+
+    <script>
+      "use strict";
+
+      /* ================= Questions ================= */
+      var QUESTIONS = [
+        { q: "相傳端午節賽龍舟，最主要是為了紀念哪一位歷史人物？",
+          opts: ["屈原", "伍子胥", "勾踐"], a: 0,
+          fact: "屈原是戰國時期楚國詩人，相傳他投汨羅江殉國後，百姓划船尋找並投粽入江，漸漸演變成端午賽龍舟與吃粽的習俗。" },
+        { q: "相傳屈原投下哪一條江殉國？",
+          opts: ["長江", "汨羅江", "珠江"], a: 1,
+          fact: "汨羅江位於今湖南省，相傳屈原在此投江，當地至今仍保留濃厚的端午龍舟傳統。" },
+        { q: "端午節是農曆的哪一天？",
+          opts: ["正月十五", "五月初五", "八月十五"], a: 1,
+          fact: "端午節在農曆五月初五，「端」有初始之意，五月又稱午月，故名「端午」。" },
+        { q: "相傳百姓把粽子投入江中，最初是為了甚麼？",
+          opts: ["祭祀河神求雨", "引開魚蝦，保護屈原的遺體", "慶祝豐收"], a: 1,
+          fact: "相傳百姓擔心魚蝦啃食屈原遺體，於是投粽入江餵飽魚蝦，後來演變成端午吃粽的習俗。" },
+        { q: "龍舟比賽中，站在船頭負責擊鼓、統一划槳節奏的人，敲擊的是甚麼？",
+          opts: ["鑼", "鼓", "木魚"], a: 1,
+          fact: "鼓手是龍舟的「指揮官」，划手跟隨鼓聲齊心落槳，槳頻一致才能划得最快。" },
+        { q: "龍舟上負責掌握方向、站在船尾的人稱為什麼？",
+          opts: ["舵手", "鼓手", "奪標手"], a: 0,
+          fact: "舵手以長舵控制航向，比賽時要避開浮標與其他賽道，技術非常講究。" },
+        { q: "屈原生活在哪一個時代？",
+          opts: ["唐朝", "漢朝", "戰國時期"], a: 2,
+          fact: "屈原是戰國時期楚國的大夫與詩人，距今已有二千三百多年。" },
+        { q: "以下哪一部是屈原的著名作品？",
+          opts: ["《離騷》", "《靜夜思》", "《蘭亭集序》"], a: 0,
+          fact: "《離騷》是屈原的代表作，是中國古代最長的抒情詩之一，屈原亦被視為「中華詩祖」。" },
+        { q: "傳統龍舟在比賽或下水前，龍頭通常要進行甚麼儀式才算「醒覺」？",
+          opts: ["上香三炷", "為龍頭點睛", "在龍頭掛紅蛋"], a: 1,
+          fact: "「畫龍點睛」儀式由主禮嘉賓以朱砂為龍眼點睛，寓意龍舟甦醒、比賽順利平安。" },
+        { q: "端午節除了「龍舟節」之外，下列哪個也是它的別稱？",
+          opts: ["重陽節", "端陽節", "上元節"], a: 1,
+          fact: "端午節別稱眾多，包括端陽節、龍舟節、五月節、天中節等。" },
+        { q: "香港最具代表性的龍舟比賽場地之一，是哪一個海灣？",
+          opts: ["赤柱正灘", "淺水灣", "大澳水道"], a: 0,
+          fact: "赤柱正灘自 1976 年起舉辦國際龍舟賽，是香港歷史悠久的龍舟賽事場地之一；香港仔、大澳等地亦有傳統龍舟競渡。" },
+        { q: "一艘標準龍舟（中龍）大約有多少名划手？",
+          opts: ["8 名", "18 至 20 名", "40 名"], a: 1,
+          fact: "標準龍舟一般設 18 至 20 名划手，再加鼓手與舵手各一名，全隊講求整齊合拍。" }
+      ];
+
+      var FACTS = [
+        "傳統龍舟的龍頭龍尾高高翹起，相傳可以辟邪驅瘟，保佑村民平安。",
+        "1976 年香港舉辦首屆香港國際龍舟邀請賽，令龍舟運動推廣至世界各地。",
+        "2009 年，端午節列入聯合國教科文組織《人類非物質文化遺產代表作名錄》，成為中國首個入選世界非物質文化遺產的傳統節日。",
+        "廣東順德、東莞等地有「龍舟說唱」等配合龍舟的民間藝術，龍舟文化不止於競渡。",
+        "比賽前「龍舟下水」要拜神祈福，有些地方還會在龍舟埋藏「龍骨」木，稱為「收龍骨」。",
+        "鼓聲是龍舟的靈魂：鼓手會用不同鼓點提示加速、轉彎與衝刺。"
+      ];
+
+      /* ================= Boat SVG ================= */
+      function boatSVG(hull, trim, skin) {
+        return '' +
+        '<svg viewBox="0 0 220 74" role="img" aria-label="龍舟">' +
+          '<g class="bob">' +
+            /* 水平翻轉：龍頭朝右（終點方向），龍尾在左 */
+            '<g transform="translate(220,0) scale(-1,1)">' +
+            /* dragon tail */
+            '<path d="M196 40 q16 -4 20 -22 q-12 2 -18 8 q6 -12 2 -20 q-8 10 -10 24 q-1 8 6 10z" fill="' + trim + '"/>' +
+            /* hull */
+            '<path d="M14 46 L206 46 L190 60 Q110 68 30 60 Z" fill="' + hull + '"/>' +
+            '<path d="M14 46 L206 46 L202 52 L18 52 Z" fill="' + trim + '"/>' +
+            /* dragon head */
+            '<g>' +
+              '<path d="M16 44 q-12 -2 -13 -14 q8 1 11 -5 q-6 -1 -7 -8 q7 2 11 7 q3 -7 10 -8 q-2 6 1 10 q8 -3 13 2 q-6 3 -6 8 q0 7 -7 10 q-7 2 -13 -2z" fill="' + trim + '"/>' +
+              '<circle cx="17" cy="26" r="3.2" fill="#fff"/><circle cx="17.5" cy="26" r="1.6" fill="#20303a"/>' +
+              '<path d="M4 34 q6 3 12 1" stroke="#20303a" stroke-width="1.6" fill="none" stroke-linecap="round"/>' +
+            '</g>' +
+            /* paddlers */
+            '<g fill="' + skin + '">' +
+              '<circle cx="70" cy="30" r="6"/><circle cx="102" cy="30" r="6"/><circle cx="134" cy="30" r="6"/><circle cx="166" cy="30" r="6"/>' +
+            '</g>' +
+            '<g fill="' + hull + '">' +
+              '<path d="M60 44 q10 -10 20 0 l-2 4 l-16 0z"/><path d="M92 44 q10 -10 20 0 l-2 4 l-16 0z"/>' +
+              '<path d="M124 44 q10 -10 20 0 l-2 4 l-16 0z"/><path d="M156 44 q10 -10 20 0 l-2 4 l-16 0z"/>' +
+            '</g>' +
+            /* drummer */
+            '<circle cx="42" cy="28" r="6" fill="' + skin + '"/>' +
+            '<ellipse cx="42" cy="40" rx="9" ry="6" fill="#7a4a21"/>' +
+            '<ellipse cx="42" cy="37" rx="9" ry="3.4" fill="#e8cf9f"/>' +
+            /* paddle */
+            '<g class="paddle">' +
+              '<line x1="66" y1="38" x2="52" y2="58" stroke="#8a5a2b" stroke-width="3.4" stroke-linecap="round"/>' +
+              '<path d="M52 58 l-4 9 q5 3 9 -1 l-2 -8z" fill="#8a5a2b"/>' +
+            '</g>' +
+            '</g>' +
+          '</g>' +
+        '</svg>';
+      }
+      document.getElementById('boat-0').innerHTML = boatSVG('#c0272d', '#f2b63c', '#f6c88f');
+      document.getElementById('boat-1').innerHTML = boatSVG('#0f766e', '#ffd94d', '#f6c88f');
+
+      /* ================= State ================= */
+      var $ = function (id) { return document.getElementById(id); };
+      var screens = { start: $('screen-start'), race: $('screen-race'), result: $('screen-result') };
+      function show(name) {
+        for (var k in screens) screens[k].classList.toggle('on', k === name);
+        window.scrollTo(0, 0);
+      }
+
+      var mode = '2p'; // or '1p'
+      var race = null;
+      var rafId = null, quizTimerId = null, usedQ = [];
+      var audioCtx = null;
+
+      function beep(freq, dur, type, gain) {
+        try {
+          if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+          var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+          o.type = type || 'sine'; o.frequency.value = freq;
+          g.gain.setValueAtTime(gain || 0.06, audioCtx.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+          o.connect(g); g.connect(audioCtx.destination);
+          o.start(); o.stop(audioCtx.currentTime + dur);
+        } catch (e) { /* sound is optional */ }
+      }
+      function drum() { beep(150, 0.12, 'triangle', 0.10); }
+      function splashSound() { beep(420 + Math.random() * 160, 0.05, 'sine', 0.02); }
+
+      /* ================= Mode select ================= */
+      $('mode-2p').addEventListener('click', function () { setMode('2p'); });
+      $('mode-1p').addEventListener('click', function () { setMode('1p'); });
+      function setMode(m) {
+        mode = m;
+        $('mode-2p').classList.toggle('sel', m === '2p');
+        $('mode-1p').classList.toggle('sel', m === '1p');
+      }
+
+      /* ================= Race ================= */
+      var FINISH = 100, TAP_POWER = 1.05;
+
+      function newRace() {
+        return {
+          pos: [0, 0], strokes: [0, 0], quizScore: [0, 0],
+          running: false, finished: false, winner: -1,
+          startAt: 0, elapsed: 0, lastTs: 0, pausedTotal: 0, quizOpenedAt: 0,
+          cpuAcc: 0, quizOpen: false,
+          quizzesDone: 0, nextQuizPos: 30 + Math.random() * 6
+        };
+      }
+
+      function startRace() {
+        race = newRace();
+        usedQ = [];
+        document.body.classList.add('racing');
+        show('race');
+        $('controls').classList.toggle('single', mode === '1p');
+        $('pad-1').style.display = (mode === '1p') ? 'none' : '';
+        $('pad-0').querySelector('.key').textContent = '連撳大掣 ／ 鍵盤 A 鍵';
+        updateBoat(0); updateBoat(1);
+        $('strokes-0').textContent = '0 槳';
+        $('strokes-1').textContent = '0 槳';
+        $('hud-timer').textContent = '0.0 秒';
+        setPadsEnabled(false);
+        /* countdown 3-2-1-GO */
+        var cd = $('countdown'), n = 3;
+        cd.classList.add('on'); cd.textContent = n;
+        $('hud-status').textContent = '預備……';
+        drum();
+        var iv = setInterval(function () {
+          n--;
+          if (n === 0) { cd.textContent = '划！'; drum(); beep(660, 0.25, 'triangle', 0.08); }
+          else if (n < 0) {
+            clearInterval(iv); cd.classList.remove('on');
+            race.running = true; race.startAt = performance.now(); race.lastTs = performance.now();
+            setPadsEnabled(true);
+            $('hud-status').textContent = '比賽進行中，狂按划槳！';
+            rafId = requestAnimationFrame(tick);
+            return;
+          } else { cd.textContent = n; drum(); }
+        }, 750);
+        race.cdInterval = iv;
+      }
+
+      function setPadsEnabled(on) {
+        $('pad-0').disabled = !on;
+        $('pad-1').disabled = !on;
+      }
+
+      function setBoatLeft(i) {
+        var pct = Math.min(race.pos[i], FINISH) / FINISH;
+        var lane = $('lane-' + i);
+        var trackW = lane.clientWidth;
+        var boatW = $('boat-' + i).clientWidth;
+        var maxLeft = trackW - boatW - trackW * 0.055;
+        $('boat-' + i).style.left = (trackW * 0.01 + pct * (maxLeft - trackW * 0.01)) + 'px';
+      }
+      function updateBoat(i) {
+        setBoatLeft(i);
+        $('pct-' + i).textContent = Math.floor(Math.min(race.pos[i], 100)) + '%';
+      }
+
+      function spawnSplash(i) {
+        var lane = $('lane-' + i), boat = $('boat-' + i);
+        var s = document.createElement('span');
+        s.className = 'splash';
+        s.style.left = (boat.offsetLeft + boat.clientWidth * (0.6 + Math.random() * 0.14)) + 'px';
+        s.style.setProperty('--dx', (-10 - Math.random() * 18) + 'px');
+        lane.appendChild(s);
+        setTimeout(function () { s.remove(); }, 520);
+      }
+
+      function paddle(i, power) {
+        if (!race || !race.running || race.finished || race.quizOpen) return;
+        race.pos[i] += power;
+        race.strokes[i]++;
+        $('strokes-' + i).textContent = race.strokes[i] + ' 槳';
+        var boat = $('boat-' + i);
+        boat.classList.remove('stroke1'); void boat.offsetWidth; boat.classList.add('stroke1');
+        spawnSplash(i);
+        updateBoat(i);
+        checkFinish();
+      }
+
+      function bindPad(id, idx) {
+        var el = $(id);
+        var lastPointerAt = 0;
+        var hit = function () {
+          if (el.disabled) return;
+          el.classList.add('pressed');
+          setTimeout(function () { el.classList.remove('pressed'); }, 90);
+          splashSound();
+          paddle(idx, TAP_POWER * (0.9 + Math.random() * 0.25));
+        };
+        /* pointerdown：一撳即計，無 click 延遲；每隻手指／滑鼠各自觸發，
+           iPad 兩位玩家同時連撳唔會漏撳 */
+        el.addEventListener('pointerdown', function (e) {
+          e.preventDefault();
+          lastPointerAt = Date.now();
+          hit();
+        });
+        /* 鍵盤 Enter／Space 啟動按鈕（桌面無障礙）仍行 click；
+           緊貼 pointerdown 的 click 係瀏覽器補發，要擋住避免一撳計兩槳 */
+        el.addEventListener('click', function () {
+          if (Date.now() - lastPointerAt < 600) return;
+          hit();
+        });
+        /* iPad 長按唔好彈出系統選單打斷比賽 */
+        el.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+      }
+      bindPad('pad-0', 0);
+      bindPad('pad-1', 1);
+
+      document.addEventListener('keydown', function (e) {
+        if (e.repeat) return;
+        if (!race || !race.running) return;
+        if (e.code === 'KeyA') paddle(0, TAP_POWER);
+        if (e.code === 'KeyL' && mode === '2p') paddle(1, TAP_POWER);
+      });
+
+      function tick(ts) {
+        if (!race || race.finished) return;
+        var dt = Math.min(ts - race.lastTs, 100); race.lastTs = ts;
+        if (race.running && !race.quizOpen) {
+          race.elapsed = ts - race.startAt - race.pausedTotal;
+          $('hud-timer').textContent = (race.elapsed / 1000).toFixed(1) + ' 秒';
+          /* CPU paddling in 1p mode */
+          if (mode === '1p') {
+            var behind = race.pos[0] - race.pos[1];
+            var rate = 2.05 + Math.sin(race.elapsed / 2600) * 0.35 + (behind > 6 ? 0.35 : 0) - (behind < -10 ? 0.3 : 0);
+            race.cpuAcc += rate * dt / 1000;
+            while (race.cpuAcc >= 1) { race.cpuAcc -= 1; paddle(1, TAP_POWER * (0.9 + Math.random() * 0.25)); }
+          }
+          /* quiz trigger：全場合共 2 條，領先龍舟去到指定賽程位置時彈出 */
+          var leaderPos = Math.max(race.pos[0], race.pos[1]);
+          if (race.quizzesDone < 2 && leaderPos >= race.nextQuizPos && leaderPos < 92) openQuiz();
+        }
+        rafId = requestAnimationFrame(tick);
+      }
+
+      function checkFinish() {
+        if (race.finished) return;
+        for (var i = 0; i < 2; i++) {
+          if (race.pos[i] >= FINISH) { endRace(i); return; }
+        }
+      }
+
+      /* ================= Quiz ================= */
+      function pickQuestion() {
+        if (usedQ.length >= QUESTIONS.length) usedQ = [];
+        var idx;
+        do { idx = Math.floor(Math.random() * QUESTIONS.length); } while (usedQ.indexOf(idx) >= 0);
+        usedQ.push(idx);
+        return QUESTIONS[idx];
+      }
+
+      var quiz = null;
+      function openQuiz() {
+        if (!race || race.quizzesDone >= 2) return;
+        race.quizzesDone++;
+        $('quiz-tag').textContent = '龍舟冷知識 · 搶答（第 ' + race.quizzesDone + '／2 題）';
+        race.quizOpen = true;
+        race.quizOpenedAt = performance.now();
+        setPadsEnabled(false);
+        $('hud-status').textContent = '冷知識搶答時間！';
+        drum(); beep(520, 0.15, 'square', 0.05);
+        var q = pickQuestion();
+        quiz = { q: q, locked: [false, false], done: false, timeLeft: 10, cpuAt: 0 };
+        if (mode === '1p') quiz.cpuAt = 1600 + Math.random() * 3800;
+        $('quiz-q').textContent = q.q;
+        $('quiz-msg').textContent = '';
+        $('quiz-cpu-note').textContent = (mode === '1p') ? '（電腦隊會搶答）' : '';
+        buildOpts(0, q); buildOpts(1, q);
+        $('quiz-veil').classList.add('on');
+        updateQuizBar();
+        quizTimerId = setInterval(quizTick, 100);
+      }
+
+      function buildOpts(side, q) {
+        var box = $('quiz-opts-' + side);
+        box.innerHTML = '';
+        var letters = ['A', 'B', 'C'];
+        q.opts.forEach(function (text, oi) {
+          var b = document.createElement('button');
+          b.type = 'button'; b.className = 'opt';
+          b.textContent = letters[oi] + '. ' + text;
+          b.addEventListener('click', function () { answer(side, oi, b); });
+          box.appendChild(b);
+        });
+      }
+
+      function updateQuizBar() {
+        $('quiz-time').textContent = Math.ceil(quiz.timeLeft);
+        $('quiz-bar-fill').style.width = (quiz.timeLeft / 10 * 100) + '%';
+      }
+
+      function quizTick() {
+        if (!quiz || quiz.done) return;
+        quiz.timeLeft -= 0.1;
+        if (mode === '1p' && quiz.cpuAt > 0) {
+          quiz.cpuAt -= 100;
+          if (quiz.cpuAt <= 0 && !quiz.locked[1]) {
+            /* CPU answers: 65% correct */
+            var pick = (Math.random() < 0.65) ? quiz.q.a : (quiz.q.a + 1 + Math.floor(Math.random() * 2)) % 3;
+            var btns = $('quiz-opts-1').children;
+            if (btns[pick]) answer(1, pick, btns[pick]);
+            return;
+          }
+        }
+        if (quiz.timeLeft <= 0) { closeQuiz(-1); return; }
+        updateQuizBar();
+      }
+
+      function answer(side, oi, btn) {
+        if (!quiz || quiz.done || quiz.locked[side]) return;
+        if (oi === quiz.q.a) {
+          quiz.done = true;
+          btn.classList.add('correct');
+          race.quizScore[side]++;
+          $('quiz-msg').textContent = (side === 0 ? '紅隊' : '青隊') + '答啱了！獲得鼓聲加速！';
+          $('quiz-msg').style.color = '#2e9e4f';
+          beep(740, 0.15, 'triangle', 0.07); setTimeout(function () { beep(990, 0.2, 'triangle', 0.07); }, 130);
+          disableAllOpts();
+          setTimeout(function () { closeQuiz(side); }, 1100);
+        } else {
+          quiz.locked[side] = true;
+          btn.classList.add('wrong');
+          beep(180, 0.2, 'sawtooth', 0.05);
+          var box = $('quiz-opts-' + side);
+          for (var i = 0; i < box.children.length; i++) { box.children[i].disabled = true; box.children[i].classList.add('locked'); }
+          btn.classList.remove('locked');
+          $('quiz-msg').textContent = (side === 0 ? '紅隊' : '青隊') + '答錯了，這題被鎖定，輪到對方搶答！';
+          $('quiz-msg').style.color = 'var(--red)';
+          if (quiz.locked[0] && quiz.locked[1]) { quiz.done = true; setTimeout(function () { closeQuiz(-1); }, 900); }
+        }
+      }
+
+      function disableAllOpts() {
+        [0, 1].forEach(function (s) {
+          var box = $('quiz-opts-' + s);
+          for (var i = 0; i < box.children.length; i++) box.children[i].disabled = true;
+        });
+      }
+
+      function closeQuiz(winnerSide) {
+        clearInterval(quizTimerId);
+        $('quiz-veil').classList.remove('on');
+        quiz = null;
+        race.quizOpen = false;
+        race.pausedTotal += performance.now() - race.quizOpenedAt;
+        race.elapsed = performance.now() - race.startAt - race.pausedTotal;
+        if (race.finished) return;
+        race.lastTs = performance.now();
+        if (winnerSide >= 0) {
+          applyBoost(winnerSide);
+        } else {
+          $('hud-status').textContent = '無人答啱，繼續比賽！';
+        }
+        setPadsEnabled(true);
+        /* 第一題之後，將第二題定喺賽程約三分之二位置；兩題出完就唔再彈題 */
+        if (race.quizzesDone === 1) race.nextQuizPos = 64 + Math.random() * 6;
+      }
+
+      function applyBoost(i) {
+        race.pos[i] += 8;
+        var boat = $('boat-' + i);
+        boat.classList.add('fast');
+        setTimeout(function () { boat.classList.remove('fast'); }, 1600);
+        var tag = document.createElement('span');
+        tag.className = 'boost-tag';
+        tag.textContent = '🥁 鼓聲加速 +8';
+        tag.style.left = Math.min(boat.offsetLeft + 20, $('lane-' + i).clientWidth - 130) + 'px';
+        tag.style.top = '34px';
+        $('lane-' + i).appendChild(tag);
+        setTimeout(function () { tag.remove(); }, 1050);
+        $('hud-status').textContent = (i === 0 ? '紅隊' : '青隊') + '答啱冷知識，鼓聲加速衝前！';
+        updateBoat(i);
+        checkFinish();
+      }
+
+      /* ================= End / result ================= */
+      function endRace(winner) {
+        document.body.classList.remove('racing');
+        race.finished = true; race.winner = winner; race.running = false;
+        cancelAnimationFrame(rafId);
+        clearInterval(quizTimerId);
+        $('quiz-veil').classList.remove('on');
+        setPadsEnabled(false);
+        drum(); setTimeout(drum, 160); setTimeout(function () { beep(880, 0.35, 'triangle', 0.08); }, 320);
+        var names = ['紅隊', '青隊'];
+        var wName = names[winner];
+        if (mode === '1p') wName = (winner === 0) ? '你（紅隊）' : '電腦（青隊）';
+        $('result-title').textContent = (mode === '1p' && winner === 1) ? '電腦青隊獲勝！' : wName + '獲勝！';
+        $('result-desc').textContent =
+          wName + '率先划到終點，全程用時 ' + (race.elapsed / 1000).toFixed(1) + ' 秒。' +
+          (race.quizScore[0] + race.quizScore[1] > 0
+            ? '今場冷知識搶答：紅隊答啱 ' + race.quizScore[0] + ' 題，青隊答啱 ' + race.quizScore[1] + ' 題。'
+            : '');
+        $('stat-time').textContent = (race.elapsed / 1000).toFixed(1) + ' 秒';
+        $('stat-strokes').textContent = race.strokes[winner] + ' 槳';
+        $('stat-quiz').textContent = race.quizScore[winner] + ' 題';
+        var f = FACTS[Math.floor(Math.random() * FACTS.length)];
+        $('fact-box').innerHTML = '<b>龍舟小知識：</b>' + f;
+        setTimeout(function () { show('result'); fireConfetti(); }, 900);
+      }
+
+      function fireConfetti() {
+        var box = $('confetti'); box.innerHTML = ''; box.classList.add('on');
+        var colors = ['#c0272d', '#d9a441', '#0f766e', '#ffd94d', '#e86a92'];
+        for (var i = 0; i < 60; i++) {
+          var c = document.createElement('i');
+          c.style.left = Math.random() * 100 + 'vw';
+          c.style.background = colors[i % colors.length];
+          c.style.animationDuration = (1.6 + Math.random() * 1.8) + 's';
+          c.style.animationDelay = (Math.random() * 0.5) + 's';
+          c.style.transform = 'rotate(' + Math.random() * 360 + 'deg)';
+          box.appendChild(c);
+        }
+        setTimeout(function () { box.classList.remove('on'); box.innerHTML = ''; }, 4200);
+      }
+
+      /* ================= Buttons ================= */
+      $('btn-start').addEventListener('click', function () { drum(); startRace(); });
+      $('btn-again').addEventListener('click', function () { startRace(); });
+      $('btn-quit').addEventListener('click', function () {
+        document.body.classList.remove('racing');
+        if (race && race.cdInterval) clearInterval(race.cdInterval);
+        cancelAnimationFrame(rafId);
+        clearInterval(quizTimerId);
+        $('quiz-veil').classList.remove('on');
+        $('countdown').classList.remove('on');
+        race = null;
+        show('start');
+      });
+
+      function relayoutBoats() {
+        if (race) { updateBoat(0); updateBoat(1); }
+      }
+      window.addEventListener('resize', relayoutBoats);
+      /* iPad 打橫／打直切換後，賽道闊度變了，要即刻重排龍舟位置 */
+      window.addEventListener('orientationchange', function () {
+        setTimeout(relayoutBoats, 80);
+        setTimeout(relayoutBoats, 350);
+      });
+      /* iOS Safari 要在使用者手勢中先解鎖聲音，之後鼓聲先會出聲 */
+      document.addEventListener('pointerdown', function () {
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+      }, { passive: true });
+    </script>
+  </body>
+</html>
